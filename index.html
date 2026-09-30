@@ -236,10 +236,6 @@
 
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 14px; margin-bottom: 4px; color: #555; }
-        .key-input-btn {
-            width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 8px;
-            background: #fff0f5; text-align: center; font-weight: bold; cursor: pointer; font-family: inherit;
-        }
         .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
         .color-picker-row input[type="color"] { cursor: pointer; border: none; background: none; width: 32px; height: 32px; }
 
@@ -286,6 +282,31 @@
         .feedback-btns .btn-primary { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
         .feedback-btns .btn-primary:hover { filter: brightness(1.08); }
         .feedback-btns .btn:disabled { opacity: .55; cursor: default; }
+
+        /* 🛎 서비스 모달 */
+        .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .service-btn { flex-direction: column; justify-content: center; gap: 4px; padding: 12px 4px; font-size: 13px; }
+        .service-icon { font-size: 1.7rem; line-height: 1; }
+
+        /* 💝 후원하기 모달 */
+        #donateModal { z-index: 1100; }
+        .donate-card { background: #fff0f5; border: 2px dashed var(--border-color); border-radius: 12px; padding: 10px 14px; }
+        .donate-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 15px; color: #444; user-select: text; -webkit-user-select: text; }
+        .donate-row + .donate-row { border-top: 1px dashed var(--border-color); }
+        .donate-label { color: #888; flex-shrink: 0; }
+        .donate-temp { font-size: 12px; color: #999; text-align: center; margin: 8px 0 0; }
+
+        /* 📢 겉표지 공지 이미지 (jpg · png · webp · 움직이는 gif 모두 가능) */
+        .cover-notice {
+            width: 80%; flex: 0 1 auto; min-height: 0; max-height: 42%;
+            margin: 14px 0 0; display: flex; align-items: center; justify-content: center;
+        }
+        .cover-notice img {
+            max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+            border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            pointer-events: none; user-select: none; -webkit-user-drag: none;
+        }
+        .cover-notice.empty { display: none; }
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -304,18 +325,18 @@
 
     <!-- 상단 컨트롤 툴바 -->
     <div class="toolbar">
-        <button class="btn" onclick="openModal('helpModal')">❓ 도움말</button>
         <button class="btn" onclick="openModal('stickerModal')">🎨 스티커</button>
         <button class="btn" onclick="addText()">✏ 글쓰기</button>
         <button class="btn" onclick="triggerImageUpload()">🖼 이미지</button>
         <button class="btn" onclick="openLibrary()">📚 라이브러리</button>
-        <input type="file" id="imgInput" accept="image/jpeg, image/png, image/gif, image/webp" style="display:none" onchange="handleImageUpload(event)">
+        <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
         <button class="btn" onclick="bringToFront()">⬆️️ 앞으로</button>
         <button class="btn" onclick="sendToBack()">⬇️ 뒤로</button>
         <button class="btn" onclick="deleteSelected()">🗑️ 삭제</button>
         <button class="btn" onclick="saveData(true)">💾 저장</button>
         <button class="btn" onclick="exportToPNG()">📷 PNG 저장</button>
         <button class="btn" onclick="openModal('skinModal')">👗 스킨</button>
+        <button class="btn" onclick="openModal('serviceModal')">🛎 서비스</button>
         <button class="btn" onclick="openModal('settingsModal')">⚙ 설정</button>
     </div>
 
@@ -327,6 +348,8 @@
             <div class="page cover-page" id="coverPage">
                 <div class="cover-title">My Pretty Diary 🌸</div>
                 <div class="cover-subtitle">나만의 비밀 일기장</div>
+                <!-- 📢 공지 이미지 : 스크립트의 NOTICE_IMAGE_SRC 에 이미지 경로/주소를 넣으면 여기에 표시 -->
+                <div class="cover-notice" id="coverNotice"><img id="coverNoticeImg" alt="공지사항"></div>
                 <div class="drag-hint">◀ 오른쪽에서 왼쪽으로 드래그하여 열기</div>
             </div>
 
@@ -379,18 +402,18 @@
             <div class="help-body">
 
                 <div class="help-section-title">🧰 상단 버튼 설명</div>
-                <div class="help-item"><b>❓ 도움말</b> : 지금 보고 있는 이 설명창을 엽니다.</div>
                 <div class="help-item"><b>🎨 스티커</b> : 이모지 스티커 목록을 엽니다. 카테고리 탭에서 고른 뒤 이모지를 누르면 페이지에 붙습니다.</div>
                 <div class="help-item"><b>✏️ 글쓰기</b> : 페이지에 글상자를 추가합니다. 상자 안을 눌러 내용을 입력하세요. 글상자를 선택하면 글상자 바로 옆에 <b>글꼴 / 색상 / 크기</b> 옵션창이 붙어서 나타납니다. (아래 '글상자 꾸미기' 참고)</div>
-                <div class="help-item"><b>🖼️ 이미지</b> : my_lovely_diary.html 파일이 있는 곳에 images 폴더를 만들고 이미지를 모두 넣고 이미지를 고르세요.<br><b>반드시 <code>images</code> 폴더 안에 파일을 넣고 이미지를 고르세요. 안그러면 저장이 안되어 이미지가 깨집니다.</b></div>
+                <div class="help-item"><b>🖼️ 이미지</b> : 내 PC·스마트폰 <b>어느 폴더에 있는 이미지든</b> 골라서 페이지에 넣을 수 있습니다. 이미지는 일기와 함께 저장되므로 원본 파일을 옮기거나 지워도 깨지지 않아요. (JPG·PNG·WEBP·움직이는 GIF 등)</div>
                 <div class="help-item"><b>📚 라이브러리</b> : <b>📚 라이브러리</b>를 누르면 이미지들이 바둑판으로 나타나고, 원하는 이미지를 누르면 페이지에 들어갑니다.</div>
                 <div class="help-item"><b>⬆️ 앞으로</b> : 선택한 요소를 다른 요소들보다 <b>맨 앞</b>으로 가져옵니다.</div>
                 <div class="help-item"><b>⬇️ 뒤로</b> : 선택한 요소를 <b>맨 뒤</b>로 보냅니다.</div>
                 <div class="help-item"><b>🗑️ 삭제</b> : 선택한 요소(스티커·글상자·이미지)를 지웁니다.</div>
-                <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 '다이어리 / 년도 / 월 / 일.json'</b> 파일에 저장합니다. 폴더와 파일이 없으면 새로 만들고, 같은 날짜는 하루 1개 파일에 계속 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
+                <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 '말랑달콤 / 다이어리 / 년도 / 월 / 일.json'</b> 파일에 저장합니다. 폴더와 파일이 없으면 새로 만들고, 같은 날짜는 하루 1개 파일에 계속 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
                 <div class="help-item"><b>📷 PNG 저장</b> : 현재 보고 있는 페이지를 <code>.png</code> 이미지로 저장합니다. 현재 페이지 크기의 2배 해상도로 저장됩니다.</div>
                 <div class="help-item"><b>👗 스킨</b> : 기본 스킨 4종을 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있습니다.</div>
-                <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 키보드 단축키를 바꿉니다.</div>
+                <div class="help-item"><b>🛎️ 서비스</b> : 도움말, 카페 이동, 타로점, 음악 듣기, 랜덤박스 등 부가 서비스를 모아 둔 창을 엽니다.</div>
+                <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 💌 건의함, 💝 후원하기가 있습니다.</div>
 
                 <div class="help-section-title">🖐️ 요소 다루기 (스티커·글·이미지)</div>
                 <div class="help-item"><b>선택</b> : 요소를 누르면 점선 테두리와 조절 핸들이 나타납니다. 빈 곳을 누르면 선택이 풀립니다.</div>
@@ -404,9 +427,6 @@
                 <div class="help-item"><b>📥 불러오기</b> : 백업 <code>.json</code>을 선택해 복원합니다.</div>
                 <div class="help-item"><b>📊 용량 확인</b> : 다이어리 저장가능 용량을 확인 할 수 있습니다.</div>
 
-                <div class="help-section-title">⌨️ 기본 키보드 단축키</div>
-                <div class="help-item"><code>Delete</code> 선택 요소 삭제 &nbsp;/&nbsp; <code>←</code> 이전 날짜 &nbsp;/&nbsp; <code>→</code> 다음 날짜 &nbsp;/&nbsp; <code>Ctrl + S</code> 저장</div>
-                <div class="help-item">단축키는 <b>⚙️ 설정</b>에서 바꿀 수 있습니다. (바꿀 항목의 버튼을 누른 뒤 원하는 키를 누르세요.) 글상자에 글을 쓰는 중에는 동작하지 않으니, 빈 곳을 한 번 누른 뒤 사용하세요.</div>
 
             </div>
             <button class="btn" style="width:100%; margin-top:15px; justify-content:center; flex-shrink:0;" onclick="closeModal('helpModal')">닫기</button>
@@ -481,7 +501,7 @@
     <!-- 설정 모달 -->
     <div class="modal" id="settingsModal">
         <div class="modal-content">
-            <div class="modal-title">⚙️ 설정 및 키보드 단축키</div>
+            <div class="modal-title">⚙️ 설정</div>
 
             <div class="form-group">
                 <label>🔤 전체 UI 폰트 (글상자 폰트와 별개):</label>
@@ -526,38 +546,52 @@
                 <div style="font-size:1.15rem; font-weight:bold; color:#ff6b81; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
                     💾 <span>다이어리 저장 용량 확인</span>
                 </div>
-                <div style="font-size:13px; color:#555; text-align:left;">구글 드라이브 '다이어리' 폴더 전체 크기:</div>
+                <div style="font-size:13px; color:#555; text-align:left;">구글 드라이브 '말랑달콤 / 다이어리' 폴더 전체 크기:</div>
                                 <div id="lsText" style="font-size:13px; color:#666; text-align:right;">계산 중...</div>
                 <div id="lsDetail" style="font-size:12px; color:#777; line-height:1.5; margin-top:4px; text-align:left;"></div>
-            </div>
-
-            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
-            <div class="modal-title" style="font-size:1.1rem;">⌨️ 커스텀 키보드 단축키</div>
-
-            <div class="form-group">
-                <label>선택 요소 삭제 키:</label>
-                <button class="key-input-btn" id="keyBtn_delete" onclick="listenKeyChange('delete')">Delete</button>
-            </div>
-            <div class="form-group">
-                <label>이전 날짜 이동 키:</label>
-                <button class="key-input-btn" id="keyBtn_prev" onclick="listenKeyChange('prev')">ArrowLeft</button>
-            </div>
-            <div class="form-group">
-                <label>다음 날짜 이동 키:</label>
-                <button class="key-input-btn" id="keyBtn_next" onclick="listenKeyChange('next')">ArrowRight</button>
-            </div>
-            <div class="form-group">
-                <label>저장 키 (Ctrl + 조합):</label>
-                <button class="key-input-btn" id="keyBtn_save" onclick="listenKeyChange('save')">s</button>
             </div>
 
             <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
             <div class="form-group">
                 <label>💌 제작자에게 의견 보내기:</label>
                 <button class="btn" style="width:100%; justify-content:center;" onclick="openFeedback()">💌 건의함</button>
+                <button class="btn" style="width:100%; justify-content:center; margin-top:6px;" onclick="openModal('donateModal')">💝 후원하기</button>
             </div>
 
             <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('settingsModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 🛎 서비스 모달 -->
+    <div class="modal" id="serviceModal">
+        <div class="modal-content">
+            <div class="modal-title">🛎️ 서비스</div>
+            <div class="service-grid">
+                <button class="btn service-btn" onclick="openHelpFromService()"><span class="service-icon">❓</span>도움말</button>
+                <button class="btn service-btn" onclick="goCafe()"><span class="service-icon">☕</span>카페이동</button>
+                <button class="btn service-btn" onclick="openTarot()"><span class="service-icon">🔮</span>타로점</button>
+                <button class="btn service-btn" onclick="openMusic()"><span class="service-icon">🎵</span>음악듣기</button>
+                <button class="btn service-btn" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스</button>
+            </div>
+            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('serviceModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 💝 후원하기 모달 (설정 모달 위에 겹쳐서 표시) -->
+    <div class="modal" id="donateModal">
+        <div class="modal-content">
+            <div class="modal-title">💝 후원하기</div>
+            <p class="feedback-notice">말랑달콤 다이어리를 응원해 주셔서 감사합니다!<br>보내주신 후원은 더 좋은 기능을 만드는 데 사용됩니다.</p>
+            <div class="donate-card">
+                <div class="donate-row"><span class="donate-label">은행</span><span id="donateBank">○○은행</span></div>
+                <div class="donate-row"><span class="donate-label">계좌번호</span><span id="donateAccount">000-0000-0000-00</span></div>
+                <div class="donate-row"><span class="donate-label">예금주</span><span id="donateHolder">홍길동</span></div>
+            </div>
+            <p class="donate-temp">※ 임시 계좌 정보입니다.</p>
+            <div class="feedback-btns">
+                <button class="btn btn-primary" onclick="copyDonateAccount()">📋 계좌번호 복사</button>
+                <button class="btn" onclick="closeModal('donateModal')">닫기</button>
+            </div>
         </div>
     </div>
 
@@ -578,16 +612,19 @@
     <script>
         /* =====================================================================
            ☁ 구글 드라이브 저장소 (하루 1개 json 파일)
-           - 저장 위치 : 다이어리 / 2026년 / 9월 / 10일.json  (폴더가 없으면 저장할 때 자동 생성)
+           - 저장 위치 : 말랑달콤 / 다이어리 / 2026년 / 9월 / 10일.json  (폴더가 없으면 저장할 때 자동 생성)
            - 같은 날짜는 항상 같은 파일을 덮어쓰기 → 하루에 파일 1개만 유지
            - 불러오기 : 처음엔 오늘 앞·뒤 포함 3일치, 페이지를 넘길 때마다 1일치씩 미리 읽기
            ===================================================================== */
         const GOOGLE_CLIENT_ID = '1020129080030-42dun4pqvve1pjg9r21m62dd71h6hui5.apps.googleusercontent.com'; // ← 본인 OAuth 클라이언트 ID로 교체
-        const ROOT_FOLDER_NAME = '다이어리';                  // 최상위 루트 폴더
-        const SETTINGS_FILE_NAME = 'settings.json';           // 스킨·글꼴·단축키 등 설정 (루트 폴더 안에 1개)
+        const TOP_FOLDER_NAME = '말랑달콤';                   // 최상위 폴더 (다이어리 폴더의 상위 폴더)
+        const ROOT_FOLDER_NAME = '다이어리';                  // 다이어리 루트 폴더 (말랑달콤 폴더 안)
+        const ROOT_PATH = [TOP_FOLDER_NAME, ROOT_FOLDER_NAME]; // 드라이브 경로 : 말랑달콤 / 다이어리
+        const ROOT_PATH_TEXT = ROOT_PATH.join(' / ');
+        const SETTINGS_FILE_NAME = 'settings.json';           // 스킨·글꼴 등 설정 (루트 폴더 안에 1개)
         const LEGACY_FILE_NAME = 'diary.json';                // 예전 방식(파일 1개) → 최초 1회 날짜별 파일로 변환용
         const LEGACY_DONE_KEY = 'gdrive_legacy_done';
-        const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
+        const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤 / 다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
         const DRIVE_SCOPE = USE_APP_DATA_FOLDER
             ? 'https://www.googleapis.com/auth/drive.appdata'
             : 'https://www.googleapis.com/auth/drive.file';
@@ -600,8 +637,8 @@
         const DAY_KEY_RE = /^diary_(\d{4})_(\d{2})_(\d{2})$/;
 
         /* 메모리 저장소: 화면이 쓰는 값은 여기(문자열)에 두고, 변경된 것만 드라이브에 올립니다.
-           - 날짜 데이터  : diary_2026_09_10  → 다이어리/2026년/9월/10일.json
-           - 설정 데이터  : diary_ui_font 등  → 다이어리/settings.json */
+           - 날짜 데이터  : diary_2026_09_10  → 말랑달콤/다이어리/2026년/9월/10일.json
+           - 설정 데이터  : diary_ui_font 등  → 말랑달콤/다이어리/settings.json */
         const store = {
             _m: new Map(),
             _silent: false,
@@ -694,7 +731,7 @@
         }
 
         /* ---------- 폴더 / 파일 이름 규칙 ----------
-           다이어리 / 2026년 / 9월 / 10일.json   (하루에 파일 1개, 같은 날은 항상 덮어쓰기) */
+           말랑달콤 / 다이어리 / 2026년 / 9월 / 10일.json   (하루에 파일 1개, 같은 날은 항상 덮어쓰기) */
         const yearFolderName = y => `${y}년`;
         const monthFolderName = m => `${m}월`;
         const dayFileName = d => `${d}일.json`;
@@ -704,7 +741,7 @@
         function isSettingKey(k) { return k.startsWith('diary_') && !isDayKey(k) && k !== PAGE_SIZE_KEY; }
         function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
         function dayPathText(date) {
-            return `${ROOT_FOLDER_NAME}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;
+            return `${ROOT_PATH.join('/')}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;
         }
         function corruptError(what) { const er = new Error('corrupt'); er.type = 'corrupt'; er.what = what; return er; }
 
@@ -755,7 +792,7 @@
             return (await res.json()).id;
         }
 
-        /* names = ['다이어리'] / ['다이어리','2026년'] / ['다이어리','2026년','9월']
+        /* names = ['말랑달콤','다이어리'] / ['말랑달콤','다이어리','2026년'] / ['말랑달콤','다이어리','2026년','9월']
            create=false : 있으면 찾기만 (읽을 때) / create=true : 없으면 만들기 (저장할 때) */
         async function getFolder(names, create) {
             const key = names.join('/');
@@ -788,7 +825,7 @@
                 if (entry || !create) return entry;
             }
             const p = (async () => {
-                const folderId = await getFolder([ROOT_FOLDER_NAME, yearFolderName(y), monthFolderName(m)], create);
+                const folderId = await getFolder([...ROOT_PATH, yearFolderName(y), monthFolderName(m)], create);
                 if (!folderId) return null;
                 const files = await driveList(`'${folderId}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,name,modifiedTime,size');
                 const e = { folderId, files: new Map() };
@@ -809,7 +846,7 @@
         /* ---------- 읽기 : 설정 / 하루치 ---------- */
         async function fetchSettings() {
             drive.settingsFile = null;
-            const rootId = await getFolder([ROOT_FOLDER_NAME], false);
+            const rootId = await getFolder(ROOT_PATH, false);
             if (!rootId) return null;
             const files = await driveList(`name='${SETTINGS_FILE_NAME}' and '${rootId}' in parents and trashed=false`, 'id,name,modifiedTime');
             if (!files[0]) return null;
@@ -934,7 +971,7 @@
                     const saved = await driveUpsert(idx.folderId, name, f && f.id, val);   // 있으면 덮어쓰기, 없으면 새 파일
                     idx.files.set(name, { id: saved.id, name, modifiedTime: saved.modifiedTime });
                 } else {
-                    const rootId = await getFolder([ROOT_FOLDER_NAME], true);                // 루트 '다이어리' 폴더
+                    const rootId = await getFolder(ROOT_PATH, true);                        // '말랑달콤 / 다이어리' 폴더 (없으면 생성)
                     const saved = await driveUpsert(rootId, SETTINGS_FILE_NAME, drive.settingsFile && drive.settingsFile.id, settingsBody());
                     drive.settingsFile = { id: saved.id, name: SETTINGS_FILE_NAME, modifiedTime: saved.modifiedTime };
                 }
@@ -981,7 +1018,7 @@
 
         /* ---------- 전체 목록 (백업 / 용량 확인용) ---------- */
         async function driveEnumerateAll() {
-            const rootId = await getFolder([ROOT_FOLDER_NAME], false);
+            const rootId = await getFolder(ROOT_PATH, false);
             const out = new Map();
             if (!rootId) return [];
             const years = (await driveList(`'${rootId}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name'))
@@ -1029,7 +1066,7 @@
             let files;
             try { files = await driveList(`name='${LEGACY_FILE_NAME}' and trashed=false`, 'id,name'); } catch (e) { return; }
             if (!files.length) { markDone(); return; }
-            const yes = await showMsg('예전 방식으로 저장된 <b>diary.json</b>을 찾았어요.<br>날짜별 파일(다이어리 / 년도 / 월 / 일.json)로 옮길까요?<br><span style="font-size:12px;color:#777;">원본 diary.json은 지우지 않고 그대로 둬요.<br>이미 날짜 파일이 있는 날은 건드리지 않아요.</span>', true);
+            const yes = await showMsg('예전 방식으로 저장된 <b>diary.json</b>을 찾았어요.<br>날짜별 파일(말랑달콤 / 다이어리 / 년도 / 월 / 일.json)로 옮길까요?<br><span style="font-size:12px;color:#777;">원본 diary.json은 지우지 않고 그대로 둬요.<br>이미 날짜 파일이 있는 날은 건드리지 않아요.</span>', true);
             markDone();
             if (!yes) return;
             try {
@@ -1046,7 +1083,7 @@
                         drive.loadedDays.add(k);
                         moved++;
                     } else if (store.getItem(k) === null) {
-                        store.setItem(k, JSON.stringify(old[k]));                   // 설정(스킨·글꼴·단축키)
+                        store.setItem(k, JSON.stringify(old[k]));                   // 설정(스킨·글꼴)
                     }
                 }
                 applyLoadedData();
@@ -1062,7 +1099,6 @@
 
         /* 드라이브에서 불러온 데이터를 화면에 반영 */
         function applyLoadedData() {
-            loadKeyBinds();
             loadCustomSkins();
             loadUIFont();
             if (isCoverOpen) loadData();
@@ -1115,7 +1151,7 @@
             if (t === 'scope') return '드라이브 파일 권한을 허용해야 일기를 저장할 수 있어요. 다시 시도해 주세요.';
             if (t === 'access_denied') return '권한이 거부됐어요. 다시 시도해 주세요.';
             if (t === 'timeout') return '응답이 없어요. 다시 시도해 주세요.';
-            if (t === 'corrupt') return '저장된 파일을 읽을 수 없어요. 데이터 보호를 위해 덮어쓰지 않았어요. 드라이브의 다이어리 폴더를 확인해 주세요.';
+            if (t === 'corrupt') return '저장된 파일을 읽을 수 없어요. 데이터 보호를 위해 덮어쓰지 않았어요. 드라이브의 말랑달콤 / 다이어리 폴더를 확인해 주세요.';
             return '연결에 실패했어요. (' + t + ')';
         }
 
@@ -1156,7 +1192,7 @@
                 try { await requestToken('none'); await loadFromDrive(); hideGate(); postLoginTasks(); return; }
                 catch (e) { if (e && e.type === 'corrupt') { showGate('login', driveErrorText(e)); return; } }
             }
-            showGate('login', '일기는 내 구글 드라이브의 <b>다이어리</b> 폴더에<br>하루에 파일 1개씩 저장돼요.' + fileHint);
+            showGate('login', '일기는 내 구글 드라이브의 <b>말랑달콤 / 다이어리</b> 폴더에<br>하루에 파일 1개씩 저장돼요.' + fileHint);
         }
 
         async function driveLogin() {
@@ -1179,7 +1215,7 @@
         }
 
         async function driveLogout() {
-            const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">드라이브의 다이어리 폴더는 그대로 남아 있어요.</span>', true);
+            const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">드라이브의 말랑달콤 / 다이어리 폴더는 그대로 남아 있어요.</span>', true);
             if (!yes) return;
             if (drive.ready && drive.dirty) await flushUpload();
             try { localStorage.removeItem(AUTH_FLAG_KEY); } catch (e) {}
@@ -1280,7 +1316,6 @@
         let autoSaveMinutes = 5;
         let zIndexCounter = 10;
 
-        let keyBinds = { delete: 'Delete', prev: 'ArrowLeft', next: 'ArrowRight', save: 's' };
         let customSkins = {};
 
         /* 페이지 크기 설정 */
@@ -1415,16 +1450,15 @@ let fontList = [
         window.onload = () => {
             loadEmojiCategory('faces');
             setupCurlDrag();
-            loadKeyBinds();
             loadCustomSkins();
             setupFontSelects();
             setupPanelDrag();
             loadUIFont();
-            setupKeyboardShortcuts();
             loadPageSize();
             setupLayout();
             startAutoSave();
             initDrive();
+            loadCoverNotice();
         };
 
         function fillFontSelect(select) {
@@ -1987,24 +2021,65 @@ let fontList = [
             return true;
         }
 
-        function handleImageUpload(e) {
+        /* 🖼 이미지 : 어느 폴더의 이미지든 가져올 수 있도록 파일 내용 자체를 다이어리에 담아 저장 (data URL)
+           - GIF(움직이는 이미지)·SVG는 원본 그대로 보관
+           - 그 외 큰 사진은 저장 용량을 줄이려고 긴 변 IMG_MAX_SIDE px 이하로 줄여서 보관 (투명 배경 유지) */
+        const IMG_MAX_SIDE = 1200;
+        const IMG_KEEP_ORIGINAL_BYTES = 300 * 1024;   // 이보다 작고 크기도 작으면 원본 그대로
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const fr = new FileReader();
+                fr.onload = () => resolve(fr.result);
+                fr.onerror = () => reject(fr.error);
+                fr.readAsDataURL(file);
+            });
+        }
+
+        function loadImageEl(src) {
+            return new Promise((resolve, reject) => {
+                const im = new Image();
+                im.onload = () => resolve(im);
+                im.onerror = reject;
+                im.src = src;
+            });
+        }
+
+        async function fileToDiaryImage(file) {
+            const original = await readFileAsDataURL(file);
+            const type = (file.type || '').toLowerCase();
+            if (type === 'image/gif' || type === 'image/svg+xml') return original;     // 움직이는 GIF 등은 원본 유지
+            let im;
+            try { im = await loadImageEl(original); } catch (e) { return original; }
+            const w = im.naturalWidth, h = im.naturalHeight;
+            const scale = Math.min(1, IMG_MAX_SIDE / Math.max(w, h || 1));
+            if (scale === 1 && file.size <= IMG_KEEP_ORIGINAL_BYTES) return original;
+            const cv = document.createElement('canvas');
+            cv.width = Math.max(1, Math.round(w * scale));
+            cv.height = Math.max(1, Math.round(h * scale));
+            cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+            let out = cv.toDataURL('image/webp', 0.85);
+            if (!out.startsWith('data:image/webp')) out = cv.toDataURL(type === 'image/jpeg' ? 'image/jpeg' : 'image/png', 0.85);
+            return out.length < original.length ? out : original;
+        }
+
+        async function handleImageUpload(e) {
             const file = e.target.files[0];
-            if (!file) return;
-
-            // HTML 파일 기준 상대 경로 검사 (webkitRelativePath / file.path 지원)
-            const filePath = file.webkitRelativePath || file.path || file.name;
-            const normalizedPath = filePath.replace(/\\/g, '/');
-
-            // images/ 폴더 안에 존재하는 파일인지 검증
-            if (!normalizedPath.startsWith('images/')) {
-                showMsg('my_lovely_diary.html이 있는 곳에 images폴더를 만들고 그곳의 이미지를 가지고 오세요.');
-                e.target.value = '';
-                return;
-            }
-
-            // 올바른 경로의 이미지인 경우에만 추가
-            addImage('images/' + file.name);
             e.target.value = '';
+            if (!file) return;
+            if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return; }
+            if (file.type && !file.type.startsWith('image/')) { showMsg('이미지 파일만 가져올 수 있어요.'); return; }
+            try {
+                toast('🖼 이미지를 불러오는 중…');
+                const src = await fileToDiaryImage(file);
+                if (addImage(src)) {
+                    toast('🖼 이미지를 넣었어요.');
+                    saveData(false);
+                }
+            } catch (err) {
+                console.error('이미지 불러오기 오류:', err);
+                showMsg('이미지를 불러오지 못했어요.<br>다른 이미지로 다시 시도해 주세요.');
+            }
         }
 
         const LIB_SHEET_ID = '17QoBogfBhJreypfQ8fm0Lk3Qs8H3ghAqC68bmUSmgpI';
@@ -2445,7 +2520,7 @@ let fontList = [
             });
         }
 
-        let storageStats = null;   // 드라이브 '다이어리' 폴더 전체 통계 (설정창을 열 때 갱신)
+        let storageStats = null;   // 드라이브 '말랑달콤 / 다이어리' 폴더 전체 통계 (설정창을 열 때 갱신)
         async function refreshStorageStats() {
             if (!drive.ready || drive.guest) { storageStats = null; updateStorageInfo(); return; }
             try {
@@ -2469,7 +2544,7 @@ let fontList = [
             }
             const st = document.getElementById('driveStatusText');
             if (st) st.textContent = drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
-                : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${ROOT_FOLDER_NAME} / 년도 / 월 / 일.json` : '☁ 연결 안 됨';
+                : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${ROOT_PATH_TEXT} / 년도 / 월 / 일.json` : '☁ 연결 안 됨';
         }
 
         function applySkinPreset(skinName) {
@@ -2564,48 +2639,10 @@ let fontList = [
             }
         }
 
-        function loadKeyBinds() {
-            const saved = store.getItem('diary_keybinds');
-            if (saved) keyBinds = JSON.parse(saved);
-            updateKeyUI();
-        }
-
-        function updateKeyUI() {
-            document.getElementById('keyBtn_delete').innerText = keyBinds.delete;
-            document.getElementById('keyBtn_prev').innerText = keyBinds.prev;
-            document.getElementById('keyBtn_next').innerText = keyBinds.next;
-            document.getElementById('keyBtn_save').innerText = keyBinds.save;
-        }
-
-        function listenKeyChange(action) {
-            const btn = document.getElementById(`keyBtn_${action}`);
-            btn.innerText = '⌨️ 원하는 키를 누르세요...';
-            
-            const handleNewKey = (e) => {
-                e.preventDefault();
-                keyBinds[action] = e.key;
-                store.setItem('diary_keybinds', JSON.stringify(keyBinds));
-                updateKeyUI();
-                window.removeEventListener('keydown', handleNewKey);
-            };
-            window.addEventListener('keydown', handleNewKey, { once: true });
-        }
-
         function updateAutoSaveInterval(val) { autoSaveMinutes = val; startAutoSave(); }
         function startAutoSave() {
             if (autoSaveTimer) clearInterval(autoSaveTimer);
             autoSaveTimer = setInterval(() => { if (!turn) saveData(false); }, autoSaveMinutes * 60 * 1000);
-        }
-
-        function setupKeyboardShortcuts() {
-            window.addEventListener('keydown', (e) => {
-                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-
-                if (e.key === keyBinds.delete) deleteSelected();
-                if (e.ctrlKey && e.key.toLowerCase() === keyBinds.save.toLowerCase()) { e.preventDefault(); saveData(true); }
-                if (e.key === keyBinds.prev) changeDate(-1);
-                if (e.key === keyBinds.next) changeDate(1);
-            });
         }
 
         function openModal(id) {
@@ -2613,6 +2650,67 @@ let fontList = [
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        /* =====================================================================
+           📢 겉표지 공지 이미지
+           - NOTICE_IMAGE_SRC 에 파일 경로(예: 'images/notice.gif') 또는 인터넷 주소(https://…)를 넣으세요.
+           - jpg · png · webp · 움직이는 gif 모두 표시됩니다.
+           - 비워 두거나 이미지를 못 찾으면 아래의 임시 공지 이미지가 대신 보입니다.
+           ===================================================================== */
+        const NOTICE_IMAGE_SRC = '';
+        const NOTICE_PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200" viewBox="0 0 360 200">' +
+            '<rect x="4" y="4" width="352" height="192" rx="18" fill="#ffffff" fill-opacity="0.92" stroke="#ffb6c1" stroke-width="4" stroke-dasharray="10 6"/>' +
+            '<text x="180" y="52" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="bold" fill="#ff6b81">📢 공지사항</text>' +
+            '<text x="180" y="96" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#555">말랑달콤 다이어리에 오신 것을 환영해요!</text>' +
+            '<text x="180" y="124" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#555">업데이트 소식과 공지가 이곳에 표시됩니다.</text>' +
+            '<text x="180" y="166" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#999">(임시 공지 이미지)</text>' +
+            '</svg>');
+
+        function loadCoverNotice() {
+            const box = document.getElementById('coverNotice');
+            const img = document.getElementById('coverNoticeImg');
+            if (!box || !img) return;
+            img.onerror = () => {
+                if (img.src !== NOTICE_PLACEHOLDER) img.src = NOTICE_PLACEHOLDER;   // 공지 이미지를 못 찾으면 임시 공지로
+                else box.classList.add('empty');
+            };
+            img.onload = () => box.classList.remove('empty');
+            img.src = NOTICE_IMAGE_SRC ? resolveSrc(NOTICE_IMAGE_SRC) : NOTICE_PLACEHOLDER;
+        }
+
+        /* =====================================================================
+           🛎 서비스 창 (도움말 · 카페이동 · 타로점 · 음악듣기 · 랜덤박스)
+           ===================================================================== */
+        const CAFE_URL = 'https://cafe.naver.com/';   // ← 이동할 카페 주소로 교체
+
+        function openHelpFromService() {
+            closeModal('serviceModal');
+            openModal('helpModal');
+        }
+        function goCafe() {
+            window.open(CAFE_URL, '_blank', 'noopener');
+        }
+        function openTarot() { showMsg('🔮 타로점은 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function openMusic() { showMsg('🎵 음악듣기는 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function openRandomBox() { showMsg('🎁 랜덤박스는 준비 중이에요.<br>조금만 기다려 주세요!'); }
+
+        /* =====================================================================
+           💝 후원하기 : 계좌번호 복사
+           ===================================================================== */
+        async function copyDonateAccount() {
+            const text = document.getElementById('donateAccount').textContent.trim();
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); } catch (er) {}
+                ta.remove();
+            }
+            toast('📋 계좌번호를 복사했어요: ' + text);
+        }
 
         /* =====================================================================
            💌 건의함 : 작성한 내용을 구글 시트(Apps Script)로 전송
