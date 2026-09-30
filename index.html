@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261001-3">
+    <link rel="stylesheet" href="css/style.css?v=20261001-4">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -43,7 +43,7 @@
         <button class="btn" onclick="saveData(true)">💾 저장</button>
         <button class="btn" onclick="exportToPNG()">📷 PNG 저장</button>
         <button class="btn" onclick="openModal('skinModal')">👗 스킨</button>
-        <button class="btn" onclick="openModal('serviceModal')">🛎 서비스</button>
+        <button class="btn" onclick="openModal('serviceModal')">🎠 놀이터</button>
         <button class="btn" onclick="openModal('settingsModal')">⚙ 설정</button>
     </div>
 
@@ -119,7 +119,7 @@
                 <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 '말랑달콤 / 다이어리 / 년도 / 월 / 일.json'</b> 파일에 저장합니다. 폴더와 파일이 없으면 새로 만들고, 같은 날짜는 하루 1개 파일에 계속 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
                 <div class="help-item"><b>📷 PNG 저장</b> : 현재 보고 있는 페이지를 <code>.png</code> 이미지로 저장합니다. 현재 페이지 크기의 2배 해상도로 저장됩니다.</div>
                 <div class="help-item"><b>👗 스킨</b> : 세 가지 메뉴가 있어요.<br>· <b>🎨 기본스킨</b> : 기본 스킨 4종을 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있습니다.<br>· <b>🆓 무료패턴 / 💎 유료패턴</b> : 다이어리 뒤 <b>전체 배경</b>에 패턴을 깔아요. 목록에서 누르면 바로 적용되고, 패턴 크기 조절과 <b>패턴 해제</b>도 할 수 있어요. 고른 패턴은 구글 드라이브 설정에 저장되어 다른 기기에서도 똑같이 보여요. 목록은 라이브러리처럼 ◀ 이전 / 다음 ▶ 으로 넘기고, ⚙ 배치에서 행·열·크기를 바꿀 수 있어요.</div>
-                <div class="help-item"><b>🛎️ 서비스</b> : 도움말, 카페 이동, 타로점, 음악 듣기, 랜덤박스 등 부가 서비스를 모아 둔 창을 엽니다.</div>
+                <div class="help-item"><b>🎠 놀이터</b> : 도움말, 카페 이동, 타로점, 음악 듣기, 랜덤박스, 🛍️ 말랑상점 등 여러 가지 기능을 모아 둔 창을 엽니다.</div>
                 <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 💌 건의함, 💝 후원하기가 있습니다.</div>
 
                 <div class="help-section-title">🖐️ 요소 다루기 (스티커·글·이미지)</div>
@@ -359,16 +359,17 @@
         </div>
     </div>
 
-    <!-- 🛎 서비스 모달 -->
+    <!-- 🎠 놀이터 모달 (코드 안에서는 serviceModal 이라는 이름을 그대로 써요) -->
     <div class="modal" id="serviceModal">
         <div class="modal-content">
-            <div class="modal-title">🛎️ 서비스</div>
+            <div class="modal-title">🎠 놀이터</div>
             <div class="service-grid">
                 <button class="btn service-btn" onclick="openHelpFromService()"><span class="service-icon">❓</span>도움말</button>
                 <button class="btn service-btn" onclick="goCafe()"><span class="service-icon">☕</span>카페이동</button>
                 <button class="btn service-btn" onclick="openTarot()"><span class="service-icon">🔮</span>타로점</button>
                 <button class="btn service-btn" onclick="openMusic()"><span class="service-icon">🎵</span>음악듣기</button>
                 <button class="btn service-btn" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스</button>
+                <button class="btn service-btn" onclick="openShop()"><span class="service-icon">🛍️</span>말랑상점</button>
             </div>
             <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('serviceModal')">닫기</button>
         </div>
@@ -407,14 +408,14 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261001-3"></script>
-    <script src="js/app.js?v=20261001-3"></script>
-    <script src="js/page.js?v=20261001-3"></script>
-    <script src="js/elements.js?v=20261001-3"></script>
-    <script src="js/settings.js?v=20261001-3"></script>
-    <script src="js/patterns.js?v=20261001-3"></script>
-    <script src="js/skins.js?v=20261001-3"></script>
-    <script src="js/service.js?v=20261001-3"></script>
+    <script src="js/drive.js?v=20261001-4"></script>
+    <script src="js/app.js?v=20261001-4"></script>
+    <script src="js/page.js?v=20261001-4"></script>
+    <script src="js/elements.js?v=20261001-4"></script>
+    <script src="js/settings.js?v=20261001-4"></script>
+    <script src="js/patterns.js?v=20261001-4"></script>
+    <script src="js/skins.js?v=20261001-4"></script>
+    <script src="js/service.js?v=20261001-4"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

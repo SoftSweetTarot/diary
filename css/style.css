@@ -292,7 +292,7 @@
         .feedback-btns .btn-primary:hover { filter: brightness(1.08); }
         .feedback-btns .btn:disabled { opacity: .55; cursor: default; }
 
-        /* 🛎 서비스 모달 */
+        /* 🎠 놀이터 모달 */
         .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .service-btn { flex-direction: column; justify-content: center; gap: 4px; padding: 12px 4px; font-size: 13px; }
         .service-icon { font-size: 1.7rem; line-height: 1; }
