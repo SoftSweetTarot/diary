@@ -157,7 +157,116 @@
             });
         }
 
-        function openLibrary() { openModal('libraryModal'); loadLibrary(false); }
+        /* ---------- 📚 라이브러리 페이지 넘기기 · 배치 설정 ----------
+           - 한 페이지에 (행 × 열)개씩 보여 주고, ◀ 이전 / 다음 ▶ 버튼(또는 옆으로 밀기)으로 넘김
+           - 배치 설정(행·열·크기)은 기기마다 화면 크기가 달라서 이 기기(localStorage)에만 기억
+             → 구글 드라이브 저장(일기·settings.json)에는 전혀 영향 없음 */
+        const LIB_LAYOUT_KEY = 'malang_lib_layout';
+        const LIB_DEFAULT_LAYOUT = { rows: 3, cols: 5, size: 88 };
+        const LIB_LAYOUT_LIMITS = { rows: [1, 10], cols: [1, 10], size: [50, 180] };
+        const LIB_GAP = 8;
+        let libLayout = loadLibLayout();
+        let libPage = 0;
+        let libSwiped = false;
+
+        function loadLibLayout() {
+            const out = Object.assign({}, LIB_DEFAULT_LAYOUT);
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(LIB_LAYOUT_KEY)); } catch (e) {}
+            if (saved && typeof saved === 'object') {
+                Object.keys(LIB_LAYOUT_LIMITS).forEach(k => {
+                    const n = parseInt(saved[k], 10), lim = LIB_LAYOUT_LIMITS[k];
+                    if (!isNaN(n)) out[k] = Math.max(lim[0], Math.min(lim[1], n));
+                });
+            }
+            return out;
+        }
+        function saveLibLayout() {
+            try { localStorage.setItem(LIB_LAYOUT_KEY, JSON.stringify(libLayout)); } catch (e) {}
+        }
+        function libPerPage() { return libLayout.rows * libLayout.cols; }
+        function libPageCount() { return libItems && libItems.length ? Math.ceil(libItems.length / libPerPage()) : 0; }
+
+        /* 행·열·크기 → 그리드 모양과 창 너비에 반영, 설정 칸 값도 맞춤 */
+        function applyLibLayoutStyle() {
+            const { rows, cols, size } = libLayout;
+            document.getElementById('libGrid').style.gridTemplateColumns = `repeat(${cols}, minmax(0, ${size}px))`;
+            document.getElementById('libContent').style.setProperty('--lib-w', (cols * size + (cols - 1) * LIB_GAP + 48) + 'px');
+            const fill = (sel, max, val) => {
+                if (sel.options.length !== max) {
+                    sel.innerHTML = '';
+                    for (let i = 1; i <= max; i++) sel.add(new Option(i, i));
+                }
+                sel.value = val;
+            };
+            fill(document.getElementById('libRowsInput'), LIB_LAYOUT_LIMITS.rows[1], rows);
+            fill(document.getElementById('libColsInput'), LIB_LAYOUT_LIMITS.cols[1], cols);
+            document.getElementById('libSizeInput').value = size;
+            document.getElementById('libSizeVal').textContent = size + 'px';
+        }
+
+        function updateLibPager() {
+            const pages = libPageCount();
+            document.getElementById('libPageInfo').textContent = pages ? `${libPage + 1} / ${pages}` : '0 / 0';
+            document.getElementById('libPrevBtn').disabled = !pages || libPage <= 0;
+            document.getElementById('libNextBtn').disabled = !pages || libPage >= pages - 1;
+        }
+
+        function changeLibPage(delta) {
+            const pages = libPageCount();
+            if (!pages) return;
+            const next = Math.max(0, Math.min(pages - 1, libPage + delta));
+            if (next === libPage) return;
+            libPage = next;
+            renderLibrary();
+        }
+
+        function toggleLibLayout() {
+            const panel = document.getElementById('libLayoutPanel');
+            const open = panel.style.display === 'none';
+            panel.style.display = open ? 'flex' : 'none';
+            document.getElementById('libLayoutBtn').classList.toggle('on', open);
+        }
+
+        /* 설정을 바꿔도 지금 보고 있던 첫 번째 이미지가 들어 있는 페이지로 이동 */
+        function setLibLayout(next) {
+            const firstIndex = libPage * libPerPage();
+            libLayout = next;
+            libPage = Math.floor(firstIndex / libPerPage());
+            saveLibLayout();
+            if (libItems) renderLibrary(); else { applyLibLayoutStyle(); updateLibPager(); }
+        }
+        function onLibLayoutChange() {
+            const num = (id, k) => {
+                const n = parseInt(document.getElementById(id).value, 10), lim = LIB_LAYOUT_LIMITS[k];
+                return isNaN(n) ? libLayout[k] : Math.max(lim[0], Math.min(lim[1], n));
+            };
+            setLibLayout({ rows: num('libRowsInput', 'rows'), cols: num('libColsInput', 'cols'), size: num('libSizeInput', 'size') });
+        }
+        function resetLibLayout() { setLibLayout(Object.assign({}, LIB_DEFAULT_LAYOUT)); }
+
+        /* 스마트폰 : 이미지 목록을 옆으로 밀어서 페이지 넘기기 */
+        (function setupLibSwipe() {
+            const grid = document.getElementById('libGrid');
+            let sx = 0, sy = 0, tracking = false;
+            grid.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) { tracking = false; return; }
+                tracking = true; libSwiped = false;
+                sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+            }, { passive: true });
+            grid.addEventListener('touchend', (e) => {
+                if (!tracking) return;
+                tracking = false;
+                const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+                if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                    libSwiped = true;                                  // 밀기 끝에 이미지가 눌리지 않도록
+                    changeLibPage(dx < 0 ? 1 : -1);
+                    setTimeout(() => { libSwiped = false; }, 400);
+                }
+            });
+        })();
+
+        function openLibrary() { applyLibLayoutStyle(); updateLibPager(); openModal('libraryModal'); loadLibrary(false); }
 
         async function loadLibrary(force) {
             const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');
@@ -171,9 +280,11 @@
                 try { cells = await fetchSheetCsv(); } catch (e) { cells = await fetchSheetJsonp(); }
                 libItems = [];
                 cells.forEach(c => { const u = normalizeImageUrl(c); if (u && !libItems.includes(u)) libItems.push(u); });
+                libPage = 0;
                 renderLibrary();
             } catch (err) {
                 libItems = null;
+                updateLibPager();
                 st.innerHTML = '⚠ 시트를 불러오지 못했어요.<br>인터넷 연결 및 시트 접근 설정을 확인 후 다시 시도해 주세요.';
             }
             libLoading = false;
@@ -182,22 +293,35 @@
         function renderLibrary() {
             const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');
             grid.innerHTML = '';
-            if (!libItems.length) { st.textContent = '시트 A열에 이미지 주소가 없어요.'; return; }
+            applyLibLayoutStyle();
+            if (!libItems.length) { st.textContent = '시트 A열에 이미지 주소가 없어요.'; updateLibPager(); return; }
+            const per = libPerPage(), pages = libPageCount();
+            libPage = Math.max(0, Math.min(pages - 1, libPage));
             st.textContent = `이미지 ${libItems.length}개 · 누르면 페이지에 들어가요`;
+            const start = libPage * per;
+            const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
             const frag = document.createDocumentFragment();
-            libItems.forEach((url, i) => {
+            libItems.slice(start, start + per).forEach((url, j) => {
+                const i = start + j;
                 const item = document.createElement('div');
                 item.className = 'lib-item';
                 item.innerHTML = `<span class="lib-num">${i + 1}</span>`;
                 const img = document.createElement('img');
                 img.loading = 'lazy';
-                img.src = url.includes('lh3.googleusercontent.com/d/') ? url + '=w240' : url;
+                img.src = url.includes('lh3.googleusercontent.com/d/') ? url + '=w' + thumbW : url;
                 img.onerror = () => item.classList.add('bad');
                 item.appendChild(img);
-                item.onclick = () => { if (addImage(url)) closeModal('libraryModal'); };
+                item.onclick = () => { if (libSwiped) return; if (addImage(url)) closeModal('libraryModal'); };
                 frag.appendChild(item);
             });
+            /* 마지막 페이지가 덜 차도 창 크기가 흔들리지 않도록 빈칸 채우기 */
+            for (let k = libItems.length - start; k < per && pages > 1; k++) {
+                const empty = document.createElement('div');
+                empty.className = 'lib-item empty';
+                frag.appendChild(empty);
+            }
             grid.appendChild(frag);
+            updateLibPager();
         }
 
         function makeTransformable(el) {
