@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261001">
+    <link rel="stylesheet" href="css/style.css?v=20261001-2">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -109,7 +109,7 @@
                 <div class="help-item"><b>🎨 스티커</b> : 이모지 스티커 목록을 엽니다. 카테고리 탭에서 고른 뒤 이모지를 누르면 페이지에 붙습니다.</div>
                 <div class="help-item"><b>✏️ 글쓰기</b> : 페이지에 글상자를 추가합니다. 상자 안을 눌러 내용을 입력하세요. 글상자를 선택하면 글상자 바로 옆에 <b>글꼴 / 색상 / 크기</b> 옵션창이 붙어서 나타납니다. (아래 '글상자 꾸미기' 참고)</div>
                 <div class="help-item"><b>🖼️ 이미지</b> : 내 PC·스마트폰 <b>어느 폴더에 있는 이미지든</b> 골라서 페이지에 넣을 수 있습니다. 이미지는 일기와 함께 저장되므로 원본 파일을 옮기거나 지워도 깨지지 않아요. (JPG·PNG·WEBP·움직이는 GIF 등)</div>
-                <div class="help-item"><b>📚 라이브러리</b> : <b>📚 라이브러리</b>를 누르면 이미지들이 바둑판으로 나타나고, 원하는 이미지를 누르면 페이지에 들어갑니다.</div>
+                <div class="help-item"><b>📚 라이브러리</b> : <b>📚 라이브러리</b>를 누르면 이미지들이 바둑판으로 나타나고, 원하는 이미지를 누르면 페이지에 들어갑니다. 위쪽 <b>◀ 이전 / 다음 ▶</b> 버튼(스마트폰은 옆으로 밀기)으로 페이지를 넘기고, 가운데 <b>3 / 20</b> 표시로 지금 몇 번째 페이지인지 볼 수 있어요. <b>⚙ 배치</b>에서 한 페이지의 행·열 개수와 이미지 크기를 바꿀 수 있습니다. (기본 3행 5열, 기기마다 따로 기억)</div>
                 <div class="help-item"><b>⬆️ 앞으로</b> : 선택한 요소를 다른 요소들보다 <b>맨 앞</b>으로 가져옵니다.</div>
                 <div class="help-item"><b>⬇️ 뒤로</b> : 선택한 요소를 <b>맨 뒤</b>로 보냅니다.</div>
                 <div class="help-item"><b>🗑️ 삭제</b> : 선택한 요소(스티커·글상자·이미지)를 지웁니다.</div>
@@ -139,9 +139,32 @@
 
     <!-- 이미지 라이브러리 모달 -->
     <div class="modal" id="libraryModal">
-        <div class="modal-content lib-content">
+        <div class="modal-content lib-content" id="libContent">
             <div class="modal-title">📚 이미지 라이브러리</div>
-            <div id="libStatus" style="font-size:13px; color:#666; margin-bottom:8px;"></div>
+
+            <!-- 페이지 이동 : ◀ 이전  3 / 20  다음 ▶ -->
+            <div class="lib-pager">
+                <button class="btn" id="libPrevBtn" onclick="changeLibPage(-1)" disabled>◀ 이전</button>
+                <span class="lib-page-info" id="libPageInfo">0 / 0</span>
+                <button class="btn" id="libNextBtn" onclick="changeLibPage(1)" disabled>다음 ▶</button>
+            </div>
+
+            <div class="lib-toolbar">
+                <div id="libStatus" class="lib-status"></div>
+                <button class="btn lib-layout-btn" id="libLayoutBtn" onclick="toggleLibLayout()">⚙ 배치</button>
+            </div>
+
+            <!-- 한 페이지 배치 설정 (행 · 열 · 이미지 크기) : 이 기기에만 기억돼요 -->
+            <div class="lib-layout" id="libLayoutPanel" style="display:none;">
+                <label>행 <select id="libRowsInput" class="btn" onchange="onLibLayoutChange()"></select></label>
+                <label>열 <select id="libColsInput" class="btn" onchange="onLibLayoutChange()"></select></label>
+                <label class="lib-size-label">크기
+                    <input type="range" id="libSizeInput" min="50" max="180" step="2" oninput="onLibLayoutChange()">
+                    <span id="libSizeVal" class="lib-size-val">88px</span>
+                </label>
+                <button class="btn" onclick="resetLibLayout()">↩ 기본(3×5)</button>
+            </div>
+
             <div class="lib-grid" id="libGrid"></div>
             <div style="display:flex; justify-content:center; margin-top:12px;">
                 <button class="btn" style="width:100%; justify-content:center;" onclick="closeModal('libraryModal')">닫기</button>
@@ -314,12 +337,12 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261001"></script>
-    <script src="js/app.js?v=20261001"></script>
-    <script src="js/page.js?v=20261001"></script>
-    <script src="js/elements.js?v=20261001"></script>
-    <script src="js/settings.js?v=20261001"></script>
-    <script src="js/service.js?v=20261001"></script>
+    <script src="js/drive.js?v=20261001-2"></script>
+    <script src="js/app.js?v=20261001-2"></script>
+    <script src="js/page.js?v=20261001-2"></script>
+    <script src="js/elements.js?v=20261001-2"></script>
+    <script src="js/settings.js?v=20261001-2"></script>
+    <script src="js/service.js?v=20261001-2"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
