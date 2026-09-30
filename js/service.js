@@ -1,0 +1,112 @@
+/* 말랑달콤 다이어리 - js/service.js
+   겉표지 공지 · 서비스 창 · 후원하기 · 건의함
+   ※ 파일 불러오는 순서: drive → app → page → elements → settings → service (index.html 참고) */
+        /* =====================================================================
+           📢 겉표지 공지 이미지
+           - NOTICE_IMAGE_SRC 에 파일 경로(예: 'images/notice.gif') 또는 인터넷 주소(https://…)를 넣으세요.
+           - jpg · png · webp · 움직이는 gif 모두 표시됩니다.
+           - 비워 두거나 이미지를 못 찾으면 아래의 임시 공지 이미지가 대신 보입니다.
+           ===================================================================== */
+        const NOTICE_IMAGE_SRC = '';
+        const NOTICE_PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200" viewBox="0 0 360 200">' +
+            '<rect x="4" y="4" width="352" height="192" rx="18" fill="#ffffff" fill-opacity="0.92" stroke="#ffb6c1" stroke-width="4" stroke-dasharray="10 6"/>' +
+            '<text x="180" y="52" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="bold" fill="#ff6b81">📢 공지사항</text>' +
+            '<text x="180" y="96" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#555">말랑달콤 다이어리에 오신 것을 환영해요!</text>' +
+            '<text x="180" y="124" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#555">업데이트 소식과 공지가 이곳에 표시됩니다.</text>' +
+            '<text x="180" y="166" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#999">(임시 공지 이미지)</text>' +
+            '</svg>');
+
+        function loadCoverNotice() {
+            const box = document.getElementById('coverNotice');
+            const img = document.getElementById('coverNoticeImg');
+            if (!box || !img) return;
+            img.onerror = () => {
+                if (img.src !== NOTICE_PLACEHOLDER) img.src = NOTICE_PLACEHOLDER;   // 공지 이미지를 못 찾으면 임시 공지로
+                else box.classList.add('empty');
+            };
+            img.onload = () => box.classList.remove('empty');
+            img.src = NOTICE_IMAGE_SRC ? resolveSrc(NOTICE_IMAGE_SRC) : NOTICE_PLACEHOLDER;
+        }
+
+        /* =====================================================================
+           🛎 서비스 창 (도움말 · 카페이동 · 타로점 · 음악듣기 · 랜덤박스)
+           ===================================================================== */
+        const CAFE_URL = 'https://cafe.naver.com/';   // ← 이동할 카페 주소로 교체
+
+        function openHelpFromService() {
+            closeModal('serviceModal');
+            openModal('helpModal');
+        }
+        function goCafe() {
+            window.open(CAFE_URL, '_blank', 'noopener');
+        }
+        function openTarot() { showMsg('🔮 타로점은 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function openMusic() { showMsg('🎵 음악듣기는 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function openRandomBox() { showMsg('🎁 랜덤박스는 준비 중이에요.<br>조금만 기다려 주세요!'); }
+
+        /* =====================================================================
+           💝 후원하기 : 계좌번호 복사
+           ===================================================================== */
+        async function copyDonateAccount() {
+            const text = document.getElementById('donateAccount').textContent.trim();
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); } catch (er) {}
+                ta.remove();
+            }
+            toast('📋 계좌번호를 복사했어요: ' + text);
+        }
+
+        /* =====================================================================
+           💌 건의함 : 작성한 내용을 구글 시트(Apps Script)로 전송
+           ===================================================================== */
+        const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_Ka3rztRHsOMR30u8u5_tzObwHgZitSEtGXRIQCyBxEHeYw2C71N31gLyqMGDa88N/exec";
+
+        function openFeedback() {
+            openModal('feedbackModal');
+            document.getElementById('feedbackInput').focus();
+        }
+        function closeFeedback() { closeModal('feedbackModal'); }
+
+        document.getElementById('feedbackInput').addEventListener('input', (e) => {
+            document.getElementById('feedbackCount').textContent = e.target.value.length;
+        });
+
+        async function submitFeedback() {
+            const input = document.getElementById('feedbackInput');
+            const btn = document.getElementById('feedbackSendBtn');
+            const text = input.value.trim();
+
+            if (!text) {
+                await showMsg('내용을 입력한 뒤 전송해 주세요.');
+                input.focus();
+                return;
+            }
+
+            btn.disabled = true;
+            try {
+                await fetch(FEEDBACK_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'comment=' + encodeURIComponent(text)
+                });
+                input.value = '';
+                document.getElementById('feedbackCount').textContent = '0';
+                closeFeedback();
+                showMsg('건의사항이 전송되었어요.<br>소중한 의견 감사합니다 💌');
+            } catch (err) {
+                console.error('건의사항 전송 오류:', err);
+                showMsg('전송하지 못했어요.<br>인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+/* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
+(window.MALLANG_LOADED = window.MALLANG_LOADED || {})['service'] = true;
