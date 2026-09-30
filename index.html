@@ -11,10 +11,13 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261001-2">
+    <link rel="stylesheet" href="css/style.css?v=20261001-3">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+
+    <!-- 🎨 전체 배경 패턴 (무료·유료 패턴을 고르면 여기에 그려져요) -->
+    <div class="bg-pattern-layer" id="bgPatternLayer" aria-hidden="true"><div class="bg-pattern-inner" id="bgPatternInner"></div></div>
 
     <!-- ☁ 구글 드라이브 연결 화면 (데이터를 불러오기 전까지 표시) -->
     <div id="driveGate" class="drive-gate">
@@ -115,7 +118,7 @@
                 <div class="help-item"><b>🗑️ 삭제</b> : 선택한 요소(스티커·글상자·이미지)를 지웁니다.</div>
                 <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 '말랑달콤 / 다이어리 / 년도 / 월 / 일.json'</b> 파일에 저장합니다. 폴더와 파일이 없으면 새로 만들고, 같은 날짜는 하루 1개 파일에 계속 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
                 <div class="help-item"><b>📷 PNG 저장</b> : 현재 보고 있는 페이지를 <code>.png</code> 이미지로 저장합니다. 현재 페이지 크기의 2배 해상도로 저장됩니다.</div>
-                <div class="help-item"><b>👗 스킨</b> : 기본 스킨 4종을 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있습니다.</div>
+                <div class="help-item"><b>👗 스킨</b> : 세 가지 메뉴가 있어요.<br>· <b>🎨 기본스킨</b> : 기본 스킨 4종을 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있습니다.<br>· <b>🆓 무료패턴 / 💎 유료패턴</b> : 다이어리 뒤 <b>전체 배경</b>에 패턴을 깔아요. 목록에서 누르면 바로 적용되고, 패턴 크기 조절과 <b>패턴 해제</b>도 할 수 있어요. 고른 패턴은 구글 드라이브 설정에 저장되어 다른 기기에서도 똑같이 보여요. 목록은 라이브러리처럼 ◀ 이전 / 다음 ▶ 으로 넘기고, ⚙ 배치에서 행·열·크기를 바꿀 수 있어요.</div>
                 <div class="help-item"><b>🛎️ 서비스</b> : 도움말, 카페 이동, 타로점, 음악 듣기, 랜덤박스 등 부가 서비스를 모아 둔 창을 엽니다.</div>
                 <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 💌 건의함, 💝 후원하기가 있습니다.</div>
 
@@ -194,10 +197,27 @@
         </div>
     </div>
 
-    <!-- 스킨 모달 -->
+    <!-- 👗 스킨 메뉴 모달 (기본스킨 · 무료패턴 · 유료패턴) -->
     <div class="modal" id="skinModal">
         <div class="modal-content">
+            <div class="modal-title">👗 스킨</div>
+            <div class="service-grid">
+                <button class="btn service-btn" onclick="openSkinBasic()"><span class="service-icon">🎨</span>기본스킨</button>
+                <button class="btn service-btn" onclick="openPatternList('free')"><span class="service-icon">🆓</span>무료패턴</button>
+                <button class="btn service-btn" onclick="openPatternList('paid')"><span class="service-icon">💎</span>유료패턴</button>
+            </div>
+            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('skinModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 🎨 기본스킨 모달 (다이어리 스킨 설정) -->
+    <div class="modal" id="skinBasicModal">
+        <div class="modal-content">
             <div class="modal-title">다이어리 스킨 설정</div>
+            <div class="skin-pattern-note" id="skinPatternNote" style="display:none;">
+                <span>🎨 지금 전체 배경에 <b id="skinPatternName"></b> 패턴을 쓰고 있어서, 전체 배경색 대신 패턴이 보여요.</span>
+                <button class="btn" onclick="clearBgPattern()">패턴 해제</button>
+            </div>
             <label style="font-weight:bold;">스킨 목록 선택:</label>
             <div style="display:flex; gap:5px; margin: 8px 0 15px 0;">
                 <select id="skinSelect" class="btn" style="flex:1;" onchange="applySkinPreset(this.value)">
@@ -221,7 +241,57 @@
             <input type="text" id="customSkinName" placeholder="스킨 이름 입력" class="btn" style="width:100%; margin-top:10px; text-align:left;">
             <button class="btn" style="width:100%; margin-top:8px; justify-content:center; background:var(--primary-accent); color:#fff;" onclick="saveCustomSkin()">➕ 이 스타일로 스킨 등록하기</button>
 
-            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('skinModal')">닫기</button>
+            <div class="sub-modal-btns">
+                <button class="btn" onclick="backToSkinMenu('skinBasicModal')">← 스킨 메뉴</button>
+                <button class="btn" onclick="closeModal('skinBasicModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🆓 무료 / 💎 유료 패턴 목록 모달 (라이브러리처럼 페이지 넘기기 + 배치 설정) -->
+    <div class="modal" id="patternModal">
+        <div class="modal-content pat-content" id="patContent">
+            <div class="modal-title" id="patTitle">🆓 무료 패턴</div>
+
+            <div class="lib-pager">
+                <button class="btn" id="patPrevBtn" onclick="changePatPage(-1)" disabled>◀ 이전</button>
+                <span class="lib-page-info" id="patPageInfo">0 / 0</span>
+                <button class="btn" id="patNextBtn" onclick="changePatPage(1)" disabled>다음 ▶</button>
+            </div>
+
+            <!-- 지금 적용된 배경 패턴 · 패턴 크기 · 해제 -->
+            <div class="pat-current-box">
+                <div class="pat-current-row">현재 배경 : <b id="patCurrent">없음</b></div>
+                <div class="pat-current-row">
+                    <label for="patScaleInput">패턴 크기</label>
+                    <input type="range" id="patScaleInput" min="0.5" max="2" step="0.05" value="1" oninput="onPatternScaleInput(false)" onchange="onPatternScaleInput(true)">
+                    <span id="patScaleVal" class="lib-size-val">100%</span>
+                    <button class="btn" id="patClearBtn" onclick="clearBgPattern()">패턴 해제</button>
+                </div>
+            </div>
+
+            <div class="lib-toolbar">
+                <div id="patStatus" class="lib-status"></div>
+                <button class="btn lib-layout-btn" id="patLayoutBtn" onclick="togglePatLayout()">⚙ 배치</button>
+            </div>
+
+            <!-- 한 페이지 배치 설정 (행 · 열 · 크기) : 이 기기에만 기억돼요 -->
+            <div class="lib-layout" id="patLayoutPanel" style="display:none;">
+                <label>행 <select id="patRowsInput" class="btn" onchange="onPatLayoutChange()"></select></label>
+                <label>열 <select id="patColsInput" class="btn" onchange="onPatLayoutChange()"></select></label>
+                <label class="lib-size-label">크기
+                    <input type="range" id="patSizeInput" min="60" max="180" step="2" oninput="onPatLayoutChange()">
+                    <span id="patSizeVal" class="lib-size-val">100px</span>
+                </label>
+                <button class="btn" onclick="resetPatLayout()">↩ 기본(3×3)</button>
+            </div>
+
+            <div class="pat-grid" id="patGrid"></div>
+
+            <div class="sub-modal-btns">
+                <button class="btn" onclick="backToSkinMenu('patternModal')">← 스킨 메뉴</button>
+                <button class="btn" onclick="closeModal('patternModal')">닫기</button>
+            </div>
         </div>
     </div>
 
@@ -337,17 +407,19 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261001-2"></script>
-    <script src="js/app.js?v=20261001-2"></script>
-    <script src="js/page.js?v=20261001-2"></script>
-    <script src="js/elements.js?v=20261001-2"></script>
-    <script src="js/settings.js?v=20261001-2"></script>
-    <script src="js/service.js?v=20261001-2"></script>
+    <script src="js/drive.js?v=20261001-3"></script>
+    <script src="js/app.js?v=20261001-3"></script>
+    <script src="js/page.js?v=20261001-3"></script>
+    <script src="js/elements.js?v=20261001-3"></script>
+    <script src="js/settings.js?v=20261001-3"></script>
+    <script src="js/patterns.js?v=20261001-3"></script>
+    <script src="js/skins.js?v=20261001-3"></script>
+    <script src="js/service.js?v=20261001-3"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
         (function () {
-            var need = ['drive', 'app', 'page', 'elements', 'settings', 'service'];
+            var need = ['drive', 'app', 'page', 'elements', 'settings', 'patterns', 'skins', 'service'];
             var loaded = window.MALLANG_LOADED || {};
             var missing = need.filter(function (k) { return !loaded[k]; });
             if (!missing.length) return;
