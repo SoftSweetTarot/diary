@@ -368,7 +368,7 @@
                 <div class="help-item"><b>⬆️ 앞으로</b> : 선택한 요소를 다른 요소들보다 <b>맨 앞</b>으로 가져옵니다.</div>
                 <div class="help-item"><b>⬇️ 뒤로</b> : 선택한 요소를 <b>맨 뒤</b>로 보냅니다.</div>
                 <div class="help-item"><b>🗑️ 삭제</b> : 선택한 요소(스티커·글상자·이미지)를 지웁니다.</div>
-                <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 diary.json</b>에 저장합니다. 파일이 없으면 새로 만들고, 있으면 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
+                <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 diary.json</b>에 저장합니다. 파일이 없으면 새로 만들고, 있으면 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
                 <div class="help-item"><b>📷 PNG 저장</b> : 현재 보고 있는 페이지를 <code>.png</code> 이미지로 저장합니다. 현재 페이지 크기의 2배 해상도로 저장됩니다.</div>
                 <div class="help-item"><b>👗 스킨</b> : 기본 스킨 4종을 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있습니다.</div>
                 <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 키보드 단축키를 바꿉니다.</div>
@@ -550,6 +550,8 @@
             : 'https://www.googleapis.com/auth/drive.file';
         const AUTH_FLAG_KEY = 'gdrive_authed';   // 이 기기에서 이전에 로그인했는지 (자동 로그인 시도용)
         const UPLOAD_DEBOUNCE_MS = 3000;         // 변경 후 이 시간이 지나면 자동으로 드라이브에 저장
+        const PENDING_KEY = 'gdrive_pending_backup'; // 화면이 꺼질 때 업로드가 끝나기 전에 앱이 멈출 경우를 대비한 임시 보관본
+        const KEEPALIVE_MAX_BYTES = 60000;       // fetch keepalive 옵션은 본문 64KB 이하만 가능
 
         /* 메모리 저장소: 기존 localStorage와 같은 방식(문자열)으로 쓰되, 브라우저 용량 제한이 없음 */
         const store = {
@@ -580,7 +582,7 @@
         const drive = {
             client: null, token: null, expiresAt: 0, fileId: null,
             ready: false,      // diary.json을 성공적으로 불러온 상태 (이때부터만 업로드 허용 → 빈 데이터로 덮어쓰기 방지)
-            guest: false, dirty: false, uploading: false, needAuth: false, error: false, lastSaved: null
+            guest: false, dirty: false, uploading: false, needAuth: false, error: false, lastSaved: null, modifiedTime: 0
         };
         let uploadTimer = null;
         let uploadChain = Promise.resolve(true);
@@ -643,6 +645,7 @@
             if (!res.ok) throw new Error('find ' + res.status);
             const j = await res.json();
             drive.fileId = (j.files && j.files[0]) ? j.files[0].id : null;
+            drive.modifiedTime = (j.files && j.files[0] && j.files[0].modifiedTime) ? Date.parse(j.files[0].modifiedTime) : 0;
             return drive.fileId;
         }
 
@@ -669,12 +672,18 @@
             updateBadge();
         }
 
+        /* 화면이 꺼지는 중에도 요청이 끝까지 전송되도록 keepalive 사용 (본문이 64KB 이하일 때만 가능) */
+        function keepaliveFor(body) {
+            try { return new Blob([body]).size <= KEEPALIVE_MAX_BYTES ? { keepalive: true } : {}; }
+            catch (e) { return {}; }
+        }
+
         async function driveWrite(body) {
             if (!drive.fileId) await driveFindFile();          // 다른 기기에서 만든 파일이 있으면 그걸 덮어씀 (중복 생성 방지)
             if (drive.fileId) {                                 // 있으면 덮어쓰기
-                const res = await gfetch(`https://www.googleapis.com/upload/drive/v3/files/${drive.fileId}?uploadType=media&fields=id`, {
+                const res = await gfetch(`https://www.googleapis.com/upload/drive/v3/files/${drive.fileId}?uploadType=media&fields=id`, Object.assign({
                     method: 'PATCH', headers: { 'Content-Type': 'application/json; charset=UTF-8' }, body
-                });
+                }, keepaliveFor(body)));
                 if (res.ok) return;
                 if (res.status !== 404) throw new Error('update ' + res.status);
                 drive.fileId = null;                            // 그 사이 삭제됨 → 새로 생성
@@ -685,9 +694,9 @@
             const multipart =
                 `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n` +
                 `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${body}\r\n--${b}--`;
-            const res = await gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+            const res = await gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', Object.assign({
                 method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: multipart
-            });
+            }, keepaliveFor(multipart)));
             if (!res.ok) throw new Error('create ' + res.status);
             drive.fileId = (await res.json()).id;
         }
@@ -703,6 +712,7 @@
                 try {
                     await driveWrite(store.toJSONString());
                     drive.lastSaved = new Date(); drive.error = false; drive.uploading = false;
+                    if (!drive.dirty) clearPending();      // 그 사이 새 변경이 없을 때만 임시 보관본 삭제
                     updateBadge(); updateStorageInfo();
                     return true;
                 } catch (e) {
@@ -808,7 +818,7 @@
             let authed = false;
             try { authed = localStorage.getItem(AUTH_FLAG_KEY) === '1'; } catch (e) {}
             if (authed) {
-                try { await requestToken('none'); await loadFromDrive(); hideGate(); return; }
+                try { await requestToken('none'); await loadFromDrive(); hideGate(); recoverPendingBackup(); return; }
                 catch (e) { if (e && e.type === 'corrupt') { showGate('login', driveErrorText(e)); return; } }
             }
             showGate('login', '일기는 내 구글 드라이브의 <b>diary.json</b> 파일 하나에 저장돼요.' + fileHint);
@@ -816,7 +826,7 @@
 
         async function driveLogin() {
             showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
-            try { await requestToken('select_account'); await loadFromDrive(); hideGate(); }
+            try { await requestToken('select_account'); await loadFromDrive(); hideGate(); recoverPendingBackup(); }
             catch (e) { showGate('login', driveErrorText(e)); }
         }
 
@@ -829,7 +839,7 @@
             if (!drive.ready) { showMsg('먼저 구글 드라이브에 연결해 주세요.'); return; }
             const yes = await showMsg('드라이브의 diary.json으로 현재 내용을 바꿔서 다시 불러올까요?<br><span style="font-size:12px;color:#777;">아직 저장되지 않은 변경은 사라져요.</span>', true);
             if (!yes) return;
-            try { drive.fileId = null; await loadFromDrive(); showMsg('🔄 드라이브에서 다시 불러왔어요!'); }
+            try { drive.fileId = null; await loadFromDrive(); clearPending(); showMsg('🔄 드라이브에서 다시 불러왔어요!'); }
             catch (e) { showMsg('⚠ ' + driveErrorText(e)); }
         }
 
@@ -841,15 +851,70 @@
             location.reload();
         }
 
-        /* 창을 닫거나 다른 탭으로 갈 때 저장 누락 방지 */
-        window.addEventListener('beforeunload', (e) => {
-            try { if (!turn) saveData(false); } catch (err) {}
-            if (drive.ready && !drive.guest && (drive.dirty || drive.uploading)) { e.preventDefault(); e.returnValue = ''; }
-        });
+        /* =====================================================================
+           📴 화면이 꺼지는 순간(잠금 / 홈 버튼 / 앱·탭 전환 / 창 닫기) 자동 저장
+           - 아이폰·안드로이드·아이패드 모두 화면이 꺼지면 페이지가 '숨김' 상태가 되어
+             visibilitychange(hidden) / pagehide / freeze 이벤트가 발생합니다.
+           - 그 즉시 ① 편집 중인 내용을 메모리에 반영하고 ② diary.json으로 업로드를 시작합니다.
+           - 화면이 꺼지면 브라우저가 앱을 곧바로 멈출 수 있어서, 업로드가 끝나기 전에 멈추는 경우를
+             대비해 이 기기에 임시 보관본도 함께 남기고, 다음에 열 때 자동으로 복구를 물어봅니다.
+           ===================================================================== */
+        function savePending() {
+            try {
+                localStorage.setItem(PENDING_KEY, JSON.stringify({ savedAt: Date.now(), data: store.toJSONString() }));
+            } catch (e) { /* 용량 초과 등: 임시 보관은 포기하고 업로드만 시도 */ }
+        }
+        function clearPending() { try { localStorage.removeItem(PENDING_KEY); } catch (e) {} }
+
+        function saveOnScreenOff() {
+            try { if (!turn) saveData(false); } catch (err) {}      // 편집 중인 글/스티커를 메모리(store)에 반영
+            if (!drive.ready || drive.guest) return;                 // 로그인 전이거나 게스트면 저장할 곳이 없음
+            if (drive.dirty || drive.uploading) {
+                savePending();                                       // 업로드 전에 먼저 이 기기에 안전하게 보관
+                if (drive.dirty) flushUpload();                      // 디바운스(3초) 기다리지 않고 즉시 업로드
+            }
+        }
+
+        /* 다음에 열었을 때, 업로드되지 못한 임시 보관본이 있으면 복구 */
+        async function recoverPendingBackup() {
+            let p = null;
+            try { const raw = localStorage.getItem(PENDING_KEY); p = raw ? JSON.parse(raw) : null; } catch (e) {}
+            if (!p || typeof p.data !== 'string') { clearPending(); return; }
+            // 이미 드라이브에 반영되어 있으면(내용이 같거나 드라이브 파일이 더 최신이면) 조용히 삭제
+            if (p.data === store.toJSONString() || (drive.modifiedTime && drive.modifiedTime >= p.savedAt)) { clearPending(); return; }
+            const when = new Date(p.savedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const yes = await showMsg('📴 ' + when + ' 화면이 꺼질 때의 변경 내용이<br>드라이브에 저장되지 못했어요.<br>이 기기에 보관된 내용으로 복구할까요?<br><span style="font-size:12px;color:#777;">취소를 누르면 드라이브의 현재 내용을 유지해요.</span>', true);
+            clearPending();
+            if (!yes) return;
+            try {
+                store.replaceAll(JSON.parse(p.data));
+                drive.dirty = true;
+                applyLoadedData();
+                await flushUpload({ force: true });
+            } catch (e) { showMsg('⚠ 복구에 실패했어요.'); }
+        }
+
+        /* 로그인 토큰이 곧 만료되면 화면이 켜져 있을 때 미리 갱신 (꺼진 상태에서는 갱신이 안 될 수 있음) */
+        async function refreshTokenIfNeeded() {
+            if (!drive.ready || drive.guest || drive.uploading || document.hidden || !drive.client) return;
+            if (drive.token && Date.now() < drive.expiresAt - 10 * 60 * 1000) return;
+            try { await requestToken('none'); updateBadge(); } catch (e) {}
+        }
+        setInterval(refreshTokenIfNeeded, 5 * 60 * 1000);
+
+        /* 화면 꺼짐 / 앱 전환 (아이폰·안드로이드·아이패드 공통) */
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) return;
-            try { if (!turn) saveData(false); } catch (err) {}
-            if (drive.ready && drive.dirty) flushUpload();
+            if (document.hidden) saveOnScreenOff();
+            else refreshTokenIfNeeded();
+        });
+        /* 아이폰 사파리·홈 화면 앱에서 페이지가 떠날 때 (visibilitychange 보완) */
+        window.addEventListener('pagehide', saveOnScreenOff);
+        /* 안드로이드 크롬 등에서 페이지가 동결될 때 */
+        document.addEventListener('freeze', saveOnScreenOff);
+        /* 데스크톱에서 창/탭을 닫을 때 */
+        window.addEventListener('beforeunload', (e) => {
+            saveOnScreenOff();
+            if (drive.ready && !drive.guest && (drive.dirty || drive.uploading)) { e.preventDefault(); e.returnValue = ''; }
         });
 
 
