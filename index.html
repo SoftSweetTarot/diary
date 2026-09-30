@@ -267,6 +267,25 @@
             padding: 5px 10px; border-radius: 12px; font-size: 12px; background: rgba(255,255,255,.92);
             border: 2px solid var(--border-color); color: #555; cursor: pointer; font-family: var(--font-family); }
         .drive-badge.warn { border-color: #e57373; color: #c62828; }
+
+        /* 💌 건의함 모달 (설정 모달 위에 겹쳐서 표시) */
+        #feedbackModal { z-index: 1100; }
+        .feedback-notice { font-size: 14px; color: #555; text-align: center; margin: 0 0 12px; line-height: 1.5; word-break: keep-all; }
+        .feedback-input {
+            display: block; width: 100%; box-sizing: border-box;
+            height: clamp(160px, 34vh, 280px); min-height: 120px;
+            padding: 12px; border: 2px solid var(--border-color); border-radius: 12px;
+            background: #fff0f5; color: #444; font-family: inherit; font-size: 15px; line-height: 1.6;
+            resize: vertical; outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        .feedback-input::placeholder { color: #b9a0a8; }
+        .feedback-input:focus { border-color: var(--primary-accent); box-shadow: 0 0 0 3px rgba(255,107,129,.18); }
+        .feedback-count { font-size: 12px; color: #999; text-align: right; margin: 4px 2px 0; }
+        .feedback-btns { display: flex; gap: 8px; margin-top: 14px; }
+        .feedback-btns .btn { flex: 1; justify-content: center; padding: 8px 10px; }
+        .feedback-btns .btn-primary { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
+        .feedback-btns .btn-primary:hover { filter: brightness(1.08); }
+        .feedback-btns .btn:disabled { opacity: .55; cursor: default; }
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -532,7 +551,27 @@
                 <button class="key-input-btn" id="keyBtn_save" onclick="listenKeyChange('save')">s</button>
             </div>
 
+            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
+            <div class="form-group">
+                <label>💌 제작자에게 의견 보내기:</label>
+                <button class="btn" style="width:100%; justify-content:center;" onclick="openFeedback()">💌 건의함</button>
+            </div>
+
             <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('settingsModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 💌 건의함 모달 -->
+    <div class="modal" id="feedbackModal">
+        <div class="modal-content">
+            <div class="modal-title">💌 건의함</div>
+            <p class="feedback-notice">제작자에게 건의사항이 전송됩니다</p>
+            <textarea id="feedbackInput" class="feedback-input" maxlength="1000" placeholder="불편한 점, 바라는 기능, 응원의 한마디 등 무엇이든 적어 주세요."></textarea>
+            <div class="feedback-count"><span id="feedbackCount">0</span> / 1000</div>
+            <div class="feedback-btns">
+                <button class="btn btn-primary" id="feedbackSendBtn" onclick="submitFeedback()">📨 전송</button>
+                <button class="btn" onclick="closeFeedback()">닫기</button>
+            </div>
         </div>
     </div>
 
@@ -2217,6 +2256,52 @@ let fontList = [
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        /* =====================================================================
+           💌 건의함 : 작성한 내용을 구글 시트(Apps Script)로 전송
+           ===================================================================== */
+        const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_Ka3rztRHsOMR30u8u5_tzObwHgZitSEtGXRIQCyBxEHeYw2C71N31gLyqMGDa88N/exec";
+
+        function openFeedback() {
+            openModal('feedbackModal');
+            document.getElementById('feedbackInput').focus();
+        }
+        function closeFeedback() { closeModal('feedbackModal'); }
+
+        document.getElementById('feedbackInput').addEventListener('input', (e) => {
+            document.getElementById('feedbackCount').textContent = e.target.value.length;
+        });
+
+        async function submitFeedback() {
+            const input = document.getElementById('feedbackInput');
+            const btn = document.getElementById('feedbackSendBtn');
+            const text = input.value.trim();
+
+            if (!text) {
+                await showMsg('내용을 입력한 뒤 전송해 주세요.');
+                input.focus();
+                return;
+            }
+
+            btn.disabled = true;
+            try {
+                await fetch(FEEDBACK_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'comment=' + encodeURIComponent(text)
+                });
+                input.value = '';
+                document.getElementById('feedbackCount').textContent = '0';
+                closeFeedback();
+                showMsg('건의사항이 전송되었어요.<br>소중한 의견 감사합니다 💌');
+            } catch (err) {
+                console.error('건의사항 전송 오류:', err);
+                showMsg('전송하지 못했어요.<br>인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
