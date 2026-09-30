@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎀 러블리 다이어리 🎀</title>
+    
+    <!-- Google Fonts (UI 폰트 / 글쓰기 폰트 선택용) -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Gowun+Dodum&family=Sunflower:wght@500&family=Jua&family=Do+Hyeon&family=Hi+Melody&family=Poor+Story&family=Single+Day&family=Gamja+Flower&family=Yeon+Sung&family=East+Sea+Dokdo&family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&family=Nanum+Myeongjo&family=Cute+Font&family=Dongle&family=Song+Myung&family=Stylish&family=Kirang+Haerang&family=Gugi&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas (PNG 저장용) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style id="theme-style">
+        :root {
+            --bg-color: #ffe6f0;
+            --cover-bg: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%);
+            --page-bg: #fff0f5;
+            --border-color: #ffb6c1;
+            --primary-accent: #ff6b81;
+            --system-font: system-ui, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', Roboto, sans-serif;
+            --font-family: var(--system-font);
+
+            --curl-shade-next: linear-gradient(to right, rgba(0,0,0,.08) 0%, rgba(255,255,255,.35) 45%, rgba(0,0,0,.10) 80%, rgba(0,0,0,.34) 100%);
+            --curl-shade-prev: linear-gradient(to left,  rgba(0,0,0,.08) 0%, rgba(255,255,255,.35) 45%, rgba(0,0,0,.10) 80%, rgba(0,0,0,.34) 100%);
+        }
+
+        html, body {
+            width: 100%; height: 100%; overflow: hidden; position: fixed;
+            margin: 0; padding: 0; background-color: var(--bg-color);
+            font-family: var(--font-family);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            touch-action: manipulation; box-sizing: border-box; user-select: none; -webkit-user-select: none;
+        }
+        textarea { user-select: text; -webkit-user-select: text; }
+
+        .toolbar {
+            display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px);
+            padding: 8px 12px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 8px; z-index: 100; max-width: 95vw;
+        }
+        .btn {
+            background: #fff; border: 2px solid var(--border-color); color: #444;
+            padding: 5px 10px; border-radius: 12px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s ease; font-family: inherit; font-size: 14px;
+            display: flex; align-items: center; gap: 3px;
+        }
+        .btn:hover { background: var(--border-color); color: #fff; }
+
+        .diary-wrapper {
+            width: min(92vw, 480px);
+            height: min(72dvh, 620px);
+            position: relative;
+            touch-action: none;
+        }
+
+        .diary-book {
+            width: 100%; height: 100%; position: relative;
+        }
+
+        .page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            box-sizing: border-box;
+            border-radius: 15px 22px 22px 15px;
+            box-shadow: 5px 10px 25px rgba(0,0,0,0.12);
+            display: flex; flex-direction: column; overflow: hidden;
+            border: 4px solid #fff;
+        }
+
+        .cover-page {
+            background: var(--cover-bg); color: #fff;
+            align-items: center; justify-content: center; text-align: center;
+            cursor: pointer; z-index: 10;
+        }
+        .cover-title { font-size: 2.6rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); margin-bottom: 8px; }
+        .cover-subtitle { font-size: 1.2rem; opacity: 0.9; }
+        .drag-hint { margin-top: 25px; font-size: 0.95rem; animation: bounce 1.5s infinite; }
+
+        @keyframes bounce { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-8px); } }
+
+        .inner-page { background-color: var(--page-bg); z-index: 5; }
+        .page-header {
+            height: 48px; border-bottom: 2px dashed var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 15px; font-size: 1.3rem; color: var(--primary-accent); font-weight: bold;
+            flex-shrink: 0; box-sizing: border-box;
+        }
+
+        .canvas-area {
+            flex: 1; position: relative; overflow: hidden; touch-action: none;
+            background-size: 100% 25px;
+            background-image: linear-gradient(to bottom, rgba(255,182,193,0.2) 1px, transparent 1px);
+        }
+
+        .element-box {
+            position: absolute; cursor: move; display: inline-block;
+            padding: 6px; border: 1px dashed transparent;
+            transform-origin: center center;
+            touch-action: none; user-select: none;
+        }
+        .element-box.selected { border-color: var(--primary-accent); }
+        .element-box img { width: 100%; height: 100%; pointer-events: none; display: block; }
+        .element-box textarea {
+            background: transparent; border: none; resize: none; outline: none;
+            width: 100%; height: 100%;
+            font-family: var(--system-font); font-size: 18px; color: #444444;
+        }
+
+        .handle {
+            position: absolute; width: 20px; height: 20px; background: var(--primary-accent);
+            border: 2px solid #fff; border-radius: 50%; display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20;
+            align-items: center; justify-content: center; color: #fff; font-size: 11px;
+        }
+        .element-box.selected .handle { display: flex; }
+
+        .handle.rotate-handle {
+            top: -28px; left: 50%; transform: translateX(-50%);
+            cursor: grab; background: #ff4757;
+        }
+        .handle.scale-handle {
+            right: -10px; bottom: -10px;
+            cursor: nwse-resize; background: #2ed573;
+        }
+
+        .text-panel {
+            position: fixed; left: 0; top: 0; width: 260px;
+            display: none; flex-direction: column; gap: 6px;
+            background: rgba(255,255,255,0.97); backdrop-filter: blur(5px);
+            border: 2px solid var(--border-color); border-radius: 16px;
+            padding: 6px 8px 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 150; box-sizing: border-box; max-width: 96vw;
+            font-size: 14px; color: #444;
+        }
+        .text-panel-handle {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--primary-accent); color: #fff; font-weight: bold; font-size: 13px;
+            border-radius: 10px; padding: 5px 8px; cursor: grab;
+            touch-action: none; user-select: none; -webkit-user-select: none;
+        }
+        .text-panel-handle:active { cursor: grabbing; }
+        .panel-close {
+            background: rgba(255,255,255,0.3); border: none; color: #fff; font-weight: bold;
+            border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 12px; line-height: 1; padding: 0;
+        }
+        .text-panel-row { display: flex; align-items: center; gap: 6px; }
+        .text-panel label { font-weight: bold; color: var(--primary-accent); white-space: nowrap; }
+        .text-panel select.btn { width: 100%; min-width: 0; }
+        .text-panel input[type="color"] {
+            width: 34px; height: 30px; padding: 0; border: 2px solid var(--border-color);
+            border-radius: 8px; background: #fff; cursor: pointer;
+        }
+        .text-panel input[type="number"] { width: 58px; text-align: center; }
+
+        .flap-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 20; overflow: hidden; pointer-events: none;
+            border-radius: 15px 22px 22px 15px;
+        }
+        .flap { position: absolute; top: 0; bottom: 0; display: none; box-sizing: border-box;
+            box-shadow: inset 0 4px 0 #fff, inset 0 -4px 0 #fff; }
+        .flap.dir-next { border-radius: 22px 0 0 22px; filter: drop-shadow(-6px 0 8px rgba(0,0,0,.28)); }
+        .flap.dir-next.page-back  { background: var(--curl-shade-next), var(--page-bg); }
+        .flap.dir-next.cover-back { background: var(--curl-shade-next), linear-gradient(rgba(255,255,255,.25), rgba(255,255,255,.25)), var(--cover-bg); }
+        .flap.dir-prev { border-radius: 0 15px 15px 0; filter: drop-shadow(6px 0 8px rgba(0,0,0,.28)); }
+        .flap.dir-prev.page-back  { background: var(--curl-shade-prev), var(--page-bg); }
+
+        .under-shadow { position: absolute; top: 0; bottom: 0; display: none; pointer-events: none; z-index: 50; }
+        .under-shadow.dir-next { background: linear-gradient(to right, rgba(0,0,0,.38), rgba(0,0,0,0)); }
+        .under-shadow.dir-prev { background: linear-gradient(to left,  rgba(0,0,0,.38), rgba(0,0,0,0)); }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: #fff; padding: 20px; border-radius: 20px; width: 90%; max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; display: flex; flex-direction: column;
+            overflow-y: auto;
+        }
+        .modal-title { font-size: 1.4rem; color: var(--primary-accent); margin-bottom: 12px; text-align: center; }
+
+        /* 다이어리 중앙 전용 알림 모달 */
+        #customAlertModal { z-index: 3000; }
+        .alert-card {
+            background: #fff; border: 3px solid var(--border-color); border-radius: 20px;
+            padding: 20px 18px; width: min(85vw, 340px); text-align: center;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25); animation: popIn 0.2s ease-out;
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .alert-msg { font-size: 15px; color: #444; margin-bottom: 18px; line-height: 1.5; word-break: keep-all; }
+        .alert-btns { display: flex; gap: 8px; justify-content: center; }
+
+        .help-content { max-width: 480px; }
+        .help-body { overflow-y: auto; padding-right: 4px; font-size: 15px; color: #444; line-height: 1.5; user-select: text; -webkit-user-select: text; }
+        .help-section-title {
+            font-size: 1.15rem; color: var(--primary-accent); font-weight: bold;
+            margin: 14px 0 6px 0; padding-bottom: 3px; border-bottom: 2px dashed var(--border-color);
+        }
+        .help-section-title:first-child { margin-top: 0; }
+        .help-item { margin-bottom: 7px; }
+        .help-item b { color: #333; }
+        .help-note {
+            background: #fff0f5; border: 1px dashed var(--border-color); border-radius: 10px;
+            padding: 8px 10px; margin: 6px 0; font-size: 14px;
+        }
+        .help-body code { background: #f3f3f3; padding: 1px 5px; border-radius: 5px; font-size: 13px; }
+
+        .sticker-categories {
+            display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px;
+            border-bottom: 1px solid #eee; scrollbar-width: none;
+        }
+        .sticker-categories::-webkit-scrollbar { display: none; }
+        .cat-btn {
+            padding: 4px 8px; font-size: 12px; border-radius: 10px; border: 1px solid var(--border-color);
+            background: #fff; cursor: pointer; white-space: nowrap; font-family: inherit;
+        }
+        .cat-btn.active { background: var(--primary-accent); color: #fff; border-color: var(--primary-accent); }
+
+        .sticker-grid {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+            overflow-y: auto; max-height: 320px; padding: 4px;
+        }
+        .sticker-item { font-size: 1.8rem; text-align: center; cursor: pointer; padding: 4px; border-radius: 8px; }
+        .sticker-item:hover { background: #ffe6f0; transform: scale(1.15); transition: transform 0.1s; }
+
+        .storage-bar-bg {
+            width: 100%; height: 22px; background: #eaeaea; border-radius: 15px; overflow: hidden; margin: 10px 0 6px 0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .storage-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
+            width: 0%; transition: width 0.4s ease; border-radius: 15px;
+        }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 14px; margin-bottom: 4px; color: #555; }
+        .key-input-btn {
+            width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 8px;
+            background: #fff0f5; text-align: center; font-weight: bold; cursor: pointer; font-family: inherit;
+        }
+        .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .color-picker-row input[type="color"] { cursor: pointer; border: none; background: none; width: 32px; height: 32px; }
+
+        .element-box img.broken { min-width: 60px; min-height: 40px; background: #ffe3e3; border: 1px dashed var(--primary-accent); font-size: 11px; color: #a33; word-break: break-all; }
+        .lib-content { max-width: 520px; }
+        .lib-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; overflow-y: auto; max-height: 50vh; padding: 4px; }
+        .lib-item { aspect-ratio: 1 / 1; border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; cursor: pointer; position: relative;
+            background: repeating-conic-gradient(#f4f4f4 0% 25%, #fff 0% 50%) 50% / 16px 16px; }
+        .lib-item:hover { border-color: var(--primary-accent); transform: scale(1.04); transition: transform .1s; }
+        .lib-item img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .lib-item.bad::after { content: '⚠'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; background: #ffe3e3; }
+        .lib-num { position: absolute; left: 4px; top: 2px; font-size: 11px; background: rgba(255,255,255,.85); border-radius: 6px; padding: 0 4px; z-index: 1; }
+        .toast { display: none; position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: rgba(50,50,50,.92); color: #fff;
+            padding: 10px 16px; border-radius: 14px; font-size: 14px; z-index: 2000; max-width: 90vw; text-align: center; }
+
+        /* ☁ 구글 드라이브 연결 화면 / 상태 배지 */
+        .drive-gate { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color);
+            display: none; justify-content: center; align-items: center; z-index: 2500; }
+        .gate-card { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .gate-title { font-size: 1.4rem; font-weight: bold; color: var(--primary-accent); }
+        .gate-msg { font-size: 14px; color: #555; line-height: 1.7; }
+        .gate-btn { justify-content: center; width: 100%; padding: 10px 12px; }
+        .gate-guest { background: none; border: none; color: #888; font-size: 12px; text-decoration: underline; cursor: pointer; font-family: inherit; }
+        .drive-badge { position: fixed; left: 10px; bottom: 10px; z-index: 1500; display: none; max-width: 70vw;
+            padding: 5px 10px; border-radius: 12px; font-size: 12px; background: rgba(255,255,255,.92);
+            border: 2px solid var(--border-color); color: #555; cursor: pointer; font-family: var(--font-family); }
+        .drive-badge.warn { border-color: #e57373; color: #c62828; }
+    </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+    <!-- ☁ 구글 드라이브 연결 화면 (데이터를 불러오기 전까지 표시) -->
+    <div id="driveGate" class="drive-gate">
+        <div class="alert-card gate-card">
+            <div class="gate-title">📔 My Lovely Diary</div>
+            <div id="gateMsg" class="gate-msg">☁ 구글 드라이브에 연결하는 중…</div>
+            <button id="gateLoginBtn" class="btn gate-btn" style="display:none" onclick="driveLogin()">☁ 구글 계정으로 시작하기</button>
+            <button id="gateGuestBtn" class="gate-guest" style="display:none" onclick="enterGuestMode()">로그인 없이 둘러보기 (저장되지 않아요)</button>
+        </div>
+    </div>
+    <div id="driveBadge" class="drive-badge" onclick="onBadgeClick()"></div>
+
+    <!-- 상단 컨트롤 툴바 -->
+    <div class="toolbar">
+        <button class="btn" onclick="openModal('helpModal')">❓ 도움말</button>
+        <button class="btn" onclick="openModal('stickerModal')">🎨 스티커</button>
+        <button class="btn" onclick="addText()">✏ 글쓰기</button>
+        <button class="btn" onclick="triggerImageUpload()">🖼 이미지</button>
+        <button class="btn" onclick="openLibrary()">📚 라이브러리</button>
+        <input type="file" id="imgInput" accept="image/jpeg, image/png, image/gif, image/webp" style="display:none" onchange="handleImageUpload(event)">
+        <button class="btn" onclick="bringToFront()">⬆️️ 앞으로</button>
+        <button class="btn" onclick="sendToBack()">⬇️ 뒤로</button>
+        <button class="btn" onclick="deleteSelected()">🗑️ 삭제</button>
+        <button class="btn" onclick="saveData(true)">💾 저장</button>
+        <button class="btn" onclick="exportToPNG()">📷 PNG 저장</button>
+        <button class="btn" onclick="openModal('skinModal')">👗 스킨</button>
+        <button class="btn" onclick="openModal('settingsModal')">⚙ 설정</button>
+    </div>
+
+    <!-- 다이어리 본체 -->
+    <div class="diary-wrapper" id="diaryWrapper">
+        <div class="diary-book" id="diaryBook">
+            
+            <!-- 겉표지 -->
+            <div class="page cover-page" id="coverPage">
+                <div class="cover-title">My Pretty Diary 🌸</div>
+                <div class="cover-subtitle">나만의 비밀 일기장</div>
+                <div class="drag-hint">◀ 오른쪽에서 왼쪽으로 드래그하여 열기</div>
+            </div>
+
+            <!-- 속페이지 -->
+            <div class="page inner-page" id="innerPage" style="display:none;">
+                <div class="page-header" id="pageHeader">
+                    <button class="btn page-nav-btn" style="padding:2px 8px;" onclick="changeDate(-1)">◀ 이전</button>
+                    <span id="pageDateDisplay">2026. 09. 30 (수)</span>
+                    <button class="btn page-nav-btn" style="padding:2px 8px;" onclick="changeDate(1)">다음 ▶</button>
+                </div>
+                <div class="canvas-area" id="canvasArea"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 글상자 꾸미기 패널 -->
+    <div class="text-panel" id="textPanel">
+        <div class="text-panel-handle" id="textPanelHandle">
+            <span>✥ 글 꾸미기</span>
+            <button class="panel-close" onclick="closeTextPanel()" title="옵션 닫기">✕</button>
+        </div>
+        <div class="text-panel-row">
+            <label>글꼴</label>
+            <select id="textFontSelect" class="btn" onchange="applyTextStyle()"></select>
+        </div>
+        <div class="text-panel-row">
+            <label>색상</label>
+            <input type="color" id="textColorInput" value="#444444" oninput="applyTextStyle()">
+            <label>크기</label>
+            <input type="number" id="textSizeInput" class="btn" min="8" max="120" value="18" oninput="applyTextStyle()">
+        </div>
+    </div>
+
+    <!-- 커스텀 알림/확인 전용 예쁜 모달 창 -->
+    <div class="modal" id="customAlertModal">
+        <div class="alert-card">
+            <div class="alert-msg" id="customAlertMsg">메시지 내용</div>
+            <div class="alert-btns">
+                <button class="btn" id="customAlertCancelBtn" style="display:none; flex:1; justify-content:center;" onclick="closeMsg(false)">취소</button>
+                <button class="btn" id="customAlertConfirmBtn" style="flex:1; justify-content:center; background:var(--primary-accent); color:#fff; border-color:var(--primary-accent);" onclick="closeMsg(true)">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 도움말 모달 -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content help-content">
+            <div class="modal-title">❓ 도움말</div>
+            <div class="help-body">
+
+                <div class="help-section-title">🧰 상단 버튼 설명</div>
+                <div class="help-item"><b>❓ 도움말</b> : 지금 보고 있는 이 설명창을 엽니다.</div>
+                <div class="help-item"><b>🎨 스티커</b> : 이모지 스티커 목록을 엽니다. 카테고리 탭에서 고른 뒤 이모지를 누르면 페이지에 붙습니다.</div>
+                <div class="help-item"><b>✏️ 글쓰기</b> : 페이지에 글상자를 추가합니다. 상자 안을 눌러 내용을 입력하세요. 글상자를 선택하면 글상자 바로 옆에 <b>글꼴 / 색상 / 크기</b> 옵션창이 붙어서 나타납니다. (아래 '글상자 꾸미기' 참고)</div>
+                <div class="help-item"><b>🖼️ 이미지</b> : my_lovely_diary.html 파일이 있는 곳에 images 폴더를 만들고 이미지를 모두 넣고 이미지를 고르세요.<br><b>반드시 <code>images</code> 폴더 안에 파일을 넣고 이미지를 고르세요. 안그러면 저장이 안되어 이미지가 깨집니다.</b></div>
+                <div class="help-item"><b>📚 라이브러리</b> : <b>📚 라이브러리</b>를 누르면 이미지들이 바둑판으로 나타나고, 원하는 이미지를 누르면 페이지에 들어갑니다.</div>
+                <div class="help-item"><b>⬆️ 앞으로</b> : 선택한 요소를 다른 요소들보다 <b>맨 앞</b>으로 가져옵니다.</div>
+                <div class="help-item"><b>⬇️ 뒤로</b> : 선택한 요소를 <b>맨 뒤</b>로 보냅니다.</div>
+                <div class="help-item"><b>🗑️ 삭제</b> : 선택한 요소(스티커·글상자·이미지)를 지웁니다.</div>
+                <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 diary.json</b>에 저장합니다. 파일이 없으면 새로 만들고, 있으면 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
+                <div class="help-item"><b>📷 PNG 저장</b> : 현재 보고 있는 페이지를 <code>.png</code> 이미지로 저장합니다. 현재 페이지 크기의 2배 해상도로 저장됩니다.</div>
+                <div class="help-item"><b>👗 스킨</b> : 기본 스킨 4종을 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있습니다.</div>
+                <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 키보드 단축키를 바꿉니다.</div>
+
+                <div class="help-section-title">🖐️ 요소 다루기 (스티커·글·이미지)</div>
+                <div class="help-item"><b>선택</b> : 요소를 누르면 점선 테두리와 조절 핸들이 나타납니다. 빈 곳을 누르면 선택이 풀립니다.</div>
+                <div class="help-item"><b>이동</b> : 요소를 끌어서 원하는 위치로 옮깁니다.</div>
+                <div class="help-item"><b>🔄 회전</b> : 위쪽의 빨간 핸들을 끌어 회전합니다.</div>
+                <div class="help-item"><b>↘ 크기 조절</b> : 오른쪽 아래의 초록 핸들을 끌어 크기를 바꿉니다. PC에서는 요소 위에서 <b>마우스 휠</b>로도 조절됩니다.</div>
+
+                <div class="help-section-title">💾 백업 · 불러오기 · 용량 확인</div>
+                <div class="help-item"><b>위치</b> : <b>⚙️ 설정 → 💾 데이터 관리</b></div>
+                <div class="help-item"><b>📂 백업</b> : 모든 날짜의 일기를 하나의 <code>.json</code> 파일로 내려받습니다.</div>
+                <div class="help-item"><b>📥 불러오기</b> : 백업 <code>.json</code>을 선택해 복원합니다.</div>
+                <div class="help-item"><b>📊 용량 확인</b> : 다이어리 저장가능 용량을 확인 할 수 있습니다.</div>
+
+                <div class="help-section-title">⌨️ 기본 키보드 단축키</div>
+                <div class="help-item"><code>Delete</code> 선택 요소 삭제 &nbsp;/&nbsp; <code>←</code> 이전 날짜 &nbsp;/&nbsp; <code>→</code> 다음 날짜 &nbsp;/&nbsp; <code>Ctrl + S</code> 저장</div>
+                <div class="help-item">단축키는 <b>⚙️ 설정</b>에서 바꿀 수 있습니다. (바꿀 항목의 버튼을 누른 뒤 원하는 키를 누르세요.) 글상자에 글을 쓰는 중에는 동작하지 않으니, 빈 곳을 한 번 누른 뒤 사용하세요.</div>
+
+            </div>
+            <button class="btn" style="width:100%; margin-top:15px; justify-content:center; flex-shrink:0;" onclick="closeModal('helpModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 이미지 라이브러리 모달 -->
+    <div class="modal" id="libraryModal">
+        <div class="modal-content lib-content">
+            <div class="modal-title">📚 이미지 라이브러리</div>
+            <div id="libStatus" style="font-size:13px; color:#666; margin-bottom:8px;"></div>
+            <div class="lib-grid" id="libGrid"></div>
+            <div style="display:flex; justify-content:center; margin-top:12px;">
+                <button class="btn" style="width:100%; justify-content:center;" onclick="closeModal('libraryModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <!-- 전체 유니코드 이모지 스티커 모달 -->
+    <div class="modal" id="stickerModal">
+        <div class="modal-content">
+            <div class="modal-title">전체 이모지 스티커 목록</div>
+            
+            <div class="sticker-categories" id="stickerCategories">
+                <button class="cat-btn active" onclick="loadEmojiCategory('faces', this)">😀 표정/감정</button>
+                <button class="cat-btn" onclick="loadEmojiCategory('animals', this)">🐱 동물/자연</button>
+                <button class="cat-btn" onclick="loadEmojiCategory('food', this)">🍔 음식/음료</button>
+                <button class="cat-btn" onclick="loadEmojiCategory('activities', this)">⚽ 활동/스포츠</button>
+                <button class="cat-btn" onclick="loadEmojiCategory('travel', this)">🚗 여행/장소</button>
+                <button class="cat-btn" onclick="loadEmojiCategory('objects', this)">💡 사물</button>
+                <button class="cat-btn" onclick="loadEmojiCategory('symbols', this)">❤️ 기호/심볼</button>
+            </div>
+
+            <div class="sticker-grid" id="stickerGrid"></div>
+            
+            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('stickerModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 스킨 모달 -->
+    <div class="modal" id="skinModal">
+        <div class="modal-content">
+            <div class="modal-title">다이어리 스킨 설정</div>
+            <label style="font-weight:bold;">스킨 목록 선택:</label>
+            <div style="display:flex; gap:5px; margin: 8px 0 15px 0;">
+                <select id="skinSelect" class="btn" style="flex:1;" onchange="applySkinPreset(this.value)">
+                    <option value="pink">🌸 러블리 핑크</option>
+                    <option value="mint">🌿 맑은 민트</option>
+                    <option value="purple">💜 파스텔 퍼플</option>
+                    <option value="yellow">⭐ 따뜻한 옐로우</option>
+                </select>
+                <button class="btn" style="background:#ff4757; color:#fff; border:none;" onclick="deleteSelectedSkin()" title="선택한 커스텀 스킨 삭제">🗑️</button>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
+
+            <div class="modal-title" style="font-size:1.1rem;">🎨 맘대로 커스텀 스킨 (실시간 적용)</div>
+            <div class="color-picker-row"><label>전체 배경색:</label><input type="color" id="customBg" value="#ffe6f0" oninput="previewCustomColor()"></div>
+            <div class="color-picker-row"><label>겉표지 색상:</label><input type="color" id="customCover" value="#ff9a9e" oninput="previewCustomColor()"></div>
+            <div class="color-picker-row"><label>속지 배경색:</label><input type="color" id="customPage" value="#fff0f5" oninput="previewCustomColor()"></div>
+            <div class="color-picker-row"><label>테두리 색상:</label><input type="color" id="customBorder" value="#ffb6c1" oninput="previewCustomColor()"></div>
+            <div class="color-picker-row"><label>포인트 색상:</label><input type="color" id="customAccent" value="#ff6b81" oninput="previewCustomColor()"></div>
+
+            <input type="text" id="customSkinName" placeholder="스킨 이름 입력" class="btn" style="width:100%; margin-top:10px; text-align:left;">
+            <button class="btn" style="width:100%; margin-top:8px; justify-content:center; background:var(--primary-accent); color:#fff;" onclick="saveCustomSkin()">➕ 이 스타일로 스킨 등록하기</button>
+
+            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('skinModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 설정 모달 -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-title">⚙️ 설정 및 키보드 단축키</div>
+
+            <div class="form-group">
+                <label>🔤 전체 UI 폰트 (글상자 폰트와 별개):</label>
+                <select id="uiFontSelect" class="btn" style="width:100%;" onchange="applyUIFont(this.value, true)"></select>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
+
+            <div class="form-group">
+                <label>📐 다이어리 페이지 크기 (px):</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <span>너비</span>
+                    <input type="number" id="pageWInput" class="btn" min="320" max="1200" step="10" style="flex:1; min-width:0; text-align:center;" onchange="applyPageSizeSetting()">
+                    <span>높이</span>
+                    <input type="number" id="pageHInput" class="btn" min="400" max="1600" step="10" style="flex:1; min-width:0; text-align:center;" onchange="applyPageSizeSetting()">
+                </div>
+                <div id="pageSizeInfo" style="font-size:12px; color:#777; margin-top:5px;"></div>
+                <button class="btn" style="width:100%; margin-top:6px; justify-content:center;" onclick="resetPageSize()">↩ 기본 크기(480×620)로</button>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
+            
+            <div class="form-group">
+                <label>⏱ 자동 저장 주기 (분):</label>
+                <input type="number" id="autoSaveInput" min="1" max="60" value="5" class="btn" style="width:100%; text-align:center;" onchange="updateAutoSaveInterval(this.value)">
+            </div>
+
+            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
+            <div class="modal-title" style="font-size:1.1rem;">💾 데이터 관리</div>
+            <div id="driveStatusText" style="font-size:12px; color:#666; margin:0 0 8px; text-align:left;"></div>
+            <div style="display:flex; gap:6px;">
+                <button class="btn" style="flex:1; justify-content:center;" onclick="exportJSON()">📂 PC로 백업</button>
+                <button class="btn" style="flex:1; justify-content:center;" onclick="triggerImportJSON()">📥 PC에서 불러오기</button>
+            </div>
+            <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
+            <div style="display:flex; gap:6px; margin-top:6px;">
+                <button class="btn" style="flex:1; justify-content:center;" onclick="reloadFromDrive()">🔄 드라이브에서 다시 불러오기</button>
+                <button class="btn" style="flex:1; justify-content:center;" onclick="driveLogout()">🚪 로그아웃</button>
+            </div>
+
+            <div style="margin-top:18px; text-align:center;">
+                <div style="font-size:1.15rem; font-weight:bold; color:#ff6b81; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                    💾 <span>다이어리 저장 용량 확인</span>
+                </div>
+                <div style="font-size:13px; color:#555; text-align:left;">구글 드라이브 diary.json 크기:</div>
+                                <div id="lsText" style="font-size:13px; color:#666; text-align:right;">계산 중...</div>
+                <div id="lsDetail" style="font-size:12px; color:#777; line-height:1.5; margin-top:4px; text-align:left;"></div>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
+            <div class="modal-title" style="font-size:1.1rem;">⌨️ 커스텀 키보드 단축키</div>
+
+            <div class="form-group">
+                <label>선택 요소 삭제 키:</label>
+                <button class="key-input-btn" id="keyBtn_delete" onclick="listenKeyChange('delete')">Delete</button>
+            </div>
+            <div class="form-group">
+                <label>이전 날짜 이동 키:</label>
+                <button class="key-input-btn" id="keyBtn_prev" onclick="listenKeyChange('prev')">ArrowLeft</button>
+            </div>
+            <div class="form-group">
+                <label>다음 날짜 이동 키:</label>
+                <button class="key-input-btn" id="keyBtn_next" onclick="listenKeyChange('next')">ArrowRight</button>
+            </div>
+            <div class="form-group">
+                <label>저장 키 (Ctrl + 조합):</label>
+                <button class="key-input-btn" id="keyBtn_save" onclick="listenKeyChange('save')">s</button>
+            </div>
+
+            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('settingsModal')">닫기</button>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================================
+           ☁ 구글 드라이브 저장소 (diary.json 단일 파일)
+           - 데이터는 메모리(store)에서 다루고, 저장 시 diary.json 하나로 드라이브에 덮어씁니다.
+           - 파일이 없으면 저장할 때 자동으로 새로 만듭니다.
+           ===================================================================== */
+        const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com'; // ← 본인 OAuth 클라이언트 ID로 교체
+        const DRIVE_FILE_NAME = 'diary.json';
+        const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 diary.json이 보임 / true: 사용자에게 안 보이는 앱 전용 공간
+        const DRIVE_SCOPE = USE_APP_DATA_FOLDER
+            ? 'https://www.googleapis.com/auth/drive.appdata'
+            : 'https://www.googleapis.com/auth/drive.file';
+        const AUTH_FLAG_KEY = 'gdrive_authed';   // 이 기기에서 이전에 로그인했는지 (자동 로그인 시도용)
+        const UPLOAD_DEBOUNCE_MS = 3000;         // 변경 후 이 시간이 지나면 자동으로 드라이브에 저장
+
+        /* 메모리 저장소: 기존 localStorage와 같은 방식(문자열)으로 쓰되, 브라우저 용량 제한이 없음 */
+        const store = {
+            _m: new Map(),
+            _silent: false,
+            keys() { return Array.from(this._m.keys()); },
+            getItem(k) { return this._m.has(k) ? this._m.get(k) : null; },
+            setItem(k, v) {
+                v = String(v);
+                if (v === 'undefined' || this._m.get(k) === v) return;
+                this._m.set(k, v);
+                if (!this._silent) markDirty();
+            },
+            removeItem(k) {
+                if (this._m.delete(k) && !this._silent) markDirty();
+            },
+            replaceAll(obj) {
+                this._m.clear();
+                Object.keys(obj || {}).forEach(k => {
+                    if (k.startsWith('diary_') && k !== PAGE_SIZE_KEY) this._m.set(k, JSON.stringify(obj[k]));
+                });
+            },
+            toJSONString() {
+                return '{' + this.keys().map(k => JSON.stringify(k) + ':' + this._m.get(k)).join(',') + '}';
+            }
+        };
+
+        const drive = {
+            client: null, token: null, expiresAt: 0, fileId: null,
+            ready: false,      // diary.json을 성공적으로 불러온 상태 (이때부터만 업로드 허용 → 빈 데이터로 덮어쓰기 방지)
+            guest: false, dirty: false, uploading: false, needAuth: false, error: false, lastSaved: null
+        };
+        let uploadTimer = null;
+        let uploadChain = Promise.resolve(true);
+        let pendingToken = null;
+
+        function markDirty() {
+            if (drive.guest) { updateBadge(); return; }
+            drive.dirty = true;
+            if (drive.ready) {
+                clearTimeout(uploadTimer);
+                uploadTimer = setTimeout(() => flushUpload(), UPLOAD_DEBOUNCE_MS);
+            }
+            updateBadge();
+        }
+
+        /* ---------- 로그인 / 토큰 ---------- */
+        function requestToken(prompt) {
+            return new Promise((resolve, reject) => {
+                if (!drive.client) return reject({ type: 'no_client' });
+                const timer = setTimeout(() => { pendingToken = null; reject({ type: 'timeout' }); }, prompt === 'none' ? 8000 : 180000);
+                pendingToken = {
+                    ok: (r) => {
+                        clearTimeout(timer); pendingToken = null;
+                        if (!google.accounts.oauth2.hasGrantedAllScopes(r, DRIVE_SCOPE)) return reject({ type: 'scope' });
+                        drive.token = r.access_token;
+                        drive.expiresAt = Date.now() + ((r.expires_in || 3600) - 120) * 1000;
+                        drive.needAuth = false;
+                        try { localStorage.setItem(AUTH_FLAG_KEY, '1'); } catch (e) {}
+                        resolve();
+                    },
+                    err: (e) => { clearTimeout(timer); pendingToken = null; reject(e || {}); }
+                };
+                drive.client.requestAccessToken({ prompt });
+            });
+        }
+
+        async function ensureToken() {
+            if (drive.token && Date.now() < drive.expiresAt) return;
+            try { await requestToken('none'); }
+            catch (e) {
+                drive.needAuth = true; updateBadge();
+                const err = new Error('auth'); err.code = 'auth'; throw err;
+            }
+        }
+
+        async function gfetch(url, opts = {}, retried = false) {
+            await ensureToken();
+            const res = await fetch(url, Object.assign({}, opts, {
+                headers: Object.assign({}, opts.headers || {}, { Authorization: 'Bearer ' + drive.token })
+            }));
+            if (res.status === 401 && !retried) { drive.token = null; return gfetch(url, opts, true); }
+            return res;
+        }
+
+        /* ---------- diary.json 찾기 / 읽기 / 쓰기 ---------- */
+        async function driveFindFile() {
+            const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
+            const space = USE_APP_DATA_FOLDER ? '&spaces=appDataFolder' : '';
+            const res = await gfetch(`https://www.googleapis.com/drive/v3/files?q=${q}${space}&orderBy=modifiedTime%20desc&pageSize=10&fields=files(id,name,modifiedTime)`);
+            if (!res.ok) throw new Error('find ' + res.status);
+            const j = await res.json();
+            drive.fileId = (j.files && j.files[0]) ? j.files[0].id : null;
+            return drive.fileId;
+        }
+
+        async function loadFromDrive() {
+            await driveFindFile();
+            let data = {};
+            if (drive.fileId) {
+                const res = await gfetch(`https://www.googleapis.com/drive/v3/files/${drive.fileId}?alt=media`);
+                if (!res.ok) throw new Error('read ' + res.status);
+                const text = await res.text();
+                if (text.trim()) {
+                    let ok = true;
+                    try { data = JSON.parse(text); } catch (e) { ok = false; }
+                    if (!ok || !data || typeof data !== 'object' || Array.isArray(data)) {
+                        const er = new Error('corrupt'); er.type = 'corrupt'; throw er; // 읽지 못하면 절대 덮어쓰지 않음
+                    }
+                }
+            }
+            clearTimeout(uploadTimer);
+            store.replaceAll(data);
+            drive.dirty = false; drive.ready = true; drive.guest = false;
+            drive.needAuth = false; drive.error = false;
+            applyLoadedData();
+            updateBadge();
+        }
+
+        async function driveWrite(body) {
+            if (!drive.fileId) await driveFindFile();          // 다른 기기에서 만든 파일이 있으면 그걸 덮어씀 (중복 생성 방지)
+            if (drive.fileId) {                                 // 있으면 덮어쓰기
+                const res = await gfetch(`https://www.googleapis.com/upload/drive/v3/files/${drive.fileId}?uploadType=media&fields=id`, {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json; charset=UTF-8' }, body
+                });
+                if (res.ok) return;
+                if (res.status !== 404) throw new Error('update ' + res.status);
+                drive.fileId = null;                            // 그 사이 삭제됨 → 새로 생성
+            }
+            const b = 'diary_boundary_' + Math.random().toString(36).slice(2);
+            const meta = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
+            if (USE_APP_DATA_FOLDER) meta.parents = ['appDataFolder'];
+            const multipart =
+                `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n` +
+                `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${body}\r\n--${b}--`;
+            const res = await gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+                method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: multipart
+            });
+            if (!res.ok) throw new Error('create ' + res.status);
+            drive.fileId = (await res.json()).id;
+        }
+
+        /* 업로드는 한 번에 하나씩(순서대로) 처리 → 파일이 두 개 생기는 문제 방지 */
+        function flushUpload(opts) {
+            const force = !!(opts && opts.force);
+            clearTimeout(uploadTimer);
+            uploadChain = uploadChain.then(async () => {
+                if (!drive.ready || drive.guest) return false;
+                if (!force && !drive.dirty) return true;
+                drive.dirty = false; drive.uploading = true; updateBadge();
+                try {
+                    await driveWrite(store.toJSONString());
+                    drive.lastSaved = new Date(); drive.error = false; drive.uploading = false;
+                    updateBadge(); updateStorageInfo();
+                    return true;
+                } catch (e) {
+                    drive.uploading = false; drive.dirty = true; drive.error = true;
+                    if (!(e && e.code === 'auth')) uploadTimer = setTimeout(() => flushUpload(), 30000);
+                    updateBadge();
+                    return false;
+                }
+            });
+            return uploadChain;
+        }
+
+        /* 드라이브에서 불러온 데이터를 화면에 반영 */
+        function applyLoadedData() {
+            loadKeyBinds();
+            loadCustomSkins();
+            loadUIFont();
+            if (isCoverOpen) loadData();
+            updateStorageInfo();
+        }
+
+        /* ---------- 화면(UI) ---------- */
+        function showGate(state, msg) {
+            document.getElementById('driveGate').style.display = 'flex';
+            document.getElementById('gateMsg').innerHTML = msg;
+            const login = state === 'login';
+            document.getElementById('gateLoginBtn').style.display = login ? 'flex' : 'none';
+            document.getElementById('gateGuestBtn').style.display = login ? 'block' : 'none';
+        }
+        function hideGate() { document.getElementById('driveGate').style.display = 'none'; }
+
+        function updateBadge() {
+            const el = document.getElementById('driveBadge');
+            if (!el) return;
+            let text = '', warn = false;
+            if (drive.guest) { text = '☁ 저장 안 됨 · 눌러서 로그인'; warn = true; }
+            else if (!drive.ready) { el.style.display = 'none'; return; }
+            else if (drive.needAuth) { text = '⚠ 로그인이 만료됐어요 · 눌러서 다시 연결'; warn = true; }
+            else if (drive.uploading) text = '☁ 드라이브에 저장 중…';
+            else if (drive.error) { text = '⚠ 저장 실패 · 눌러서 다시 시도'; warn = true; }
+            else if (drive.dirty) text = '☁ 저장 대기 중…';
+            else if (drive.lastSaved) text = '☁ 드라이브에 저장됨 ' + drive.lastSaved.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            else text = '☁ 드라이브 연결됨';
+            el.textContent = text;
+            el.classList.toggle('warn', warn);
+            el.style.display = 'block';
+        }
+
+        async function onBadgeClick() {
+            if (drive.guest) {
+                const yes = await showMsg('로그인하면 지금 화면의 임시 내용은<br>드라이브의 diary.json 내용으로 대체돼요.<br>계속할까요?', true);
+                if (yes) showGate('login', '☁ 구글 계정으로 로그인해 주세요.');
+            } else if (drive.needAuth) {
+                try { await requestToken('select_account'); await flushUpload({ force: true }); }
+                catch (e) { showMsg('⚠ ' + driveErrorText(e)); }
+            } else if (drive.error || drive.dirty) {
+                flushUpload({ force: true });
+            }
+        }
+
+        function driveErrorText(e) {
+            const t = (e && (e.type || e.error || e.message)) || '';
+            if (t === 'popup_closed') return '로그인 창이 닫혔어요. 다시 시도해 주세요.';
+            if (t === 'popup_failed_to_open') return '팝업이 차단됐어요. 팝업을 허용한 뒤 다시 눌러 주세요.';
+            if (t === 'scope') return '드라이브 파일 권한을 허용해야 일기를 저장할 수 있어요. 다시 시도해 주세요.';
+            if (t === 'access_denied') return '권한이 거부됐어요. 다시 시도해 주세요.';
+            if (t === 'timeout') return '응답이 없어요. 다시 시도해 주세요.';
+            if (t === 'corrupt') return 'diary.json을 읽을 수 없어요. 데이터 보호를 위해 덮어쓰지 않았어요. 드라이브의 파일을 확인해 주세요.';
+            return '연결에 실패했어요. (' + t + ')';
+        }
+
+        /* ---------- 시작 / 로그인 / 로그아웃 ---------- */
+        function waitForGoogle(ms) {
+            return new Promise(resolve => {
+                const t0 = Date.now();
+                (function poll() {
+                    if (window.google && google.accounts && google.accounts.oauth2) return resolve(true);
+                    if (Date.now() - t0 > ms) return resolve(false);
+                    setTimeout(poll, 100);
+                })();
+            });
+        }
+
+        async function initDrive() {
+            if (GOOGLE_CLIENT_ID.startsWith('YOUR_CLIENT_ID')) {
+                showGate('config', '⚙ 코드 맨 위의 <b>GOOGLE_CLIENT_ID</b>에<br>발급받은 OAuth 클라이언트 ID를 넣어 주세요.');
+                return;
+            }
+            showGate('wait', '☁ 구글 드라이브에 연결하는 중…');
+            const fileHint = location.protocol === 'file:'
+                ? '<br><br><span style="font-size:12px;color:#c62828;">이 파일이 <b>file://</b>로 열려 있어요. 구글 로그인은 https 주소(GitHub Pages 등)나 localhost에서만 동작해요.</span>' : '';
+            if (!(await waitForGoogle(10000))) {
+                showGate('login', '구글 로그인 스크립트를 불러오지 못했어요.<br>인터넷 연결을 확인하고 새로고침해 주세요.' + fileHint);
+                return;
+            }
+            drive.client = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: DRIVE_SCOPE,
+                callback: (r) => { if (pendingToken) (r && r.error) ? pendingToken.err(r) : pendingToken.ok(r); },
+                error_callback: (e) => { if (pendingToken) pendingToken.err(e); }
+            });
+            /* 이전에 로그인한 적이 있으면 창 없이 자동 로그인 시도 */
+            let authed = false;
+            try { authed = localStorage.getItem(AUTH_FLAG_KEY) === '1'; } catch (e) {}
+            if (authed) {
+                try { await requestToken('none'); await loadFromDrive(); hideGate(); return; }
+                catch (e) { if (e && e.type === 'corrupt') { showGate('login', driveErrorText(e)); return; } }
+            }
+            showGate('login', '일기는 내 구글 드라이브의 <b>diary.json</b> 파일 하나에 저장돼요.' + fileHint);
+        }
+
+        async function driveLogin() {
+            showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
+            try { await requestToken('select_account'); await loadFromDrive(); hideGate(); }
+            catch (e) { showGate('login', driveErrorText(e)); }
+        }
+
+        function enterGuestMode() {
+            drive.guest = true; drive.ready = false;
+            hideGate(); updateBadge();
+        }
+
+        async function reloadFromDrive() {
+            if (!drive.ready) { showMsg('먼저 구글 드라이브에 연결해 주세요.'); return; }
+            const yes = await showMsg('드라이브의 diary.json으로 현재 내용을 바꿔서 다시 불러올까요?<br><span style="font-size:12px;color:#777;">아직 저장되지 않은 변경은 사라져요.</span>', true);
+            if (!yes) return;
+            try { drive.fileId = null; await loadFromDrive(); showMsg('🔄 드라이브에서 다시 불러왔어요!'); }
+            catch (e) { showMsg('⚠ ' + driveErrorText(e)); }
+        }
+
+        async function driveLogout() {
+            const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">드라이브의 diary.json은 그대로 남아 있어요.</span>', true);
+            if (!yes) return;
+            if (drive.ready && drive.dirty) await flushUpload();
+            try { localStorage.removeItem(AUTH_FLAG_KEY); } catch (e) {}
+            location.reload();
+        }
+
+        /* 창을 닫거나 다른 탭으로 갈 때 저장 누락 방지 */
+        window.addEventListener('beforeunload', (e) => {
+            try { if (!turn) saveData(false); } catch (err) {}
+            if (drive.ready && !drive.guest && (drive.dirty || drive.uploading)) { e.preventDefault(); e.returnValue = ''; }
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) return;
+            try { if (!turn) saveData(false); } catch (err) {}
+            if (drive.ready && drive.dirty) flushUpload();
+        });
+
+
+        let currentDate = new Date();
+        let isCoverOpen = false;
+        let selectedElement = null;
+        let autoSaveTimer = null;
+        let autoSaveMinutes = 5;
+        let zIndexCounter = 10;
+
+        let keyBinds = { delete: 'Delete', prev: 'ArrowLeft', next: 'ArrowRight', save: 's' };
+        let customSkins = {};
+
+        /* 페이지 크기 설정 */
+        const PAGE_SIZE_KEY = 'diary_page_size';
+        const DEFAULT_PAGE_W = 480, DEFAULT_PAGE_H = 620;
+        const PAGE_W_MIN = 320, PAGE_W_MAX = 1200, PAGE_H_MIN = 400, PAGE_H_MAX = 1600;
+        const PAGE_BORDER = 4, PAGE_HEADER_H = 48;
+        let pageSetting = { w: DEFAULT_PAGE_W, h: DEFAULT_PAGE_H };
+        let liveSize = null;
+        let layoutDirty = false;
+
+        /* 커스텀 예쁜 메시지 모달 로직 (alert / confirm 대체) */
+        let msgResolve = null;
+        function showMsg(msg, isConfirm = false) {
+            return new Promise((resolve) => {
+                msgResolve = resolve;
+                document.getElementById('customAlertMsg').innerHTML = msg;
+                document.getElementById('customAlertCancelBtn').style.display = isConfirm ? 'block' : 'none';
+                document.getElementById('customAlertModal').style.display = 'flex';
+            });
+        }
+        function closeMsg(res) {
+            document.getElementById('customAlertModal').style.display = 'none';
+            if (msgResolve) {
+                msgResolve(res);
+                msgResolve = null;
+            }
+        }
+
+/* 폰트 목록 (기본 web/google fonts 및 기본 로컬 폰트) */
+const SYSTEM_FONT = "system-ui, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', Roboto, sans-serif";
+
+let fontList = [
+    { id: 'sys',           name: '기기 기본 폰트', css: SYSTEM_FONT },
+
+    /* --- 로컬 폰트 (Windows / Mac / OS 공통) --- */
+    { id: 'malgun',        name: '맑은 고딕 (Local)', css: "'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif" },
+    { id: 'gulim',         name: '굴림 (Local)', css: "'Gulim', 'GulimChe', sans-serif" },
+    { id: 'dotum',         name: '돋움 (Local)', css: "'Dotum', 'DotumChe', sans-serif" },
+    { id: 'batang',        name: '바탕 (Local)', css: "'Batang', 'AppleMyungjo', serif" },
+    { id: 'gungsuh',       name: '궁서 (Local)', css: "'Gungsuh', 'GungsuhChe', serif" },
+    { id: 'pyunji',        name: '휴먼편지체 (Local)', css: "'HMDodum', 'Pyunji R', sans-serif" },
+    { id: 'headline',      name: '헤드라인 (Local)', css: "'HYHeadLine-Medium', 'HeadLine', sans-serif" },
+    { id: 'arial',         name: 'Arial (Local)', css: "Arial, Helvetica, sans-serif" },
+    { id: 'comic_sans',    name: 'Comic Sans MS (Local)', css: "'Comic Sans MS', 'Chalkboard SE', cursive" },
+    { id: 'courier_new',   name: 'Courier New (Local)', css: "'Courier New', Courier, monospace" },
+    { id: 'georgia',       name: 'Georgia (Local)', css: "Georgia, serif" },
+    { id: 'impact',        name: 'Impact (Local)', css: "Impact, Charcoal, sans-serif" },
+    { id: 'times_roman',   name: 'Times New Roman (Local)', css: "'Times New Roman', Times, serif" },
+    { id: 'verdana',       name: 'Verdana (Local)', css: "Verdana, Geneva, sans-serif" },
+    { id: 'segoe',         name: 'Segoe UI (Local)', css: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+    { id: 'tahoma',        name: 'Tahoma (Local)', css: "Tahoma, Geneva, sans-serif" },
+    { id: 'trebuchet',     name: 'Trebuchet MS (Local)', css: "'Trebuchet MS', 'Lucida Sans Unicode', sans-serif" },
+    { id: 'palatino',      name: 'Palatino (Local)', css: "'Palatino Linotype', 'Book Antiqua', Palatino, serif" },
+    { id: 'garamond',      name: 'Garamond (Local)', css: "Garamond, Baskerville, 'Baskerville Old Face', serif" },
+    { id: 'consolas',      name: 'Consolas (Local)', css: "Consolas, 'Courier New', monospace" },
+    { id: 'apple_sd',      name: '애플 SD 산돌고딕 (Apple)', css: "'Apple SD Gothic Neo', sans-serif" },
+    { id: 'apple_myungjo', name: '애플 명조 (Apple)', css: "'AppleMyungjo', serif" },
+    { id: 'helvetica',     name: 'Helvetica (Apple)', css: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
+    { id: 'chalkboard',    name: 'Chalkboard (Apple)', css: "'Chalkboard SE', 'Comic Sans MS', cursive" },
+
+    /* --- 초인기 표준 웹폰트 (CDN 필요) --- */
+    { id: 'pretendard',    name: '프리텐다드 [대표 고딕]', css: "'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif" },
+    { id: 'suit',          name: '수트 (SUIT) [모던 고딕]', css: "'SUIT', sans-serif" },
+    { id: 'gmarket',       name: 'Gmarket Sans [제목용]', css: "'GmarketSansMedium', sans-serif" },
+    { id: 'tmon',          name: '티몬 몬소리체 [제목용]', css: "'TmonMonsori', sans-serif" },
+
+    /* --- Google Fonts (고딕/Sans-Serif) --- */
+    { id: 'nk',            name: '노토산스 KR [Google Fonts]', css: "'Noto Sans KR', sans-serif" },
+    { id: 'gd',            name: '고운돋움 [Google Fonts]', css: "'Gowun Dodum', sans-serif" },
+    { id: 'nanum_gothic',  name: '나눔고딕 [Google Fonts]', css: "'Nanum Gothic', sans-serif" },
+    { id: 'nanum_square',  name: '나눔스퀘어 네오 [Google Fonts]', css: "'NanumSquareNeo', sans-serif" },
+    { id: 'jua',           name: '주아 [Google Fonts]', css: "'Jua', sans-serif" },
+    { id: 'dh',            name: '도현 [Google Fonts]', css: "'Do Hyeon', sans-serif" },
+    { id: 'sf',            name: '해바라기 [Google Fonts]', css: "'Sunflower', sans-serif" },
+    { id: 'bh',            name: '블랙한산스 [Google Fonts]', css: "'Black Han Sans', sans-serif" },
+    { id: 'dg',            name: '동글 [Google Fonts]', css: "'Dongle', sans-serif" },
+    { id: 'sty',           name: '스타일리쉬 [Google Fonts]', css: "'Stylish', sans-serif" },
+    { id: 'ibm_sans',      name: 'IBM Plex Sans KR [Google Fonts]', css: "'IBM Plex Sans KR', sans-serif" },
+    { id: 'orbit',         name: '오르빗 [Google Fonts]', css: "'Orbit', sans-serif" },
+    { id: 'gothic_a1',     name: '고딕 A1 [Google Fonts]', css: "'Gothic A1', sans-serif" },
+
+    /* --- Google Fonts (명조/Serif) --- */
+    { id: 'nm',            name: '나눔명조 [Google Fonts]', css: "'Nanum Myeongjo', serif" },
+    { id: 'noto_serif',    name: '노토세리프 KR [Google Fonts]', css: "'Noto Serif KR', serif" },
+    { id: 'gowun_batang',  name: '고운바탕 [Google Fonts]', css: "'Gowun Batang', serif" },
+    { id: 'sm',            name: '송명 [Google Fonts]', css: "'Song Myung', serif" },
+    { id: 'diphylleia',    name: '산들바람 [Google Fonts]', css: "'Diphylleia', serif" },
+    { id: 'hahmlet',       name: '함렛 [Google Fonts]', css: "'Hahmlet', serif" },
+
+    /* --- Google Fonts (손글씨/Cursive/Display) --- */
+    { id: 'nps',           name: '나눔펜 스크립트 [Google Fonts]', css: "'Nanum Pen Script', cursive" },
+    { id: 'nanum_brush',   name: '나눔붓 스크립트 [Google Fonts]', css: "'Nanum Brush Script', cursive" },
+    { id: 'gaegu',         name: '개구 [Google Fonts]', css: "'Gaegu', cursive" },
+    { id: 'hm',            name: '하이멜로디 [Google Fonts]', css: "'Hi Melody', cursive" },
+    { id: 'ps',            name: '푸어스토리 [Google Fonts]', css: "'Poor Story', cursive" },
+    { id: 'sd',            name: '싱글데이 [Google Fonts]', css: "'Single Day', cursive" },
+    { id: 'gj',            name: '감자꽃 [Google Fonts]', css: "'Gamja Flower', cursive" },
+    { id: 'ys',            name: '연성 [Google Fonts]', css: "'Yeon Sung', cursive" },
+    { id: 'ed',            name: '동해 독도 [Google Fonts]', css: "'East Sea Dokdo', cursive" },
+    { id: 'cute',          name: '귀여운폰트 [Google Fonts]', css: "'Cute Font', cursive" },
+    { id: 'kh',            name: '기랑해랑 [Google Fonts]', css: "'Kirang Haerang', cursive" },
+    { id: 'gugi',          name: '구기 [Google Fonts]', css: "'Gugi', cursive" },
+    { id: 'dokdo',         name: '독도 [Google Fonts]', css: "'Dokdo', cursive" },
+    { id: 'black_fancy',   name: '흑백영화 [Google Fonts]', css: "'Black And White Fancy', cursive" },
+    { id: 'bagel_fat',     name: '베이글 팻 One [Google Fonts]', css: "'Bagel Fat One', cursive" }
+];
+
+        function fontIdOf(css) { const f = fontList.find(x => x.css === css); return f ? f.id : 'sys'; }
+        const DEFAULT_UI_FONT = fontList[0].css;
+        const DEFAULT_TEXT_FONT = fontList[0].css;
+        const DEFAULT_TEXT_COLOR = '#444444';
+        const DEFAULT_TEXT_SIZE = 18;
+
+        const emojiRanges = {
+            faces: [[0x1F600, 0x1F64F], [0x1F970, 0x1F9A2]],
+            animals: [[0x1F400, 0x1F4D3], [0x1F980, 0x1F9AE]],
+            food: [[0x1F347, 0x1F37B], [0x1F950, 0x1F96B]],
+            activities: [[0x1F380, 0x1F3C4], [0x1F940, 0x1F94B]],
+            travel: [[0x1F680, 0x1F6C5], [0x1F300, 0x1F320]],
+            objects: [[0x1F4A0, 0x1F4FF], [0x1F321, 0x1F346]],
+            symbols: [[0x2702, 0x27B0], [0x1F300, 0x1F5FF]]
+        };
+
+        const skinPresets = {
+            pink: { bg: '#ffe6f0', cover: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%)', page: '#fff0f5', border: '#ffb6c1', accent: '#ff6b81' },
+            mint: { bg: '#e0f2f1', cover: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', page: '#f1f8e9', border: '#a5d6a7', accent: '#2e7d32' },
+            purple: { bg: '#f3e5f5', cover: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', page: '#faf0e6', border: '#ce93d8', accent: '#7b1fa2' },
+            yellow: { bg: '#fffde7', cover: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', page: '#fff8e1', border: '#ffe082', accent: '#f57f17' }
+        };
+
+        window.onload = () => {
+            loadEmojiCategory('faces');
+            setupCurlDrag();
+            loadKeyBinds();
+            loadCustomSkins();
+            setupFontSelects();
+            setupPanelDrag();
+            loadUIFont();
+            setupKeyboardShortcuts();
+            loadPageSize();
+            setupLayout();
+            startAutoSave();
+            initDrive();
+        };
+
+        function fillFontSelect(select) {
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '';
+            fontList.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.css;
+                opt.textContent = f.name;
+                opt.style.fontFamily = f.css;
+                select.appendChild(opt);
+            });
+            if (currentVal && fontList.some(f => f.css === currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        function setupFontSelects() {
+            fillFontSelect(document.getElementById('uiFontSelect'));
+            fillFontSelect(document.getElementById('textFontSelect'));
+        }
+
+        function applyUIFont(css, save) {
+            if (!fontList.some(f => f.css === css)) css = DEFAULT_UI_FONT;
+            document.documentElement.style.setProperty('--font-family', css);
+            const sel = document.getElementById('uiFontSelect');
+            if (sel) sel.value = css;
+            if (save) store.setItem('diary_ui_font', JSON.stringify(css));
+        }
+
+        function loadUIFont() {
+            let css = DEFAULT_UI_FONT;
+            try {
+                const saved = JSON.parse(store.getItem('diary_ui_font'));
+                if (saved) css = saved;
+            } catch (err) {}
+            applyUIFont(css, false);
+        }
+
+        function styleTextarea(ta, font, color, size) {
+            font = font || DEFAULT_TEXT_FONT;
+            color = color || DEFAULT_TEXT_COLOR;
+            size = parseInt(size) || DEFAULT_TEXT_SIZE;
+            ta.dataset.font = font;
+            ta.dataset.color = color;
+            ta.dataset.size = size;
+            ta.style.fontFamily = font;
+            ta.style.color = color;
+            ta.style.fontSize = size + 'px';
+        }
+
+        function getSelectedTextarea() {
+            return selectedElement ? selectedElement.querySelector('textarea') : null;
+        }
+
+        function updateTextPanel() {
+            const panel = document.getElementById('textPanel');
+            const ta = getSelectedTextarea();
+            if (!ta) { panel.style.display = 'none'; return; }
+
+            const fontSel = document.getElementById('textFontSelect');
+            const font = ta.dataset.font || DEFAULT_TEXT_FONT;
+            if (!fontList.some(f => f.css === font)) {
+                fontSel.value = DEFAULT_TEXT_FONT;
+            } else {
+                fontSel.value = font;
+            }
+            document.getElementById('textColorInput').value = ta.dataset.color || DEFAULT_TEXT_COLOR;
+            document.getElementById('textSizeInput').value = ta.dataset.size || DEFAULT_TEXT_SIZE;
+            panel.style.display = 'flex';
+            positionTextPanel();
+        }
+
+        let panelOffset = null;
+
+        function clampPanelPos(l, t, pw, ph) {
+            const m = 6;
+            l = Math.max(m, Math.min(l, window.innerWidth - pw - m));
+            t = Math.max(m, Math.min(t, window.innerHeight - ph - m));
+            return { l, t };
+        }
+
+        function positionTextPanel() {
+            const panel = document.getElementById('textPanel');
+            if (!selectedElement || !getSelectedTextarea() || panel.style.display === 'none') return;
+
+            const er = selectedElement.getBoundingClientRect();
+            const pw = panel.offsetWidth, ph = panel.offsetHeight;
+            let l, t;
+
+            if (panelOffset) {
+                l = er.left + panelOffset.dx;
+                t = er.top + panelOffset.dy;
+            } else {
+                l = er.left + er.width / 2 - pw / 2;
+                t = er.bottom + 22;
+                if (t + ph > window.innerHeight - 6) {
+                    t = er.top - ph - 34;
+                }
+            }
+            const p = clampPanelPos(l, t, pw, ph);
+            panel.style.left = p.l + 'px';
+            panel.style.top = p.t + 'px';
+        }
+
+        function closeTextPanel() {
+            if (selectedElement) selectedElement.classList.remove('selected');
+            selectedElement = null;
+            updateTextPanel();
+        }
+
+        function setupPanelDrag() {
+            const panel = document.getElementById('textPanel');
+            const handle = document.getElementById('textPanelHandle');
+            let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+
+            handle.addEventListener('pointerdown', (e) => {
+                if (e.target.closest('button')) return;
+                dragging = true;
+                const r = panel.getBoundingClientRect();
+                sx = e.clientX; sy = e.clientY; sl = r.left; st = r.top;
+                try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            handle.addEventListener('pointermove', (e) => {
+                if (!dragging) return;
+                const p = clampPanelPos(sl + e.clientX - sx, st + e.clientY - sy, panel.offsetWidth, panel.offsetHeight);
+                panel.style.left = p.l + 'px';
+                panel.style.top = p.t + 'px';
+                if (selectedElement) {
+                    const er = selectedElement.getBoundingClientRect();
+                    panelOffset = { dx: p.l - er.left, dy: p.t - er.top };
+                }
+            });
+
+            const stop = () => { dragging = false; };
+            handle.addEventListener('pointerup', stop);
+            handle.addEventListener('pointercancel', stop);
+            window.addEventListener('resize', positionTextPanel);
+        }
+
+        function applyTextStyle() {
+            const ta = getSelectedTextarea();
+            if (!ta) return;
+            const font = document.getElementById('textFontSelect').value;
+            const color = document.getElementById('textColorInput').value;
+            let size = parseInt(document.getElementById('textSizeInput').value);
+            if (isNaN(size)) return;
+            size = Math.max(8, Math.min(120, size));
+            styleTextarea(ta, font, color, size);
+        }
+
+        function loadEmojiCategory(category, btnElement) {
+            if (btnElement) {
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            const grid = document.getElementById('stickerGrid');
+            grid.innerHTML = '';
+
+            const ranges = emojiRanges[category];
+            if (!ranges) return;
+
+            const fragment = document.createDocumentFragment();
+
+            ranges.forEach(([start, end]) => {
+                for (let code = start; code <= end; code++) {
+                    const char = String.fromCodePoint(code);
+                    const item = document.createElement('div');
+                    item.className = 'sticker-item';
+                    item.innerText = char;
+                    item.onclick = () => addSticker(char);
+                    fragment.appendChild(item);
+                }
+            });
+
+            grid.appendChild(fragment);
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            return `${year}. ${month}. ${day} (${days[date.getDay()]})`;
+        }
+
+        function getDateKey(date) {
+            return `diary_${date.getFullYear()}_${String(date.getMonth() + 1).padStart(2, '0')}_${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        let turn = null;
+        let drag = null;
+
+        function normalizeItem(d) {
+            if (d.type) return d;
+            const f = fontList.find(x => x.id === d.f);
+            return { type: ({ i: 'image', t: 'text', s: 'sticker' })[d.t] || 'sticker', content: d.c,
+                posX: d.x || 0, posY: d.y || 0, scale: d.s || 1, rotation: d.r || 0,
+                width: d.w ? d.w + 'px' : '', height: d.h ? d.h + 'px' : '', zIndex: d.z || 1,
+                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs };
+        }
+
+        function readDayData(date) {
+            let raw = null;
+            try { raw = JSON.parse(store.getItem(getDateKey(date))); } catch (err) {}
+            if (!raw) return [];
+            if (Array.isArray(raw)) return raw.map(normalizeItem);
+            const items = (raw.i || raw.items || []).map(normalizeItem);
+            const pw = raw.pw || raw.pageW, ph = raw.ph || raw.pageH;
+            if (!(pw > 0 && ph > 0)) return items;
+            const from = { w: pw, h: ph }, to = getPageSize();
+            if (from.w === to.w && from.h === to.h) return items;
+            return items.map(it => Object.assign({}, it, convertGeometry(it, from, to)));
+        }
+
+        function buildStaticPage(date) {
+            const page = document.createElement('div');
+            page.className = 'page inner-page';
+            page.style.zIndex = 2;
+            page.style.pointerEvents = 'none';
+            page.innerHTML =
+                `<div class="page-header">
+                    <button class="btn" style="padding:2px 8px;">◀ 이전</button>
+                    <span>${formatDate(date)}</span>
+                    <button class="btn" style="padding:2px 8px;">다음 ▶</button>
+                </div>
+                <div class="canvas-area"></div>`;
+            const canvas = page.querySelector('.canvas-area');
+            readDayData(date).forEach(d => canvas.appendChild(createElementFromData(d, false)));
+            return page;
+        }
+
+        function beginCurl(isCover, dir) {
+            if (turn) return false;
+            if (isCover && dir !== 1) return false;
+
+            const book = document.getElementById('diaryBook');
+            const W = book.clientWidth;
+            const pageEl = document.getElementById(isCover ? 'coverPage' : 'innerPage');
+
+            const targetDate = new Date(currentDate);
+            if (!isCover) {
+                saveData(false);
+                targetDate.setDate(targetDate.getDate() + dir);
+            }
+
+            const under = buildStaticPage(targetDate);
+            const shadow = document.createElement('div');
+            shadow.className = 'under-shadow ' + (dir === 1 ? 'dir-next' : 'dir-prev');
+            under.appendChild(shadow);
+            book.appendChild(under);
+
+            const flapLayer = document.createElement('div');
+            flapLayer.className = 'flap-layer';
+            const flap = document.createElement('div');
+            flap.className = 'flap ' + (dir === 1 ? 'dir-next' : 'dir-prev') + ' ' + (isCover ? 'cover-back' : 'page-back');
+            flapLayer.appendChild(flap);
+            book.appendChild(flapLayer);
+
+            if (selectedElement) { selectedElement.classList.remove('selected'); selectedElement = null; }
+            updateTextPanel();
+
+            turn = { isCover, dir, W, pageEl, under, shadow, flapLayer, flap, d: 0 };
+            updateCurl(0);
+            return true;
+        }
+
+        function updateCurl(d) {
+            const t = turn;
+            if (!t) return;
+            const W = t.W;
+            d = Math.max(0, Math.min(W, d));
+            t.d = d;
+
+            const show = d >= 1;
+            t.flap.style.display = show ? 'block' : 'none';
+            t.shadow.style.display = show ? 'block' : 'none';
+
+            const sw = Math.min(90, d);
+            t.flap.style.width = d + 'px';
+            t.shadow.style.width = sw + 'px';
+
+            if (t.dir === 1) {
+                const fold = W - d;
+                t.pageEl.style.clipPath = `inset(0 ${d}px 0 0)`;
+                t.flap.style.left = (fold - d) + 'px';
+                t.shadow.style.left = (fold - 4) + 'px';
+            } else {
+                const fold = d;
+                t.pageEl.style.clipPath = `inset(0 0 0 ${d}px)`;
+                t.flap.style.left = fold + 'px';
+                t.shadow.style.left = (fold - sw - 4) + 'px';
+            }
+        }
+
+        function animateCurlTo(target, complete) {
+            const t = turn;
+            if (!t) return;
+            const from = t.d;
+            const dist = Math.abs(target - from);
+            const dur = 120 + 480 * (dist / t.W);
+            const startTime = performance.now();
+
+            function step(now) {
+                if (turn !== t) return;
+                const p = Math.min(1, (now - startTime) / dur);
+                const eased = 1 - Math.pow(1 - p, 3);
+                updateCurl(from + (target - from) * eased);
+                if (p < 1) requestAnimationFrame(step);
+                else endCurl(complete);
+            }
+            requestAnimationFrame(step);
+        }
+
+        function endCurl(complete) {
+            const t = turn;
+            if (!t) return;
+
+            if (complete) {
+                if (t.isCover) {
+                    t.pageEl.style.display = 'none';
+                    document.getElementById('innerPage').style.display = 'flex';
+                    isCoverOpen = true;
+                } else {
+                    currentDate.setDate(currentDate.getDate() + t.dir);
+                }
+                selectedElement = null;
+                document.getElementById('pageDateDisplay').innerText = formatDate(currentDate);
+                loadData();
+            }
+
+            t.under.remove();
+            t.flapLayer.remove();
+            t.pageEl.style.clipPath = '';
+            setTimeout(() => { if (layoutDirty) refreshLayout(); }, 0);
+            turn = null;
+            updateTextPanel();
+        }
+
+        function changeDate(delta) {
+            if (!isCoverOpen || turn) return;
+            if (beginCurl(false, delta > 0 ? 1 : -1)) animateCurlTo(turn.W, true);
+        }
+
+        function openCoverAnimated() {
+            if (isCoverOpen || turn) return;
+            if (beginCurl(true, 1)) animateCurlTo(turn.W, true);
+        }
+
+        function setupCurlDrag() {
+            const wrapper = document.getElementById('diaryWrapper');
+            const book = document.getElementById('diaryBook');
+
+            wrapper.addEventListener('pointerdown', (e) => {
+                if (turn) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                if (e.target.closest('.element-box, button, textarea, input, select')) return;
+                drag = { id: e.pointerId, x: e.clientX, y: e.clientY, started: false, dir: 0 };
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!drag || drag.id !== e.pointerId) return;
+                const dx = e.clientX - drag.x;
+                const dy = e.clientY - drag.y;
+
+                if (!drag.started) {
+                    if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
+                    const dir = dx < 0 ? 1 : -1;
+                    if (!isCoverOpen && dir === -1) { drag = null; return; }
+                    if (!beginCurl(!isCoverOpen, dir)) { drag = null; return; }
+                    drag.started = true;
+                    drag.dir = dir;
+                    try { wrapper.setPointerCapture(e.pointerId); } catch (err) {}
+                }
+
+                const moved = (drag.dir === 1 ? drag.x - e.clientX : e.clientX - drag.x) - 8;
+                updateCurl(moved);
+
+                const rect = book.getBoundingClientRect();
+                const outside = drag.dir === 1 ? e.clientX <= rect.left : e.clientX >= rect.right;
+                if (outside || moved >= turn.W) {
+                    drag = null;
+                    animateCurlTo(turn.W, true);
+                }
+            });
+
+            const endDrag = (e) => {
+                if (!drag || drag.id !== e.pointerId) return;
+                const d = drag;
+                drag = null;
+                if (d.started && turn) {
+                    const complete = turn.d > turn.W * 0.35;
+                    animateCurlTo(complete ? turn.W : 0, complete);
+                } else if (!d.started && !isCoverOpen && e.target.closest && e.target.closest('#coverPage')) {
+                    openCoverAnimated();
+                }
+            };
+            window.addEventListener('pointerup', endDrag);
+            window.addEventListener('pointercancel', endDrag);
+        }
+
+        function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+        function canvasOfPage(pw, ph) {
+            return { w: pw - PAGE_BORDER * 2, h: ph - PAGE_BORDER * 2 - PAGE_HEADER_H };
+        }
+        function getPageSize() {
+            const b = document.getElementById('diaryBook');
+            return { w: b.clientWidth, h: b.clientHeight };
+        }
+        function fitFactor(c) {
+            const ref = canvasOfPage(DEFAULT_PAGE_W, DEFAULT_PAGE_H);
+            return Math.min(c.w / ref.w, c.h / ref.h);
+        }
+
+        function convertGeometry(g, fromPage, toPage) {
+            const a = canvasOfPage(fromPage.w, fromPage.h), b = canvasOfPage(toPage.w, toPage.h);
+            if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0) return g;
+            const px = parseFloat(g.posX) || 0, py = parseFloat(g.posY) || 0;
+            const sc = parseFloat(g.scale) || 1;
+            const w = g.boxW || 0, h = g.boxH || 0;
+            const k = fitFactor(b) / fitFactor(a);
+            const cx = (px + w / 2) * (b.w / a.w);
+            const cy = (py + h / 2) * (b.h / a.h);
+            return { posX: cx - w / 2, posY: cy - h / 2, scale: sc * k };
+        }
+
+        function rescaleLiveElements(fromPage, toPage) {
+            document.querySelectorAll('#canvasArea .element-box').forEach(el => {
+                const c = convertGeometry({ posX: el.dataset.posX, posY: el.dataset.posY, scale: el.dataset.scale,
+                                            boxW: el.offsetWidth, boxH: el.offsetHeight }, fromPage, toPage);
+                el.dataset.posX = c.posX; el.dataset.posY = c.posY; el.dataset.scale = c.scale;
+                el.style.transform = `translate(${c.posX}px, ${c.posY}px) scale(${c.scale}) rotate(${el.dataset.rotation || 0}deg)`;
+            });
+        }
+
+        function refreshLayout() {
+            if (turn) { layoutDirty = true; return; }
+            const ae = document.activeElement;
+            if (ae && ae.tagName === 'TEXTAREA') return;
+            layoutDirty = false;
+
+            const wrapper = document.getElementById('diaryWrapper');
+            const toolbar = document.querySelector('.toolbar');
+            const maxW = Math.floor(window.innerWidth * 0.92);
+            const maxH = Math.floor(window.innerHeight - toolbar.offsetHeight - 8 - 24);
+            wrapper.style.width = Math.max(240, Math.min(pageSetting.w, maxW)) + 'px';
+            wrapper.style.height = Math.max(240, Math.min(pageSetting.h, maxH)) + 'px';
+
+            const now = getPageSize();
+            if (isCoverOpen && liveSize && (liveSize.w !== now.w || liveSize.h !== now.h)) {
+                rescaleLiveElements(liveSize, now);
+                positionTextPanel();
+            }
+            liveSize = now;
+
+            const info = document.getElementById('pageSizeInfo');
+            if (info) info.textContent = `현재 표시 크기: ${now.w} × ${now.h}px` +
+                ((now.w < pageSetting.w || now.h < pageSetting.h) ? ' (화면보다 커서 자동으로 줄였어요)' : '');
+        }
+
+        function setupLayout() {
+            window.addEventListener('resize', refreshLayout);
+            document.addEventListener('focusout', () => setTimeout(refreshLayout, 300));
+            if (window.ResizeObserver) new ResizeObserver(refreshLayout).observe(document.querySelector('.toolbar'));
+            refreshLayout();
+        }
+
+        function syncPageSizeInputs() {
+            document.getElementById('pageWInput').value = pageSetting.w;
+            document.getElementById('pageHInput').value = pageSetting.h;
+        }
+        function loadPageSize() {
+            try {
+                const v = JSON.parse(localStorage.getItem(PAGE_SIZE_KEY));
+                if (v && v.w > 0 && v.h > 0) pageSetting = {
+                    w: clampNum(Math.round(v.w), PAGE_W_MIN, PAGE_W_MAX),
+                    h: clampNum(Math.round(v.h), PAGE_H_MIN, PAGE_H_MAX)
+                };
+            } catch (err) {}
+            syncPageSizeInputs();
+        }
+        function applyPageSizeSetting() {
+            let w = parseInt(document.getElementById('pageWInput').value);
+            let h = parseInt(document.getElementById('pageHInput').value);
+            if (isNaN(w)) w = pageSetting.w;
+            if (isNaN(h)) h = pageSetting.h;
+            pageSetting = { w: clampNum(w, PAGE_W_MIN, PAGE_W_MAX), h: clampNum(h, PAGE_H_MIN, PAGE_H_MAX) };
+            syncPageSizeInputs();
+            localStorage.setItem(PAGE_SIZE_KEY, JSON.stringify(pageSetting));
+            refreshLayout();
+        }
+        function resetPageSize() {
+            document.getElementById('pageWInput').value = DEFAULT_PAGE_W;
+            document.getElementById('pageHInput').value = DEFAULT_PAGE_H;
+            applyPageSizeSetting();
+        }
+
+        function addSticker(emoji) {
+            const el = document.createElement('div');
+            el.className = 'element-box';
+            el.innerHTML = `<span style="font-size:45px; display:inline-block;">${emoji}</span>`;
+            makeTransformable(el);
+            document.getElementById('canvasArea').appendChild(el);
+            closeModal('stickerModal');
+        }
+
+        function addText() {
+            const el = document.createElement('div');
+            el.className = 'element-box';
+            el.style.width = '160px';
+            el.style.height = '80px';
+            const ta = document.createElement('textarea');
+            ta.placeholder = '글을 입력하세요...';
+            styleTextarea(ta, DEFAULT_TEXT_FONT, DEFAULT_TEXT_COLOR, DEFAULT_TEXT_SIZE);
+            el.appendChild(ta);
+            makeTransformable(el);
+            document.getElementById('canvasArea').appendChild(el);
+            selectElement(el);
+        }
+
+        function triggerImageUpload() { document.getElementById('imgInput').click(); }
+
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.style.display = 'block';
+            clearTimeout(t._t); t._t = setTimeout(() => { t.style.display = 'none'; }, 4000);
+        }
+
+        function resolveSrc(p) {
+            return /^(https?:|data:|blob:)/i.test(p) ? p : p.split('/').map(encodeURIComponent).join('/');
+        }
+
+        function bindImage(img, src, fallback) {
+            img.dataset.src = src;
+            img.onerror = () => {
+                if (fallback && img.src !== fallback) { img.src = fallback; toast('⚠ ' + src + ' 을(를) 못 찾았어요. images 폴더에 넣어 주세요.'); }
+                else { img.classList.add('broken'); img.alt = '⚠ ' + src; }
+            };
+            img.src = resolveSrc(src);
+        }
+
+        function addImage(src, fallback) {
+            if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return false; }
+            const el = document.createElement('div');
+            el.className = 'element-box';
+            el.style.width = '150px';
+            const img = document.createElement('img');
+            bindImage(img, src, fallback);
+            el.appendChild(img);
+            makeTransformable(el);
+            document.getElementById('canvasArea').appendChild(el);
+            return true;
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // HTML 파일 기준 상대 경로 검사 (webkitRelativePath / file.path 지원)
+            const filePath = file.webkitRelativePath || file.path || file.name;
+            const normalizedPath = filePath.replace(/\\/g, '/');
+
+            // images/ 폴더 안에 존재하는 파일인지 검증
+            if (!normalizedPath.startsWith('images/')) {
+                showMsg('my_lovely_diary.html이 있는 곳에 images폴더를 만들고 그곳의 이미지를 가지고 오세요.');
+                e.target.value = '';
+                return;
+            }
+
+            // 올바른 경로의 이미지인 경우에만 추가
+            addImage('images/' + file.name);
+            e.target.value = '';
+        }
+
+        const LIB_SHEET_ID = '17QoBogfBhJreypfQ8fm0Lk3Qs8H3ghAqC68bmUSmgpI';
+        let libItems = null, libLoading = false;
+
+        function driveImageUrl(id) { return 'https://lh3.googleusercontent.com/d/' + id; }
+
+        function normalizeImageUrl(raw) {
+            const u = String(raw || '').trim();
+            if (!/^https?:\/\//i.test(u)) return null;
+            let m = u.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/);
+            if (!m && /drive\.google\.com|docs\.google\.com/.test(u)) m = u.match(/[?&]id=([\w-]{10,})/);
+            return m ? driveImageUrl(m[1]) : u;
+        }
+
+        async function fetchSheetCsv() {
+            const res = await fetch(`https://docs.google.com/spreadsheets/d/${LIB_SHEET_ID}/gviz/tq?headers=0&tqx=out:csv`);
+            const txt = await res.text();
+            if (!res.ok || /^\s*</.test(txt)) throw new Error('csv');
+            const first = l => { const m = l.match(/^"((?:[^"]|"")*)"/); return m ? m[1].replace(/""/g, '"') : l.split(',')[0]; };
+            return txt.split(/\r?\n/).map(first);
+        }
+
+        function fetchSheetJsonp() {
+            return new Promise((resolve, reject) => {
+                const cb = '__libcb' + Date.now();
+                const s = document.createElement('script');
+                const done = () => { clearTimeout(timer); delete window[cb]; s.remove(); };
+                const timer = setTimeout(() => { done(); reject(new Error('timeout')); }, 10000);
+                window[cb] = (json) => {
+                    done();
+                    if (!json || json.status !== 'ok') return reject(new Error('status'));
+                    resolve(json.table.rows.map(r => r.c && r.c[0] ? r.c[0].v : ''));
+                };
+                s.onerror = () => { done(); reject(new Error('load')); };
+                s.src = `https://docs.google.com/spreadsheets/d/${LIB_SHEET_ID}/gviz/tq?headers=0&tqx=out:json;responseHandler:${cb}`;
+                document.head.appendChild(s);
+            });
+        }
+
+        function openLibrary() { openModal('libraryModal'); loadLibrary(false); }
+
+        async function loadLibrary(force) {
+            const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');
+            if (libItems && !force) { renderLibrary(); return; }
+            if (libLoading) return;
+            libLoading = true;
+            st.textContent = '⏳ 시트에서 이미지 주소를 불러오는 중...';
+            grid.innerHTML = '';
+            try {
+                let cells;
+                try { cells = await fetchSheetCsv(); } catch (e) { cells = await fetchSheetJsonp(); }
+                libItems = [];
+                cells.forEach(c => { const u = normalizeImageUrl(c); if (u && !libItems.includes(u)) libItems.push(u); });
+                renderLibrary();
+            } catch (err) {
+                libItems = null;
+                st.innerHTML = '⚠ 시트를 불러오지 못했어요.<br>인터넷 연결 및 시트 접근 설정을 확인 후 다시 시도해 주세요.';
+            }
+            libLoading = false;
+        }
+
+        function renderLibrary() {
+            const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');
+            grid.innerHTML = '';
+            if (!libItems.length) { st.textContent = '시트 A열에 이미지 주소가 없어요.'; return; }
+            st.textContent = `이미지 ${libItems.length}개 · 누르면 페이지에 들어가요`;
+            const frag = document.createDocumentFragment();
+            libItems.forEach((url, i) => {
+                const item = document.createElement('div');
+                item.className = 'lib-item';
+                item.innerHTML = `<span class="lib-num">${i + 1}</span>`;
+                const img = document.createElement('img');
+                img.loading = 'lazy';
+                img.src = url.includes('lh3.googleusercontent.com/d/') ? url + '=w240' : url;
+                img.onerror = () => item.classList.add('bad');
+                item.appendChild(img);
+                item.onclick = () => { if (addImage(url)) closeModal('libraryModal'); };
+                frag.appendChild(item);
+            });
+            grid.appendChild(frag);
+        }
+
+        function makeTransformable(el) {
+            el.style.zIndex = zIndexCounter++;
+            let posX = 100, posY = 100, scale = 1, rotation = 0;
+
+            const rotateHandle = document.createElement('div');
+            rotateHandle.className = 'handle rotate-handle';
+            rotateHandle.innerHTML = '🔄';
+            el.appendChild(rotateHandle);
+
+            const scaleHandle = document.createElement('div');
+            scaleHandle.className = 'handle scale-handle';
+            scaleHandle.innerHTML = '↘';
+            el.appendChild(scaleHandle);
+
+            function updateTransform() {
+                el.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
+            }
+            
+            el.dataset.posX = posX; el.dataset.posY = posY;
+            el.dataset.scale = scale; el.dataset.rotation = rotation;
+            updateTransform();
+
+            let actionType = null;
+            let startX, startY, startDist, startAngle, initialScale, initialX, initialY;
+
+            function getClientPos(e) {
+                if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                return { x: e.clientX, y: e.clientY };
+            }
+
+            const onStart = (e) => {
+                selectElement(el);
+                const pos = getClientPos(e);
+                startX = pos.x; startY = pos.y;
+                posX = parseFloat(el.dataset.posX) || 0;
+                posY = parseFloat(el.dataset.posY) || 0;
+                scale = parseFloat(el.dataset.scale) || 1;
+                rotation = parseFloat(el.dataset.rotation) || 0;
+
+                if (e.target === rotateHandle) {
+                    actionType = 'rotate';
+                    const rect = el.getBoundingClientRect();
+                    startAngle = Math.atan2(pos.y - (rect.top + rect.height / 2), pos.x - (rect.left + rect.width / 2)) * (180 / Math.PI) - rotation;
+                } else if (e.target === scaleHandle) {
+                    actionType = 'scale';
+                    const rect = el.getBoundingClientRect();
+                    startDist = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
+                    initialScale = scale;
+                } else {
+                    actionType = 'move';
+                    initialX = posX; initialY = posY;
+                }
+                e.stopPropagation();
+            };
+
+            const onMove = (e) => {
+                if (!actionType) return;
+                const pos = getClientPos(e);
+
+                if (actionType === 'move') {
+                    posX = initialX + (pos.x - startX);
+                    posY = initialY + (pos.y - startY);
+                    el.dataset.posX = posX; el.dataset.posY = posY;
+                } else if (actionType === 'rotate') {
+                    const rect = el.getBoundingClientRect();
+                    const currentAngle = Math.atan2(pos.y - (rect.top + rect.height / 2), pos.x - (rect.left + rect.width / 2)) * (180 / Math.PI);
+                    rotation = currentAngle - startAngle;
+                    el.dataset.rotation = rotation;
+                } else if (actionType === 'scale') {
+                    const rect = el.getBoundingClientRect();
+                    const currentDist = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
+                    if (startDist > 0) {
+                        scale = Math.max(0.2, initialScale * (currentDist / startDist));
+                        el.dataset.scale = scale;
+                    }
+                }
+                updateTransform();
+                if (el === selectedElement) positionTextPanel();
+            };
+
+            const onEnd = () => { actionType = null; };
+
+            el.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                scale = parseFloat(el.dataset.scale) || 1;
+                posX = parseFloat(el.dataset.posX) || 0;
+                posY = parseFloat(el.dataset.posY) || 0;
+                rotation = parseFloat(el.dataset.rotation) || 0;
+                scale += e.deltaY < 0 ? 0.05 : -0.05;
+                scale = Math.max(0.2, Math.min(scale, 5));
+                el.dataset.scale = scale;
+                updateTransform();
+                if (el === selectedElement) positionTextPanel();
+            });
+
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, { passive: false });
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('mouseup', onEnd);
+            window.addEventListener('touchend', onEnd);
+        }
+
+        function selectElement(el) {
+            if (selectedElement !== el) panelOffset = null;
+            if (selectedElement) selectedElement.classList.remove('selected');
+            selectedElement = el;
+            selectedElement.classList.add('selected');
+            updateTextPanel();
+        }
+
+        document.getElementById('canvasArea').addEventListener('click', (e) => {
+            if (e.target.id === 'canvasArea') {
+                if (selectedElement) selectedElement.classList.remove('selected');
+                selectedElement = null;
+                updateTextPanel();
+            }
+        });
+
+        function bringToFront() { if (selectedElement) selectedElement.style.zIndex = ++zIndexCounter; }
+        function sendToBack() { if (selectedElement) selectedElement.style.zIndex = 1; }
+        function deleteSelected() {
+            if (selectedElement) { selectedElement.remove(); selectedElement = null; }
+            updateTextPanel();
+        }
+
+        async function saveData(showAlert = false) {
+            if (!isCoverOpen) return;
+            const canvas = document.getElementById('canvasArea');
+            const r1 = v => Math.round((parseFloat(v) || 0) * 10) / 10;
+            const elementsData = [];
+
+            canvas.querySelectorAll('.element-box').forEach(el => {
+                const textarea = el.querySelector('textarea');
+                const img = el.querySelector('img');
+                const span = el.querySelector('span');
+                const item = {
+                    t: textarea ? 't' : (img ? 'i' : 's'),
+                    c: textarea ? textarea.value : (img ? (img.dataset.src || img.getAttribute('src')) : span.innerText),
+                    x: r1(el.dataset.posX), y: r1(el.dataset.posY)
+                };
+                const sc = Math.round((parseFloat(el.dataset.scale) || 1) * 1000) / 1000;
+                if (sc !== 1) item.s = sc;
+                const rot = r1(el.dataset.rotation);
+                if (rot) item.r = rot;
+                const w = parseFloat(el.style.width), h = parseFloat(el.style.height);
+                if (w) item.w = Math.round(w);
+                if (h) item.h = Math.round(h);
+                item.z = parseInt(el.style.zIndex) || 1;
+                item.bw = el.offsetWidth; item.bh = el.offsetHeight;
+                if (textarea) {
+                    const fid = fontIdOf(textarea.dataset.font);
+                    if (fid !== 'sys') item.f = fid;
+                    if ((textarea.dataset.color || DEFAULT_TEXT_COLOR) !== DEFAULT_TEXT_COLOR) item.k = textarea.dataset.color;
+                    const fs = parseInt(textarea.dataset.size) || DEFAULT_TEXT_SIZE;
+                    if (fs !== DEFAULT_TEXT_SIZE) item.fs = fs;
+                }
+                elementsData.push(item);
+            });
+
+            const ps = getPageSize();
+            const dayKey = getDateKey(currentDate);
+            if (elementsData.length) store.setItem(dayKey, JSON.stringify({ v: 3, pw: ps.w, ph: ps.h, i: elementsData }));
+            else store.removeItem(dayKey);   // 빈 페이지는 파일에 남기지 않음
+
+            if (!showAlert) return;          // 자동 저장: 변경이 있으면 잠시 뒤 드라이브에 자동 업로드
+            if (drive.guest || !drive.ready) {
+                showMsg('⚠ 구글 드라이브에 연결되어 있지 않아 저장되지 않았어요.<br>왼쪽 아래 ☁ 표시를 눌러 로그인해 주세요.');
+                return;
+            }
+            const ok = await flushUpload({ force: true });   // 파일이 없으면 생성, 있으면 덮어쓰기
+            showMsg(ok
+                ? '💾 저장이 완료되었습니다!<br><span style="font-size:12px;color:#777;">☁ 구글 드라이브 · ' + DRIVE_FILE_NAME + '</span>'
+                : '⚠ 구글 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
+        }
+
+        function createElementFromData(data, interactive) {
+            const el = document.createElement('div');
+            el.className = 'element-box';
+            if (data.width) el.style.width = data.width;
+            if (data.height) el.style.height = data.height;
+
+            if (data.type === 'text') {
+                const ta = document.createElement('textarea');
+                ta.value = data.content || '';
+                if (!interactive) ta.readOnly = true;
+                styleTextarea(ta, data.fontFamily, data.color, data.fontSize);
+                el.appendChild(ta);
+            } else if (data.type === 'image') {
+                const img = document.createElement('img');
+                bindImage(img, data.content);
+                el.appendChild(img);
+            } else {
+                const span = document.createElement('span');
+                span.style.cssText = 'font-size:45px; display:inline-block;';
+                span.textContent = data.content;
+                el.appendChild(span);
+            }
+
+            if (interactive) makeTransformable(el);
+
+            el.dataset.posX = data.posX || 0;
+            el.dataset.posY = data.posY || 0;
+            el.dataset.scale = data.scale || 1;
+            el.dataset.rotation = data.rotation || 0;
+            el.style.transform = `translate(${data.posX || 0}px, ${data.posY || 0}px) scale(${data.scale || 1}) rotate(${data.rotation || 0}deg)`;
+
+            const z = parseInt(data.zIndex) || 1;
+            el.style.zIndex = z;
+            if (interactive) zIndexCounter = Math.max(zIndexCounter, z + 1);
+            return el;
+        }
+
+        function loadData() {
+            liveSize = getPageSize();
+            clearCanvas();
+            const canvas = document.getElementById('canvasArea');
+            readDayData(currentDate).forEach(data => {
+                canvas.appendChild(createElementFromData(data, true));
+            });
+        }
+
+        function clearCanvas() { document.getElementById('canvasArea').innerHTML = ''; }
+
+        function exportJSON() {
+            saveData(false);
+            const blob = new Blob([store.toJSONString()], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `MyDiary_Backup_${getDateKey(currentDate)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+
+        function triggerImportJSON() { document.getElementById('jsonInput').click(); }
+
+        function importJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(evt) {
+                try {
+                    const importedData = JSON.parse(evt.target.result);
+                    if (!importedData || typeof importedData !== 'object' || Array.isArray(importedData)) throw new Error('format');
+                    Object.keys(importedData).forEach(key => {
+                        if (key.startsWith('diary_') && key !== PAGE_SIZE_KEY) store.setItem(key, JSON.stringify(importedData[key]));
+                    });
+                } catch (err) { showMsg('⚠ 올바르지 않은 JSON 파일입니다.'); return; }
+
+                applyLoadedData();
+                if (drive.ready && !drive.guest) {
+                    const ok = await flushUpload({ force: true });   // 드라이브의 diary.json도 함께 갱신
+                    showMsg(ok
+                        ? '📥 데이터 복원이 완료되었고,<br>구글 드라이브의 diary.json도 갱신했어요!'
+                        : '📥 복원은 되었지만 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
+                } else {
+                    showMsg('📥 데이터 복원이 완료되었어요.<br>(드라이브에 연결되지 않아 저장은 되지 않았어요)');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function roundedRectPath(ctx, x, y, w, h, radii) {
+            const [tl, tr, br, bl] = radii;
+            ctx.beginPath();
+            ctx.moveTo(x + tl, y);
+            ctx.lineTo(x + w - tr, y);
+            ctx.arcTo(x + w, y, x + w, y + tr, tr);
+            ctx.lineTo(x + w, y + h - br);
+            ctx.arcTo(x + w, y + h, x + w - br, y + h, br);
+            ctx.lineTo(x + bl, y + h);
+            ctx.arcTo(x, y + h, x, y + h - bl, bl);
+            ctx.lineTo(x, y + tl);
+            ctx.arcTo(x, y, x + tl, y, tl);
+            ctx.closePath();
+        }
+
+        function exportToPNG() {
+            if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return; }
+            if (turn) return;
+            if (selectedElement) selectedElement.classList.remove('selected');
+
+            const navButtons = document.querySelectorAll('.page-nav-btn');
+            navButtons.forEach(btn => btn.style.visibility = 'hidden');
+
+            const innerPage = document.getElementById('innerPage');
+            const prevShadow = innerPage.style.boxShadow;
+            innerPage.style.boxShadow = 'none';
+
+            const restore = () => {
+                innerPage.style.boxShadow = prevShadow;
+                navButtons.forEach(btn => btn.style.visibility = 'visible');
+                if (selectedElement) selectedElement.classList.add('selected');
+            };
+
+            html2canvas(innerPage, {
+                backgroundColor: null,
+                useCORS: true,
+                scale: 2
+            }).then(canvas => {
+                const s = canvas.width / innerPage.offsetWidth;
+                const out = document.createElement('canvas');
+                out.width = canvas.width;
+                out.height = canvas.height;
+                const ctx = out.getContext('2d');
+                roundedRectPath(ctx, 0, 0, out.width, out.height, [15 * s, 22 * s, 22 * s, 15 * s]);
+                ctx.clip();
+                ctx.drawImage(canvas, 0, 0);
+
+                const link = document.createElement('a');
+                link.download = `${getDateKey(currentDate)}.png`;
+                link.href = out.toDataURL('image/png');
+                link.click();
+                restore();
+            }).catch(() => {
+                restore();
+                showMsg('⚠ PNG 저장에 실패했습니다.');
+            });
+        }
+
+        function updateStorageInfo() {
+            let days = 0, imgs = 0;
+            store.keys().forEach(k => {
+                if (!/^diary_\d{4}_\d{2}_\d{2}$/.test(k)) return;
+                days++;
+                try {
+                    const raw = JSON.parse(store.getItem(k));
+                    const arr = Array.isArray(raw) ? raw : (raw.i || raw.items || []);
+                    arr.forEach(d => { if ((d.type || d.t) === 'image' || d.t === 'i') imgs++; });
+                } catch (err) {}
+            });
+            const bytes = new Blob([store.toJSONString()]).size;
+            const size = bytes >= 1048576 ? (bytes / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB';
+            const t = document.getElementById('lsText');
+            if (t) t.innerText = size;
+            const d = document.getElementById('lsDetail');
+            if (d) d.innerText = `일기 ${days}일치 · 이미지 ${imgs}개`;
+            const st = document.getElementById('driveStatusText');
+            if (st) st.textContent = drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
+                : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${DRIVE_FILE_NAME}` : '☁ 연결 안 됨';
+        }
+
+        function applySkinPreset(skinName) {
+            let skin = skinPresets[skinName] || customSkins[skinName];
+            if (!skin) return;
+
+            const root = document.documentElement;
+            root.style.setProperty('--bg-color', skin.bg);
+            root.style.setProperty('--cover-bg', skin.cover);
+            root.style.setProperty('--page-bg', skin.page);
+            root.style.setProperty('--border-color', skin.border);
+            root.style.setProperty('--primary-accent', skin.accent);
+
+            if (skinPresets[skinName]) {
+                document.getElementById('customBg').value = skin.bg.startsWith('#') ? skin.bg : '#ffe6f0';
+                document.getElementById('customPage').value = skin.page;
+                document.getElementById('customBorder').value = skin.border;
+                document.getElementById('customAccent').value = skin.accent;
+            }
+        }
+
+        function previewCustomColor() {
+            const root = document.documentElement;
+            root.style.setProperty('--bg-color', document.getElementById('customBg').value);
+            root.style.setProperty('--cover-bg', document.getElementById('customCover').value);
+            root.style.setProperty('--page-bg', document.getElementById('customPage').value);
+            root.style.setProperty('--border-color', document.getElementById('customBorder').value);
+            root.style.setProperty('--primary-accent', document.getElementById('customAccent').value);
+        }
+
+        async function saveCustomSkin() {
+            const nameInput = document.getElementById('customSkinName').value.trim();
+            if (!nameInput) { showMsg('스킨 이름을 입력해주세요!'); return; }
+
+            const newSkin = {
+                bg: document.getElementById('customBg').value,
+                cover: document.getElementById('customCover').value,
+                page: document.getElementById('customPage').value,
+                border: document.getElementById('customBorder').value,
+                accent: document.getElementById('customAccent').value
+            };
+
+            customSkins[nameInput] = newSkin;
+            store.setItem('diary_custom_skins', JSON.stringify(customSkins));
+
+            addSkinToSelect(nameInput, `🎨 ${nameInput}`);
+            document.getElementById('skinSelect').value = nameInput;
+            document.getElementById('customSkinName').value = '';
+            showMsg(`'${nameInput}' 스킨이 새로 추가되었습니다!`);
+        }
+
+        async function deleteSelectedSkin() {
+            const select = document.getElementById('skinSelect');
+            const selectedVal = select.value;
+
+            if (skinPresets[selectedVal]) {
+                showMsg('기본 제공 프리셋 스킨은 삭제할 수 없습니다!');
+                return;
+            }
+
+            const confirmDelete = await showMsg(`'${selectedVal}' 커스텀 스킨을 정말 삭제하시겠습니까?`, true);
+            if (confirmDelete) {
+                delete customSkins[selectedVal];
+                store.setItem('diary_custom_skins', JSON.stringify(customSkins));
+
+                const optionToRemove = select.querySelector(`option[value="${selectedVal}"]`);
+                if (optionToRemove) optionToRemove.remove();
+
+                select.value = 'pink';
+                applySkinPreset('pink');
+                showMsg('스킨이 삭제되었습니다.');
+            }
+        }
+
+        function loadCustomSkins() {
+            const saved = store.getItem('diary_custom_skins');
+            if (saved) {
+                customSkins = JSON.parse(saved);
+                Object.keys(customSkins).forEach(name => {
+                    addSkinToSelect(name, `🎨 ${name}`);
+                });
+            }
+        }
+
+        function addSkinToSelect(value, text) {
+            const select = document.getElementById('skinSelect');
+            if (!select.querySelector(`option[value="${value}"]`)) {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.innerText = text;
+                select.appendChild(opt);
+            }
+        }
+
+        function loadKeyBinds() {
+            const saved = store.getItem('diary_keybinds');
+            if (saved) keyBinds = JSON.parse(saved);
+            updateKeyUI();
+        }
+
+        function updateKeyUI() {
+            document.getElementById('keyBtn_delete').innerText = keyBinds.delete;
+            document.getElementById('keyBtn_prev').innerText = keyBinds.prev;
+            document.getElementById('keyBtn_next').innerText = keyBinds.next;
+            document.getElementById('keyBtn_save').innerText = keyBinds.save;
+        }
+
+        function listenKeyChange(action) {
+            const btn = document.getElementById(`keyBtn_${action}`);
+            btn.innerText = '⌨️ 원하는 키를 누르세요...';
+            
+            const handleNewKey = (e) => {
+                e.preventDefault();
+                keyBinds[action] = e.key;
+                store.setItem('diary_keybinds', JSON.stringify(keyBinds));
+                updateKeyUI();
+                window.removeEventListener('keydown', handleNewKey);
+            };
+            window.addEventListener('keydown', handleNewKey, { once: true });
+        }
+
+        function updateAutoSaveInterval(val) { autoSaveMinutes = val; startAutoSave(); }
+        function startAutoSave() {
+            if (autoSaveTimer) clearInterval(autoSaveTimer);
+            autoSaveTimer = setInterval(() => { if (!turn) saveData(false); }, autoSaveMinutes * 60 * 1000);
+        }
+
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+                if (e.key === keyBinds.delete) deleteSelected();
+                if (e.ctrlKey && e.key.toLowerCase() === keyBinds.save.toLowerCase()) { e.preventDefault(); saveData(true); }
+                if (e.key === keyBinds.prev) changeDate(-1);
+                if (e.key === keyBinds.next) changeDate(1);
+            });
+        }
+
+        function openModal(id) {
+            if (id === 'settingsModal') { saveData(false); updateStorageInfo(); }
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    </script>
+</body>
+</html>
