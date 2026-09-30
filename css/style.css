@@ -316,3 +316,55 @@
             pointer-events: none; user-select: none; -webkit-user-drag: none;
         }
         .cover-notice.empty { display: none; }
+
+        /* 🎨 전체 배경 패턴 레이어 : 패턴을 쓰면 body 배경을 비우고 이 레이어가 보여요 */
+        .bg-pattern-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; display: none; }
+        html.bg-pattern-on .bg-pattern-layer { display: block; }
+        html.bg-pattern-on body { background-color: transparent; }
+        .bg-pattern-inner {
+            position: absolute; left: 0; top: 0;
+            width: calc(100% / var(--pat-s, 1)); height: calc(100% / var(--pat-s, 1));
+            transform: scale(var(--pat-s, 1)); transform-origin: 0 0;
+        }
+
+        /* 👗 스킨 하위 창 공통 버튼 줄 (← 스킨 메뉴 / 닫기) */
+        .sub-modal-btns { display: flex; gap: 8px; margin-top: 15px; flex-shrink: 0; }
+        .sub-modal-btns .btn { flex: 1; justify-content: center; }
+        .skin-pattern-note {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+            background: #fff0f5; border: 1px dashed var(--border-color); border-radius: 12px;
+            padding: 8px 10px; font-size: 13px; color: #555; line-height: 1.4;
+        }
+        .skin-pattern-note .btn { flex-shrink: 0; font-size: 12px; padding: 3px 8px; }
+
+        /* 🆓 / 💎 패턴 목록 */
+        .pat-content { max-width: min(95vw, var(--pat-w, 420px)); min-width: min(90vw, 340px); }
+        .pat-content .btn:disabled { opacity: .4; cursor: default; }
+        .pat-content .btn:disabled:hover { background: #fff; color: #444; }
+        .pat-current-box {
+            display: grid; gap: 6px; margin-bottom: 8px; padding: 8px 10px;
+            border: 2px solid var(--border-color); border-radius: 12px; font-size: 13px; color: #555;
+        }
+        .pat-current-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .pat-current-row b { color: var(--primary-accent); }
+        .pat-current-row input[type="range"] { flex: 1; min-width: 80px; accent-color: var(--primary-accent); }
+        .pat-current-row .btn { font-size: 12px; padding: 3px 8px; }
+        .pat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 100px)); justify-content: center; gap: 10px; overflow-y: auto; max-height: 55vh; padding: 4px; touch-action: pan-y; }
+        .pat-item {
+            display: flex; flex-direction: column; gap: 4px; padding: 0; background: none; border: none;
+            cursor: pointer; font-family: inherit; min-width: 0;
+        }
+        .pat-swatch {
+            position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden;
+            border: 2px solid var(--border-color); transition: transform .1s;
+        }
+        .pat-item:hover .pat-swatch { border-color: var(--primary-accent); transform: scale(1.04); }
+        .pat-item.sel .pat-swatch { border: 3px solid var(--primary-accent); box-shadow: 0 0 0 3px rgba(255,107,129,.2); }
+        .pat-swatch-inner { position: absolute; left: 0; top: 0; width: 200%; height: 200%; transform: scale(.5); transform-origin: 0 0; }
+        .pat-badge { position: absolute; right: 4px; top: 3px; font-size: 13px; }
+        .pat-check {
+            position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); white-space: nowrap;
+            background: var(--primary-accent); color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 10px;
+        }
+        .pat-name { font-size: 12px; color: #444; text-align: center; line-height: 1.3; word-break: keep-all; }
+        .pat-item.empty { visibility: hidden; pointer-events: none; }
