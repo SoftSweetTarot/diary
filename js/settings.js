@@ -218,6 +218,7 @@
                     addSkinToSelect(name, `🎨 ${name}`);
                 });
             }
+            if (typeof loadBgPattern === 'function') loadBgPattern();   // 전체 배경 패턴 (js/skins.js)
         }
 
         function addSkinToSelect(value, text) {
