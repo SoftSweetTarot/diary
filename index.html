@@ -387,7 +387,7 @@
                 <div class="help-item"><b>⬆️ 앞으로</b> : 선택한 요소를 다른 요소들보다 <b>맨 앞</b>으로 가져옵니다.</div>
                 <div class="help-item"><b>⬇️ 뒤로</b> : 선택한 요소를 <b>맨 뒤</b>로 보냅니다.</div>
                 <div class="help-item"><b>🗑️ 삭제</b> : 선택한 요소(스티커·글상자·이미지)를 지웁니다.</div>
-                <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 diary.json</b>에 저장합니다. 파일이 없으면 새로 만들고, 있으면 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
+                <div class="help-item"><b>💾 저장</b> : 현재 날짜 페이지를 <b>구글 드라이브의 '다이어리 / 년도 / 월 / 일.json'</b> 파일에 저장합니다. 폴더와 파일이 없으면 새로 만들고, 같은 날짜는 하루 1개 파일에 계속 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
                 <div class="help-item"><b>📷 PNG 저장</b> : 현재 보고 있는 페이지를 <code>.png</code> 이미지로 저장합니다. 현재 페이지 크기의 2배 해상도로 저장됩니다.</div>
                 <div class="help-item"><b>👗 스킨</b> : 기본 스킨 4종을 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있습니다.</div>
                 <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 키보드 단축키를 바꿉니다.</div>
@@ -526,7 +526,7 @@
                 <div style="font-size:1.15rem; font-weight:bold; color:#ff6b81; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
                     💾 <span>다이어리 저장 용량 확인</span>
                 </div>
-                <div style="font-size:13px; color:#555; text-align:left;">구글 드라이브 diary.json 크기:</div>
+                <div style="font-size:13px; color:#555; text-align:left;">구글 드라이브 '다이어리' 폴더 전체 크기:</div>
                                 <div id="lsText" style="font-size:13px; color:#666; text-align:right;">계산 중...</div>
                 <div id="lsDetail" style="font-size:12px; color:#777; line-height:1.5; margin-top:4px; text-align:left;"></div>
             </div>
@@ -577,13 +577,17 @@
 
     <script>
         /* =====================================================================
-           ☁ 구글 드라이브 저장소 (diary.json 단일 파일)
-           - 데이터는 메모리(store)에서 다루고, 저장 시 diary.json 하나로 드라이브에 덮어씁니다.
-           - 파일이 없으면 저장할 때 자동으로 새로 만듭니다.
+           ☁ 구글 드라이브 저장소 (하루 1개 json 파일)
+           - 저장 위치 : 다이어리 / 2026년 / 9월 / 10일.json  (폴더가 없으면 저장할 때 자동 생성)
+           - 같은 날짜는 항상 같은 파일을 덮어쓰기 → 하루에 파일 1개만 유지
+           - 불러오기 : 처음엔 오늘 앞·뒤 포함 3일치, 페이지를 넘길 때마다 1일치씩 미리 읽기
            ===================================================================== */
         const GOOGLE_CLIENT_ID = '1020129080030-42dun4pqvve1pjg9r21m62dd71h6hui5.apps.googleusercontent.com'; // ← 본인 OAuth 클라이언트 ID로 교체
-        const DRIVE_FILE_NAME = 'diary.json';
-        const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 diary.json이 보임 / true: 사용자에게 안 보이는 앱 전용 공간
+        const ROOT_FOLDER_NAME = '다이어리';                  // 최상위 루트 폴더
+        const SETTINGS_FILE_NAME = 'settings.json';           // 스킨·글꼴·단축키 등 설정 (루트 폴더 안에 1개)
+        const LEGACY_FILE_NAME = 'diary.json';                // 예전 방식(파일 1개) → 최초 1회 날짜별 파일로 변환용
+        const LEGACY_DONE_KEY = 'gdrive_legacy_done';
+        const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
         const DRIVE_SCOPE = USE_APP_DATA_FOLDER
             ? 'https://www.googleapis.com/auth/drive.appdata'
             : 'https://www.googleapis.com/auth/drive.file';
@@ -591,8 +595,13 @@
         const UPLOAD_DEBOUNCE_MS = 3000;         // 변경 후 이 시간이 지나면 자동으로 드라이브에 저장
         const PENDING_KEY = 'gdrive_pending_backup'; // 화면이 꺼질 때 업로드가 끝나기 전에 앱이 멈출 경우를 대비한 임시 보관본
         const KEEPALIVE_MAX_BYTES = 60000;       // fetch keepalive 옵션은 본문 64KB 이하만 가능
+        const DRIVE_API = 'https://www.googleapis.com/drive/v3/files';
+        const FOLDER_MIME = 'application/vnd.google-apps.folder';
+        const DAY_KEY_RE = /^diary_(\d{4})_(\d{2})_(\d{2})$/;
 
-        /* 메모리 저장소: 기존 localStorage와 같은 방식(문자열)으로 쓰되, 브라우저 용량 제한이 없음 */
+        /* 메모리 저장소: 화면이 쓰는 값은 여기(문자열)에 두고, 변경된 것만 드라이브에 올립니다.
+           - 날짜 데이터  : diary_2026_09_10  → 다이어리/2026년/9월/10일.json
+           - 설정 데이터  : diary_ui_font 등  → 다이어리/settings.json */
         const store = {
             _m: new Map(),
             _silent: false,
@@ -602,34 +611,42 @@
                 v = String(v);
                 if (v === 'undefined' || this._m.get(k) === v) return;
                 this._m.set(k, v);
-                if (!this._silent) markDirty();
+                if (!this._silent) markDirty(k);
             },
             removeItem(k) {
-                if (this._m.delete(k) && !this._silent) markDirty();
+                if (this._m.delete(k) && !this._silent) markDirty(k);
             },
-            replaceAll(obj) {
-                this._m.clear();
-                Object.keys(obj || {}).forEach(k => {
-                    if (k.startsWith('diary_') && k !== PAGE_SIZE_KEY) this._m.set(k, JSON.stringify(obj[k]));
-                });
-            },
+            /* 드라이브에서 읽어온 값을 '변경됨' 표시 없이 넣기 (null이면 비우기) */
+            putLoaded(k, v) { if (v === null || v === undefined) this._m.delete(k); else this._m.set(k, String(v)); },
+            clear() { this._m.clear(); },
             toJSONString() {
                 return '{' + this.keys().map(k => JSON.stringify(k) + ':' + this._m.get(k)).join(',') + '}';
             }
         };
 
         const drive = {
-            client: null, token: null, expiresAt: 0, fileId: null,
-            ready: false,      // diary.json을 성공적으로 불러온 상태 (이때부터만 업로드 허용 → 빈 데이터로 덮어쓰기 방지)
-            guest: false, dirty: false, uploading: false, needAuth: false, error: false, lastSaved: null, modifiedTime: 0
+            client: null, token: null, expiresAt: 0,
+            ready: false,      // 설정을 성공적으로 불러온 상태 (이때부터만 업로드 허용)
+            guest: false, uploading: false, needAuth: false, error: false, lastSaved: null,
+            gen: 0,            // 다시 불러오기 할 때마다 증가 (예전 요청의 결과가 뒤늦게 섞이는 것 방지)
+            inflight: null,    // 지금 업로드 중인 키
+            settingsFile: null,
+            dirtyKeys: new Set(),        // 아직 드라이브에 올리지 못한 변경 (날짜/설정 키)
+            loadedDays: new Set(),       // 드라이브에서 이미 읽어 온 날짜 (없는 날짜도 '읽음' 처리)
+            dayLoads: new Map(),         // 읽는 중인 날짜 요청
+            folderIds: new Map(),        // 폴더 경로 → 폴더 id 캐시
+            folderBusy: new Map(),
+            monthIndex: new Map(),       // '2026/9' → { folderId, files: Map(파일명 → 파일정보) } 캐시
+            monthBusy: new Map(),
+            get dirty() { return this.dirtyKeys.size > 0; }
         };
         let uploadTimer = null;
         let uploadChain = Promise.resolve(true);
         let pendingToken = null;
 
-        function markDirty() {
+        function markDirty(key) {
             if (drive.guest) { updateBadge(); return; }
-            drive.dirty = true;
+            drive.dirtyKeys.add(key);
             if (drive.ready) {
                 clearTimeout(uploadTimer);
                 uploadTimer = setTimeout(() => flushUpload(), UPLOAD_DEBOUNCE_MS);
@@ -676,92 +693,371 @@
             return res;
         }
 
-        /* ---------- diary.json 찾기 / 읽기 / 쓰기 ---------- */
-        async function driveFindFile() {
-            const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
-            const space = USE_APP_DATA_FOLDER ? '&spaces=appDataFolder' : '';
-            const res = await gfetch(`https://www.googleapis.com/drive/v3/files?q=${q}${space}&orderBy=modifiedTime%20desc&pageSize=10&fields=files(id,name,modifiedTime)`);
-            if (!res.ok) throw new Error('find ' + res.status);
-            const j = await res.json();
-            drive.fileId = (j.files && j.files[0]) ? j.files[0].id : null;
-            drive.modifiedTime = (j.files && j.files[0] && j.files[0].modifiedTime) ? Date.parse(j.files[0].modifiedTime) : 0;
-            return drive.fileId;
+        /* ---------- 폴더 / 파일 이름 규칙 ----------
+           다이어리 / 2026년 / 9월 / 10일.json   (하루에 파일 1개, 같은 날은 항상 덮어쓰기) */
+        const yearFolderName = y => `${y}년`;
+        const monthFolderName = m => `${m}월`;
+        const dayFileName = d => `${d}일.json`;
+        function dayKeyOf(y, m, d) { return `diary_${y}_${String(m).padStart(2, '0')}_${String(d).padStart(2, '0')}`; }
+        function parseDayKey(k) { const r = DAY_KEY_RE.exec(k); return r ? { y: +r[1], m: +r[2], d: +r[3] } : null; }
+        function isDayKey(k) { return DAY_KEY_RE.test(k); }
+        function isSettingKey(k) { return k.startsWith('diary_') && !isDayKey(k) && k !== PAGE_SIZE_KEY; }
+        function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
+        function dayPathText(date) {
+            return `${ROOT_FOLDER_NAME}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;
+        }
+        function corruptError(what) { const er = new Error('corrupt'); er.type = 'corrupt'; er.what = what; return er; }
+
+        /* ---------- 드라이브 기본 동작 ---------- */
+        const DRIVE_PARENT_DEFAULT = USE_APP_DATA_FOLDER ? 'appDataFolder' : 'root';
+        const DRIVE_SPACE = USE_APP_DATA_FOLDER ? '&spaces=appDataFolder' : '';
+
+        async function driveList(query, fields) {
+            let files = [], pageToken = '';
+            do {
+                const url = `${DRIVE_API}?q=${encodeURIComponent(query)}${DRIVE_SPACE}&orderBy=createdTime&pageSize=1000`
+                    + `&fields=${encodeURIComponent('nextPageToken,files(' + fields + ')')}` + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
+                const res = await gfetch(url);
+                if (!res.ok) throw new Error('list ' + res.status);
+                const j = await res.json();
+                files = files.concat(j.files || []);
+                pageToken = j.nextPageToken || '';
+            } while (pageToken);
+            return files;
         }
 
-        async function loadFromDrive() {
-            await driveFindFile();
-            let data = {};
-            if (drive.fileId) {
-                const res = await gfetch(`https://www.googleapis.com/drive/v3/files/${drive.fileId}?alt=media`);
-                if (!res.ok) throw new Error('read ' + res.status);
-                const text = await res.text();
-                if (text.trim()) {
-                    let ok = true;
-                    try { data = JSON.parse(text); } catch (e) { ok = false; }
-                    if (!ok || !data || typeof data !== 'object' || Array.isArray(data)) {
-                        const er = new Error('corrupt'); er.type = 'corrupt'; throw er; // 읽지 못하면 절대 덮어쓰지 않음
-                    }
+        async function readFileText(id) {
+            const res = await gfetch(`${DRIVE_API}/${id}?alt=media`);
+            if (!res.ok) throw new Error('read ' + res.status);
+            return await res.text();
+        }
+
+        /* 빈 파일이면 null, 읽을 수 없는 내용이면 corrupt 에러(→ 절대 덮어쓰지 않음) */
+        function parseJsonObject(text, what) {
+            if (!text.trim()) return null;
+            let obj;
+            try { obj = JSON.parse(text); } catch (e) { throw corruptError(what); }
+            if (!obj || typeof obj !== 'object') throw corruptError(what);
+            return obj;
+        }
+
+        async function findFolder(name, parentId) {
+            const files = await driveList(`name='${name}' and mimeType='${FOLDER_MIME}' and '${parentId || DRIVE_PARENT_DEFAULT}' in parents and trashed=false`, 'id,name');
+            return files[0] ? files[0].id : null;
+        }
+
+        async function createFolder(name, parentId) {
+            const res = await gfetch(`${DRIVE_API}?fields=id`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                body: JSON.stringify({ name, mimeType: FOLDER_MIME, parents: [parentId || DRIVE_PARENT_DEFAULT] })
+            });
+            if (!res.ok) throw new Error('mkdir ' + res.status);
+            return (await res.json()).id;
+        }
+
+        /* names = ['다이어리'] / ['다이어리','2026년'] / ['다이어리','2026년','9월']
+           create=false : 있으면 찾기만 (읽을 때) / create=true : 없으면 만들기 (저장할 때) */
+        async function getFolder(names, create) {
+            const key = names.join('/');
+            if (drive.folderIds.has(key)) return drive.folderIds.get(key);
+            const busyKey = key + '|' + (create ? 1 : 0);
+            if (drive.folderBusy.has(busyKey)) return drive.folderBusy.get(busyKey);
+            const p = (async () => {
+                let parentId = null;
+                if (names.length > 1) {
+                    parentId = await getFolder(names.slice(0, -1), create);
+                    if (!parentId) return null;
                 }
+                const name = names[names.length - 1];
+                let id = await findFolder(name, parentId);
+                if (!id && create) id = await createFolder(name, parentId);
+                if (id) drive.folderIds.set(key, id);
+                return id || null;
+            })();
+            drive.folderBusy.set(busyKey, p);
+            try { return await p; } finally { drive.folderBusy.delete(busyKey); }
+        }
+
+        /* 한 달 폴더 안의 파일 목록을 한 번만 가져와 기억 → 같은 달의 날짜들은 목록 조회 없이 바로 읽음 */
+        async function getMonthIndex(y, m, create) {
+            const key = `${y}/${m}`;
+            let entry = drive.monthIndex.get(key);
+            if (entry) return entry;
+            if (drive.monthBusy.has(key)) {
+                entry = await drive.monthBusy.get(key);
+                if (entry || !create) return entry;
             }
+            const p = (async () => {
+                const folderId = await getFolder([ROOT_FOLDER_NAME, yearFolderName(y), monthFolderName(m)], create);
+                if (!folderId) return null;
+                const files = await driveList(`'${folderId}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,name,modifiedTime,size');
+                const e = { folderId, files: new Map() };
+                files.forEach(f => { if (!e.files.has(f.name)) e.files.set(f.name, f); });   // 같은 이름이 여러 개면 가장 오래된 1개만 사용
+                drive.monthIndex.set(key, e);
+                return e;
+            })();
+            drive.monthBusy.set(key, p);
+            try { return await p; } finally { drive.monthBusy.delete(key); }
+        }
+
+        function resetDriveCaches() {
+            drive.folderIds.clear(); drive.folderBusy.clear();
+            drive.monthIndex.clear(); drive.monthBusy.clear();
+            drive.settingsFile = null;
+        }
+
+        /* ---------- 읽기 : 설정 / 하루치 ---------- */
+        async function fetchSettings() {
+            drive.settingsFile = null;
+            const rootId = await getFolder([ROOT_FOLDER_NAME], false);
+            if (!rootId) return null;
+            const files = await driveList(`name='${SETTINGS_FILE_NAME}' and '${rootId}' in parents and trashed=false`, 'id,name,modifiedTime');
+            if (!files[0]) return null;
+            drive.settingsFile = files[0];
+            return parseJsonObject(await readFileText(files[0].id), 'settings');
+        }
+
+        async function fetchDay(date) {
+            const idx = await getMonthIndex(date.getFullYear(), date.getMonth() + 1, false);
+            const f = idx && idx.files.get(dayFileName(date.getDate()));
+            if (!f) return null;                                   // 그날 쓴 일기가 없음
+            const obj = parseJsonObject(await readFileText(f.id), getDateKey(date));
+            return obj ? JSON.stringify(obj) : null;
+        }
+
+        /* 하루치를 메모리로 읽어 오기 (이미 읽었으면 바로 끝, 읽는 중이면 그 요청을 같이 기다림) */
+        function ensureDayLoaded(date) {
+            const key = getDateKey(date);
+            if (drive.guest || drive.loadedDays.has(key)) return Promise.resolve(true);
+            if (drive.dayLoads.has(key)) return drive.dayLoads.get(key);
+            const gen = drive.gen;
+            const p = (async () => {
+                try {
+                    const text = await fetchDay(date);
+                    if (gen !== drive.gen) return false;
+                    if (!drive.dirtyKeys.has(key)) store.putLoaded(key, text);   // 고치는 중인 내용이 있으면 덮어쓰지 않음
+                    drive.loadedDays.add(key);
+                    return true;
+                } catch (e) {
+                    console.warn('일기 불러오기 실패:', key, e);
+                    return false;
+                } finally {
+                    if (drive.dayLoads.get(key) === p) drive.dayLoads.delete(key);
+                }
+            })();
+            drive.dayLoads.set(key, p);
+            return p;
+        }
+
+        function prefetchDays(dates) {
+            if (!drive.ready || drive.guest) return Promise.resolve([]);
+            return Promise.all(dates.map(ensureDayLoaded));
+        }
+        /* 다이어리를 처음 열 때: 오늘 + 어제 + 내일 (3개) */
+        function prefetchInitial() { return prefetchDays([currentDate, addDays(currentDate, -1), addDays(currentDate, 1)]); }
+        /* 페이지를 한 장 넘긴 뒤: 넘긴 방향의 다음 하루치만 (1개) */
+        function prefetchAfterTurn(dir) { return prefetchDays([addDays(currentDate, dir)]); }
+
+        async function loadFromDrive() {
+            resetDriveCaches();
+            const settings = await fetchSettings();        // 읽지 못하면 여기서 에러 → 아무것도 바꾸지 않음
             clearTimeout(uploadTimer);
-            store.replaceAll(data);
-            drive.dirty = false; drive.ready = true; drive.guest = false;
+            drive.gen++;
+            store.clear();
+            drive.dirtyKeys.clear(); drive.loadedDays.clear(); drive.dayLoads.clear();
+            if (settings) Object.keys(settings).forEach(k => { if (isSettingKey(k)) store.putLoaded(k, JSON.stringify(settings[k])); });
+            drive.ready = true; drive.guest = false;
             drive.needAuth = false; drive.error = false;
             applyLoadedData();
             updateBadge();
+            prefetchInitial();                             // 기다리지 않고 백그라운드로 3일치 미리 읽기
         }
 
+        /* ---------- 쓰기 : 하루 1파일 덮어쓰기 ---------- */
         /* 화면이 꺼지는 중에도 요청이 끝까지 전송되도록 keepalive 사용 (본문이 64KB 이하일 때만 가능) */
         function keepaliveFor(body) {
             try { return new Blob([body]).size <= KEEPALIVE_MAX_BYTES ? { keepalive: true } : {}; }
             catch (e) { return {}; }
         }
 
-        async function driveWrite(body) {
-            if (!drive.fileId) await driveFindFile();          // 다른 기기에서 만든 파일이 있으면 그걸 덮어씀 (중복 생성 방지)
-            if (drive.fileId) {                                 // 있으면 덮어쓰기
-                const res = await gfetch(`https://www.googleapis.com/upload/drive/v3/files/${drive.fileId}?uploadType=media&fields=id`, Object.assign({
+        /* fileId가 있으면 그 파일을 덮어쓰고, 없으면 folderId 안에 새로 만듭니다 */
+        async function driveUpsert(folderId, name, fileId, body) {
+            if (fileId) {
+                const res = await gfetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&fields=id,modifiedTime`, Object.assign({
                     method: 'PATCH', headers: { 'Content-Type': 'application/json; charset=UTF-8' }, body
                 }, keepaliveFor(body)));
-                if (res.ok) return;
+                if (res.ok) return await res.json();
                 if (res.status !== 404) throw new Error('update ' + res.status);
-                drive.fileId = null;                            // 그 사이 삭제됨 → 새로 생성
+                const er = new Error('gone'); er.code = 'gone'; throw er;       // 그 사이 지워짐 → 캐시를 비우고 다시 시도
             }
             const b = 'diary_boundary_' + Math.random().toString(36).slice(2);
-            const meta = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
-            if (USE_APP_DATA_FOLDER) meta.parents = ['appDataFolder'];
+            const meta = { name, mimeType: 'application/json', parents: [folderId] };
             const multipart =
                 `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n` +
                 `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${body}\r\n--${b}--`;
-            const res = await gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', Object.assign({
+            const res = await gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime', Object.assign({
                 method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: multipart
             }, keepaliveFor(multipart)));
-            if (!res.ok) throw new Error('create ' + res.status);
-            drive.fileId = (await res.json()).id;
+            if (!res.ok) {
+                if (res.status === 404) { const er = new Error('gone'); er.code = 'gone'; throw er; }   // 폴더가 지워짐
+                throw new Error('create ' + res.status);
+            }
+            return await res.json();
         }
 
-        /* 업로드는 한 번에 하나씩(순서대로) 처리 → 파일이 두 개 생기는 문제 방지 */
+        async function driveTrash(fileId) {
+            const res = await gfetch(`${DRIVE_API}/${fileId}?fields=id`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json; charset=UTF-8' }, body: JSON.stringify({ trashed: true })
+            });
+            if (!res.ok && res.status !== 404) throw new Error('trash ' + res.status);
+        }
+
+        function settingsBody() {
+            return '{' + store.keys().filter(isSettingKey).map(k => JSON.stringify(k) + ':' + store.getItem(k)).join(',') + '}';
+        }
+
+        /* 변경된 키 하나를 드라이브에 반영 */
+        async function driveWriteKey(key, retried) {
+            try {
+                const dk = parseDayKey(key);
+                if (dk) {
+                    const val = store.getItem(key);
+                    const name = dayFileName(dk.d);
+                    if (val === null) {                                    // 내용을 모두 지운 날 → 파일은 휴지통으로
+                        const idx = await getMonthIndex(dk.y, dk.m, false);
+                        const f = idx && idx.files.get(name);
+                        if (f) { await driveTrash(f.id); idx.files.delete(name); }
+                        return;
+                    }
+                    const idx = await getMonthIndex(dk.y, dk.m, true);      // 년도·달 폴더가 없으면 여기서 생성
+                    const f = idx.files.get(name);
+                    const saved = await driveUpsert(idx.folderId, name, f && f.id, val);   // 있으면 덮어쓰기, 없으면 새 파일
+                    idx.files.set(name, { id: saved.id, name, modifiedTime: saved.modifiedTime });
+                } else {
+                    const rootId = await getFolder([ROOT_FOLDER_NAME], true);                // 루트 '다이어리' 폴더
+                    const saved = await driveUpsert(rootId, SETTINGS_FILE_NAME, drive.settingsFile && drive.settingsFile.id, settingsBody());
+                    drive.settingsFile = { id: saved.id, name: SETTINGS_FILE_NAME, modifiedTime: saved.modifiedTime };
+                }
+            } catch (e) {
+                if (e && e.code === 'gone' && !retried) { resetDriveCaches(); return driveWriteKey(key, true); }
+                throw e;
+            }
+        }
+
+        /* 업로드는 한 번에 하나씩(순서대로) 처리 → 같은 날짜 파일이 두 개 생기는 문제 방지 */
         function flushUpload(opts) {
             const force = !!(opts && opts.force);
             clearTimeout(uploadTimer);
             uploadChain = uploadChain.then(async () => {
                 if (!drive.ready || drive.guest) return false;
-                if (!force && !drive.dirty) return true;
-                drive.dirty = false; drive.uploading = true; updateBadge();
-                try {
-                    await driveWrite(store.toJSONString());
-                    drive.lastSaved = new Date(); drive.error = false; drive.uploading = false;
-                    if (!drive.dirty) clearPending();      // 그 사이 새 변경이 없을 때만 임시 보관본 삭제
-                    updateBadge(); updateStorageInfo();
-                    return true;
-                } catch (e) {
-                    drive.uploading = false; drive.dirty = true; drive.error = true;
-                    if (!(e && e.code === 'auth')) uploadTimer = setTimeout(() => flushUpload(), 30000);
-                    updateBadge();
-                    return false;
+                if (force && isCoverOpen) {                                 // 💾 저장 버튼: 지금 보고 있는 날짜 파일을 한 번 더 덮어씀
+                    const k = getDateKey(currentDate);
+                    if (drive.loadedDays.has(k) && store.getItem(k) !== null) drive.dirtyKeys.add(k);
                 }
+                if (!drive.dirty) return true;
+                drive.uploading = true; updateBadge();
+                let allOk = true, authFail = false;
+                for (const key of Array.from(drive.dirtyKeys)) {
+                    drive.dirtyKeys.delete(key);                            // 올리는 도중 또 바뀌면 다시 표시됨
+                    drive.inflight = key;
+                    try { await driveWriteKey(key); }
+                    catch (e) {
+                        drive.dirtyKeys.add(key); allOk = false;
+                        if (e && e.code === 'auth') { authFail = true; break; }
+                    }
+                }
+                drive.inflight = null; drive.uploading = false; drive.error = !allOk;
+                if (allOk) {
+                    drive.lastSaved = new Date();
+                    if (!drive.dirty) clearPending();                       // 그 사이 새 변경이 없을 때만 임시 보관본 삭제
+                } else if (!authFail) {
+                    uploadTimer = setTimeout(() => flushUpload(), 30000);
+                }
+                updateBadge(); updateStorageInfo();
+                return allOk;
             });
             return uploadChain;
+        }
+
+        /* ---------- 전체 목록 (백업 / 용량 확인용) ---------- */
+        async function driveEnumerateAll() {
+            const rootId = await getFolder([ROOT_FOLDER_NAME], false);
+            const out = new Map();
+            if (!rootId) return [];
+            const years = (await driveList(`'${rootId}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name'))
+                .map(f => ({ f, r: /^(\d{4})년$/.exec(f.name) })).filter(x => x.r);
+            const monthGroups = await Promise.all(years.map(async yx => {
+                const ms = await driveList(`'${yx.f.id}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name');
+                return ms.map(f => ({ f, y: +yx.r[1], r: /^(\d{1,2})월$/.exec(f.name) })).filter(x => x.r);
+            }));
+            await Promise.all([].concat(...monthGroups).map(async mx => {
+                const files = await driveList(`'${mx.f.id}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,name,size');
+                files.forEach(f => {
+                    const r = /^(\d{1,2})일\.json$/.exec(f.name);
+                    if (!r) return;
+                    const key = dayKeyOf(mx.y, +mx.r[1], +r[1]);
+                    if (!out.has(key)) out.set(key, { key, id: f.id, size: +f.size || 0 });
+                });
+            }));
+            return Array.from(out.values());
+        }
+
+        /* 아직 읽지 않은 모든 날짜를 메모리로 읽기 (전체 백업용). 읽지 못한 파일 수를 돌려줌 */
+        async function loadAllDays() {
+            const all = await driveEnumerateAll();
+            const todo = all.filter(f => !drive.loadedDays.has(f.key));
+            const gen = drive.gen;
+            let i = 0, failed = 0;
+            await Promise.all(Array.from({ length: 5 }, async () => {
+                while (i < todo.length) {
+                    const f = todo[i++];
+                    try {
+                        const obj = parseJsonObject(await readFileText(f.id), f.key);
+                        if (gen !== drive.gen) return;
+                        if (!drive.dirtyKeys.has(f.key)) store.putLoaded(f.key, obj ? JSON.stringify(obj) : null);
+                        drive.loadedDays.add(f.key);
+                    } catch (e) { failed++; }
+                }
+            }));
+            return failed;
+        }
+
+        /* ---------- 예전 diary.json(파일 1개) → 날짜별 파일로 변환 (최초 1회) ---------- */
+        async function migrateLegacyIfNeeded() {
+            try { if (localStorage.getItem(LEGACY_DONE_KEY) === '1') return; } catch (e) {}
+            const markDone = () => { try { localStorage.setItem(LEGACY_DONE_KEY, '1'); } catch (e) {} };
+            let files;
+            try { files = await driveList(`name='${LEGACY_FILE_NAME}' and trashed=false`, 'id,name'); } catch (e) { return; }
+            if (!files.length) { markDone(); return; }
+            const yes = await showMsg('예전 방식으로 저장된 <b>diary.json</b>을 찾았어요.<br>날짜별 파일(다이어리 / 년도 / 월 / 일.json)로 옮길까요?<br><span style="font-size:12px;color:#777;">원본 diary.json은 지우지 않고 그대로 둬요.<br>이미 날짜 파일이 있는 날은 건드리지 않아요.</span>', true);
+            markDone();
+            if (!yes) return;
+            try {
+                const old = parseJsonObject(await readFileText(files[0].id), 'legacy');
+                let moved = 0;
+                for (const k of Object.keys(old || {})) {
+                    if (!k.startsWith('diary_') || k === PAGE_SIZE_KEY) continue;
+                    const dk = parseDayKey(k);
+                    if (dk) {
+                        const idx = await getMonthIndex(dk.y, dk.m, false);
+                        if (idx && idx.files.has(dayFileName(dk.d))) continue;      // 새 방식 파일이 이미 있으면 유지
+                        if (drive.loadedDays.has(k) && store.getItem(k) !== null) continue;
+                        store.setItem(k, JSON.stringify(old[k]));
+                        drive.loadedDays.add(k);
+                        moved++;
+                    } else if (store.getItem(k) === null) {
+                        store.setItem(k, JSON.stringify(old[k]));                   // 설정(스킨·글꼴·단축키)
+                    }
+                }
+                applyLoadedData();
+                const ok = await flushUpload({ force: true });
+                showMsg(ok ? `✅ 예전 일기 ${moved}일치를 날짜별 파일로 옮겼어요!` : '⚠ 일부를 옮기지 못했어요.<br>잠시 후 자동으로 다시 시도합니다.');
+            } catch (e) { showMsg('⚠ 예전 diary.json을 옮기지 못했어요.<br>' + (e && e.type === 'corrupt' ? '파일을 읽을 수 없어요.' : '')); }
+        }
+
+        async function postLoginTasks() {
+            await recoverPendingBackup();
+            await migrateLegacyIfNeeded();
         }
 
         /* 드라이브에서 불러온 데이터를 화면에 반영 */
@@ -802,7 +1098,7 @@
 
         async function onBadgeClick() {
             if (drive.guest) {
-                const yes = await showMsg('로그인하면 지금 화면의 임시 내용은<br>드라이브의 diary.json 내용으로 대체돼요.<br>계속할까요?', true);
+                const yes = await showMsg('로그인하면 지금 화면의 임시 내용은<br>드라이브에 저장된 내용으로 대체돼요.<br>계속할까요?', true);
                 if (yes) showGate('login', '☁ 구글 계정으로 로그인해 주세요.');
             } else if (drive.needAuth) {
                 try { await requestToken('select_account'); await flushUpload({ force: true }); }
@@ -819,7 +1115,7 @@
             if (t === 'scope') return '드라이브 파일 권한을 허용해야 일기를 저장할 수 있어요. 다시 시도해 주세요.';
             if (t === 'access_denied') return '권한이 거부됐어요. 다시 시도해 주세요.';
             if (t === 'timeout') return '응답이 없어요. 다시 시도해 주세요.';
-            if (t === 'corrupt') return 'diary.json을 읽을 수 없어요. 데이터 보호를 위해 덮어쓰지 않았어요. 드라이브의 파일을 확인해 주세요.';
+            if (t === 'corrupt') return '저장된 파일을 읽을 수 없어요. 데이터 보호를 위해 덮어쓰지 않았어요. 드라이브의 다이어리 폴더를 확인해 주세요.';
             return '연결에 실패했어요. (' + t + ')';
         }
 
@@ -857,15 +1153,15 @@
             let authed = false;
             try { authed = localStorage.getItem(AUTH_FLAG_KEY) === '1'; } catch (e) {}
             if (authed) {
-                try { await requestToken('none'); await loadFromDrive(); hideGate(); recoverPendingBackup(); return; }
+                try { await requestToken('none'); await loadFromDrive(); hideGate(); postLoginTasks(); return; }
                 catch (e) { if (e && e.type === 'corrupt') { showGate('login', driveErrorText(e)); return; } }
             }
-            showGate('login', '일기는 내 구글 드라이브의 <b>diary.json</b> 파일 하나에 저장돼요.' + fileHint);
+            showGate('login', '일기는 내 구글 드라이브의 <b>다이어리</b> 폴더에<br>하루에 파일 1개씩 저장돼요.' + fileHint);
         }
 
         async function driveLogin() {
             showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
-            try { await requestToken('select_account'); await loadFromDrive(); hideGate(); recoverPendingBackup(); }
+            try { await requestToken('select_account'); await loadFromDrive(); hideGate(); postLoginTasks(); }
             catch (e) { showGate('login', driveErrorText(e)); }
         }
 
@@ -876,14 +1172,14 @@
 
         async function reloadFromDrive() {
             if (!drive.ready) { showMsg('먼저 구글 드라이브에 연결해 주세요.'); return; }
-            const yes = await showMsg('드라이브의 diary.json으로 현재 내용을 바꿔서 다시 불러올까요?<br><span style="font-size:12px;color:#777;">아직 저장되지 않은 변경은 사라져요.</span>', true);
+            const yes = await showMsg('드라이브에 저장된 내용으로 현재 내용을 바꿔서 다시 불러올까요?<br><span style="font-size:12px;color:#777;">아직 저장되지 않은 변경은 사라져요.</span>', true);
             if (!yes) return;
-            try { drive.fileId = null; await loadFromDrive(); clearPending(); showMsg('🔄 드라이브에서 다시 불러왔어요!'); }
+            try { await loadFromDrive(); clearPending(); showMsg('🔄 드라이브에서 다시 불러왔어요!'); }
             catch (e) { showMsg('⚠ ' + driveErrorText(e)); }
         }
 
         async function driveLogout() {
-            const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">드라이브의 diary.json은 그대로 남아 있어요.</span>', true);
+            const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">드라이브의 다이어리 폴더는 그대로 남아 있어요.</span>', true);
             if (!yes) return;
             if (drive.ready && drive.dirty) await flushUpload();
             try { localStorage.removeItem(AUTH_FLAG_KEY); } catch (e) {}
@@ -894,13 +1190,16 @@
            📴 화면이 꺼지는 순간(잠금 / 홈 버튼 / 앱·탭 전환 / 창 닫기) 자동 저장
            - 아이폰·안드로이드·아이패드 모두 화면이 꺼지면 페이지가 '숨김' 상태가 되어
              visibilitychange(hidden) / pagehide / freeze 이벤트가 발생합니다.
-           - 그 즉시 ① 편집 중인 내용을 메모리에 반영하고 ② diary.json으로 업로드를 시작합니다.
+           - 그 즉시 ① 편집 중인 내용을 메모리에 반영하고 ② 날짜별 json 파일로 업로드를 시작합니다.
            - 화면이 꺼지면 브라우저가 앱을 곧바로 멈출 수 있어서, 업로드가 끝나기 전에 멈추는 경우를
              대비해 이 기기에 임시 보관본도 함께 남기고, 다음에 열 때 자동으로 복구를 물어봅니다.
            ===================================================================== */
         function savePending() {
             try {
-                localStorage.setItem(PENDING_KEY, JSON.stringify({ savedAt: Date.now(), data: store.toJSONString() }));
+                const items = {};
+                drive.dirtyKeys.forEach(k => { items[k] = store.getItem(k); });          // null = 내용을 지운 날
+                if (drive.inflight && !(drive.inflight in items)) items[drive.inflight] = store.getItem(drive.inflight);
+                localStorage.setItem(PENDING_KEY, JSON.stringify({ savedAt: Date.now(), items }));
             } catch (e) { /* 용량 초과 등: 임시 보관은 포기하고 업로드만 시도 */ }
         }
         function clearPending() { try { localStorage.removeItem(PENDING_KEY); } catch (e) {} }
@@ -914,20 +1213,37 @@
             }
         }
 
-        /* 다음에 열었을 때, 업로드되지 못한 임시 보관본이 있으면 복구 */
+        /* 다음에 열었을 때, 업로드되지 못한 임시 보관본(변경된 날짜만)이 있으면 복구 */
         async function recoverPendingBackup() {
             let p = null;
             try { const raw = localStorage.getItem(PENDING_KEY); p = raw ? JSON.parse(raw) : null; } catch (e) {}
-            if (!p || typeof p.data !== 'string') { clearPending(); return; }
-            // 이미 드라이브에 반영되어 있으면(내용이 같거나 드라이브 파일이 더 최신이면) 조용히 삭제
-            if (p.data === store.toJSONString() || (drive.modifiedTime && drive.modifiedTime >= p.savedAt)) { clearPending(); return; }
-            const when = new Date(p.savedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const yes = await showMsg('📴 ' + when + ' 화면이 꺼질 때의 변경 내용이<br>드라이브에 저장되지 못했어요.<br>이 기기에 보관된 내용으로 복구할까요?<br><span style="font-size:12px;color:#777;">취소를 누르면 드라이브의 현재 내용을 유지해요.</span>', true);
+            if (!p || !p.items || typeof p.items !== 'object') { clearPending(); return; }
+            const todo = [];
+            for (const k of Object.keys(p.items)) {
+                const v = p.items[k];
+                if (!k.startsWith('diary_') || !(v === null || typeof v === 'string')) continue;
+                const dk = parseDayKey(k);
+                let driveTime = 0;
+                if (dk) {
+                    await ensureDayLoaded(new Date(dk.y, dk.m - 1, dk.d));
+                    if (!drive.loadedDays.has(k)) continue;                             // 드라이브 내용을 읽지 못하면 건드리지 않음
+                    const idx = drive.monthIndex.get(`${dk.y}/${dk.m}`);
+                    const f = idx && idx.files.get(dayFileName(dk.d));
+                    driveTime = f && f.modifiedTime ? Date.parse(f.modifiedTime) : 0;
+                } else if (isSettingKey(k)) {
+                    driveTime = drive.settingsFile && drive.settingsFile.modifiedTime ? Date.parse(drive.settingsFile.modifiedTime) : 0;
+                } else continue;
+                if (driveTime && driveTime >= p.savedAt) continue;                      // 이미 드라이브에 반영됨(더 최신)
+                if (store.getItem(k) === v) continue;                                   // 내용이 같음
+                todo.push(k);
+            }
             clearPending();
+            if (!todo.length) return;
+            const when = new Date(p.savedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const yes = await showMsg('📴 ' + when + ' 화면이 꺼질 때의 변경 내용이<br>드라이브에 저장되지 못했어요. (' + todo.length + '건)<br>이 기기에 보관된 내용으로 복구할까요?<br><span style="font-size:12px;color:#777;">취소를 누르면 드라이브의 현재 내용을 유지해요.</span>', true);
             if (!yes) return;
             try {
-                store.replaceAll(JSON.parse(p.data));
-                drive.dirty = true;
+                todo.forEach(k => { const v = p.items[k]; if (v === null) store.removeItem(k); else store.setItem(k, v); });
                 applyLoadedData();
                 await flushUpload({ force: true });
             } catch (e) { showMsg('⚠ 복구에 실패했어요.'); }
@@ -1443,6 +1759,8 @@ let fontList = [
                 selectedElement = null;
                 document.getElementById('pageDateDisplay').innerText = formatDate(currentDate);
                 loadData();
+                if (t.isCover) prefetchInitial();          // 표지를 넘기면: 오늘 + 앞·뒤 3일치 (이미 읽었으면 바로 끝)
+                else prefetchAfterTurn(t.dir);             // 한 장 넘기면: 넘긴 방향의 다음 하루치만
             }
 
             t.under.remove();
@@ -1932,6 +2250,10 @@ let fontList = [
 
             const ps = getPageSize();
             const dayKey = getDateKey(currentDate);
+            if (!drive.guest && !drive.loadedDays.has(dayKey)) {     // 아직 읽지 못한 날짜는 저장 금지 (빈 화면으로 덮어쓰기 방지)
+                if (showAlert) showMsg('⏳ 이 날짜를 아직 드라이브에서 불러오는 중이에요.<br>잠시 후 다시 저장해 주세요.');
+                return;
+            }
             if (elementsData.length) store.setItem(dayKey, JSON.stringify({ v: 3, pw: ps.w, ph: ps.h, i: elementsData }));
             else store.removeItem(dayKey);   // 빈 페이지는 파일에 남기지 않음
 
@@ -1942,7 +2264,7 @@ let fontList = [
             }
             const ok = await flushUpload({ force: true });   // 파일이 없으면 생성, 있으면 덮어쓰기
             showMsg(ok
-                ? '💾 저장이 완료되었습니다!<br><span style="font-size:12px;color:#777;">☁ 구글 드라이브 · ' + DRIVE_FILE_NAME + '</span>'
+                ? '💾 저장이 완료되었습니다!<br><span style="font-size:12px;color:#777;">☁ 구글 드라이브 · ' + dayPathText(currentDate) + '</span>'
                 : '⚠ 구글 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
         }
 
@@ -1983,10 +2305,29 @@ let fontList = [
             return el;
         }
 
+        function setCanvasLoading(on) {
+            const c = document.getElementById('canvasArea');
+            c.style.pointerEvents = on ? 'none' : '';
+            if (on) c.innerHTML = '<div style="padding:24px;text-align:center;color:var(--primary-accent);font-weight:bold;">☁ 불러오는 중…</div>';
+        }
+
         function loadData() {
             liveSize = getPageSize();
             clearCanvas();
             const canvas = document.getElementById('canvasArea');
+            const key = getDateKey(currentDate);
+            /* 아직 드라이브에서 읽지 못한 날짜라면 읽어 온 뒤에 표시 (빈 화면으로 덮어쓰는 사고 방지) */
+            if (!drive.guest && !drive.loadedDays.has(key)) {
+                setCanvasLoading(true);
+                ensureDayLoaded(currentDate).then(ok => {
+                    if (getDateKey(currentDate) !== key) return;    // 그 사이 다른 날짜로 넘어감
+                    if (ok) { loadData(); return; }
+                    setCanvasLoading(false);
+                    showMsg('⚠ 이 날짜의 일기를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">데이터 보호를 위해 이 날짜는 저장되지 않아요.<br>왼쪽 아래 ☁ 표시를 확인하거나 다른 날짜로 넘겼다가 다시 돌아와 주세요.</span>');
+                });
+                return;
+            }
+            setCanvasLoading(false);
             readDayData(currentDate).forEach(data => {
                 canvas.appendChild(createElementFromData(data, true));
             });
@@ -1994,8 +2335,16 @@ let fontList = [
 
         function clearCanvas() { document.getElementById('canvasArea').innerHTML = ''; }
 
-        function exportJSON() {
+        async function exportJSON() {
             saveData(false);
+            if (drive.ready && !drive.guest) {
+                const st = document.getElementById('driveStatusText');
+                if (st) st.textContent = '📂 드라이브의 모든 일기를 불러오는 중…';
+                let failed = -1;
+                try { failed = await loadAllDays(); } catch (e) {}
+                updateStorageInfo();
+                if (failed !== 0) { showMsg('⚠ 일부 일기를 불러오지 못해 백업을 만들지 못했어요.<br>잠시 후 다시 시도해 주세요.'); return; }
+            }
             const blob = new Blob([store.toJSONString()], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
@@ -2017,15 +2366,18 @@ let fontList = [
                     const importedData = JSON.parse(evt.target.result);
                     if (!importedData || typeof importedData !== 'object' || Array.isArray(importedData)) throw new Error('format');
                     Object.keys(importedData).forEach(key => {
-                        if (key.startsWith('diary_') && key !== PAGE_SIZE_KEY) store.setItem(key, JSON.stringify(importedData[key]));
+                        if (key.startsWith('diary_') && key !== PAGE_SIZE_KEY) {
+                            store.setItem(key, JSON.stringify(importedData[key]));
+                            if (isDayKey(key)) drive.loadedDays.add(key);      // 가져온 내용이 그 날짜의 최신 내용
+                        }
                     });
                 } catch (err) { showMsg('⚠ 올바르지 않은 JSON 파일입니다.'); return; }
 
                 applyLoadedData();
                 if (drive.ready && !drive.guest) {
-                    const ok = await flushUpload({ force: true });   // 드라이브의 diary.json도 함께 갱신
+                    const ok = await flushUpload({ force: true });   // 날짜별 파일로 드라이브에 저장
                     showMsg(ok
-                        ? '📥 데이터 복원이 완료되었고,<br>구글 드라이브의 diary.json도 갱신했어요!'
+                        ? '📥 데이터 복원이 완료되었고,<br>구글 드라이브의 날짜별 파일도 갱신했어요!'
                         : '📥 복원은 되었지만 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
                 } else {
                     showMsg('📥 데이터 복원이 완료되었어요.<br>(드라이브에 연결되지 않아 저장은 되지 않았어요)');
@@ -2093,26 +2445,31 @@ let fontList = [
             });
         }
 
+        let storageStats = null;   // 드라이브 '다이어리' 폴더 전체 통계 (설정창을 열 때 갱신)
+        async function refreshStorageStats() {
+            if (!drive.ready || drive.guest) { storageStats = null; updateStorageInfo(); return; }
+            try {
+                const all = await driveEnumerateAll();
+                storageStats = { days: all.length, bytes: all.reduce((s, f) => s + f.size, 0) };
+            } catch (e) {}
+            updateStorageInfo();
+        }
+
         function updateStorageInfo() {
-            let days = 0, imgs = 0;
-            store.keys().forEach(k => {
-                if (!/^diary_\d{4}_\d{2}_\d{2}$/.test(k)) return;
-                days++;
-                try {
-                    const raw = JSON.parse(store.getItem(k));
-                    const arr = Array.isArray(raw) ? raw : (raw.i || raw.items || []);
-                    arr.forEach(d => { if ((d.type || d.t) === 'image' || d.t === 'i') imgs++; });
-                } catch (err) {}
-            });
-            const bytes = new Blob([store.toJSONString()]).size;
-            const size = bytes >= 1048576 ? (bytes / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB';
             const t = document.getElementById('lsText');
-            if (t) t.innerText = size;
             const d = document.getElementById('lsDetail');
-            if (d) d.innerText = `일기 ${days}일치 · 이미지 ${imgs}개`;
+            if (storageStats) {
+                const bytes = storageStats.bytes;
+                const size = bytes >= 1048576 ? (bytes / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB';
+                if (t) t.innerText = size;
+                if (d) d.innerText = `일기 ${storageStats.days}일치 · 하루에 파일 1개씩 저장`;
+            } else {
+                if (t) t.innerText = drive.ready ? '계산 중…' : '-';
+                if (d) d.innerText = '';
+            }
             const st = document.getElementById('driveStatusText');
             if (st) st.textContent = drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
-                : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${DRIVE_FILE_NAME}` : '☁ 연결 안 됨';
+                : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${ROOT_FOLDER_NAME} / 년도 / 월 / 일.json` : '☁ 연결 안 됨';
         }
 
         function applySkinPreset(skinName) {
@@ -2252,7 +2609,7 @@ let fontList = [
         }
 
         function openModal(id) {
-            if (id === 'settingsModal') { saveData(false); updateStorageInfo(); }
+            if (id === 'settingsModal') { saveData(false); updateStorageInfo(); refreshStorageStats(); }
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
