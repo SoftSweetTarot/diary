@@ -115,30 +115,27 @@
             }
             return feedbackMsgId;
         }
-        const FEEDBACK_FAIL_SHOW_MS = 2600;                    // 실패 안내가 떠 있는 시간
         let feedbackSending = false;
-        let feedbackFailTimer = null;
 
         /* 전송 중에 창(탭)을 닫으려 하면 브라우저가 한 번 물어봐요 */
         window.addEventListener('beforeunload', e => { if (feedbackSending) { e.preventDefault(); e.returnValue = ''; } });
 
-        /* '전송 중…' 창을 실패 안내로 바꿔 잠깐 보여 주고 저절로 닫기 (눌러도 바로 닫혀요) */
+        /* '전송 중…' 창을 실패 안내로 바꿔서 보여 주기 : 다 읽고 [닫기]를 누를 때까지 그대로 있어요 */
         function showFeedbackFail(msg) {
             const pop = document.getElementById('feedbackSending'), card = pop.querySelector('.sending-card');
+            const close = document.getElementById('feedbackFailClose');
             document.getElementById('feedbackSendingSpin').hidden = true;
             document.getElementById('feedbackSendingSec').hidden = true;
             document.getElementById('feedbackSendingTitle').textContent = '⚠ 전송하지 못했어요';
             document.getElementById('feedbackSendingMsg').innerHTML = msg;
             card.classList.add('fail');
+            close.hidden = false;
             pop.hidden = false;
-            const done = () => {
-                clearTimeout(feedbackFailTimer); feedbackFailTimer = null;
-                pop.hidden = true; pop.onclick = null;
+            close.onclick = () => {
+                pop.hidden = true; close.hidden = true; close.onclick = null;
                 document.getElementById('feedbackInput').focus();
             };
-            pop.onclick = done;
-            clearTimeout(feedbackFailTimer);
-            feedbackFailTimer = setTimeout(done, FEEDBACK_FAIL_SHOW_MS);
+            close.focus();
         }
 
         async function submitFeedback() {
@@ -158,7 +155,7 @@
             }
 
             feedbackSending = true;
-            clearTimeout(feedbackFailTimer); pop.onclick = null;
+            document.getElementById('feedbackFailClose').hidden = true;
             btn.disabled = true; input.disabled = true; closeBtn.disabled = true;   // 전송 중엔 닫기도 막기
             btn.textContent = '📨 보내는 중…';
             /* '전송 중…' 창 : 걸린 시간을 보여 주고, 3초가 넘으면 늦는 이유를 안내 */

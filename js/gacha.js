@@ -121,9 +121,11 @@
                 box.appendChild(b); gc.bulbs.push(b);
             }
 
+            el.addEventListener('pointerdown', gcUnlockAudio, true);      // 랜덤박스 화면 어디를 눌러도 소리 깨우기
+            el.addEventListener('keydown', gcUnlockAudio, true);
             gq('gcInsert').onclick = gcInsertCoin;
             gq('gcCapsule').onclick = gcTapCapsule;
-            gq('gcSound').onclick = () => { gc.sound = !gc.sound; gq('gcSound').textContent = gc.sound ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'; if (!gc.sound) gcStopRumble(); };
+            gq('gcSound').onclick = () => { gcUnlockAudio(); gc.sound = !gc.sound; gq('gcSound').textContent = gc.sound ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'; if (!gc.sound) gcStopRumble(); };
             const crank = gq('gcCrank');
             const angleOf = e => { const r = crank.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
             crank.addEventListener('pointerdown', e => { if (gc.stage !== 'turning') return; gc.lastAng = angleOf(e); gc.dragged = false; crank.setPointerCapture(e.pointerId); });
@@ -149,6 +151,7 @@
         async function openGacha() {
             if (typeof closeModal === 'function') closeModal('serviceModal');
             gcBuild();
+            gcUnlockAudio();                                   // 놀이터에서 누른 순간에 소리 미리 깨우기
             gq('gachaRoom').classList.add('show');
             gc.open = true;
             gcReset();
@@ -157,6 +160,7 @@
             gcSetCoin('checking');
             const r = await gcApi('status');
             if (!gc.open || gc.stage !== 'idle') return;
+            gc.test = !!(r.ok && r.test);
             if (r.ok) { gcRenderOdds(r.odds); gcSetCoin(r.used ? 'used' : 'ready'); }
             else gcSetCoin('error', r.error);
         }
@@ -183,7 +187,8 @@
         function gcSetCoin(state, err) {
             const chip = gq('gcChip'), txt = gq('gcChipText'), btn = gq('gcInsert'), say = gq('gcSay');
             chip.classList.toggle('empty', state !== 'ready');
-            txt.textContent = { checking: '코인 확인 중…', ready: '오늘의 코인 1개', used: '오늘 코인을 썼어요', error: '코인 없음' }[state];
+            txt.textContent = gc.test && state !== 'error' && state !== 'checking' ? '🧪 테스트 모드 · 무제한'
+                : { checking: '코인 확인 중…', ready: '오늘의 코인 1개', used: '오늘 코인을 썼어요', error: '코인 없음' }[state];
             btn.disabled = state !== 'ready';
             say.textContent = state === 'ready' ? '코인을 넣고 손잡이를 돌려 보세요!'
                 : state === 'used' ? GC_ERR.used : state === 'checking' ? '…' : (GC_ERR[err] || GC_ERR.server);
@@ -192,7 +197,7 @@
         /* ---------- 1. 코인 넣기 ---------- */
         async function gcInsertCoin() {
             if (gc.stage !== 'idle') return;
-            gcAudio();
+            gcUnlockAudio();
             gc.stage = 'asking';
             gq('gcInsert').disabled = true;
             gq('gcSay').textContent = '코인을 확인하고 있어요…';
@@ -204,7 +209,8 @@
                 gcSetCoin(r.error === 'used' ? 'used' : 'error', r.error);
                 return;
             }
-            gc.outcome = { kind: r.kind, url: r.url || '' };
+            gc.outcome = { kind: r.kind, url: r.url || '', odds: r.odds };
+            gc.test = !!r.test;
             gc.stage = 'coin';
             gcSetCoin('used'); gq('gcSay').textContent = '';
             const coin = gq('gcCoin'); coin.classList.remove('drop'); void coin.offsetWidth; coin.classList.add('drop');
@@ -312,6 +318,14 @@
                     <p>다음 코인까지 <span class="gc-timer" id="gcTimer"></span></p>`;
                 gq('gcSay').textContent = '축하해요! 정말 운이 좋아요!';
             }
+            if (gc.test) {                                      // 🧪 테스트 모드 : 바로 한 번 더
+                const again = document.createElement('button');
+                again.type = 'button'; again.className = 'gc-main gc-again';
+                again.textContent = '🔁 한 번 더 돌리기 (테스트 모드)';
+                again.onclick = () => { gcReset(); gcRenderOdds(o.odds); gcSetCoin('ready'); gq('gcCapsule').scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+                box.appendChild(again);
+                const t = box.querySelector('.gc-timer'); if (t) t.parentElement.remove();
+            }
             gcTimer();
         }
         function gcTimer() {
@@ -396,6 +410,26 @@
 
         /* ---------- 소리 (파일 없이 WebAudio) · 진동 ---------- */
         function gcAudio() { if (!gc.ac) { try { gc.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return gc.ac; }
+        /* 🔊 소리 켜기 : 브라우저는 사용자가 화면을 누를 때만 소리를 허락해요.
+           - 오디오가 '일시정지(suspended)' 상태로 시작하면 resume() 으로 깨우기
+           - 아이폰 무음 모드에서도 들리게 : 아주 짧은 무음 소리를 한 번 재생해서 '미디어 재생' 모드로 바꾸기 */
+        const GC_SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+        function gcUnlockAudio() {
+            const a = gcAudio();
+            if (a && a.state !== 'running') { try { a.resume(); } catch (e) {} }
+            if (!gc.unlocked) {
+                gc.unlocked = true;
+                try {
+                    const el = new Audio(GC_SILENT);
+                    el.setAttribute('playsinline', ''); el.volume = 0;
+                    const pr = el.play(); if (pr && pr.catch) pr.catch(() => {});
+                } catch (e) {}
+                try {                                            // 아이폰 사파리 : 무음 한 조각을 바로 재생해 오디오 길을 열어 둠
+                    const b = a.createBuffer(1, 1, 22050), src = a.createBufferSource();
+                    src.buffer = b; src.connect(a.destination); src.start(0);
+                } catch (e) {}
+            }
+        }
         function gcTone(freq, dur, type = 'sine', vol = .15, when = 0, slideTo) {
             if (!gc.sound) return; const a = gcAudio(); if (!a) return;
             const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
