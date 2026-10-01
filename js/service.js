@@ -52,7 +52,7 @@
         function openArcade() { comingSoon('🕹️ 오락실'); }
         function openComics() { comingSoon('📚 만화방'); }
         function openMusic() { comingSoon('🎵 음악듣기'); }
-        function openRandomBox() { comingSoon('🎁 랜덤박스'); }
+        function openRandomBox() { if (typeof openGacha === 'function') openGacha(); else comingSoon('🎁 랜덤박스'); }   // js/gacha.js
         function openShop() { showMsg('🛍️ 말랑상점은 준비 중이에요.<br>예쁜 패턴과 꾸미기 이미지를 곧 만나보세요!'); }
 
         /* =====================================================================
@@ -75,7 +75,7 @@
         /* =====================================================================
            💌 건의함 : 작성한 내용을 구글 시트(Apps Script)로 전송
            ===================================================================== */
-        const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_Ka3rztRHsOMR30u8u5_tzObwHgZitSEtGXRIQCyBxEHeYw2C71N31gLyqMGDa88N/exec";
+        const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkh25l1LBwrmop0muyxZaXnTOEaZNpuyEM7aB9N2CfhUZ6YuqfAyKMn8S0xtTN05YE/exec";
 
         function openFeedback() {
             openModal('feedbackModal');
