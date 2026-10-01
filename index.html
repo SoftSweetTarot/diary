@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261001-16">
+    <link rel="stylesheet" href="css/style.css?v=20261001-17">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -200,8 +200,8 @@
     </div>
 
     <!-- 👗 스킨 메뉴 모달 (기본스킨 · 무료패턴 · 유료패턴) -->
-    <div class="modal skin-float" id="skinModal">
-        <div class="modal-content skin-compact">
+    <div class="modal" id="skinModal">
+        <div class="modal-content">
             <div class="modal-title">👗 스킨</div>
             <button class="btn skin-basic-btn" onclick="openSkinBasic()">🎨 기본스킨 <small>(다이어리 색 설정)</small></button>
 
@@ -535,7 +535,7 @@
                 <button class="btn service-btn" onclick="openDollPicker()"><span class="service-icon">👧</span>인형방<small>나만의 인형 만들기</small></button>
                 <button class="btn service-btn soon" onclick="openPuppetShow()"><span class="service-icon">🎭</span>인형극<small>(준비중)</small></button>
                 <button class="btn service-btn soon" onclick="openSweetVideo()"><span class="service-icon">🎬</span>달콤영상<small>(준비중)</small></button>
-                <button class="btn service-btn soon" onclick="openFortune()"><span class="service-icon">🔮</span>포춘카드<small>(준비중)</small></button>
+                <button class="btn service-btn" onclick="openFortune()"><span class="service-icon">🔮</span>포춘카드</button>
                 <button class="btn service-btn soon" onclick="openDream()"><span class="service-icon">🌙</span>꿈해몽<small>(준비중)</small></button>
                 <button class="btn service-btn soon" onclick="openArcade()"><span class="service-icon">🕹️</span>오락실<small>(준비중)</small></button>
                 <button class="btn service-btn soon" onclick="openComics()"><span class="service-icon">📚</span>만화방<small>(준비중)</small></button>
@@ -599,23 +599,23 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261001-16"></script>
-    <script src="js/app.js?v=20261001-16"></script>
-    <script src="js/page.js?v=20261001-16"></script>
-    <script src="js/elements.js?v=20261001-16"></script>
-    <script src="js/settings.js?v=20261001-16"></script>
-    <script src="js/patterns.js?v=20261001-16"></script>
+    <script src="js/drive.js?v=20261001-17"></script>
+    <script src="js/app.js?v=20261001-17"></script>
+    <script src="js/page.js?v=20261001-17"></script>
+    <script src="js/elements.js?v=20261001-17"></script>
+    <script src="js/settings.js?v=20261001-17"></script>
+    <script src="js/patterns.js?v=20261001-17"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261001-16"></script>
-    <script src="js/skins.js?v=20261001-16"></script>
-    <script src="js/pattern-maker.js?v=20261001-16"></script>
-    <script src="js/doll-render.js?v=20261001-16"></script>
-    <script src="js/doll-store.js?v=20261001-16"></script>
-    <script src="js/doll-room.js?v=20261001-16"></script>
-    <script src="js/service.js?v=20261001-16"></script>
+    <script src="js/pattern-recipe.js?v=20261001-17"></script>
+    <script src="js/skins.js?v=20261001-17"></script>
+    <script src="js/pattern-maker.js?v=20261001-17"></script>
+    <script src="js/doll-render.js?v=20261001-17"></script>
+    <script src="js/doll-store.js?v=20261001-17"></script>
+    <script src="js/doll-room.js?v=20261001-17"></script>
+    <script src="js/service.js?v=20261001-17"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
