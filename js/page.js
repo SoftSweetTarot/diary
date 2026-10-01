@@ -463,7 +463,7 @@
             liveSize = now;
 
             const info = document.getElementById('pageSizeInfo');
-            if (info) info.textContent = `현재 표시 크기: ${now.w} × ${now.h}px` +
+            if (info) info.textContent = `현재 표시 크기: 가로 ${now.w} · 세로 ${now.h}px` +
                 ((now.w < pageSetting.w || now.h < pageSetting.h) ? ' (화면보다 커서 자동으로 줄였어요)' : '');
         }
 

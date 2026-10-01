@@ -158,8 +158,8 @@
         }
 
         /* ---------- 📚 라이브러리 페이지 넘기기 · 배치 설정 ----------
-           - 한 페이지에 (행 × 열)개씩 보여 주고, ◀ 이전 / 다음 ▶ 버튼(또는 옆으로 밀기)으로 넘김
-           - 배치 설정(행·열·크기)은 기기마다 화면 크기가 달라서 이 기기(localStorage)에만 기억
+           - 한 페이지에 (몇 줄 × 한 줄에 몇 개)개씩 보여 주고, ◀ 이전 / 다음 ▶ 버튼(또는 옆으로 밀기)으로 넘김
+           - 배치 설정(한 줄에 몇 개·몇 줄·크기)은 기기마다 화면 크기가 달라서 이 기기(localStorage)에만 기억
              → 구글 드라이브 저장(일기·settings.json)에는 전혀 영향 없음 */
         const LIB_LAYOUT_KEY = 'malang_lib_layout';
         const LIB_DEFAULT_LAYOUT = { rows: 3, cols: 5, size: 88 };
@@ -187,7 +187,7 @@
         function libPerPage() { return libLayout.rows * libLayout.cols; }
         function libPageCount() { return libItems && libItems.length ? Math.ceil(libItems.length / libPerPage()) : 0; }
 
-        /* 행·열·크기 → 그리드 모양과 창 너비에 반영, 설정 칸 값도 맞춤 */
+        /* 줄 수·한 줄 개수·크기 → 그리드 모양과 창 너비에 반영, 설정 칸 값도 맞춤 */
         function applyLibLayoutStyle() {
             const { rows, cols, size } = libLayout;
             document.getElementById('libGrid').style.gridTemplateColumns = `repeat(${cols}, minmax(0, ${size}px))`;
@@ -203,6 +203,15 @@
             fill(document.getElementById('libColsInput'), LIB_LAYOUT_LIMITS.cols[1], cols);
             document.getElementById('libSizeInput').value = size;
             document.getElementById('libSizeVal').textContent = size + 'px';
+
+            /* 한눈에 보이게 : 작은 칸 그림 + '= 한 페이지 N개' */
+            const mini = document.getElementById('libLayoutMini');
+            if (mini) {
+                mini.style.gridTemplateColumns = `repeat(${cols}, 5px)`;
+                if (mini.childElementCount !== rows * cols) { mini.innerHTML = '<i></i>'.repeat(rows * cols); }
+            }
+            const sum = document.getElementById('libLayoutSum');
+            if (sum) sum.textContent = `= 한 페이지 ${rows * cols}개`;
         }
 
         function updateLibPager() {

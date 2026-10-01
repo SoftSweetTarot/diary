@@ -3,7 +3,7 @@
    - 고른 패턴은 설정값 'diary_bg_pattern' 으로 저장 → 구글 드라이브 settings.json 에 함께 저장돼요
        예) "diary_bg_pattern": {"id":"tomato","scale":1}
    - 패턴 해제 시 이 값을 지워요 (settings.json 에서도 빠짐)
-   - 목록 배치(행·열·크기)는 기기마다 화면이 달라서 이 기기(localStorage)에만 기억
+   - 목록 배치(한 줄에 몇 개·몇 줄·크기)는 기기마다 화면이 달라서 이 기기(localStorage)에만 기억
    - 패턴 출처 : 기본 제공(js/patterns.js) · 내 패턴('my:번호') · 등록된 사용자 패턴('cm:번호', 관리자가 승인한 것)
        등록된 사용자 패턴은 레시피를 함께 저장해서 {"id":"cm:3","scale":1,"r":{...}} 처럼 기록 → 목록에서 빠져도 배경은 유지
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → pattern-recipe → skins → pattern-maker → service */
@@ -170,6 +170,15 @@
             fill(document.getElementById('patColsInput'), PAT_LAYOUT_LIMITS.cols[1], cols);
             document.getElementById('patSizeInput').value = size;
             document.getElementById('patSizeVal').textContent = size + 'px';
+
+            /* 한눈에 보이게 : 작은 칸 그림 + '= 한 페이지 N개' */
+            const mini = document.getElementById('patLayoutMini');
+            if (mini) {
+                mini.style.gridTemplateColumns = `repeat(${cols}, 5px)`;
+                if (mini.childElementCount !== rows * cols) { mini.innerHTML = '<i></i>'.repeat(rows * cols); }
+            }
+            const sum = document.getElementById('patLayoutSum');
+            if (sum) sum.textContent = `= 한 페이지 ${rows * cols}개`;
         }
 
         function renderPatternList() {
