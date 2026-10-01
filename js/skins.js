@@ -4,15 +4,31 @@
        예) "diary_bg_pattern": {"id":"tomato","scale":1}
    - 패턴 해제 시 이 값을 지워요 (settings.json 에서도 빠짐)
    - 목록 배치(행·열·크기)는 기기마다 화면이 달라서 이 기기(localStorage)에만 기억
-   ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → skins → service (index.html 참고) */
+   - 패턴 출처 : 기본 제공(js/patterns.js) · 내 패턴('my:번호') · 등록된 사용자 패턴('cm:번호', 관리자가 승인한 것)
+       등록된 사용자 패턴은 레시피를 함께 저장해서 {"id":"cm:3","scale":1,"r":{...}} 처럼 기록 → 목록에서 빠져도 배경은 유지
+   ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → pattern-recipe → skins → pattern-maker → service */
 
         const BG_PATTERN_KEY = 'diary_bg_pattern';
         const PAID_PATTERNS_OPEN = true;   // 임시: 유료 패턴도 모두 사용 가능 (결제 기능을 붙이면 false로)
         const PATTERN_SCALE_MIN = 0.5, PATTERN_SCALE_MAX = 2;
 
-        let bgPattern = null;              // 지금 적용된 패턴 { id, scale } (없으면 null)
+        let bgPattern = null;              // 지금 적용된 패턴 { id, scale, r? } (없으면 null)
 
-        function findBgPattern(id) { return BG_PATTERNS.find(p => p.id === id) || null; }
+        /* id로 패턴 찾기 → { id, tier, name, css, by? } */
+        function findBgPattern(id, inlineRecipe) {
+            if (typeof id !== 'string') return null;
+            if (id.startsWith('my:')) {
+                return (typeof getMyPatternItems === 'function' ? getMyPatternItems() : []).find(p => p.id === id) || null;
+            }
+            if (id.startsWith('cm:')) {
+                const hit = (typeof getCommunityItems === 'function' ? getCommunityItems() : []).find(p => p.id === id);
+                if (hit) return hit;
+                const css = inlineRecipe ? recipeToCss(inlineRecipe) : null;   // 목록을 아직 못 받았으면 저장된 레시피로 그리기
+                return css ? { id, tier: 'free', name: '사용자 패턴', css } : null;
+            }
+            return BG_PATTERNS.find(p => p.id === id) || null;
+        }
+        function currentBgPattern() { return bgPattern ? findBgPattern(bgPattern.id, bgPattern.r) : null; }
         function clampPatternScale(v) {
             const n = parseFloat(v);
             return isNaN(n) ? 1 : Math.max(PATTERN_SCALE_MIN, Math.min(PATTERN_SCALE_MAX, Math.round(n * 100) / 100));
@@ -28,7 +44,7 @@
         function renderBgPattern() {
             const layer = document.getElementById('bgPatternLayer');
             const inner = document.getElementById('bgPatternInner');
-            const p = bgPattern && findBgPattern(bgPattern.id);
+            const p = currentBgPattern();
             paintPatternInto(inner, p);
             layer.style.setProperty('--pat-s', p ? bgPattern.scale : 1);
             document.documentElement.classList.toggle('bg-pattern-on', !!p);
@@ -37,17 +53,24 @@
 
         /* ---------- 저장 : 설정(settings.json)에 id와 크기만 저장 ---------- */
         function saveBgPattern() {
-            if (bgPattern) store.setItem(BG_PATTERN_KEY, JSON.stringify({ id: bgPattern.id, scale: bgPattern.scale }));
+            if (bgPattern) {
+                const v = { id: bgPattern.id, scale: bgPattern.scale };
+                if (bgPattern.r) v.r = bgPattern.r;
+                store.setItem(BG_PATTERN_KEY, JSON.stringify(v));
+            }
             else if (store.getItem(BG_PATTERN_KEY) !== null) store.removeItem(BG_PATTERN_KEY);
         }
 
         /* ---------- 불러오기 : 드라이브 설정을 읽은 뒤 / PC 백업 불러온 뒤 호출 ----------
            값이 없거나, 깨졌거나, 목록에 없는 패턴이면 패턴 없이 표시 (저장된 값은 건드리지 않음) */
         function loadBgPattern() {
+            if (typeof loadMyPatterns === 'function') loadMyPatterns();      // 내 패턴 목록 먼저 (js/pattern-maker.js)
             let v = null;
             try { v = JSON.parse(store.getItem(BG_PATTERN_KEY)); } catch (e) { v = null; }
-            bgPattern = (v && typeof v === 'object' && findBgPattern(v.id))
+            const r = v && v.r ? sanitizeRecipe(v.r) : null;
+            bgPattern = (v && typeof v === 'object' && findBgPattern(v.id, r))
                 ? { id: v.id, scale: clampPatternScale(v.scale) } : null;
+            if (bgPattern && r) bgPattern.r = r;
             renderBgPattern();
         }
 
@@ -56,6 +79,7 @@
             if (!p) return;
             if (p.tier === 'paid' && !PAID_PATTERNS_OPEN) { showMsg('💎 유료 패턴은 준비 중이에요.<br>조금만 기다려 주세요!'); return; }
             bgPattern = { id, scale: bgPattern ? bgPattern.scale : 1 };
+            if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 패턴은 레시피도 같이 저장
             renderBgPattern();
             saveBgPattern();
             renderPatternList();
@@ -114,19 +138,24 @@
         }
         function savePatLayout() { try { localStorage.setItem(PAT_LAYOUT_KEY, JSON.stringify(patLayout)); } catch (e) {} }
 
-        function patItems() { return BG_PATTERNS.filter(p => p.tier === patTier); }
+        function patItems() {
+            if (patTier === 'my') return typeof getMyPatternItems === 'function' ? getMyPatternItems() : [];
+            const cm = typeof getCommunityItems === 'function' ? getCommunityItems() : [];
+            return BG_PATTERNS.filter(p => p.tier === patTier).concat(cm.filter(p => p.tier === patTier));
+        }
         function patPerPage() { return patLayout.rows * patLayout.cols; }
         function patPageCount() { const n = patItems().length; return n ? Math.ceil(n / patPerPage()) : 0; }
 
         function openPatternList(tier) {
-            patTier = tier === 'paid' ? 'paid' : 'free';
+            patTier = ['paid', 'my'].includes(tier) ? tier : 'free';
             /* 지금 쓰는 패턴이 이 목록에 있으면 그 페이지부터 보여 주기 */
             const idx = bgPattern ? patItems().findIndex(p => p.id === bgPattern.id) : -1;
             patPage = idx >= 0 ? Math.floor(idx / patPerPage()) : 0;
-            document.getElementById('patTitle').textContent = patTier === 'paid' ? '💎 유료 패턴' : '🆓 무료 패턴';
+            document.getElementById('patTitle').textContent = { free: '🆓 무료 패턴', paid: '💎 유료 패턴', my: '📂 내 패턴' }[patTier];
             closeModal('skinModal');
             renderPatternList();
             openModal('patternModal');
+
         }
 
         function applyPatLayoutStyle() {
@@ -150,8 +179,14 @@
             updatePatternUI();
             grid.innerHTML = '';
             const items = patItems(), per = patPerPage(), pages = patPageCount();
+            const nickRow = document.getElementById('patNickRow');
+            if (nickRow) {
+                nickRow.style.display = patTier === 'my' && items.length ? 'flex' : 'none';
+                if (patTier === 'my' && typeof loadPatternNick === 'function') loadPatternNick();
+            }
             document.getElementById('patStatus').textContent = items.length
-                ? `패턴 ${items.length}개 · 누르면 전체 배경에 적용돼요` : '아직 준비된 패턴이 없어요.';
+                ? `패턴 ${items.length}개 · 누르면 전체 배경에 적용돼요`
+                : (patTier === 'my' ? '아직 만든 패턴이 없어요. 스킨 메뉴의 ✏️ 만들기에서 만들어 보세요!' : '아직 준비된 패턴이 없어요.');
             patPage = pages ? Math.max(0, Math.min(pages - 1, patPage)) : 0;
             const start = patPage * per;
             const frag = document.createDocumentFragment();
@@ -171,8 +206,28 @@
                 name.className = 'pat-name';
                 name.textContent = p.name;
                 card.append(sw, name);
+                if (p.by) {                                                    // 등록된 사용자 패턴 : 만든 사람
+                    const by = document.createElement('span');
+                    by.className = 'pat-by';
+                    by.textContent = 'by ' + p.by;
+                    card.appendChild(by);
+                }
                 card.onclick = () => { if (!patSwiped) selectBgPattern(p.id); };
-                frag.appendChild(card);
+                if (patTier === 'my') {                                        // 내 패턴 : 파일 저장 · 삭제
+                    const wrap = document.createElement('div');
+                    wrap.className = 'pat-item-wrap';
+                    const acts = document.createElement('div');
+                    acts.className = 'pat-actions';
+                    const send = document.createElement('button');
+                    send.type = 'button'; send.className = 'btn'; send.textContent = '💾'; send.title = '파일로 저장 (카페에 올리기용)';
+                    send.onclick = () => downloadMyPattern(p.uid);
+                    const del = document.createElement('button');
+                    del.type = 'button'; del.className = 'btn'; del.textContent = '🗑'; del.title = '삭제';
+                    del.onclick = () => deleteMyPattern(p.uid);
+                    acts.append(send, del);
+                    wrap.append(card, acts);
+                    frag.appendChild(wrap);
+                } else frag.appendChild(card);
             });
             for (let k = items.length - start; k < per && pages > 1; k++) {        // 마지막 페이지 빈칸 채우기
                 const empty = document.createElement('div');
@@ -219,7 +274,7 @@
 
         /* 지금 쓰는 패턴 이름 · 패턴 크기 · 해제 버튼 · 기본스킨 창 안내문 */
         function updatePatternUI() {
-            const p = bgPattern && findBgPattern(bgPattern.id);
+            const p = currentBgPattern();
             const cur = document.getElementById('patCurrent');
             if (cur) cur.textContent = p ? p.name : '없음 (기본스킨 배경색)';
             const sc = document.getElementById('patScaleInput');
