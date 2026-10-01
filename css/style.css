@@ -417,3 +417,80 @@
         .draw-stamps .cat-btn { font-size: 16px; padding: 2px 6px; }
 
         @media (max-width: 480px) { .draw-board-box { margin: 0 auto; } }
+
+        /* 👧 내 인형들 */
+        .doll-picker { max-width: 560px; }
+        .doll-picker-top { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .doll-picker-top .btn { flex: 1; justify-content: center; padding: 8px 10px; }
+        .doll-picker .btn-primary, .dr-foot .btn-primary, .dr-done-btns .btn-primary { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
+        .doll-draft { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; background: #fff0f5; border: 1px dashed var(--border-color); border-radius: 12px; padding: 8px 10px; margin-bottom: 10px; font-size: 13px; color: #555; }
+        .doll-draft span { flex: 1; min-width: 160px; }
+        .doll-draft .btn { font-size: 12px; padding: 3px 9px; }
+        .doll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; overflow-y: auto; max-height: 55vh; padding: 2px; }
+        .doll-card { border: 2px solid var(--border-color); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+        .doll-card img { width: 100%; aspect-ratio: 300 / 470; object-fit: cover; display: block; }
+        .doll-card-name { font-size: 13px; font-weight: bold; text-align: center; padding: 6px 6px 2px; color: #444; word-break: keep-all; }
+        .doll-card-acts { display: flex; gap: 4px; justify-content: center; padding: 4px 6px 8px; flex-wrap: wrap; }
+        .doll-card-acts .btn { font-size: 12px; padding: 2px 8px; }
+        .doll-empty { grid-column: 1 / -1; text-align: center; color: #888; padding: 26px 10px; line-height: 1.7; }
+
+        /* 🧸 인형방 (화면 전체) */
+        .doll-room { position: fixed; inset: 0; z-index: 1600; background: #fff7f9; display: flex; flex-direction: column; font-family: var(--font-family); color: #444;
+            padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); user-select: none; -webkit-user-select: none; }
+        .dr-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 2px solid var(--border-color); background: #fff; flex-wrap: wrap; }
+        .dr-title { font-size: 1.15rem; color: var(--primary-accent); }
+        .dr-stats { font-size: 12.5px; color: #888; flex: 1; min-width: 160px; font-variant-numeric: tabular-nums; }
+        .dr-head-btns { display: flex; gap: 6px; }
+        .dr-head-btns .btn { font-size: 13px; padding: 4px 10px; }
+        .dr-steps { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px; background: #fff; border-bottom: 1px dashed var(--border-color); scrollbar-width: thin; }
+        .dr-step { flex-shrink: 0; font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 2px solid var(--border-color); background: #fff; color: #777; cursor: pointer; }
+        .dr-step.passed { color: var(--primary-accent); }
+        .dr-step.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; font-weight: bold; }
+        .dr-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 10px; padding: 10px 12px; }
+        @media (max-width: 760px) { .dr-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(240px, 46%) minmax(0, 1fr); } }
+        .dr-stage-col { display: flex; flex-direction: column; min-height: 0; gap: 6px; }
+        .dr-stage { flex: 1; min-height: 0; overflow: auto; border-radius: 18px; border: 3px solid var(--border-color); background: #fff; display: flex; }
+        .dr-stage-inner { position: relative; flex-shrink: 0; aspect-ratio: 300 / 470; margin: auto; }
+        #drDoll { position: absolute; inset: 0; }
+        #drDoll svg { width: 100%; height: 100%; display: block; }
+        #drDoll svg.pick [data-li] { cursor: pointer; }
+        #drOverlay { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+        #drOverlay .dr-handle { pointer-events: all; cursor: grab; }
+        .dr-zoom { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: #777; }
+        .dr-zoom .btn { padding: 2px 12px; font-size: 15px; }
+        .dr-hint { flex: 1; min-width: 160px; font-size: 12px; color: #999; }
+        .dr-panel { min-height: 0; overflow-y: auto; background: #fff; border: 2px solid var(--border-color); border-radius: 18px; padding: 12px; }
+        .dr-intro { margin: 0 0 10px; font-size: 13.5px; color: #555; line-height: 1.6; }
+        .dr-mode { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+        .dr-mode .chip { flex: 1; justify-content: center; }
+        .dr-group { margin-bottom: 12px; }
+        .dr-group h4 { margin: 0 0 6px; font-size: 13px; color: var(--primary-accent); }
+        .dr-note { font-size: 12px; color: #999; margin: 6px 0 0; line-height: 1.5; }
+        .doll-room .chips, #dollQuick .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+        .doll-room .chip, #dollQuick .chip { font: inherit; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; border: 2px solid var(--border-color); background: #fff; color: #555; cursor: pointer; display: inline-flex; align-items: center; }
+        .doll-room .chip.on, #dollQuick .chip.on { background: #fff0f5; border-color: var(--primary-accent); color: var(--primary-accent); font-weight: bold; }
+        .doll-room .swatches { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .doll-room .sw { width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--border-color); cursor: pointer; }
+        .doll-room .sw.on { box-shadow: 0 0 0 3px var(--primary-accent); }
+        .doll-room .swatches input[type=color] { width: 32px; height: 32px; padding: 0; border: 2px dashed var(--border-color); border-radius: 50%; background: none; cursor: pointer; }
+        .doll-room .range { display: flex; align-items: center; gap: 8px; }
+        .doll-room .range input { flex: 1; min-width: 0; accent-color: var(--primary-accent); }
+        .doll-room .range span { width: 44px; text-align: right; font-size: 12px; color: #888; font-variant-numeric: tabular-nums; }
+        .dr-layers { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; }
+        .dr-layer { display: flex; align-items: center; gap: 6px; font: inherit; font-size: 12.5px; text-align: left; padding: 4px 8px; border-radius: 10px; border: 1.5px solid #eee; background: #fff; cursor: pointer; }
+        .dr-layer.on { border-color: #3d8bff; background: #eef5ff; }
+        .dr-layer i { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
+        .dr-layer small { color: #aaa; margin-left: auto; }
+        .dr-text { width: 100%; text-align: left; font-weight: normal; }
+        .dr-record { margin: 0; font-size: 13px; color: #555; }
+        .dr-done-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        .dr-done-btns .btn { justify-content: center; font-size: 13px; padding: 7px 6px; }
+        .dr-done-btns .btn-primary { grid-column: 1 / -1; }
+        .dr-check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #666; margin-bottom: 10px; }
+        .dr-card { width: 100%; max-width: 260px; display: block; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+        .dr-foot { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; background: #fff; border-top: 2px solid var(--border-color); }
+        .dr-foot .btn { padding: 7px 16px; }
+        .dr-foot .btn:disabled { opacity: .4; cursor: default; }
+        .dq-preview { display: block; width: 120px; margin: 0 auto 10px; border-radius: 12px; border: 2px solid var(--border-color); }
+        #dollQuick .dr-group h4 { margin: 0 0 6px; font-size: 13px; color: var(--primary-accent); }
+        .doll-where { margin: 0 0 10px; font-size: 12px; color: #999; }
