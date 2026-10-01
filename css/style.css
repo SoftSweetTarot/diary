@@ -296,6 +296,20 @@
         .feedback-btns .btn-primary { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
         .feedback-btns .btn-primary:hover { filter: brightness(1.08); }
         .feedback-btns .btn:disabled { opacity: .55; cursor: default; }
+        /* 💌 전송 중… 창 */
+        .sending-overlay { position: fixed; inset: 0; z-index: 2900; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.35); }
+        .sending-overlay[hidden] { display: none; }
+        .sending-card { background: #fff; border: 3px solid var(--border-color); border-radius: 20px; padding: 22px 20px 18px; width: min(85vw, 300px);
+            text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,.22); animation: popIn .2s ease-out; }
+        .sending-spinner { width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 50%; border: 5px solid var(--border-color); border-top-color: var(--primary-accent); animation: sendSpin .9s linear infinite; }
+        @keyframes sendSpin { to { transform: rotate(360deg); } }
+        .sending-title { font-size: 1.15rem; font-weight: bold; color: var(--primary-accent); }
+        .sending-sec { font-size: 13px; color: #999; margin-top: 2px; font-variant-numeric: tabular-nums; }
+        .sending-msg { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.55; word-break: keep-all; }
+        .sending-card.fail { border-color: #ef9a9a; }
+        .sending-card.fail .sending-title { color: #e53935; }
+        @media (prefers-reduced-motion: reduce) { .sending-spinner { animation-duration: 2.5s; } }
+        .feedback-input:disabled { opacity: .7; }
 
         /* 🎠 놀이터 모달 */
         .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

@@ -119,7 +119,9 @@
             }
         }
 
-        const LIB_SHEET_ID = '17QoBogfBhJreypfQ8fm0Lk3Qs8H3ghAqC68bmUSmgpI';
+        /* 📚 라이브러리 : 라이브러리 시트(나만 보기)에 붙은 앱스크립트가 이미지 링크 목록을 보내 줘요
+           서버 코드 : 라이브러리_앱스크립트.gs · 시트 맨 왼쪽 탭의 A열 = 이미지 링크 */
+        const LIB_API_URL = 'https://script.google.com/macros/s/AKfycbzpe6ZEbSpety1CASpu6whbYRNp5JE5P_PBCL9_fkCTSBXlXMfKem4vBTeRGyUtE4p5uA/exec';                        // ← 라이브러리 앱스크립트 웹 앱 주소 (…/exec)
         let libItems = null, libLoading = false;
 
         function driveImageUrl(id) { return 'https://lh3.googleusercontent.com/d/' + id; }
@@ -132,29 +134,15 @@
             return m ? driveImageUrl(m[1]) : u;
         }
 
-        async function fetchSheetCsv() {
-            const res = await fetch(`https://docs.google.com/spreadsheets/d/${LIB_SHEET_ID}/gviz/tq?headers=0&tqx=out:csv`);
-            const txt = await res.text();
-            if (!res.ok || /^\s*</.test(txt)) throw new Error('csv');
-            const first = l => { const m = l.match(/^"((?:[^"]|"")*)"/); return m ? m[1].replace(/""/g, '"') : l.split(',')[0]; };
-            return txt.split(/\r?\n/).map(first);
-        }
-
-        function fetchSheetJsonp() {
-            return new Promise((resolve, reject) => {
-                const cb = '__libcb' + Date.now();
-                const s = document.createElement('script');
-                const done = () => { clearTimeout(timer); delete window[cb]; s.remove(); };
-                const timer = setTimeout(() => { done(); reject(new Error('timeout')); }, 10000);
-                window[cb] = (json) => {
-                    done();
-                    if (!json || json.status !== 'ok') return reject(new Error('status'));
-                    resolve(json.table.rows.map(r => r.c && r.c[0] ? r.c[0].v : ''));
-                };
-                s.onerror = () => { done(); reject(new Error('load')); };
-                s.src = `https://docs.google.com/spreadsheets/d/${LIB_SHEET_ID}/gviz/tq?headers=0&tqx=out:json;responseHandler:${cb}`;
-                document.head.appendChild(s);
-            });
+        async function fetchLibraryList() {
+            if (!LIB_API_URL) throw new Error('setup');
+            const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 15000);
+            try {
+                const res = await fetch(LIB_API_URL, { signal: ctl.signal });
+                const data = await res.json();
+                if (!data || !data.ok || !Array.isArray(data.images)) throw new Error('server');
+                return data.images;
+            } finally { clearTimeout(timer); }
         }
 
         /* ---------- 📚 라이브러리 페이지 넘기기 · 배치 설정 ----------
@@ -275,6 +263,9 @@
             });
         })();
 
+        /* ☕ 라이브러리 목록 미리 받아 두기 : 다이어리를 열고 잠시 뒤 조용히 받아 둬요 → 📚 라이브러리를 누르면 바로 보여요 */
+        window.addEventListener('load', () => setTimeout(() => { if (!libItems && !libLoading) loadLibrary(false); }, 2500));
+
         function openLibrary() { applyLibLayoutStyle(); updateLibPager(); openModal('libraryModal'); loadLibrary(false); }
 
         async function loadLibrary(force) {
@@ -282,11 +273,10 @@
             if (libItems && !force) { renderLibrary(); return; }
             if (libLoading) return;
             libLoading = true;
-            st.textContent = '⏳ 시트에서 이미지 주소를 불러오는 중...';
+            st.textContent = '⏳ 이미지 목록을 불러오는 중...';
             grid.innerHTML = '';
             try {
-                let cells;
-                try { cells = await fetchSheetCsv(); } catch (e) { cells = await fetchSheetJsonp(); }
+                const cells = await fetchLibraryList();
                 libItems = [];
                 cells.forEach(c => { const u = normalizeImageUrl(c); if (u && !libItems.includes(u)) libItems.push(u); });
                 libPage = 0;
@@ -294,7 +284,8 @@
             } catch (err) {
                 libItems = null;
                 updateLibPager();
-                st.innerHTML = '⚠ 시트를 불러오지 못했어요.<br>인터넷 연결 및 시트 접근 설정을 확인 후 다시 시도해 주세요.';
+                st.innerHTML = err && err.message === 'setup' ? '📚 라이브러리를 준비하고 있어요. 조금만 기다려 주세요!'
+                    : '⚠ 이미지 목록을 불러오지 못했어요.<br>인터넷 연결을 확인한 뒤 다시 열어 주세요.';
             }
             libLoading = false;
         }

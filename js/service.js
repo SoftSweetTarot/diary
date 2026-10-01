@@ -77,19 +77,68 @@
            ===================================================================== */
         const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEDrtkCkcmmbxIL30fgzmGXTb4r5BoO7RP59M930O66duHgvy-xkYEDK3PDZWUcd1l/exec";
 
+        /* ☕ 서버 미리 깨우기 : 앱스크립트는 쉬다가 처음 요청을 받으면 깨어나는 데 몇 초~십몇 초 걸려요.
+           창을 여는 순간 '일어나' 신호(doGet · 시트에는 아무것도 안 씀)를 미리 보내 두면,
+           사용자가 글을 쓰거나 고르는 동안 깨어나서 실제 요청은 금방 끝나요. (같은 서버는 4분에 한 번만) */
+        const warmedAt = {};
+        function warmServer(url) {
+            if (!url || Date.now() - (warmedAt[url] || 0) < 4 * 60000) return;
+            warmedAt[url] = Date.now();
+            fetch(url, { credentials: 'omit' }).catch(() => {});
+        }
+
         function openFeedback() {
+            warmServer(FEEDBACK_SCRIPT_URL);
             openModal('feedbackModal');
             document.getElementById('feedbackInput').focus();
         }
-        function closeFeedback() { closeModal('feedbackModal'); }
+        function closeFeedback() {
+            if (feedbackSending) return;                      // 전송 중에는 닫을 수 없어요 (저장이 끝날 때까지)
+            closeModal('feedbackModal');
+        }
 
         document.getElementById('feedbackInput').addEventListener('input', (e) => {
             document.getElementById('feedbackCount').textContent = e.target.value.length;
         });
 
+        /* 💌 보내기 : 서버(앱스크립트)가 시트에 저장한 뒤 돌려주는 {"ok":true} 를 받았을 때만 '전송되었어요'
+           - 앱스크립트는 한동안 쉬다가 깨어나면 몇 초~십몇 초 걸려요 → 그동안 '보내는 중'을 보여 줘요
+           - 구글 로그인 정보는 보내지 않아요 (credentials: 'omit') : 구글 계정이 여러 개 로그인된 브라우저에서도 동작 */
+        const FEEDBACK_TIMEOUT_MS = 45000;
+        const FEEDBACK_FAIL_SHOW_MS = 2600;                    // 실패 안내가 떠 있는 시간
+        let feedbackSending = false;
+        let feedbackFailTimer = null;
+
+        /* 전송 중에 창(탭)을 닫으려 하면 브라우저가 한 번 물어봐요 */
+        window.addEventListener('beforeunload', e => { if (feedbackSending) { e.preventDefault(); e.returnValue = ''; } });
+
+        /* '전송 중…' 창을 실패 안내로 바꿔 잠깐 보여 주고 저절로 닫기 (눌러도 바로 닫혀요) */
+        function showFeedbackFail(msg) {
+            const pop = document.getElementById('feedbackSending'), card = pop.querySelector('.sending-card');
+            document.getElementById('feedbackSendingSpin').hidden = true;
+            document.getElementById('feedbackSendingSec').hidden = true;
+            document.getElementById('feedbackSendingTitle').textContent = '⚠ 전송하지 못했어요';
+            document.getElementById('feedbackSendingMsg').innerHTML = msg;
+            card.classList.add('fail');
+            pop.hidden = false;
+            const done = () => {
+                clearTimeout(feedbackFailTimer); feedbackFailTimer = null;
+                pop.hidden = true; pop.onclick = null;
+                document.getElementById('feedbackInput').focus();
+            };
+            pop.onclick = done;
+            clearTimeout(feedbackFailTimer);
+            feedbackFailTimer = setTimeout(done, FEEDBACK_FAIL_SHOW_MS);
+        }
+
         async function submitFeedback() {
+            if (feedbackSending) return;
             const input = document.getElementById('feedbackInput');
             const btn = document.getElementById('feedbackSendBtn');
+            const pop = document.getElementById('feedbackSending');
+            const closeBtn = document.getElementById('feedbackCloseBtn');
+            const popSec = document.getElementById('feedbackSendingSec');
+            const popMsg = document.getElementById('feedbackSendingMsg');
             const text = input.value.trim();
 
             if (!text) {
@@ -98,23 +147,57 @@
                 return;
             }
 
-            btn.disabled = true;
+            feedbackSending = true;
+            clearTimeout(feedbackFailTimer); pop.onclick = null;
+            btn.disabled = true; input.disabled = true; closeBtn.disabled = true;   // 전송 중엔 닫기도 막기
+            btn.textContent = '📨 보내는 중…';
+            /* '전송 중…' 창 : 걸린 시간을 보여 주고, 3초가 넘으면 늦는 이유를 안내 */
+            const started = Date.now();
+            pop.querySelector('.sending-card').classList.remove('fail');
+            document.getElementById('feedbackSendingSpin').hidden = false;
+            document.getElementById('feedbackSendingTitle').textContent = '💌 전송 중…';
+            popSec.hidden = false;
+            popSec.textContent = '0초';
+            popMsg.textContent = '잠시만 기다려 주세요.';
+            pop.hidden = false;
+            const tick = setInterval(() => {
+                const sec = Math.floor((Date.now() - started) / 1000);
+                popSec.textContent = sec + '초';
+                if (sec >= 3) popMsg.textContent = '건의함 서버를 깨우는 중이에요. 처음 보낼 땐 10초 넘게 걸릴 수 있어요. 창을 닫지 말고 잠시만 기다려 주세요.';
+            }, 250);
+            const ctl = new AbortController();
+            const timer = setTimeout(() => ctl.abort(), FEEDBACK_TIMEOUT_MS);
+            let ok = false, reason = '';
             try {
-                await fetch(FEEDBACK_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'comment=' + encodeURIComponent(text)
+                const res = await fetch(FEEDBACK_SCRIPT_URL, {
+                    method: 'POST', credentials: 'omit', signal: ctl.signal,
+                    body: new URLSearchParams({ comment: text })     // comment=내용 (예전과 같은 형식)
                 });
+                const data = await res.json().catch(() => null);
+                ok = !!(data && data.ok);
+                if (!ok) reason = 'server';
+            } catch (err) {
+                reason = err && err.name === 'AbortError' ? 'timeout' : 'network';
+                console.error('건의사항 전송 오류:', err);
+            } finally {
+                clearInterval(tick); clearTimeout(timer);
+                feedbackSending = false;
+                btn.disabled = false; input.disabled = false; closeBtn.disabled = false;
+                btn.textContent = '📨 전송';
+                pop.hidden = true;
+            }
+
+            if (ok) {
                 input.value = '';
                 document.getElementById('feedbackCount').textContent = '0';
                 closeFeedback();
                 showMsg('건의사항이 전송되었어요.<br>소중한 의견 감사합니다 💌');
-            } catch (err) {
-                console.error('건의사항 전송 오류:', err);
-                showMsg('전송하지 못했어요.<br>인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
-            } finally {
-                btn.disabled = false;
+            } else {
+                showFeedbackFail({
+                    timeout: '서버 응답이 너무 늦어요.<br>잠시 후 다시 시도해 주세요.',
+                    network: '인터넷 연결을 확인하고<br>다시 시도해 주세요.',
+                    server: '서버에서 저장하지 못했어요.<br>잠시 후 다시 시도해 주세요.'
+                }[reason] + '<br><span style="font-size:12px;color:#999;">적은 내용은 그대로 남아 있어요.</span>');
             }
         }
 
