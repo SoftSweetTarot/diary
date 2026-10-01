@@ -111,5 +111,24 @@
 
         const RECIPE_KIND_NAMES = { stripe: '줄무늬', dot: '도트', check: '깅엄 체크', grid: '격자', scallop: '물결', tile: '이미지/그림' };
 
+        /* 🎨 공유 스킨 : 색 5개뿐 → {"bg":"#ffe6f0","cover":"#ff9a9e","page":"#fff0f5","border":"#ffb6c1","accent":"#ff6b81"}
+           '#'+6자리 색만 통과 (하나라도 이상하면 null) */
+        const SKIN_COLOR_FIELDS = ['bg', 'cover', 'page', 'border', 'accent'];
+        function sanitizeSkin(input) {
+            let s = input;
+            if (typeof s === 'string') {
+                if (s.length > 2000) return null;
+                try { s = JSON.parse(s); } catch (e) { return null; }
+            }
+            if (!s || typeof s !== 'object' || Array.isArray(s)) return null;
+            const out = {};
+            for (const k of SKIN_COLOR_FIELDS) {
+                const c = recipeColor(s[k], null);
+                if (!c) return null;
+                out[k] = c;
+            }
+            return out;
+        }
+
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['pattern-recipe'] = true;

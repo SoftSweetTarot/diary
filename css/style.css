@@ -159,11 +159,13 @@
 
         .modal {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 1000;
+            /* 뒤 화면을 어둡게 하지 않아요 (스킨 색을 그대로 확인할 수 있게) · 창 밖을 눌러도 뒤의 다이어리는 눌리지 않음 */
+            background: transparent; display: none; justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
             background: #fff; padding: 20px; border-radius: 20px; width: 90%; max-width: 420px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; display: flex; flex-direction: column;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12); max-height: 80vh; display: flex; flex-direction: column;
             overflow-y: auto;
         }
         .modal-title { font-size: 1.4rem; color: var(--primary-accent); margin-bottom: 12px; text-align: center; }
@@ -507,3 +509,44 @@
         .save-choice-text b { font-size: 15px; color: #333; }
         .save-choice-text small { font-size: 12px; color: #777; line-height: 1.45; }
         .save-chooser-note { font-size: 12px; color: #999; text-align: center; margin: 2px 0 10px; }
+
+        /* ===== 👗 스킨 창 : 원래 크기의 2/3 · 제목을 끌어 옮기기 · 👀 꾹 눌러 보기 ===== */
+        .modal-content.skin-compact {
+            width: 66%; max-width: 280px; max-height: 54vh; padding: 12px 13px; border-radius: 16px; font-size: 12.5px;
+            transition: opacity .15s;
+        }
+        .skin-compact .modal-title { font-size: 1.05rem; margin-bottom: 6px; }
+        .skin-compact .modal-title.skin-sub-title { font-size: 0.9rem; margin-bottom: 6px; }
+        .skin-compact .drag-title { cursor: move; touch-action: none; user-select: none; -webkit-user-select: none;
+            border-bottom: 1px dashed var(--border-color); padding-bottom: 4px; }
+        .skin-compact .btn { font-size: 12px; }
+        .skin-compact .skin-basic-btn { padding: 6px; font-size: 13px; }
+        .skin-compact .skin-section-title { font-size: 12.5px; margin: 10px 0 5px; }
+        .skin-compact .service-grid { gap: 5px; }
+        .skin-compact .service-btn { padding: 6px 2px; font-size: 11.5px; }
+        .skin-compact .service-icon { font-size: 18px; }
+        .skin-compact .sub-modal-btns { margin-top: 10px; gap: 6px; }
+        .skin-compact .color-picker-row { margin-bottom: 3px; }
+        .skin-compact .color-picker-row input[type="color"] { width: 26px; height: 24px; }
+        .skin-compact .skin-pattern-note { font-size: 11px; padding: 5px 7px; }
+        .skin-compact.peeking { opacity: 0.06; }
+        .skin-float-hint { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 11px; color: #999; margin-bottom: 6px; }
+        .skin-peek-btn { flex-shrink: 0; padding: 2px 7px !important; font-size: 11px !important; touch-action: none; user-select: none; -webkit-user-select: none; }
+        .skin-label { font-weight: bold; }
+        .skin-select-row { display: flex; gap: 5px; margin: 5px 0 8px; }
+        .skin-select-row select { flex: 1; min-width: 0; }
+        .skin-del-btn { background: #ff4757 !important; color: #fff !important; border: none !important; flex-shrink: 0; }
+        .skin-hr { border: 0; border-top: 1px dashed var(--border-color); margin: 8px 0; }
+        .skin-name-input { width: 100%; box-sizing: border-box; margin-top: 6px; text-align: left; }
+        .skin-compact select.btn, .skin-share-nick input { box-sizing: border-box; }
+        .skin-save-btn { width: 100%; margin-top: 6px; justify-content: center; background: var(--primary-accent) !important; color: #fff !important; }
+        .skin-share { margin-top: 8px; border: 1px dashed var(--border-color); border-radius: 10px; padding: 5px 7px; }
+        .skin-share summary { cursor: pointer; font-weight: bold; font-size: 12px; color: var(--primary-accent); }
+        .skin-share-body { display: grid; gap: 5px; margin-top: 6px; }
+        .skin-share-target { font-size: 11.5px; }
+        .skin-share-nick { display: flex; align-items: center; gap: 5px; font-size: 11.5px; }
+        .skin-share-nick input { flex: 1; min-width: 0; text-align: left; }
+        .skin-share-btns { display: flex; gap: 5px; }
+        .skin-share-btns .btn { flex: 1; justify-content: center; padding: 4px 2px; }
+        .skin-share-btns .btn:disabled { opacity: .45; cursor: default; }
+        .skin-share-note { font-size: 10.5px; color: #888; margin: 0; line-height: 1.45; }

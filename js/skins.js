@@ -6,7 +6,8 @@
    - 목록 배치(한 줄에 몇 개·몇 줄·크기)는 기기마다 화면이 달라서 이 기기(localStorage)에만 기억
    - 패턴 출처 : 기본 제공(js/patterns.js) · 내 패턴('my:번호') · 등록된 사용자 패턴('cm:번호', 관리자가 승인한 것)
        등록된 사용자 패턴은 레시피를 함께 저장해서 {"id":"cm:3","scale":1,"r":{...}} 처럼 기록 → 목록에서 빠져도 배경은 유지
-   ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → pattern-recipe → skins → pattern-maker → service */
+   - 🌟 모두의 스킨(js/community-skins.js) 목록도 여기서 읽어요. 스킨 고르기·저장은 js/settings.js
+   ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → community-skins → pattern-recipe → skins → pattern-maker → service */
 
         const BG_PATTERN_KEY = 'diary_bg_pattern';
         const PAID_PATTERNS_OPEN = true;   // 임시: 유료 패턴도 모두 사용 가능 (결제 기능을 붙이면 false로)
@@ -107,8 +108,74 @@
         function openSkinBasic() {
             closeModal('skinModal');
             updatePatternUI();
+            renderSkinSelect();
+            updateSkinShareUI();
             openModal('skinBasicModal');
         }
+
+        /* ---------- 🌟 모두의 스킨 (카페에서 받아 관리자가 등록 : js/community-skins.js) ----------
+           목록 한 줄 : {"no":1,"tier":"free","name":"봄날","by":"닉네임","skin":{색 5개}}  →  id 'cs:번호'
+           파일이 없거나 깨져도 다이어리는 정상 동작 (모두의 스킨만 안 보임) */
+        let communitySkinItems = null;
+        function getCommunitySkins() {
+            if (communitySkinItems) return communitySkinItems;
+            communitySkinItems = [];
+            const list = (typeof COMMUNITY_SKINS !== 'undefined' && Array.isArray(COMMUNITY_SKINS)) ? COMMUNITY_SKINS : [];
+            list.forEach(row => {
+                const no = parseInt(row && row.no, 10);
+                const skin = row && sanitizeSkin(row.skin);
+                if (!no || !skin || communitySkinItems.some(x => x.id === 'cs:' + no)) return;
+                communitySkinItems.push({
+                    id: 'cs:' + no, no, tier: row.tier === 'paid' ? 'paid' : 'free',
+                    name: recipeText(row.name, 20) || '모두의 스킨', by: recipeText(row.by, 12), skin
+                });
+            });
+            return communitySkinItems;
+        }
+
+        /* ---------- 스킨 창 : 제목을 끌어서 옮기기 · 👀 꾹 눌러 다이어리 보기 ----------
+           스킨 색을 바꾸면서 뒤의 다이어리가 어떻게 바뀌는지 볼 수 있게 */
+        (function setupSkinWindows() {
+            const posOf = {};
+            const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+            document.querySelectorAll('.modal.skin-float').forEach(modal => {
+                const box = modal.querySelector('.modal-content');
+                const title = box && box.querySelector('.modal-title');
+                if (!title) return;
+                title.classList.add('drag-title');
+                title.title = '끌어서 창을 옮길 수 있어요';
+                let start = null;
+                title.addEventListener('pointerdown', e => {
+                    if (e.button > 0) return;
+                    const p = posOf[modal.id] || { x: 0, y: 0 };
+                    start = { x: e.clientX, y: e.clientY, ox: p.x, oy: p.y };
+                    title.setPointerCapture(e.pointerId);
+                    e.preventDefault();
+                });
+                title.addEventListener('pointermove', e => {
+                    if (!start) return;
+                    const r = box.getBoundingClientRect(), p = posOf[modal.id] || { x: 0, y: 0 };
+                    /* 창이 화면 밖으로 완전히 나가지 않게 */
+                    const baseL = r.left - p.x, baseT = r.top - p.y;
+                    const x = clamp(start.ox + e.clientX - start.x, 40 - r.width - baseL, window.innerWidth - 40 - baseL);
+                    const y = clamp(start.oy + e.clientY - start.y, -baseT, window.innerHeight - 40 - baseT);
+                    posOf[modal.id] = { x, y };
+                    box.style.transform = `translate(${x}px, ${y}px)`;
+                });
+                const end = () => { start = null; };
+                title.addEventListener('pointerup', end);
+                title.addEventListener('pointercancel', end);
+            });
+            /* 👀 버튼 : 누르고 있는 동안 창을 투명하게 */
+            document.querySelectorAll('.skin-peek-btn').forEach(btn => {
+                const box = btn.closest('.modal-content');
+                const on = e => { e.preventDefault(); box.classList.add('peeking'); };
+                const off = () => box.classList.remove('peeking');
+                btn.addEventListener('pointerdown', on);
+                ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => btn.addEventListener(t, off));
+                btn.addEventListener('contextmenu', e => e.preventDefault());
+            });
+        })();
         function backToSkinMenu(fromId) {
             closeModal(fromId);
             openModal('skinModal');
