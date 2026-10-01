@@ -104,7 +104,17 @@
         /* 💌 보내기 : 서버(앱스크립트)가 시트에 저장한 뒤 돌려주는 {"ok":true} 를 받았을 때만 '전송되었어요'
            - 앱스크립트는 한동안 쉬다가 깨어나면 몇 초~십몇 초 걸려요 → 그동안 '보내는 중'을 보여 줘요
            - 구글 로그인 정보는 보내지 않아요 (credentials: 'omit') : 구글 계정이 여러 개 로그인된 브라우저에서도 동작 */
-        const FEEDBACK_TIMEOUT_MS = 45000;
+        const FEEDBACK_TIMEOUT_MS = 5000;                      // 5초 안에 '저장했어요' 답이 없으면 끊고 다시 시도하게
+        /* 확인 번호 : 같은 글을 다시 보내면 같은 번호를 붙여요.
+           5초에 끊겨도 서버는 뒤에서 저장을 끝낼 수 있는데, 그때 다시 눌러도 서버가 번호를 보고 두 번 쓰지 않아요. */
+        let feedbackMsgId = '', feedbackMsgText = '';
+        function feedbackIdFor(text) {
+            if (text !== feedbackMsgText || !feedbackMsgId) {
+                feedbackMsgText = text;
+                feedbackMsgId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+            }
+            return feedbackMsgId;
+        }
         const FEEDBACK_FAIL_SHOW_MS = 2600;                    // 실패 안내가 떠 있는 시간
         let feedbackSending = false;
         let feedbackFailTimer = null;
@@ -152,26 +162,20 @@
             btn.disabled = true; input.disabled = true; closeBtn.disabled = true;   // 전송 중엔 닫기도 막기
             btn.textContent = '📨 보내는 중…';
             /* '전송 중…' 창 : 걸린 시간을 보여 주고, 3초가 넘으면 늦는 이유를 안내 */
-            const started = Date.now();
             pop.querySelector('.sending-card').classList.remove('fail');
             document.getElementById('feedbackSendingSpin').hidden = false;
             document.getElementById('feedbackSendingTitle').textContent = '💌 전송 중…';
-            popSec.hidden = false;
-            popSec.textContent = '0초';
+            popSec.hidden = true;
             popMsg.textContent = '잠시만 기다려 주세요.';
             pop.hidden = false;
-            const tick = setInterval(() => {
-                const sec = Math.floor((Date.now() - started) / 1000);
-                popSec.textContent = sec + '초';
-                if (sec >= 3) popMsg.textContent = '건의함 서버를 깨우는 중이에요. 처음 보낼 땐 10초 넘게 걸릴 수 있어요. 창을 닫지 말고 잠시만 기다려 주세요.';
-            }, 250);
+            const msgId = feedbackIdFor(text);
             const ctl = new AbortController();
             const timer = setTimeout(() => ctl.abort(), FEEDBACK_TIMEOUT_MS);
             let ok = false, reason = '';
             try {
                 const res = await fetch(FEEDBACK_SCRIPT_URL, {
                     method: 'POST', credentials: 'omit', signal: ctl.signal,
-                    body: new URLSearchParams({ comment: text })     // comment=내용 (예전과 같은 형식)
+                    body: new URLSearchParams({ comment: text, id: msgId })   // comment=내용 & id=확인 번호
                 });
                 const data = await res.json().catch(() => null);
                 ok = !!(data && data.ok);
@@ -180,7 +184,7 @@
                 reason = err && err.name === 'AbortError' ? 'timeout' : 'network';
                 console.error('건의사항 전송 오류:', err);
             } finally {
-                clearInterval(tick); clearTimeout(timer);
+                clearTimeout(timer);
                 feedbackSending = false;
                 btn.disabled = false; input.disabled = false; closeBtn.disabled = false;
                 btn.textContent = '📨 전송';
@@ -188,13 +192,14 @@
             }
 
             if (ok) {
+                feedbackMsgId = ''; feedbackMsgText = '';
                 input.value = '';
                 document.getElementById('feedbackCount').textContent = '0';
                 closeFeedback();
                 showMsg('건의사항이 전송되었어요.<br>소중한 의견 감사합니다 💌');
             } else {
                 showFeedbackFail({
-                    timeout: '서버 응답이 너무 늦어요.<br>잠시 후 다시 시도해 주세요.',
+                    timeout: '연결이 잠깐 늦어지고 있어요.<br>전송 버튼을 한 번 더 눌러 주세요.',
                     network: '인터넷 연결을 확인하고<br>다시 시도해 주세요.',
                     server: '서버에서 저장하지 못했어요.<br>잠시 후 다시 시도해 주세요.'
                 }[reason] + '<br><span style="font-size:12px;color:#999;">적은 내용은 그대로 남아 있어요.</span>');
