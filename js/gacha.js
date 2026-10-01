@@ -121,8 +121,7 @@
                 box.appendChild(b); gc.bulbs.push(b);
             }
 
-            el.addEventListener('pointerdown', gcUnlockAudio, true);      // 랜덤박스 화면 어디를 눌러도 소리 깨우기
-            el.addEventListener('keydown', gcUnlockAudio, true);
+            ['pointerdown', 'touchend', 'click', 'keydown'].forEach(t => el.addEventListener(t, gcUnlockAudio, true));   // 화면 어디를 눌러도 소리 깨우기 (아이패드는 touchend·click 이 확실)
             gq('gcInsert').onclick = gcInsertCoin;
             gq('gcCapsule').onclick = gcTapCapsule;
             gq('gcSound').onclick = () => { gcUnlockAudio(); gc.sound = !gc.sound; gq('gcSound').textContent = gc.sound ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'; if (!gc.sound) gcStopRumble(); };
@@ -411,20 +410,35 @@
         /* ---------- 소리 (파일 없이 WebAudio) · 진동 ---------- */
         function gcAudio() { if (!gc.ac) { try { gc.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return gc.ac; }
         /* 🔊 소리 켜기 : 브라우저는 사용자가 화면을 누를 때만 소리를 허락해요.
-           - 오디오가 '일시정지(suspended)' 상태로 시작하면 resume() 으로 깨우기
-           - 아이폰 무음 모드에서도 들리게 : 아주 짧은 무음 소리를 한 번 재생해서 '미디어 재생' 모드로 바꾸기 */
-        const GC_SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+           - 오디오가 '일시정지(suspended)'나 '중단(interrupted · 아이패드에서 앱을 오가면)' 상태면 resume() 으로 깨우기
+           - 아이폰·아이패드 무음 모드에서도 들리게
+               ① iOS / iPadOS 17 이상 : navigator.audioSession.type = 'playback' ('미디어 재생'으로 취급 → 무음 모드 무시)
+               ② 그보다 예전 기기 : 아주 짧은 '무음 소리 파일'을 한 번 재생해서 같은 효과 */
+        let gcSilentUrl = '';
+        function gcSilentWav() {                               // 0.2초짜리 무음 WAV 를 직접 만들기 (파일 없이)
+            if (gcSilentUrl) return gcSilentUrl;
+            const n = 1600, buf = new ArrayBuffer(44 + n), v = new DataView(buf);
+            const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+            w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt ');
+            v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+            v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+            w(36, 'data'); v.setUint32(40, n, true);
+            for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);   // 8비트 무음 = 128
+            gcSilentUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+            return gcSilentUrl;
+        }
         function gcUnlockAudio() {
+            try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}   // ①
             const a = gcAudio();
-            if (a && a.state !== 'running') { try { a.resume(); } catch (e) {} }
+            if (a && a.state !== 'running') { try { const p = a.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
             if (!gc.unlocked) {
                 gc.unlocked = true;
-                try {
-                    const el = new Audio(GC_SILENT);
-                    el.setAttribute('playsinline', ''); el.volume = 0;
-                    const pr = el.play(); if (pr && pr.catch) pr.catch(() => {});
-                } catch (e) {}
-                try {                                            // 아이폰 사파리 : 무음 한 조각을 바로 재생해 오디오 길을 열어 둠
+                try {                                            // ② 무음 소리 한 번 재생
+                    const el = new Audio(gcSilentWav());
+                    el.setAttribute('playsinline', ''); el.preload = 'auto';
+                    const pr = el.play(); if (pr && pr.catch) pr.catch(() => { gc.unlocked = false; });
+                } catch (e) { gc.unlocked = false; }
+                try {                                            // 사파리 : 무음 한 조각을 바로 재생해 오디오 길을 열어 둠
                     const b = a.createBuffer(1, 1, 22050), src = a.createBufferSource();
                     src.buffer = b; src.connect(a.destination); src.start(0);
                 } catch (e) {}
