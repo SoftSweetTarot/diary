@@ -75,7 +75,7 @@
         /* =====================================================================
            💌 건의함 : 작성한 내용을 구글 시트(Apps Script)로 전송
            ===================================================================== */
-        const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkh25l1LBwrmop0muyxZaXnTOEaZNpuyEM7aB9N2CfhUZ6YuqfAyKMn8S0xtTN05YE/exec";
+        const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEDrtkCkcmmbxIL30fgzmGXTb4r5BoO7RP59M930O66duHgvy-xkYEDK3PDZWUcd1l/exec";
 
         function openFeedback() {
             openModal('feedbackModal');

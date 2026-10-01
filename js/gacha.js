@@ -8,7 +8,7 @@
    - 이 파일이 없어도 다이어리는 정상 동작 (랜덤박스만 '준비 중')
    ※ 파일 불러오는 순서: … → service → gacha */
 
-        const GACHA_API_URL = 'https://script.google.com/macros/s/AKfycbzFKkB_VIBGi-6iBnqUl45B4_30EITgkO3_G28lRtVzHAGKUFHuVELIpFaRZvtpBlr-/exec';                      // ← 앱스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
+        const GACHA_API_URL = 'https://script.google.com/macros/s/AKfycbwkuQlkD_jwpozbSlyz2Nj5py7MgYRfrWu3BtxTXHYOZ5pE4CYGbxqJGdy-6_UOsWTvCQ/exec';                      // ← 앱스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
         const GACHA_MIX_MS = 12600;                    // 공 섞는 시간 (긴장감!)
         const GACHA_FORTUNES = [
             '오늘 쓴 일기 한 줄이 내일의 나를 웃게 해요.',
