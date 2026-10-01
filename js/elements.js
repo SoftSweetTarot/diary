@@ -460,9 +460,11 @@
                 const textarea = el.querySelector('textarea');
                 const img = el.querySelector('img');
                 const span = el.querySelector('span');
+                let dollData = null;                                            // 👧 붙인 인형 (js/doll-room.js)
+                if (el.dataset.doll) { try { dollData = JSON.parse(el.dataset.doll); } catch (e) { dollData = null; } }
                 const item = {
-                    t: textarea ? 't' : (img ? 'i' : 's'),
-                    c: textarea ? textarea.value : (img ? (img.dataset.src || img.getAttribute('src')) : span.innerText),
+                    t: dollData ? 'd' : (textarea ? 't' : (img ? 'i' : 's')),
+                    c: dollData ? dollData : (textarea ? textarea.value : (img ? (img.dataset.src || img.getAttribute('src')) : span.innerText)),
                     x: r1(el.dataset.posX), y: r1(el.dataset.posY)
                 };
                 const sc = Math.round((parseFloat(el.dataset.scale) || 1) * 1000) / 1000;
@@ -495,12 +497,14 @@
 
             if (!showAlert) return;          // 자동 저장: 변경이 있으면 잠시 뒤 드라이브에 자동 업로드
             if (drive.guest || !drive.ready) {
-                showMsg('⚠ 구글 드라이브에 연결되어 있지 않아 저장되지 않았어요.<br>왼쪽 아래 ☁ 표시를 눌러 로그인해 주세요.');
+                showMsg('⚠ 구글 드라이브에 연결되어 있지 않아 저장되지 않았어요.<br>왼쪽 아래 ☁ 표시를 눌러 로그인해 주세요.'
+                    + '<br><button class="btn" style="margin:10px auto 0;" onclick="closeMsg(true); setTimeout(exportToPNG, 60)">📷 이 페이지를 PNG로 저장</button>');
                 return;
             }
             const ok = await flushUpload({ force: true });   // 파일이 없으면 생성, 있으면 덮어쓰기
             showMsg(ok
                 ? '💾 저장이 완료되었습니다!<br><span style="font-size:12px;color:#777;">☁ 구글 드라이브 · ' + dayPathText(currentDate) + '</span>'
+                  + '<br><button class="btn" style="margin:10px auto 0;" onclick="closeMsg(true); setTimeout(exportToPNG, 60)">📷 이 페이지를 PNG로도 저장</button>'
                 : '⚠ 구글 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
         }
 
@@ -516,6 +520,8 @@
                 if (!interactive) ta.readOnly = true;
                 styleTextarea(ta, data.fontFamily, data.color, data.fontSize);
                 el.appendChild(ta);
+            } else if (data.type === 'doll') {
+                buildPlacedDoll(el, data.content, interactive);                // 👧 붙인 인형 (js/doll-room.js)
             } else if (data.type === 'image') {
                 const img = document.createElement('img');
                 bindImage(img, data.content);
