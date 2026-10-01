@@ -111,12 +111,39 @@
             });
         }
 
-        let storageStats = null;   // 드라이브 '말랑달콤 / 다이어리' 폴더 전체 통계 (설정창을 열 때 갱신)
+        /* 💾 저장 용량 : 내 구글 저장공간 게이지 + 말랑달콤 전체(다이어리 + 인형) 크기 (설정창을 열 때 갱신)
+           - 구글 저장공간은 지금 받는 권한(drive.file) 그대로 읽을 수 있어요 (about.storageQuota · 추가 허락 없음)
+           - 회사·학교 계정처럼 용량 제한이 없으면 게이지 없이 숫자만 */
+        let storageStats = null;   // { days, diaryBytes, dolls, dollBytes, plays, playBytes, quota: { used, limit } | null }
+        const fmtBytes = b => !b ? '0KB' : b >= 1073741824 ? (b / 1073741824).toFixed(b >= 107374182400 ? 0 : 1) + 'GB'
+            : b >= 1048576 ? (b / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(b / 1024)) + 'KB';
+
+        async function folderFileStats(names) {
+            const id = await getFolder(names, false);
+            if (!id) return { n: 0, bytes: 0 };
+            const files = await driveList(`'${id}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,size');
+            return { n: files.length, bytes: files.reduce((s, f) => s + (parseInt(f.size, 10) || 0), 0) };
+        }
+        async function readDriveQuota() {
+            try {
+                const res = await gfetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota');
+                if (!res.ok) return null;
+                const q = (await res.json()).storageQuota || {};
+                return { used: parseInt(q.usage, 10) || 0, limit: parseInt(q.limit, 10) || 0 };   // limit 0 = 제한 없음
+            } catch (e) { return null; }
+        }
+
         async function refreshStorageStats() {
             if (!drive.ready || drive.guest) { storageStats = null; updateStorageInfo(); return; }
+            const none = { n: 0, bytes: 0 };
+            const dollStats = key => (typeof DOLL_FOLDERS !== 'undefined' && DOLL_FOLDERS[key])
+                ? folderFileStats(DOLL_FOLDERS[key]).catch(() => none) : Promise.resolve(none);
             try {
-                const all = await driveEnumerateAll();
-                storageStats = { days: all.length, bytes: all.reduce((s, f) => s + f.size, 0) };
+                const [all, quota, dolls, plays] = await Promise.all([driveEnumerateAll(), readDriveQuota(), dollStats('deco'), dollStats('play')]);
+                storageStats = {
+                    days: all.length, diaryBytes: all.reduce((s, f) => s + f.size, 0),
+                    dolls: dolls.n, dollBytes: dolls.bytes, plays: plays.n, playBytes: plays.bytes, quota
+                };
             } catch (e) {}
             updateStorageInfo();
         }
@@ -124,13 +151,36 @@
         function updateStorageInfo() {
             const t = document.getElementById('lsText');
             const d = document.getElementById('lsDetail');
+            const gauge = document.getElementById('lsGauge');
+            const warn = document.getElementById('lsWarn');
+            if (gauge) gauge.style.display = 'none';
+            if (warn) warn.style.display = 'none';
             if (storageStats) {
-                const bytes = storageStats.bytes;
-                const size = bytes >= 1048576 ? (bytes / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB';
-                if (t) t.innerText = size;
-                if (d) d.innerText = `일기 ${storageStats.days}일치 · 하루에 파일 1개씩 저장`;
+                const S = storageStats, q = S.quota;
+                if (q && q.limit > 0) {
+                    const pct = Math.min(100, q.used / q.limit * 100);
+                    if (gauge) {
+                        gauge.style.display = 'block';
+                        const bar = gauge.querySelector('.ls-gauge-fill');
+                        bar.style.width = Math.max(pct, 1) + '%';
+                        bar.className = 'ls-gauge-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
+                    }
+                    if (t) t.innerText = `${fmtBytes(q.used)} / ${fmtBytes(q.limit)} (${pct < 1 ? pct.toFixed(1) : Math.round(pct)}%)`;
+                    if (warn && pct >= 90) {
+                        warn.style.display = 'block';
+                        warn.innerHTML = pct >= 99
+                            ? '⚠ 구글 저장공간이 <b>가득 찼어요!</b> 이대로면 일기를 저장할 수 없어요.<br>지메일·구글 포토 등에서 필요 없는 파일을 지워 주세요.'
+                            : '⚠ 구글 저장공간이 거의 찼어요. 가득 차면 일기를 저장할 수 없어요.';
+                    }
+                } else if (t) {
+                    t.innerText = q ? `${fmtBytes(q.used)} 사용 중 (용량 제한 없는 계정)` : '구글 저장공간을 읽지 못했어요';
+                }
+                const mine = S.diaryBytes + S.dollBytes + S.playBytes;
+                if (d) d.innerHTML = `└ 그중 <b>말랑달콤</b> : ${fmtBytes(mine)}<br>`
+                    + `<span style="color:#999;">(📔 일기 ${S.days}일치 ${fmtBytes(S.diaryBytes)} · 👧 인형 ${S.dolls}개 ${fmtBytes(S.dollBytes)}`
+                    + (S.plays ? ` · 🎭 인형극 ${S.plays}개 ${fmtBytes(S.playBytes)}` : '') + ')</span>';
             } else {
-                if (t) t.innerText = drive.ready ? '계산 중…' : '-';
+                if (t) t.innerText = drive.guest ? '로그인하면 볼 수 있어요' : drive.ready ? '계산 중…' : '-';
                 if (d) d.innerText = '';
             }
             const st = document.getElementById('driveStatusText');
@@ -141,7 +191,7 @@
         /* =====================================================================
            🎨 스킨 (다이어리 색 5개 : 전체 배경 · 겉표지 · 속지 · 테두리 · 포인트)
            - 스킨 목록 : 기본 스킨 4종 + 🌟 모두의 스킨(카페에서 받아 등록, js/community-skins.js) + 🎨 내 스킨
-           - 내 스킨     : 'diary_custom_skins' → settings.json  (예전과 같음)
+           - 내 스킨     : 'diary_custom_skins' → settings.json
            - 지금 고른 스킨 : 'diary_skin' → settings.json  (다음에 열어도 · 다른 기기에서도 그대로)
                예) {"id":"mint"} · {"id":"봄날","c":{색 5개}} · {"id":"cs:3","c":{색 5개}}
                모두의 스킨·내 스킨은 색도 같이 적어 둬서, 목록에서 빠지거나 지워도 쓰던 색이 유지돼요.
@@ -312,9 +362,6 @@
             if (typeof loadBgPattern === 'function') loadBgPattern();   // 전체 배경 패턴 (js/skins.js)
         }
 
-        /* 예전 코드 호환 */
-        function addSkinToSelect() { renderSkinSelect(); }
-
         /* ---------- 📤 카페에 스킨 공유 · 📥 스킨 파일 불러오기 ----------
            파일 : malang_skin_날짜_시간.malang.txt  내용 : {"malang_skin":1,"name":"봄날","by":"닉네임","skin":{색 5개}}
            → 카페에 첨부 → 관리자가 pattern-tool.html 에 넣어 js/community-skins.js 를 만들어 깃허브에 올림 */
@@ -410,6 +457,19 @@
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        /* ---------- ⚙ 설정 메뉴 : 📐 페이지 크기 · ⚙️ 설정 · 💌 건의함 · 💝 후원 ---------- */
+        function openSettingsMenu() { openModal('settingsMenuModal'); }
+        function openFromSettingsMenu(id) {
+            closeModal('settingsMenuModal');
+            if (id === 'pageSizeModal') { syncPageSizeInputs(); refreshLayout(); }
+            if (id === 'feedbackModal') { openFeedback(); return; }
+            openModal(id);
+        }
+        function backToSettingsMenu(fromId) {
+            closeModal(fromId);
+            openModal('settingsMenuModal');
+        }
 
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */

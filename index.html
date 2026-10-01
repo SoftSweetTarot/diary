@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261001-12">
+    <link rel="stylesheet" href="css/style.css?v=20261001-15">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -43,7 +43,7 @@
         <button class="btn" onclick="openSaveChooser()">💾 저장</button>
         <button class="btn" onclick="openModal('skinModal')">👗 스킨</button>
         <button class="btn" onclick="openModal('serviceModal')">🎠 놀이터</button>
-        <button class="btn" onclick="openModal('settingsModal')">⚙ 설정</button>
+        <button class="btn" onclick="openSettingsMenu()">⚙ 설정</button>
     </div>
 
     <!-- 다이어리 본체 -->
@@ -52,8 +52,8 @@
             
             <!-- 겉표지 -->
             <div class="page cover-page" id="coverPage">
-                <div class="cover-title">My Pretty Diary 🌸</div>
-                <div class="cover-subtitle">나만의 비밀 일기장</div>
+                <div class="cover-title">Soft Sweet Diary 🌸</div>
+                <div class="cover-subtitle">말랑달콤 다이어리</div>
                 <!-- 📢 공지 이미지 : 스크립트의 NOTICE_IMAGE_SRC 에 이미지 경로/주소를 넣으면 여기에 표시 -->
                 <div class="cover-notice" id="coverNotice"><img id="coverNoticeImg" alt="공지사항"></div>
                 <div class="drag-hint">◀ 오른쪽에서 왼쪽으로 드래그하여 열기</div>
@@ -118,10 +118,10 @@
                 <div class="help-item"><b>💾 저장</b> : 누르면 저장 방법을 고르는 창이 떠요.<br>· <b>☁ 웹에 저장 (구글 드라이브)</b> : 현재 날짜 페이지를 <b>구글 드라이브의 '말랑달콤 / 다이어리 / 년도 / 월 / 일.json'</b> 파일에 저장합니다. 폴더와 파일이 없으면 새로 만들고, 같은 날짜는 하루 1개 파일에 계속 덮어씁니다. 변경 후 몇 초 뒤와 설정한 주기마다 자동으로도 저장되며, <b>스마트폰·아이패드 화면이 꺼지거나 앱을 벗어나는 순간에도 자동 저장</b>됩니다.<br>· <b>🖼 내 기기에 사진(PNG)으로 저장</b> : 지금 페이지를 그림 파일로 내려받아요.<br>※ 화면 왼쪽 아래 <b>☁ 표시</b>로 웹 저장 상태를 확인할 수 있어요. 📂 백업은 내 PC에 파일로 따로 보관합니다.</div>
                 <div class="help-item"><b>🖼 사진(PNG)으로 저장</b> : <b>💾 저장</b>을 누르고 <b>🖼 내 기기에 사진(PNG)으로 저장</b>을 고르세요. 지금 페이지가 2배 해상도 <code>.png</code> 그림 파일로 컴퓨터·폰에 내려받아져요.</div>
                 <div class="help-item"><b>👧 인형</b> (🎠 놀이터 → 👧 인형방) : 내가 만든 인형들을 보고, <b>📔 붙이기</b>로 지금 페이지에 붙여요. 붙인 인형은 스티커처럼 옮기고 돌리고 크기를 바꿀 수 있고, <b>두 번 누르면</b> 표정·좌우 반전을 바로 바꿀 수 있어요. <b>✏️ 새 인형 만들기</b>를 누르면 인형방이 열려요.</div>
-                <div class="help-item"><b>👧 인형방</b> (🎠 놀이터 → 👧 인형방 → ✏️ 새 인형 만들기) : 마네킹에서 시작해 ① 체형 → ② 피부 → ③ 눈·코·입 → ④ 헤어 → ⑤ 화장 → ⑥ 옷 → ⑦ 소품 → ⑧ 완성 순서로 인형을 만들어요. ③~⑦은 <b>😊 쉬움</b>(고르기)과 <b>🔥 어려움</b>(직접 그리기) 중에 고를 수 있어요.<br>· <b>어려움 펜</b> : 점을 찍으면 선이 따라오고, 다음 점을 찍어 이어 가다가 <b>첫 점을 누르면 닫히면서 색이 채워져요</b>. 누른 채 끌면 곡선, 두 번 누르면 열린 선으로 끝나요. <b>붓</b>으로 칠하고, <b>고르기</b>로 조각을 옮기거나 점을 끌어 고칠 수 있어요. ↔ 좌우 대칭, 되돌리기, 확대도 있어요.<br>· 만든 시간·조각 수·점 수가 <b>제작 기록</b>으로 남아요. ⑧ 완성에서 <b>📷 사진으로 저장</b>(카페 자랑용 카드), <b>💾 인형 파일로 저장</b>, <b>▶ 만드는 과정 다시보기</b>, <b>📔 일기에 붙이기</b>를 할 수 있어요.<br>· 인형은 <b>내 구글 드라이브 / 말랑달콤 / 인형 / 꾸미기</b> 폴더에 인형마다 파일 하나로, <b>인형 이름</b>으로 저장돼요. (예: 로라.json · 최대 50개) 같은 이름이 있으면 바꿀지 물어봐요.<br>· 만들다 닫아도 이 기기에 임시 저장돼서 이어서 만들 수 있어요.</div>
+                <div class="help-item"><b>👧 인형방</b> (🎠 놀이터 → 👧 인형방 → ✏️ 새 인형 만들기) : 마네킹에서 시작해 ① 체형 → ② 피부 → ③ 눈·코·입 → ④ 헤어 → ⑤ 화장 → ⑥ 옷 → ⑦ 소품 → ⑧ 완성 순서로 인형을 만들어요. ③~⑦은 <b>😊 쉬움</b>(고르기)과 <b>🔥 어려움</b>(직접 그리기) 중에 고를 수 있어요.<br>· <b>어려움 펜</b> : 점을 찍으면 선이 따라오고, 다음 점을 찍어 이어 가다가 <b>첫 점을 누르면 닫히면서 색이 채워져요</b>. 누른 채 끌면 곡선, 두 번 누르면 열린 선으로 끝나요. <b>붓</b>으로 칠하고, <b>고르기</b>로 조각을 옮기거나 점을 끌어 고칠 수 있어요. ↔ 좌우 대칭, 되돌리기, 확대도 있어요.<br>· 만든 시간·조각 수·점 수가 <b>제작 기록</b>으로 남아요. ⑧ 완성에서 <b>📷 사진으로 저장</b>(카페 자랑용 카드), <b>💾 인형 파일로 저장</b>, <b>▶ 만드는 과정 다시보기</b>, <b>📔 일기에 붙이기</b>를 할 수 있어요.<br>· 인형은 <b>내 구글 드라이브 / 말랑달콤 / 인형</b> 폴더에 인형마다 파일 하나로, <b>인형 이름</b>으로 저장돼요. (예: 로라.json · 최대 50개) 같은 이름이 있으면 바꿀지 물어봐요.<br>· 만들다 닫아도 이 기기에 임시 저장돼서 이어서 만들 수 있어요.</div>
                 <div class="help-item"><b>👗 스킨</b> : 세 가지 메뉴가 있어요.<br>· <b>🎨 기본스킨</b> : 기본 스킨 4종, <b>🌟 모두의 스킨</b>(카페에서 받아 등록된 스킨), <b>🎨 내 스킨</b> 중에서 고르거나, 색상을 직접 골라 나만의 스킨을 만들어 등록/삭제할 수 있어요. 고른 스킨은 구글 드라이브 설정에 저장되어 다음에 열어도 그대로예요. 창 제목을 끌면 창을 옮길 수 있고, <b>👀 꾹 눌러 보기</b>를 누르고 있으면 창이 투명해져서 다이어리 색을 확인할 수 있어요. <b>📤 카페에 스킨 공유</b>에서 내 스킨을 <b>💾 파일로 저장</b>해 카페에 올리면 모든 사용자의 목록에 등록될 수 있고, 카페에서 받은 스킨 파일은 <b>📥 스킨 파일 넣기</b>로 바로 내 스킨에 넣을 수 있어요.<br>· <b>🆓 무료패턴 / 💎 유료패턴</b> : 다이어리 뒤 <b>전체 배경</b>에 패턴을 깔아요. 목록에서 누르면 바로 적용되고, 패턴 크기 조절과 <b>패턴 해제</b>도 할 수 있어요. 고른 패턴은 구글 드라이브 설정에 저장되어 다른 기기에서도 똑같이 보여요. 목록은 라이브러리처럼 ◀ 이전 / 다음 ▶ 으로 넘기고, ⚙ 배치에서 한 줄에 몇 개·몇 줄·크기를 바꿀 수 있어요.<br>· <b>📂 내 패턴</b> : 내가 만든 패턴 모음이에요. 누르면 배경에 적용되고, 💾 로 카페에 올릴 파일을 저장하거나 🗑 로 지울 수 있어요.<br>· <b>✏️ 패턴 직접 만들기</b> : <b>🧵 무늬 메이커</b>(줄무늬·도트·깅엄 체크·격자·물결), <b>🖼️ 이미지 패턴</b>(내 이미지를 바둑판·엇갈림으로 반복), <b>🖌️ 그려서 만들기</b>(한 칸을 그리면 이어 붙인 모습이 바로 보여요. 이어그리기를 켜면 경계가 자연스럽게 이어져요)로 나만의 패턴을 만들 수 있어요. 만든 패턴을 <b>💾 파일로 저장</b>해서 <b>말랑달콤 카페</b>에 첨부해 올리면, 확인 후 모든 사용자의 패턴 목록에 닉네임과 함께 등록될 수 있어요.</div>
-                <div class="help-item"><b>🎠 놀이터</b> : 👧 인형방, 도움말, 카페 이동, 타로점, 음악 듣기, 랜덤박스, 🛍️ 말랑상점 등 여러 가지 기능을 모아 둔 창을 엽니다.</div>
-                <div class="help-item"><b>⚙️ 설정</b> : <b>전체 UI 폰트</b>, <b>페이지 크기</b>, 자동 저장 주기(1~60분), <b>💾 데이터 관리(백업·불러오기·용량 확인)</b>, 💌 건의함, 💝 후원하기가 있습니다.</div>
+                <div class="help-item"><b>🎠 놀이터</b> : 👧 인형방, 🎭 인형극, 🎬 달콤영상, 🔮 포춘카드, 🌙 꿈해몽, 🕹️ 오락실, 📚 만화방, 🎵 음악듣기, 🎁 랜덤박스, 🛍️ 말랑상점, ☕ 카페 이동, ❓ 도움말 등 여러 가지 기능을 모아 둔 창을 엽니다.</div>
+                <div class="help-item"><b>⚙ 설정</b> : 네 가지 메뉴가 있어요.<br>· <b>📐 페이지 크기</b> : 다이어리 가로·세로 크기를 바꿔요. 작은 창이라 바뀐 크기를 보면서 조절할 수 있고, 제목을 끌면 창이 옮겨지고 <b>👀 꾹 눌러 보기</b>로 창을 잠깐 투명하게 할 수 있어요.<br>· <b>⚙️ 설정</b> : 전체 UI 폰트, 자동 저장 주기(1~60분), 💾 데이터 관리(백업·불러오기·로그아웃), 저장 용량 확인<br>· <b>💌 건의함</b> · <b>💝 후원</b></div>
 
                 <div class="help-section-title">🖐️ 요소 다루기 (스티커·글·이미지)</div>
                 <div class="help-item"><b>선택</b> : 요소를 누르면 점선 테두리와 조절 핸들이 나타납니다. 빈 곳을 누르면 선택이 풀립니다.</div>
@@ -448,20 +448,6 @@
             <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
 
             <div class="form-group">
-                <label>📐 다이어리 페이지 크기 (px):</label>
-                <div style="display:flex; gap:6px; align-items:center;">
-                    <span>↔ 가로</span>
-                    <input type="number" id="pageWInput" class="btn" min="320" max="1200" step="10" style="flex:1; min-width:0; text-align:center;" onchange="applyPageSizeSetting()">
-                    <span>↕ 세로</span>
-                    <input type="number" id="pageHInput" class="btn" min="400" max="1600" step="10" style="flex:1; min-width:0; text-align:center;" onchange="applyPageSizeSetting()">
-                </div>
-                <div id="pageSizeInfo" style="font-size:12px; color:#777; margin-top:5px;"></div>
-                <button class="btn" style="width:100%; margin-top:6px; justify-content:center;" onclick="resetPageSize()">↩ 기본 크기(가로 480 · 세로 620)로</button>
-            </div>
-
-            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
-            
-            <div class="form-group">
                 <label>⏱ 자동 저장 주기 (분):</label>
                 <input type="number" id="autoSaveInput" min="1" max="60" value="5" class="btn" style="width:100%; text-align:center;" onchange="updateAutoSaveInterval(this.value)">
             </div>
@@ -483,19 +469,61 @@
                 <div style="font-size:1.15rem; font-weight:bold; color:#ff6b81; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
                     💾 <span>다이어리 저장 용량 확인</span>
                 </div>
-                <div style="font-size:13px; color:#555; text-align:left;">구글 드라이브 '말랑달콤 / 다이어리' 폴더 전체 크기:</div>
-                                <div id="lsText" style="font-size:13px; color:#666; text-align:right;">계산 중...</div>
+                <div style="font-size:13px; color:#555; text-align:left;">☁ 내 구글 저장공간 <span style="font-size:11px; color:#999;">(지메일·구글 포토와 함께 써요)</span></div>
+                <div class="ls-gauge" id="lsGauge" style="display:none;"><div class="ls-gauge-fill"></div></div>
+                <div id="lsText" style="font-size:13px; color:#666; text-align:right; margin-top:3px;">계산 중...</div>
+                <div class="ls-warn" id="lsWarn" style="display:none;"></div>
                 <div id="lsDetail" style="font-size:12px; color:#777; line-height:1.5; margin-top:4px; text-align:left;"></div>
             </div>
 
-            <hr style="border:0; border-top:1px dashed var(--border-color); margin:15px 0;">
-            <div class="form-group">
-                <label>💌 제작자에게 의견 보내기:</label>
-                <button class="btn" style="width:100%; justify-content:center;" onclick="openFeedback()">💌 건의함</button>
-                <button class="btn" style="width:100%; justify-content:center; margin-top:6px;" onclick="openModal('donateModal')">💝 후원하기</button>
+            <div class="sub-modal-btns">
+                <button class="btn" onclick="backToSettingsMenu('settingsModal')">← 설정 메뉴</button>
+                <button class="btn" onclick="closeModal('settingsModal')">닫기</button>
             </div>
+        </div>
+    </div>
 
-            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('settingsModal')">닫기</button>
+    <!-- ⚙ 설정 메뉴 : 페이지 크기 · 설정 · 건의함 · 후원 -->
+    <div class="modal" id="settingsMenuModal">
+        <div class="modal-content settings-menu">
+            <div class="modal-title">⚙ 설정</div>
+            <div class="service-grid settings-grid">
+                <button class="btn service-btn" onclick="openFromSettingsMenu('pageSizeModal')"><span class="service-icon">📐</span>페이지 크기<small>다이어리 크기 바꾸기</small></button>
+                <button class="btn service-btn" onclick="openFromSettingsMenu('settingsModal')"><span class="service-icon">⚙️</span>설정<small>폰트·저장·백업·용량</small></button>
+                <button class="btn service-btn" onclick="openFromSettingsMenu('feedbackModal')"><span class="service-icon">💌</span>건의함<small>제작자에게 의견 보내기</small></button>
+                <button class="btn service-btn" onclick="openFromSettingsMenu('donateModal')"><span class="service-icon">💝</span>후원<small>말랑달콤 응원하기</small></button>
+            </div>
+            <button class="btn" style="width:100%; margin-top:12px; justify-content:center;" onclick="closeModal('settingsMenuModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 📐 다이어리 페이지 크기 (스킨 창처럼 작게 · 제목을 끌어 옮기기 · 👀 꾹 눌러 보기) -->
+    <div class="modal skin-float" id="pageSizeModal">
+        <div class="modal-content skin-compact">
+            <div class="modal-title">📐 다이어리 페이지 크기</div>
+            <div class="skin-float-hint">
+                <span>✋ 제목을 끌면 창이 옮겨져요</span>
+                <button class="btn skin-peek-btn" type="button" title="누르고 있는 동안 창이 투명해져요">👀 꾹 눌러 보기</button>
+            </div>
+            <div class="page-size-row">
+                <span class="page-size-label">↔ 가로</span>
+                <button class="btn page-step" type="button" onclick="stepPageSize('w', -10)">−</button>
+                <input type="number" id="pageWInput" class="btn" min="320" max="1200" step="10" onchange="applyPageSizeSetting()">
+                <button class="btn page-step" type="button" onclick="stepPageSize('w', 10)">＋</button>
+            </div>
+            <div class="page-size-row">
+                <span class="page-size-label">↕ 세로</span>
+                <button class="btn page-step" type="button" onclick="stepPageSize('h', -10)">−</button>
+                <input type="number" id="pageHInput" class="btn" min="400" max="1600" step="10" onchange="applyPageSizeSetting()">
+                <button class="btn page-step" type="button" onclick="stepPageSize('h', 10)">＋</button>
+            </div>
+            <div class="page-size-range">가로 320~1200 · 세로 400~1600 (px)</div>
+            <div id="pageSizeInfo" class="page-size-info"></div>
+            <button class="btn" style="width:100%; margin-top:6px; justify-content:center;" onclick="resetPageSize()">↩ 기본 크기(가로 480 · 세로 620)로</button>
+            <div class="sub-modal-btns">
+                <button class="btn" onclick="backToSettingsMenu('pageSizeModal')">← 설정 메뉴</button>
+                <button class="btn" onclick="closeModal('pageSizeModal')">닫기</button>
+            </div>
         </div>
     </div>
 
@@ -503,14 +531,19 @@
     <div class="modal" id="serviceModal">
         <div class="modal-content">
             <div class="modal-title">🎠 놀이터</div>
-            <button class="btn skin-basic-btn" style="margin-bottom:8px;" onclick="openDollPicker()">👧 인형방 <small>(마네킹부터 나만의 인형 만들기)</small></button>
             <div class="service-grid">
-                <button class="btn service-btn" onclick="openHelpFromService()"><span class="service-icon">❓</span>도움말</button>
+                <button class="btn service-btn" onclick="openDollPicker()"><span class="service-icon">👧</span>인형방<small>나만의 인형 만들기</small></button>
+                <button class="btn service-btn soon" onclick="openPuppetShow()"><span class="service-icon">🎭</span>인형극<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openSweetVideo()"><span class="service-icon">🎬</span>달콤영상<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openFortune()"><span class="service-icon">🔮</span>포춘카드<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openDream()"><span class="service-icon">🌙</span>꿈해몽<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openArcade()"><span class="service-icon">🕹️</span>오락실<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openComics()"><span class="service-icon">📚</span>만화방<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openMusic()"><span class="service-icon">🎵</span>음악듣기<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openShop()"><span class="service-icon">🛍️</span>말랑상점<small>(준비중)</small></button>
                 <button class="btn service-btn" onclick="goCafe()"><span class="service-icon">☕</span>카페이동</button>
-                <button class="btn service-btn" onclick="openTarot()"><span class="service-icon">🔮</span>타로점</button>
-                <button class="btn service-btn" onclick="openMusic()"><span class="service-icon">🎵</span>음악듣기</button>
-                <button class="btn service-btn" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스</button>
-                <button class="btn service-btn" onclick="openShop()"><span class="service-icon">🛍️</span>말랑상점</button>
+                <button class="btn service-btn" onclick="openHelpFromService()"><span class="service-icon">❓</span>도움말</button>
             </div>
             <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('serviceModal')">닫기</button>
         </div>
@@ -566,23 +599,23 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261001-12"></script>
-    <script src="js/app.js?v=20261001-12"></script>
-    <script src="js/page.js?v=20261001-12"></script>
-    <script src="js/elements.js?v=20261001-12"></script>
-    <script src="js/settings.js?v=20261001-12"></script>
-    <script src="js/patterns.js?v=20261001-12"></script>
+    <script src="js/drive.js?v=20261001-15"></script>
+    <script src="js/app.js?v=20261001-15"></script>
+    <script src="js/page.js?v=20261001-15"></script>
+    <script src="js/elements.js?v=20261001-15"></script>
+    <script src="js/settings.js?v=20261001-15"></script>
+    <script src="js/patterns.js?v=20261001-15"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261001-12"></script>
-    <script src="js/skins.js?v=20261001-12"></script>
-    <script src="js/pattern-maker.js?v=20261001-12"></script>
-    <script src="js/doll-render.js?v=20261001-12"></script>
-    <script src="js/doll-store.js?v=20261001-12"></script>
-    <script src="js/doll-room.js?v=20261001-12"></script>
-    <script src="js/service.js?v=20261001-12"></script>
+    <script src="js/pattern-recipe.js?v=20261001-15"></script>
+    <script src="js/skins.js?v=20261001-15"></script>
+    <script src="js/pattern-maker.js?v=20261001-15"></script>
+    <script src="js/doll-render.js?v=20261001-15"></script>
+    <script src="js/doll-store.js?v=20261001-15"></script>
+    <script src="js/doll-room.js?v=20261001-15"></script>
+    <script src="js/service.js?v=20261001-15"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

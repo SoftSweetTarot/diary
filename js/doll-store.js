@@ -1,21 +1,19 @@
 /* 말랑달콤 다이어리 - js/doll-store.js
    👧 인형 저장소 : 구글 드라이브에 인형마다 파일 1개, 인형 이름으로 저장
-       내 드라이브 / 말랑달콤 / 인형 / 꾸미기 / 로라.json
-       (나중에 인형극을 만들면 : 말랑달콤 / 인형 / 인형극 / 남친과데이트.json — DOLL_FOLDERS 에 경로만 추가)
+       내 드라이브 / 말랑달콤 / 인형 / 로라.json
+       (나중에 인형극을 만들면 : 말랑달콤 / 인형극 / 상황극.json — DOLL_FOLDERS.play 주석만 풀면 됨)
    - 다이어리(말랑달콤/다이어리)와는 다른 폴더라서 일기·설정 저장과 서로 영향을 주지 않아요.
    - 저장할 때만 그 인형 파일 하나를 올려요. (설정을 바꿀 때마다 인형까지 올라가지 않음)
    - 로그인 없이 둘러보기(게스트)일 때는 이 기기(브라우저)에만 저장해요.
-   - 예전 버전에서 settings.json 안('diary_dolls')에 저장했던 인형은 처음 한 번 이 폴더로 옮겨요.
    ※ 저장 코드(drive.js)의 getFolder · driveList · readFileText · driveUpsert · driveTrash 를 그대로 사용
    ※ 파일 불러오는 순서: … → pattern-maker → doll-render → doll-store → doll-room → service */
 
         const DOLL_FOLDERS = {
-            deco: [TOP_FOLDER_NAME, '인형', '꾸미기']           // 👧 인형 꾸미기
-            // play: [TOP_FOLDER_NAME, '인형', '인형극']        // 🎭 나중에 인형극(미연시) 만들 때
+            deco: [TOP_FOLDER_NAME, '인형']                     // 👧 인형 꾸미기 : 말랑달콤 / 인형 / 로라.json
+            // play: [TOP_FOLDER_NAME, '인형극']                // 🎭 나중에 인형극 : 말랑달콤 / 인형극 / 상황극.json
         };
         const DOLL_MAX_COUNT = 50;                              // 인형 최대 개수
         const DOLL_GUEST_KEY = 'malang_dolls_guest';            // 게스트 모드 : 이 기기에만
-        const DOLL_OLD_KEY = 'diary_dolls';                     // 예전 버전 : settings.json 안에 있던 인형
 
         const dollCache = { list: null, loading: null, mode: '' };   // [{ id, name(파일 이름), doll, time }]
         const dollUseDrive = () => drive.ready && !drive.guest;
@@ -67,28 +65,10 @@
                     }
                     out.sort((a, b) => b.time - a.time);
                     dollCache.list = out;
-                    await migrateOldDolls();
                     return dollCache.list;
                 } finally { dollCache.loading = null; }
             })();
             return dollCache.loading;
-        }
-
-        /* 예전 버전(settings.json 안)에 있던 인형 → 인형 폴더로 한 번 옮기기 */
-        async function migrateOldDolls() {
-            let arr = null;
-            try { arr = JSON.parse(store.getItem(DOLL_OLD_KEY)); } catch (e) { arr = null; }
-            if (!Array.isArray(arr) || !arr.length) return;
-            let moved = 0;
-            for (const raw of arr) {
-                const d = sanitizeDoll(raw);
-                if (!d) continue;
-                if (!d.name) d.name = '인형' + (moved + 1);
-                const r = await saveDoll(d, null, { ask: false });
-                if (r) moved++;
-            }
-            store.removeItem(DOLL_OLD_KEY);                     // settings.json 에서는 빼기
-            if (moved) toast(`👧 인형 ${moved}개를 '${dollFolderText()}' 폴더로 옮겼어요`);
         }
 
         /* ---------- 저장 : 결과 { id, doll } 또는 null ----------

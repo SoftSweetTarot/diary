@@ -155,16 +155,20 @@
                 title.addEventListener('pointermove', e => {
                     if (!start) return;
                     const r = box.getBoundingClientRect(), p = posOf[modal.id] || { x: 0, y: 0 };
-                    /* 창이 화면 밖으로 완전히 나가지 않게 */
+                    /* 창이 화면 밖으로 나가지 않게 (창 전체가 화면 안에) */
                     const baseL = r.left - p.x, baseT = r.top - p.y;
-                    const x = clamp(start.ox + e.clientX - start.x, 40 - r.width - baseL, window.innerWidth - 40 - baseL);
-                    const y = clamp(start.oy + e.clientY - start.y, -baseT, window.innerHeight - 40 - baseT);
+                    const x = clamp(start.ox + e.clientX - start.x, -baseL, Math.max(-baseL, window.innerWidth - r.width - baseL));
+                    const y = clamp(start.oy + e.clientY - start.y, -baseT, Math.max(-baseT, window.innerHeight - r.height - baseT));
                     posOf[modal.id] = { x, y };
                     box.style.transform = `translate(${x}px, ${y}px)`;
                 });
                 const end = () => { start = null; };
                 title.addEventListener('pointerup', end);
                 title.addEventListener('pointercancel', end);
+            });
+            /* 화면 크기가 바뀌면(폰 돌리기 등) 옮겨 둔 창은 가운데로 */
+            window.addEventListener('resize', () => {
+                Object.keys(posOf).forEach(id => { delete posOf[id]; const b = document.querySelector('#' + id + ' .modal-content'); if (b) b.style.transform = ''; });
             });
             /* 👀 버튼 : 누르고 있는 동안 창을 투명하게 */
             document.querySelectorAll('.skin-peek-btn').forEach(btn => {

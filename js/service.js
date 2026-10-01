@@ -30,9 +30,11 @@
         }
 
         /* =====================================================================
-           🎠 놀이터 창 (도움말 · 카페이동 · 타로점 · 음악듣기 · 랜덤박스 · 말랑상점)
+           🎠 놀이터 창 : 인형방 · 인형극 · 달콤영상 · 포춘카드 · 꿈해몽 · 오락실 · 만화방 · 음악듣기 · 랜덤박스 · 말랑상점 · 카페이동 · 도움말
+           - 아직 안 만든 기능은 버튼에 '(준비중)'이 붙어 있고, 누르면 안내 메시지만 떠요.
+             기능을 만들면 index.html 버튼의 class 에서 'soon' 과 <small>(준비중)</small> 을 빼고 아래 함수 내용을 바꾸면 돼요.
            ===================================================================== */
-        const CAFE_URL = 'https://cafe.naver.com/';   // ← 이동할 카페 주소로 교체
+        const CAFE_URL = 'https://cafe.naver.com/sarangloveis';   // ☕ 말랑달콤 카페
 
         function openHelpFromService() {
             closeModal('serviceModal');
@@ -41,10 +43,16 @@
         function goCafe() {
             window.open(CAFE_URL, '_blank', 'noopener');
         }
-        function openTarot() { showMsg('🔮 타로점은 준비 중이에요.<br>조금만 기다려 주세요!'); }
-        function openMusic() { showMsg('🎵 음악듣기는 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function comingSoon(name) { showMsg(name + ' 기능은 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function openPuppetShow() { comingSoon('🎭 인형극'); }
+        function openSweetVideo() { comingSoon('🎬 달콤영상'); }
+        function openFortune() { comingSoon('🔮 포춘카드'); }
+        function openDream() { comingSoon('🌙 꿈해몽'); }
+        function openArcade() { comingSoon('🕹️ 오락실'); }
+        function openComics() { comingSoon('📚 만화방'); }
+        function openMusic() { comingSoon('🎵 음악듣기'); }
+        function openRandomBox() { comingSoon('🎁 랜덤박스'); }
         function openShop() { showMsg('🛍️ 말랑상점은 준비 중이에요.<br>예쁜 패턴과 꾸미기 이미지를 곧 만나보세요!'); }
-        function openRandomBox() { showMsg('🎁 랜덤박스는 준비 중이에요.<br>조금만 기다려 주세요!'); }
 
         /* =====================================================================
            💝 후원하기 : 계좌번호 복사

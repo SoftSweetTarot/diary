@@ -13,8 +13,6 @@
         const ROOT_PATH = [TOP_FOLDER_NAME, ROOT_FOLDER_NAME]; // 드라이브 경로 : 말랑달콤 / 다이어리
         const ROOT_PATH_TEXT = ROOT_PATH.join(' / ');
         const SETTINGS_FILE_NAME = 'settings.json';           // 스킨·글꼴 등 설정 (루트 폴더 안에 1개)
-        const LEGACY_FILE_NAME = 'diary.json';                // 예전 방식(파일 1개) → 최초 1회 날짜별 파일로 변환용
-        const LEGACY_DONE_KEY = 'gdrive_legacy_done';
         const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤 / 다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
         const DRIVE_SCOPE = USE_APP_DATA_FOLDER
             ? 'https://www.googleapis.com/auth/drive.appdata'
@@ -450,42 +448,8 @@
             return failed;
         }
 
-        /* ---------- 예전 diary.json(파일 1개) → 날짜별 파일로 변환 (최초 1회) ---------- */
-        async function migrateLegacyIfNeeded() {
-            try { if (localStorage.getItem(LEGACY_DONE_KEY) === '1') return; } catch (e) {}
-            const markDone = () => { try { localStorage.setItem(LEGACY_DONE_KEY, '1'); } catch (e) {} };
-            let files;
-            try { files = await driveList(`name='${LEGACY_FILE_NAME}' and trashed=false`, 'id,name'); } catch (e) { return; }
-            if (!files.length) { markDone(); return; }
-            const yes = await showMsg('예전 방식으로 저장된 <b>diary.json</b>을 찾았어요.<br>날짜별 파일(말랑달콤 / 다이어리 / 년도 / 월 / 일.json)로 옮길까요?<br><span style="font-size:12px;color:#777;">원본 diary.json은 지우지 않고 그대로 둬요.<br>이미 날짜 파일이 있는 날은 건드리지 않아요.</span>', true);
-            markDone();
-            if (!yes) return;
-            try {
-                const old = parseJsonObject(await readFileText(files[0].id), 'legacy');
-                let moved = 0;
-                for (const k of Object.keys(old || {})) {
-                    if (!k.startsWith('diary_') || k === PAGE_SIZE_KEY) continue;
-                    const dk = parseDayKey(k);
-                    if (dk) {
-                        const idx = await getMonthIndex(dk.y, dk.m, false);
-                        if (idx && idx.files.has(dayFileName(dk.d))) continue;      // 새 방식 파일이 이미 있으면 유지
-                        if (drive.loadedDays.has(k) && store.getItem(k) !== null) continue;
-                        store.setItem(k, JSON.stringify(old[k]));
-                        drive.loadedDays.add(k);
-                        moved++;
-                    } else if (store.getItem(k) === null) {
-                        store.setItem(k, JSON.stringify(old[k]));                   // 설정(스킨·글꼴)
-                    }
-                }
-                applyLoadedData();
-                const ok = await flushUpload({ force: true });
-                showMsg(ok ? `✅ 예전 일기 ${moved}일치를 날짜별 파일로 옮겼어요!` : '⚠ 일부를 옮기지 못했어요.<br>잠시 후 자동으로 다시 시도합니다.');
-            } catch (e) { showMsg('⚠ 예전 diary.json을 옮기지 못했어요.<br>' + (e && e.type === 'corrupt' ? '파일을 읽을 수 없어요.' : '')); }
-        }
-
         async function postLoginTasks() {
             await recoverPendingBackup();
-            await migrateLegacyIfNeeded();
         }
 
         /* 드라이브에서 불러온 데이터를 화면에 반영 */

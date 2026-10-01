@@ -198,7 +198,6 @@
         let drag = null;
 
         function normalizeItem(d) {
-            if (d.type) return d;
             const f = fontList.find(x => x.id === d.f);
             return { type: ({ i: 'image', t: 'text', s: 'sticker', d: 'doll' })[d.t] || 'sticker', content: d.c,
                 posX: d.x || 0, posY: d.y || 0, scale: d.s || 1, rotation: d.r || 0,
@@ -210,9 +209,8 @@
             let raw = null;
             try { raw = JSON.parse(store.getItem(getDateKey(date))); } catch (err) {}
             if (!raw) return [];
-            if (Array.isArray(raw)) return raw.map(normalizeItem);
-            const items = (raw.i || raw.items || []).map(normalizeItem);
-            const pw = raw.pw || raw.pageW, ph = raw.ph || raw.pageH;
+            const items = (Array.isArray(raw.i) ? raw.i : []).map(normalizeItem);
+            const pw = raw.pw, ph = raw.ph;
             if (!(pw > 0 && ph > 0)) return items;
             const from = { w: pw, h: ph }, to = getPageSize();
             if (from.w === to.w && from.h === to.h) return items;
@@ -497,6 +495,12 @@
             syncPageSizeInputs();
             localStorage.setItem(PAGE_SIZE_KEY, JSON.stringify(pageSetting));
             refreshLayout();
+        }
+        /* 📐 − / ＋ 버튼 : 10px씩 */
+        function stepPageSize(which, delta) {
+            const el = document.getElementById(which === 'w' ? 'pageWInput' : 'pageHInput');
+            el.value = (parseInt(el.value, 10) || pageSetting[which]) + delta;
+            applyPageSizeSetting();
         }
         function resetPageSize() {
             document.getElementById('pageWInput').value = DEFAULT_PAGE_W;
