@@ -497,14 +497,12 @@
 
             if (!showAlert) return;          // 자동 저장: 변경이 있으면 잠시 뒤 드라이브에 자동 업로드
             if (drive.guest || !drive.ready) {
-                showMsg('⚠ 구글 드라이브에 연결되어 있지 않아 저장되지 않았어요.<br>왼쪽 아래 ☁ 표시를 눌러 로그인해 주세요.'
-                    + '<br><button class="btn" style="margin:10px auto 0;" onclick="closeMsg(true); setTimeout(exportToPNG, 60)">📷 이 페이지를 PNG로 저장</button>');
+                showMsg('⚠ 구글 드라이브에 연결되어 있지 않아 웹에 저장되지 않았어요.<br>왼쪽 아래 ☁ 표시를 눌러 로그인해 주세요.<br><span style="font-size:12px;color:#777;">사진으로 남기려면 💾 저장 → 🖼 내 기기에 사진(PNG)으로 저장을 눌러 주세요.</span>');
                 return;
             }
             const ok = await flushUpload({ force: true });   // 파일이 없으면 생성, 있으면 덮어쓰기
             showMsg(ok
-                ? '💾 저장이 완료되었습니다!<br><span style="font-size:12px;color:#777;">☁ 구글 드라이브 · ' + dayPathText(currentDate) + '</span>'
-                  + '<br><button class="btn" style="margin:10px auto 0;" onclick="closeMsg(true); setTimeout(exportToPNG, 60)">📷 이 페이지를 PNG로도 저장</button>'
+                ? '☁ 웹(구글 드라이브)에 저장했어요!<br><span style="font-size:12px;color:#777;">' + dayPathText(currentDate) + '</span>'
                 : '⚠ 구글 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
         }
 
@@ -577,6 +575,25 @@
 
         function clearCanvas() { document.getElementById('canvasArea').innerHTML = ''; }
 
+
+        /* =====================================================================
+           💾 저장 버튼 : 어떤 저장을 할지 고르는 창
+           - ☁ 웹에 저장      : 구글 드라이브에 저장 (다른 기기에서도 이어서 보기) → saveData(true)
+           - 🖼 기기에 PNG 저장 : 지금 페이지를 사진 파일로 컴퓨터·폰에 내려받기 → exportToPNG()
+           ===================================================================== */
+        function openSaveChooser() {
+            if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return; }
+            const web = document.getElementById('saveWebDesc');
+            if (web) web.textContent = drive.ready && !drive.guest
+                ? '내 구글 드라이브에 저장해요. 다른 기기에서 로그인해도 이어서 볼 수 있어요.'
+                : '⚠ 지금은 로그인되어 있지 않아서 웹에 저장할 수 없어요.';
+            openModal('saveChooser');
+        }
+        function chooseSave(kind) {
+            closeModal('saveChooser');
+            if (kind === 'web') saveData(true);
+            if (kind === 'png') setTimeout(exportToPNG, 60);
+        }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['elements'] = true;
