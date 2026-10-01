@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎀 러블리 다이어리 🎀</title>
+    <title>🎀 말랑달콤 다이어리 🎀</title>
     
     <!-- Google Fonts (UI 폰트 / 글쓰기 폰트 선택용) -->
     <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Gowun+Dodum&family=Sunflower:wght@500&family=Jua&family=Do+Hyeon&family=Hi+Melody&family=Poor+Story&family=Single+Day&family=Gamja+Flower&family=Yeon+Sung&family=East+Sea+Dokdo&family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&family=Nanum+Myeongjo&family=Cute+Font&family=Dongle&family=Song+Myung&family=Stylish&family=Kirang+Haerang&family=Gugi&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261001-15">
+    <link rel="stylesheet" href="css/style.css?v=20261001-16">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -22,7 +22,7 @@
     <!-- ☁ 구글 드라이브 연결 화면 (데이터를 불러오기 전까지 표시) -->
     <div id="driveGate" class="drive-gate">
         <div class="alert-card gate-card">
-            <div class="gate-title">📔 My Lovely Diary</div>
+            <div class="gate-title">📔 Soft Sweet Diary</div>
             <div id="gateMsg" class="gate-msg">☁ 구글 드라이브에 연결하는 중…</div>
             <button id="gateLoginBtn" class="btn gate-btn" style="display:none" onclick="driveLogin()">☁ 구글 계정으로 시작하기</button>
             <button id="gateGuestBtn" class="gate-guest" style="display:none" onclick="enterGuestMode()">로그인 없이 둘러보기 (저장되지 않아요)</button>
@@ -53,7 +53,7 @@
             <!-- 겉표지 -->
             <div class="page cover-page" id="coverPage">
                 <div class="cover-title">Soft Sweet Diary 🌸</div>
-                <div class="cover-subtitle">말랑달콤 다이어리</div>
+                <div class="cover-subtitle">나만의 말랑달콤 다이어리</div>
                 <!-- 📢 공지 이미지 : 스크립트의 NOTICE_IMAGE_SRC 에 이미지 경로/주소를 넣으면 여기에 표시 -->
                 <div class="cover-notice" id="coverNotice"><img id="coverNoticeImg" alt="공지사항"></div>
                 <div class="drag-hint">◀ 오른쪽에서 왼쪽으로 드래그하여 열기</div>
@@ -599,23 +599,23 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261001-15"></script>
-    <script src="js/app.js?v=20261001-15"></script>
-    <script src="js/page.js?v=20261001-15"></script>
-    <script src="js/elements.js?v=20261001-15"></script>
-    <script src="js/settings.js?v=20261001-15"></script>
-    <script src="js/patterns.js?v=20261001-15"></script>
+    <script src="js/drive.js?v=20261001-16"></script>
+    <script src="js/app.js?v=20261001-16"></script>
+    <script src="js/page.js?v=20261001-16"></script>
+    <script src="js/elements.js?v=20261001-16"></script>
+    <script src="js/settings.js?v=20261001-16"></script>
+    <script src="js/patterns.js?v=20261001-16"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261001-15"></script>
-    <script src="js/skins.js?v=20261001-15"></script>
-    <script src="js/pattern-maker.js?v=20261001-15"></script>
-    <script src="js/doll-render.js?v=20261001-15"></script>
-    <script src="js/doll-store.js?v=20261001-15"></script>
-    <script src="js/doll-room.js?v=20261001-15"></script>
-    <script src="js/service.js?v=20261001-15"></script>
+    <script src="js/pattern-recipe.js?v=20261001-16"></script>
+    <script src="js/skins.js?v=20261001-16"></script>
+    <script src="js/pattern-maker.js?v=20261001-16"></script>
+    <script src="js/doll-render.js?v=20261001-16"></script>
+    <script src="js/doll-store.js?v=20261001-16"></script>
+    <script src="js/doll-room.js?v=20261001-16"></script>
+    <script src="js/service.js?v=20261001-16"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

@@ -14,7 +14,7 @@
             const blob = new Blob([store.toJSONString()], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `MyDiary_Backup_${getDateKey(currentDate)}.json`;
+            a.download = `SoftSweetDiary_Backup_${getDateKey(currentDate)}.json`;
             document.body.appendChild(a);
             a.click();
             a.remove();
