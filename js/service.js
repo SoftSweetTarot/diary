@@ -47,7 +47,10 @@
         function comingSoon(name) { showMsg(name + ' 기능은 준비 중이에요.<br>조금만 기다려 주세요!'); }
         function openPuppetShow() { comingSoon('🎭 인형극'); }
         function openSweetVideo() { comingSoon('🎬 달콤영상'); }
-        function openFortune() { window.open(FORTUNE_URL, '_blank', 'noopener'); }
+        function openFortune() {                         // js/fortune.js 가 있고 서버 주소가 있으면 다이어리 안에서, 아니면 예전 포춘카드 사이트
+            if (typeof openFortuneCard === 'function' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) openFortuneCard();
+            else window.open(FORTUNE_URL, '_blank', 'noopener');
+        }
         function openDream() { comingSoon('🌙 꿈해몽'); }
         function openArcade() { comingSoon('🕹️ 오락실'); }
         function openComics() { comingSoon('📚 만화방'); }
