@@ -361,9 +361,8 @@
             updateTextPanel();
         }
 
-        /* 📅 오늘 페이지로 가기 (표지가 닫혀 있으면 열고, 다른 날짜면 저장한 뒤 오늘로) → 오늘 일기를 다 불러온 뒤 done() */
-        function goToToday(done) {
-            const today = new Date();
+        /* 📅 원하는 날짜 페이지로 가기 (표지가 닫혀 있으면 열고, 다른 날짜면 저장한 뒤 그 날로) → 그날 일기를 다 불러온 뒤 done() */
+        function goToDate(target, done) {
             const ready = () => {
                 const key = getDateKey(currentDate); let n = 0;
                 const w = () => {
@@ -373,9 +372,9 @@
                 w();
             };
             const jump = () => {
-                if (getDateKey(currentDate) !== getDateKey(today)) {
+                if (getDateKey(currentDate) !== getDateKey(target)) {
                     saveData(false);
-                    currentDate.setTime(today.getTime());
+                    currentDate.setTime(target.getTime());
                     selectedElement = null;
                     document.getElementById('pageDateDisplay').innerText = formatDate(currentDate);
                     loadData();
@@ -384,12 +383,13 @@
                 ready();
             };
             if (isCoverOpen) { jump(); return; }
-            if (getDateKey(currentDate) !== getDateKey(today)) currentDate.setTime(today.getTime());
+            if (getDateKey(currentDate) !== getDateKey(target)) currentDate.setTime(target.getTime());
             openCoverAnimated();
             let n = 0;
             const w = () => { if (isCoverOpen && !turn) jump(); else if (n++ < 40) setTimeout(w, 100); };
             setTimeout(w, 100);
         }
+        function goToToday(done) { goToDate(new Date(), done); }
 
         function changeDate(delta) {
             if (!isCoverOpen || turn) return;
