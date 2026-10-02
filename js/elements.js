@@ -519,6 +519,7 @@
             if (pageStamps.we) day.we = pageStamps.we;
             if (elementsData.length || day.mo || day.we) store.setItem(dayKey, JSON.stringify(day));
             else store.removeItem(dayKey);   // 빈 페이지는 파일에 남기지 않음
+            if (typeof searchTouch === 'function') searchTouch(dayKey);          // 🔍 검색 목록 고치기 (js/search.js)
 
             if (!showAlert) return;          // 자동 저장: 변경이 있으면 잠시 뒤 드라이브에 자동 업로드
             if (drive.guest || !drive.ready) {
