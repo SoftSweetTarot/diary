@@ -11,7 +11,7 @@
         const FC_TIMEOUT_MS = 12000;                    // 서버가 이보다 늦으면 '다시 해 주세요'
         const FC_FAN = 7;                               // 펼쳐 놓는 카드 수
 
-        const fc = { built: false, open: false, stage: 'intro', req: null, card: null, last: -1, timers: [] };
+        const fc = { built: false, open: false, stage: 'intro', req: null, card: null, last: -1, timers: [], noise: null };
         const fq = id => document.getElementById(id);
         function fcLater(fn, ms) { const t = setTimeout(fn, ms); fc.timers.push(t); return t; }
         function fcClearTimers() { fc.timers.forEach(clearTimeout); fc.timers = []; }
@@ -81,9 +81,9 @@
             ['fcIntro', 'fcThink', 'fcReveal'].forEach(s => { fq(s).hidden = s !== id; });
             fq('fortuneRoom').scrollTop = 0;
         }
-        function fcFadeText(el, text) {                                  // 글이 스르르 바뀌기
+        function fcFadeText(el, text) {                                  // 글이 스르르 바뀌기 (+ 신비로운 소리)
             el.classList.remove('on');
-            fcLater(() => { el.textContent = text; el.classList.add('on'); }, 450);
+            fcLater(() => { el.textContent = text; el.classList.add('on'); fcWhisper(); }, 450);
         }
 
         function openFortuneCard() {
@@ -140,7 +140,7 @@
                 c.onclick = () => fcPick(c);
                 fan.appendChild(c);
             }
-            fcLater(() => fan.classList.add('on'), 500);
+            fcLater(() => { fan.classList.add('on'); fcFanSound(); }, 500);
         }
 
         /* 3. 고른 카드 → 3 · 2 · 1 → 뒤집기 */
@@ -235,6 +235,32 @@
                     o.connect(og).connect(g); o.start(t); o.stop(t + 1.7);
                 });
             });
+        }
+
+        function fcAir(dur, vol, at, f1, f2) {                         // 바람 · 카드 스치는 소리
+            const ac = fcSound(); if (!ac) return;
+            if (!fc.noise) { const n = ac.sampleRate, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; fc.noise = b; }
+            const t = ac.currentTime + at, s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+            s.buffer = fc.noise; s.loop = true; f.type = 'bandpass'; f.Q.value = .9; f.frequency.setValueAtTime(f1, t); f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * .4); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            s.connect(f).connect(g).connect(sndOut()); s.start(t); s.stop(t + dur + .05);
+        }
+        function fcBell(f, at, vol, len) {                              // 하프 같은 맑은 음 하나
+            const ac = fcSound(); if (!ac) return;
+            const t = ac.currentTime + at, g = ac.createGain();
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+            g.connect(sndOut());
+            [[1, 1], [2.01, .25], [3.9, .06]].forEach(([m, a]) => { const o = ac.createOscillator(), og = ac.createGain(); o.frequency.value = f * m; og.gain.value = a; o.connect(og).connect(g); o.start(t); o.stop(t + len + .05); });
+        }
+        /* 글이 떠오를 때 : 바람이 스르르 + 하프가 천천히 올라가요 */
+        function fcWhisper() {
+            fcAir(2.2, .05, 0, 500, 2600);
+            [392, 523, 659, 784, 1047].forEach((f, i) => fcBell(f, .1 + i * .16, .06, 1.8));
+        }
+        /* 카드가 부채처럼 펼쳐질 때 : 한 장씩 '촤라락' + 반짝 */
+        function fcFanSound() {
+            for (let k = 0; k < FC_FAN; k++) { fcAir(.14, .09, k * .06, 2600, 5200); fcBell(1175 + k * 90, k * .06 + .02, .025, .3); }
+            [784, 988, 1319, 1568].forEach((f, i) => fcBell(f, FC_FAN * .06 + .15 + i * .07, .06, 1.4));
         }
 
         document.addEventListener('keydown', e => { if (e.key === 'Escape' && fc.open) closeFortuneCard(); });
