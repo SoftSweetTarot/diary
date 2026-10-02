@@ -2,6 +2,8 @@
    🍀 오늘의 행운 : 클로버 밭에서 네잎클로버를 찾으면 오늘의 행운이 열려요 (놀이터 → 매일 말랑 → 🍀 오늘의 행운)
    - 기회는 하루 5번 · 세잎을 고를 때마다 기회가 줄고 응원 메시지 · 마지막 기회는 두근두근
    - 5번 안에 못 찾으면 숨어 있던 자리를 보여 주고 '내일은 행운이 찾아올 거예요' 로 끝 (그날은 다시 못 해요)
+   - 했는지는 랜덤박스 서버의 '행운' 탭에 계정마다 기록 → 어느 기기에서든 하루 한 번 (게스트 · 서버에 못 닿으면 이 기기에만)
+     클로버를 처음 누르는 순간 '못 찾음'으로 기록하고, 찾으면 '찾음'으로 바꿔요 (도중에 닫아도 그날은 끝)
    - 효과음은 ✨ 연출 소리 (js/ritual.js · js/sound.js)
    - 행운 지수 · 행운의 색 · 숫자 · 물건 · 시간 · 오늘의 한마디 · 행운 미션
    - 하루 동안은 같은 결과 (날짜 + 사람마다 다른 행운 번호로 정해져요) → 다음 날 다시 열면 새 행운
@@ -11,7 +13,7 @@
 
         const LK_KEY = 'diary_luck_seed';            // 설정 저장소 키 (사람마다 다른 행운 번호)
         const LK_LOCAL = 'malang_luck_seed';         // 게스트용 (이 기기)
-        const LK_TODAY = 'malang_luck_today';        // 오늘 결과 'YYYY-MM-DD|win' · '|lose' (이 기기 · 다시 열면 바로 그 화면)
+        const LK_TODAY = 'malang_luck_today';        // 오늘 결과 'YYYY-MM-DD|win' · '|lose' (이 기기 · 서버에 못 닿을 때 · 게스트)
         const LK_TRIES = 5;
         const LK_CHEER = ['', '마지막 기회예요… 두근두근 💓', '집중! 네잎은 잎이 하나 더 있어요. 2번 남았어요', '괜찮아요, 행운은 천천히 와요. 3번 남았어요', '아깝다! 세잎클로버였어요. 아직 4번 남았어요 🍀'];
         const LK_COLORS = [
@@ -38,7 +40,15 @@
             '📔 오늘 가장 맛있었던 것 일기에 적기', '🧹 책상 위 하나만 정리하기', '🌙 오늘은 30분 일찍 자기', '🙆 어깨 쭉 펴고 스트레칭하기',
             '📔 오늘의 기분을 색깔로 일기에 남기기', '🍀 누군가에게 칭찬 한마디 건네기', '📚 책 한 쪽이라도 읽기', '🌷 화분에 물 주기 (일기 쓰고!)'];
 
-        const lk = { built: false, open: false, res: null, tries: LK_TRIES, busy: false };
+        const lk = { built: false, open: false, res: null, tries: LK_TRIES, busy: false, started: false };
+        const lkServer = () => typeof GACHA_API_URL !== 'undefined' && GACHA_API_URL && typeof drive !== 'undefined' && drive.ready && !drive.guest;
+        async function lkApi(action, data) {
+            try { await ensureToken(); } catch (e) { return null; }
+            try { const res = await fetch(GACHA_API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ action, token: drive.token }, data || {})) }); const r = await res.json(); return r && r.ok ? r : null; }
+            catch (e) { return null; }
+        }
+        /* 오늘 결과 기록 : 이 기기 + 서버 (기다리지 않아요) */
+        function lkRecord(r) { lkSave(r); if (lkServer()) lkApi('luck_set', { r }); }
         const lkToday = () => { try { const [d, r] = (localStorage.getItem(LK_TODAY) || '').split('|'); return d === lkDay() ? r : ''; } catch (e) { return ''; } };
         const lkSave = r => { try { localStorage.setItem(LK_TODAY, lkDay() + '|' + r); } catch (e) {} };
         /* 🔊 연출 소리 (js/ritual.js 의 소리 도구 · 연출 소리를 끄면 조용) */
@@ -116,7 +126,7 @@
                 else b.onclick = () => lkMiss(b);
                 f.appendChild(b);
             }
-            lk.tries = LK_TRIES; lk.busy = false;
+            lk.tries = LK_TRIES; lk.busy = false; lk.started = false;
             f.classList.remove('last', 'over');
             lkChance();
             lkq('lkHint').textContent = '';
@@ -130,6 +140,7 @@
         /* 세잎클로버 : 기회가 하나 줄어요 */
         function lkMiss(b) {
             if (lk.busy || b.classList.contains('seen')) return;
+            if (!lk.started) { lk.started = true; lkRecord('lose'); }       // 첫 클로버를 누르는 순간 '오늘 했음'
             b.classList.add('no', 'seen');
             lk.tries--;
             lkChance(true);
@@ -142,7 +153,7 @@
                 return;
             }
             /* 기회를 모두 썼어요 → 숨어 있던 자리 보여 주기 → 내일을 기약 */
-            lk.busy = true; lkSave('lose');
+            lk.busy = true;
             f.classList.remove('last'); f.classList.add('over');
             hint.textContent = '앗… 기회를 모두 썼어요';
             lkSfx('lose');
@@ -165,7 +176,7 @@
         function lkFound(b) {
             if (lk.busy) return;
             lk.busy = true;
-            b.classList.add('got'); lkSave('win'); lkSfx('win');
+            lk.started = true; b.classList.add('got'); lkRecord('win'); lkSfx('win');
             lkq('lkHint').textContent = lk.tries === 1 ? '🎉 마지막 기회에 찾았어요!' : '🎉 찾았다! 네잎클로버!';
             setTimeout(() => { if (lk.open) lkShowResult(true); }, 1300);
         }
@@ -226,11 +237,23 @@
             lk.open = true;
             lkq('luckRoom').classList.add('show');
             document.body.classList.add('fc-lock');
-            const today = lkToday();
-            if (today === 'win') lkShowResult(false);
-            else if (today === 'lose') lkShowLose(false);
-            else { lkq('lkFind').hidden = false; lkq('lkResult').hidden = true; lkField(); }
             lkq('luckRoom').scrollTop = 0;
+            const go = r => {
+                if (!lk.open) return;
+                if (r === 'win') lkShowResult(false);
+                else if (r === 'lose') lkShowLose(false);
+                else { lkq('lkFind').hidden = false; lkq('lkResult').hidden = true; lkField(); }
+            };
+            if (!lkServer()) { go(lkToday()); return; }
+            /* 로그인했으면 서버에 오늘 했는지 물어봐요 (못 닿으면 이 기기 기록으로) */
+            lkq('lkFind').hidden = true;
+            const box = lkq('lkResult'); box.hidden = false; box.className = '';
+            box.innerHTML = '<div class="lk-wait"><span>🍀</span><p>클로버 밭으로 가는 중…</p></div>';
+            lkApi('luck_get').then(res => {
+                if (!res) { go(lkToday()); return; }
+                if (res.r) lkSave(res.r); else try { localStorage.removeItem(LK_TODAY); } catch (e) {}
+                go(res.r);
+            });
         }
         function closeLuck() {
             lk.open = false;
