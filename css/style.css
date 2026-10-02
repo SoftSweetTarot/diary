@@ -1843,3 +1843,10 @@
         .cl-acts { display: flex; gap: 8px; }
         .cl-acts button { flex: 1; border: 1.5px solid #f0dcc8; background: #fff; border-radius: 16px; padding: 12px 8px; font-size: 14.5px; font-weight: bold; cursor: pointer; font-family: inherit; color: #5a3d4a; }
         .cl-acts .cl-main { flex: 1.4; border: none; background: linear-gradient(135deg, #ff9fb8, #ff7fa0); color: #fff; box-shadow: 0 4px 12px rgba(255,127,160,.35); }
+
+        /* ===== ↕️ 순서 메뉴 ===== */
+        .layer-menu { position: fixed; z-index: 1500; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(90,61,74,.18); animation: layerIn .15s ease-out; }
+        .layer-menu button { border: 1.5px solid #ffd6e0; background: #fff7fa; color: #5a3d4a; border-radius: 12px; padding: 9px 12px; font-size: 13.5px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+        .layer-menu button:active { background: #ffe4ec; }
+        .layer-menu button:disabled { opacity: .4; cursor: default; }
+        @keyframes layerIn { from { opacity: 0; transform: translateY(-4px); } }

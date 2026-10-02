@@ -460,8 +460,47 @@
             }
         });
 
-        function bringToFront() { if (selectedElement) selectedElement.style.zIndex = ++zIndexCounter; }
-        function sendToBack() { if (selectedElement) selectedElement.style.zIndex = 1; }
+        /* ↕️ 순서 : 고른 것의 겹친 순서 바꾸기 (맨 앞 · 한 칸 앞 · 한 칸 뒤 · 맨 뒤) */
+        function layerBoxes() {
+            return [...document.querySelectorAll('#canvasArea > .element-box')].map((el, i) => [el, parseInt(el.style.zIndex) || 1, i])
+                .sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(a => a[0]);
+        }
+        function openLayerMenu(btn) {
+            let m = document.getElementById('layerMenu');
+            if (m) { m.remove(); return; }
+            if (!selectedElement) { showMsg('순서를 바꿀 스티커 · 글 · 사진을<br>먼저 눌러서 골라 주세요.'); return; }
+            m = document.createElement('div');
+            m.id = 'layerMenu'; m.className = 'layer-menu';
+            m.innerHTML = [['top', '⏫ 맨 앞'], ['up', '🔼 한 칸 앞'], ['down', '🔽 한 칸 뒤'], ['bottom', '⏬ 맨 뒤']]
+                .map(([k, t]) => `<button type="button" data-k="${k}" onclick="layerMove('${k}')">${t}</button>`).join('');
+            document.body.appendChild(m);
+            const r = btn.getBoundingClientRect(), w = m.offsetWidth;
+            m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+            m.style.top = (r.bottom + 6) + 'px';
+            layerMark();
+            setTimeout(() => document.addEventListener('pointerdown', layerAway, true), 0);
+        }
+        function layerAway(e) {
+            const m = document.getElementById('layerMenu');
+            if (m && m.contains(e.target)) return;
+            document.removeEventListener('pointerdown', layerAway, true);
+            if (m) m.remove();
+        }
+        function layerMark() {
+            const m = document.getElementById('layerMenu'); if (!m) return;
+            const L = layerBoxes(), i = L.indexOf(selectedElement), last = L.length - 1;
+            m.querySelectorAll('button').forEach(b => { b.disabled = i < 0 || (/top|up/.test(b.dataset.k) ? i === last : i === 0); });
+        }
+        function layerMove(k) {
+            const el = selectedElement; if (!el) return;
+            const L = layerBoxes().filter(x => x !== el);
+            let i = layerBoxes().indexOf(el);
+            i = k === 'top' ? L.length : k === 'bottom' ? 0 : Math.max(0, Math.min(L.length, i + (k === 'up' ? 1 : -1)));
+            L.splice(i, 0, el);
+            L.forEach((x, n) => { x.style.zIndex = n + 1; });
+            zIndexCounter = L.length + 1;
+            layerMark();
+        }
         function deleteSelected() {
             if (selectedElement) { selectedElement.remove(); selectedElement = null; }
             updateTextPanel();
