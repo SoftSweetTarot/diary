@@ -248,6 +248,7 @@
                 </div>
                 <div class="canvas-area"></div>`;
             const canvas = page.querySelector('.canvas-area');
+            if (typeof psStaticHtml === 'function') page.insertAdjacentHTML('beforeend', psStaticHtml(date));
             readDayData(date).forEach(d => canvas.appendChild(createElementFromData(d, false)));
             return page;
         }

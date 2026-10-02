@@ -514,7 +514,10 @@
                 if (showAlert) showMsg('⏳ 이 날짜를 아직 드라이브에서 불러오는 중이에요.<br>잠시 후 다시 저장해 주세요.');
                 return;
             }
-            if (elementsData.length) store.setItem(dayKey, JSON.stringify({ v: 3, pw: ps.w, ph: ps.h, i: elementsData }));
+            const day = { v: 3, pw: ps.w, ph: ps.h, i: elementsData };
+            if (pageStamps.mo) day.mo = pageStamps.mo;                          // 😊 오늘의 기분 · ☀️ 날씨 도장 (js/stamp.js)
+            if (pageStamps.we) day.we = pageStamps.we;
+            if (elementsData.length || day.mo || day.we) store.setItem(dayKey, JSON.stringify(day));
             else store.removeItem(dayKey);   // 빈 페이지는 파일에 남기지 않음
 
             if (!showAlert) return;          // 자동 저장: 변경이 있으면 잠시 뒤 드라이브에 자동 업로드
@@ -581,6 +584,8 @@
         function loadData() {
             liveSize = getPageSize();
             clearCanvas();
+            pageStamps.mo = ''; pageStamps.we = '';
+            if (typeof psRender === 'function') psRender();
             const canvas = document.getElementById('canvasArea');
             const key = getDateKey(currentDate);
             /* 아직 드라이브에서 읽지 못한 날짜라면 읽어 온 뒤에 표시 (빈 화면으로 덮어쓰는 사고 방지) */
@@ -598,7 +603,11 @@
             readDayData(currentDate).forEach(data => {
                 canvas.appendChild(createElementFromData(data, true));
             });
+            let raw = null; try { raw = JSON.parse(store.getItem(key)); } catch (e) {}
+            pageStamps.mo = raw && raw.mo || ''; pageStamps.we = raw && raw.we || '';
+            if (typeof psRender === 'function') psRender();
         }
+        const pageStamps = { mo: '', we: '' };            // 지금 페이지의 기분 · 날씨 도장
 
         function clearCanvas() { document.getElementById('canvasArea').innerHTML = ''; }
 

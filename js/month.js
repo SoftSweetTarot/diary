@@ -1,6 +1,7 @@
 /* 말랑달콤 다이어리 - js/month.js
    📅 한 달 모아보기 : 한 달 동안 쓴 일기를 달력 한 장으로 (다이어리 위쪽 날짜를 누르면 열려요)
    - 일기를 쓴 날에는 그날의 대표 그림이 보여요 : 사진 → 스티커 그림 → 이모지 스티커 → 인형 → 📝(글만)
+   - 😊 기분 도장을 찍은 날은 오른쪽 위에 기분이 함께 보여요 (js/stamp.js)
    - 날짜를 누르면 그날 일기로 바로 가요
    - 드라이브 사용 : 그 달의 파일 목록 1번 + 아직 안 읽은 '가벼운' 날 파일만 읽어요 (사진이 많은 큰 날은 📷 표시만, 눌러서 볼 때 읽어요)
      한 번 읽은 날은 기억해 두어서, 그 날로 넘길 때 다시 읽지 않아요
@@ -72,7 +73,9 @@
                 days.forEach(x => {
                     const pv = x.has && (x.loaded || drive.loadedDays.has(x.key)) ? moPreview(x.date) : null;
                     const inner = pv ? (pv.img ? `<img src="${pv.img.replace(/"/g, '&quot;')}" alt="" loading="lazy">` : `<em>${pv.emoji}</em>`) : x.has ? `<em class="mo-wait">${x.big ? '📷' : '·'}</em>` : '';
-                    h += `<button type="button" class="mo-c${x.has ? ' mo-has' : ''}${x.key === getDateKey(today) ? ' mo-today' : ''}${x.fut ? ' mo-fut' : ''}" onclick="moGo(${x.d})"><i>${x.d}</i>${inner}</button>`;
+                    let mood = '', inner2 = inner;
+                    if (typeof PS_MOODS !== 'undefined' && (x.loaded || drive.loadedDays.has(x.key))) { try { const r = JSON.parse(store.getItem(x.key)); const mm = r && r.mo && PS_MOODS.find(q => q[0] === r.mo); if (mm) { if (pv) mood = `<span class="mo-mood">${mm[1]}</span>`; else inner2 = `<em>${mm[1]}</em>`; } } catch (e) {} }
+                    h += `<button type="button" class="mo-c${x.has ? ' mo-has' : ''}${x.key === getDateKey(today) ? ' mo-today' : ''}${x.fut ? ' mo-fut' : ''}" onclick="moGo(${x.d})"><i>${x.d}</i>${inner2}${mood}</button>`;
                 });
                 moq('moGrid').innerHTML = h;
                 const n = days.filter(x => x.has).length, pastDays = y === today.getFullYear() && m === today.getMonth() ? today.getDate() : last;
