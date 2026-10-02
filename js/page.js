@@ -69,6 +69,7 @@
             }
             document.getElementById('textColorInput').value = ta.dataset.color || DEFAULT_TEXT_COLOR;
             document.getElementById('textSizeInput').value = ta.dataset.size || DEFAULT_TEXT_SIZE;
+            if (typeof updatePaperChips === 'function') updatePaperChips();
             panel.style.display = 'flex';
             positionTextPanel();
         }
@@ -202,7 +203,7 @@
             return { type: ({ i: 'image', t: 'text', s: 'sticker', d: 'doll' })[d.t] || 'sticker', content: d.c,
                 posX: d.x || 0, posY: d.y || 0, scale: d.s || 1, rotation: d.r || 0,
                 width: d.w ? d.w + 'px' : '', height: d.h ? d.h + 'px' : '', zIndex: d.z || 1,
-                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs };
+                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp };
         }
 
         function readDayData(date) {

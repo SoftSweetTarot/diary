@@ -494,6 +494,7 @@
                 item.z = parseInt(el.style.zIndex) || 1;
                 item.bw = el.offsetWidth; item.bh = el.offsetHeight;
                 if (textarea) {
+                    if (el.dataset.paper) item.pp = el.dataset.paper;            // 📝 글상자 모양 (js/paper.js)
                     const fid = fontIdOf(textarea.dataset.font);
                     if (fid !== 'sys') item.f = fid;
                     if ((textarea.dataset.color || DEFAULT_TEXT_COLOR) !== DEFAULT_TEXT_COLOR) item.k = textarea.dataset.color;
@@ -535,6 +536,7 @@
                 if (!interactive) ta.readOnly = true;
                 styleTextarea(ta, data.fontFamily, data.color, data.fontSize);
                 el.appendChild(ta);
+                if (data.paper && /^[a-z]{1,10}$/.test(data.paper)) { el.classList.add('pp-' + data.paper); el.dataset.paper = data.paper; }
             } else if (data.type === 'doll') {
                 buildPlacedDoll(el, data.content, interactive);                // 👧 붙인 인형 (js/doll-room.js)
             } else if (data.type === 'image') {
