@@ -108,6 +108,7 @@
             nm.timer.forEach(clearTimeout); nm.timer = [];
             nmq('nmStep1').hidden = n !== 1; nmq('nmStep2').hidden = n !== 2;
             nmq('nmBack').hidden = n === 1; nmq('nmSp').hidden = n !== 1;
+            nmq('nmRoom').classList.remove('nm-tense');
             nmq('nmRoom').scrollTop = 0;
         }
 
@@ -126,14 +127,61 @@
             nmShow(2); nmAnimate();
         }
 
-        /* 피라미드 : 한 줄씩 내려오며 계산 (모두 3초 안에) */
+        /* 피라미드 연출 (약 8초) : 이름 쓰기 → 획수 세기 → 한 줄씩 더하기 → 두근두근 → 숫자 하나씩 공개 → 하트 팡! */
+        const NM_MSGS = ['➕ 옆 숫자끼리 더하는 중…', '💭 점점 가까워지고 있어요…', '💓 두근두근…', '🤞 거의 다 왔어요…', '😳 떨려요…'];
         function nmAnimate() {
             const { r1 } = nm.res, box = nmq('nmPyr'), res = nmq('nmRes');
             res.hidden = true;
-            const step = Math.min(300, 1800 / r1.rows.length);
-            box.innerHTML = `<div class="nm-row nm-chars">${r1.chars.map(([ch, w]) => `<span class="${w ? 'you' : 'me'}">${ch}</span>`).join('')}</div>`
-                + r1.rows.map((r, i) => `<div class="nm-row" style="animation-delay:${(i * step) / 1000}s">${r.map(v => `<span>${v}</span>`).join('')}</div>`).join('');
-            nm.timer.push(setTimeout(nmReveal, r1.rows.length * step + 250));
+            let t = 0;
+            const at = (ms, fn) => { t += ms; nm.timer.push(setTimeout(fn, t)); };
+            const msg = m => { const el = nmq('nmMsg'); if (el) { el.textContent = m; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } };
+            const roll = (sp, v, ms) => {                 // 숫자가 슬롯처럼 굴러가다 멈춰요
+                sp.classList.add('rolling');
+                const iv = setInterval(() => { sp.textContent = Math.floor(Math.random() * 10); }, 60);
+                nm.timer.push(iv);
+                nm.timer.push(setTimeout(() => { clearInterval(iv); sp.textContent = v; sp.classList.remove('rolling'); sp.classList.add('done'); }, ms));
+            };
+            const addRow = (vals, cls) => {
+                const row = document.createElement('div');
+                row.className = 'nm-row ' + (cls || '');
+                row.innerHTML = vals.map(() => '<span>?</span>').join('');
+                nmq('nmRows').appendChild(row);
+                return [...row.children];
+            };
+            box.innerHTML = `<p class="nm-msg" id="nmMsg"></p>
+              <div class="nm-row nm-chars">${r1.chars.map(([ch, w]) => `<span class="${w ? 'you' : 'me'}">${ch}</span>`).join('')}</div>
+              <div id="nmRows" class="nm-rows"></div>`;
+            const chars = [...box.querySelectorAll('.nm-chars span')], last = r1.rows.length - 1;
+            msg('✍️ 두 이름을 번갈아 써 볼게요');
+            chars.forEach((sp, i) => at(i ? 170 : 250, () => sp.classList.add('in')));
+            r1.rows.forEach((vals, ri) => {
+                if (ri < last) {
+                    at(ri ? 520 : 500, () => {
+                        msg(ri ? NM_MSGS[(ri - 1) % NM_MSGS.length] : '✏️ 한 글자씩 획수를 세는 중…');
+                        const sps = addRow(vals);
+                        sps.forEach((sp, i) => roll(sp, vals[i], ri ? 380 : 420 + i * 110));
+                    });
+                    if (!ri) t += vals.length * 110;
+                    return;
+                }
+                /* 마지막 두 자리 */
+                at(ri ? 600 : 500, () => {
+                    msg('결과는…');
+                    nmq('nmRoom').classList.add('nm-tense');
+                    const sps = addRow(vals, 'nm-final');
+                    box.insertAdjacentHTML('beforeend', '<div class="nm-beat" id="nmBeat">💗</div>');
+                });
+                at(1500, () => { const h = nmq('nmBeat'); if (h) h.remove(); msg('두구두구두구…'); roll(box.querySelector('.nm-final span'), vals[0], 650); });
+                at(1350, () => { msg('하나 더…!'); roll(box.querySelectorAll('.nm-final span')[vals.length > 1 ? 1 : 0], vals[vals.length - 1], 900); });
+                at(1050, () => {
+                    nmq('nmRoom').classList.remove('nm-tense');
+                    msg(r1.pct >= 75 ? '꺄아! 💕' : r1.pct >= 50 ? '오오~ 💗' : '두둥! 🌈');
+                    const fx = document.createElement('div'); fx.className = 'nm-burst';
+                    fx.innerHTML = Array.from({ length: 16 }, (_, i) => `<i style="--a:${i * 22.5}deg;--d:${70 + (i % 3) * 30}px">${['💗', '💕', '✨', '💖'][i % 4]}</i>`).join('');
+                    box.appendChild(fx);
+                });
+                at(750, nmReveal);
+            });
         }
         function nmReveal() {
             const { a, b, r1, r2, tier, talk, together } = nm.res, res = nmq('nmRes');
@@ -204,7 +252,7 @@ ${hearts}
         }
         function closeNameMatch() {
             nm.timer.forEach(clearTimeout); nm.timer = [];
-            const r = nmq('nmRoom'); if (r) r.classList.remove('show');
+            const r = nmq('nmRoom'); if (r) r.classList.remove('nm-tense'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }
         window.openNameMatch = openNameMatch;
