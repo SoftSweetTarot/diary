@@ -33,7 +33,7 @@
             '📔 오늘 가장 맛있었던 것 일기에 적기', '🧹 책상 위 하나만 정리하기', '🌙 오늘은 30분 일찍 자기', '🙆 어깨 쭉 펴고 스트레칭하기',
             '📔 오늘의 기분을 색깔로 일기에 남기기', '🍀 누군가에게 칭찬 한마디 건네기', '📚 책 한 쪽이라도 읽기', '🌷 화분에 물 주기 (일기 쓰고!)'];
 
-        const lk = { built: false, open: false, res: null, timer: 0 };
+        const lk = { built: false, open: false, res: null };
         const lkq = id => document.getElementById(id);
         const lkSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
         function lkDay(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -97,15 +97,17 @@
                 b.innerHTML = lkClover(i === hit, 44 + Math.floor(Math.random() * 12));
                 b.setAttribute('aria-label', i === hit ? '네잎클로버' : '세잎클로버');
                 if (i === hit) { b.classList.add('four'); b.onclick = () => lkFound(b); }
-                else b.onclick = () => { b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); lkq('lkHint').textContent = '🍀 세잎클로버예요. 꽃말은 "행복"! 네잎을 찾아봐요'; };
+                else b.onclick = () => {                     // 세잎클로버 : 흔들리고 흐려져요 (같은 걸 또 누르지 않게 · 언젠가는 꼭 찾아요)
+                    if (b.classList.contains('seen')) return;
+                    b.classList.add('no', 'seen');
+                    const left = f.querySelectorAll('.lk-cl:not(.seen)').length;
+                    lkq('lkHint').textContent = left <= 4 ? `🍀 거의 다 왔어요! 남은 클로버 ${left}개` : '🍀 세잎클로버예요. 꽃말은 "행복"! 네잎을 찾아봐요';
+                };
                 f.appendChild(b);
             }
             lkq('lkHint').textContent = '';
-            clearTimeout(lk.timer);
-            lk.timer = setTimeout(() => { const x = f.querySelector('.four'); if (x && lk.open) { x.classList.add('glow'); lkq('lkHint').textContent = '✨ 반짝이는 클로버를 살펴봐요!'; } }, 4000);
         }
         function lkFound(b) {
-            clearTimeout(lk.timer);
             b.classList.add('got');
             try { localStorage.setItem(LK_FOUND, lkDay()); } catch (e) {}
             setTimeout(() => { if (lk.open) lkShowResult(true); }, 700);
@@ -174,7 +176,7 @@
             lkq('luckRoom').scrollTop = 0;
         }
         function closeLuck() {
-            lk.open = false; clearTimeout(lk.timer);
+            lk.open = false;
             const r = lkq('luckRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }

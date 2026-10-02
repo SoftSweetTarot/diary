@@ -1225,7 +1225,7 @@
         @keyframes lkSway { 0%, 100% { transform: rotate(var(--r)); } 50% { transform: rotate(calc(var(--r) + 8deg)); } }
         .lk-cl.no { animation: lkNo .4s ease; }
         @keyframes lkNo { 0%, 100% { transform: rotate(var(--r)) translateX(0); } 25% { transform: rotate(var(--r)) translateX(-5px); } 75% { transform: rotate(var(--r)) translateX(5px); } }
-        .lk-cl.glow svg { filter: drop-shadow(0 0 6px #fff7a0) drop-shadow(0 0 10px #ffe14d); }
+        .lk-cl.seen svg { opacity: .35; transition: opacity .4s .3s; } .lk-cl.seen { cursor: default; }
         .lk-cl.got { animation: lkGot .7s ease forwards; }
         @keyframes lkGot { 0% { transform: scale(1); } 50% { transform: scale(1.8) rotate(20deg); filter: drop-shadow(0 0 12px #ffe14d); } 100% { transform: scale(1.4) rotate(360deg); opacity: 0; } }
         .lk-hint { min-height: 22px; text-align: center; font-size: 13.5px; color: #4f8a45; margin: 10px 0 0; }
