@@ -70,8 +70,8 @@
         function nmSeed(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 
         /* ---------- 내 이름 기억 ---------- */
-        function nmMyName() { try { return (nmSync() ? store.getItem(NM_KEY) : localStorage.getItem(NM_LOCAL)) || ''; } catch (e) { return ''; } }
-        function nmKeepName(v) { try { if (nmSync()) { if (store.getItem(NM_KEY) !== v) store.setItem(NM_KEY, v); } else localStorage.setItem(NM_LOCAL, v); } catch (e) {} }
+        function nmMyName() { try { return JSON.parse((nmSync() ? store.getItem(NM_KEY) : localStorage.getItem(NM_LOCAL)) || '""') || ''; } catch (e) { return ''; } }
+        function nmKeepName(v) { const t = JSON.stringify(v); try { if (nmSync()) { if (store.getItem(NM_KEY) !== t) store.setItem(NM_KEY, t); } else localStorage.setItem(NM_LOCAL, t); } catch (e) {} }
 
         /* ---------- 화면 ---------- */
         function nmBuild() {

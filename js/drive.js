@@ -338,8 +338,13 @@
             if (!res.ok && res.status !== 404) throw new Error('trash ' + res.status);
         }
 
+        /* 설정 값은 모두 JSON 글자 · 잘못된 값이 하나 섞여도 settings.json 전체가 깨지지 않게 그 값만 빼고 저장 */
         function settingsBody() {
-            return '{' + store.keys().filter(isSettingKey).map(k => JSON.stringify(k) + ':' + store.getItem(k)).join(',') + '}';
+            return '{' + store.keys().filter(isSettingKey).map(k => {
+                const v = store.getItem(k);
+                try { JSON.parse(v); } catch (e) { console.warn('설정 값이 JSON 이 아니라서 저장하지 않았어요:', k); return ''; }
+                return JSON.stringify(k) + ':' + v;
+            }).filter(Boolean).join(',') + '}';
         }
 
         /* 변경된 키 하나를 드라이브에 반영 */
