@@ -3,7 +3,7 @@
    - 옛날 교실에서 하던 '획수 궁합' : 두 이름을 한 글자씩 번갈아 쓰고, 글자 획수를 옆끼리 더해(일의 자리만) 두 자리가 남을 때까지
    - 누가 먼저 쓰느냐에 따라 결과가 달라져요 → '반대로 보면' 도 함께
    - 사이 : 💕 썸·연인 · 👭 친구 · 🏡 가족 → 풀이 말이 달라져요
-   - 효과음 : 파일 없이 만든 소리 (글자 톡 · 숫자 또르륵 · 심장 두근 · 드럼 · 팡파레) · 🔊 버튼으로 끄고 켜기
+   - 효과음 : 파일 없이 만든 소리 (글자 톡 · 숫자 또르륵 · 심장 두근 · 드럼 · 팡파레) · ✨ 연출 소리 (첫 화면 🔊 · 설정)
    - 이름은 어디에도 저장하지 않아요
    - 📌 다이어리에 붙이기 : 궁합 카드 그림 (SVG)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (이름 궁합만 '준비 중') */
@@ -50,7 +50,7 @@
             friend: ['📸 네컷 사진 찍기', '🍰 디저트 투어', '🛍️ 소품샵 구경', '🎤 노래방 가기', '☕ 카페에서 수다', '🧁 같이 베이킹', '🚌 당일치기 여행', '🎮 같이 게임하기'],
             family: ['🍲 같이 저녁 먹기', '🌳 공원 산책', '🧺 소풍 가기', '🎬 집에서 영화 보기', '📷 가족사진 찍기', '🍓 과일 따기 체험', '♨️ 온천 여행', '🎂 작은 파티 하기']
         };
-        const nm = { built: false, rel: 'love', res: null, timer: [], sound: true, ac: null, noise: null };
+        const nm = { built: false, rel: 'love', res: null, timer: [], noise: null };
         const nmq = id => document.getElementById(id);
         const nmEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -70,20 +70,14 @@
         function nmSeed(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 
         /* ---------- 🔊 효과음 (파일 없이 만들어요 · 아이폰 무음 모드에서도 들리게) ---------- */
-        function nmAudio() {
-            if (!nm.sound) return null;
-            try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-            if (!nm.ac) { try { nm.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
-            if (nm.ac.state !== 'running') { try { const p = nm.ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-            return nm.ac;
-        }
+        const nmAudio = () => typeof sndFx === 'function' ? sndFx() : null;       // 연출 소리가 꺼져 있으면 null (js/sound.js)
         function nmTone(f, dur, vol, type, at, f2) {      // 맑은 음 하나 (f2 : 끝 음높이로 미끄러지기)
             const ac = nmAudio(); if (!ac) return;
             const t = ac.currentTime + (at || 0), o = ac.createOscillator(), g = ac.createGain();
             o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
             if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
             g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-            o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+            o.connect(g).connect(sndOut()); o.start(t); o.stop(t + dur + 0.02);
         }
         function nmNoise(dur, vol, at, freq) {             // 드럼 · 바람 소리
             const ac = nmAudio(); if (!ac) return;
@@ -91,7 +85,7 @@
             const t = ac.currentTime + (at || 0), src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
             src.buffer = nm.noise; f.type = 'bandpass'; f.frequency.value = freq || 1800; f.Q.value = 1.2;
             g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-            src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + dur + 0.02);
+            src.connect(f).connect(g).connect(sndOut()); src.start(t); src.stop(t + dur + 0.02);
         }
         const NM_SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760];
         const nmSfx = {
@@ -109,8 +103,6 @@
             },
             count: () => nmTone(500, .9, .07, 'sine', 0, 1500)
         };
-        function nmToggleSound() { nm.sound = !nm.sound; nmSoundMark(); if (nm.sound) nmSfx.pop(4); }
-        const nmSoundMark = () => { const b = nmq('nmSnd'); if (b) { b.textContent = nm.sound ? '🔊' : '🔇'; b.setAttribute('aria-label', nm.sound ? '소리 끄기' : '소리 켜기'); } };
 
         /* ---------- 화면 ---------- */
         function nmBuild() {
@@ -120,7 +112,7 @@
             el.id = 'nmRoom'; el.className = 'nm-room';
             el.innerHTML = `
               <i class="nm-float f1">💗</i><i class="nm-float f2">💕</i><i class="nm-float f3">✨</i><i class="nm-float f4">💞</i>
-              <div class="nm-bar"><button class="nm-x" type="button" id="nmBack" onclick="nmShow(1)" aria-label="뒤로" hidden>←</button><span class="nm-sp" id="nmSp"></span><b>💕 이름 궁합</b><button class="nm-x" type="button" onclick="closeNameMatch()" aria-label="닫기">✕</button></div>
+              <div class="nm-bar"><button class="nm-x" type="button" id="nmBack" onclick="nmShow(1)" aria-label="뒤로" hidden>←</button><span id="nmSp">${typeof sndFxBtn === 'function' ? sndFxBtn('nm-x') : '<span class="nm-sp"></span>'}</span><b>💕 이름 궁합</b><button class="nm-x" type="button" onclick="closeNameMatch()" aria-label="닫기">✕</button></div>
               <div class="nm-wrap">
                 <section id="nmStep1" class="nm-step">
                   <div class="nm-hero"><span>💌</span></div>
@@ -187,11 +179,10 @@
                 nmq('nmRows').appendChild(row);
                 return [...row.children];
             };
-            box.innerHTML = `<button class="nm-snd" type="button" id="nmSnd" onclick="nmToggleSound()"></button><p class="nm-msg" id="nmMsg"></p>
+            box.innerHTML = `<p class="nm-msg" id="nmMsg"></p>
               <div class="nm-row nm-chars">${r1.chars.map(([ch, w]) => `<span class="${w ? 'you' : 'me'}">${ch}</span>`).join('')}</div>
               <div id="nmRows" class="nm-rows"></div>`;
             const chars = [...box.querySelectorAll('.nm-chars span')], last = r1.rows.length - 1;
-            nmSoundMark();
             msg('✍️ 두 이름을 번갈아 써 볼게요');
             chars.forEach((sp, i) => at(i ? 170 : 250, () => { sp.classList.add('in'); nmSfx.pop(i); }));
             r1.rows.forEach((vals, ri) => {

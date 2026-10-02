@@ -11,7 +11,7 @@
         const FC_TIMEOUT_MS = 12000;                    // 서버가 이보다 늦으면 '다시 해 주세요'
         const FC_FAN = 7;                               // 펼쳐 놓는 카드 수
 
-        const fc = { built: false, open: false, stage: 'intro', req: null, card: null, last: -1, timers: [], ac: null };
+        const fc = { built: false, open: false, stage: 'intro', req: null, card: null, last: -1, timers: [] };
         const fq = id => document.getElementById(id);
         function fcLater(fn, ms) { const t = setTimeout(fn, ms); fc.timers.push(t); return t; }
         function fcClearTimers() { fc.timers.forEach(clearTimeout); fc.timers = []; }
@@ -46,6 +46,7 @@
             el.className = 'fc-room';
             el.innerHTML = `
               <div class="fc-sky" aria-hidden="true"><i class="fc-aurora a1"></i><i class="fc-aurora a2"></i><i class="fc-stars"></i><i class="fc-stars s2"></i></div>
+              ${typeof sndFxBtn === 'function' ? sndFxBtn('fc-x fc-left') : ''}
               <button class="fc-x" type="button" onclick="closeFortuneCard()" aria-label="닫기">✕</button>
               <div class="fc-wrap">
                 <section class="fc-stage" id="fcIntro">
@@ -219,20 +220,15 @@
         }
 
         /* ---------- 소리 : 맑은 종소리 (파일 없이 만들어요 · 아이폰 무음 모드에서도 들리게) ---------- */
-        function fcSound() {
-            try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-            if (!fc.ac) { try { fc.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
-            if (fc.ac.state !== 'running') { try { const p = fc.ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-            return fc.ac;
-        }
+        const fcSound = () => typeof sndFx === 'function' ? sndFx() : null;      // 연출 소리가 꺼져 있으면 null (js/sound.js)
         function fcChime(freqs, vol) {
-            const ac = fc.ac; if (!ac) return;
+            const ac = fcSound(); if (!ac) return;
             freqs.forEach((f, i) => {
                 const t = ac.currentTime + i * 0.11, g = ac.createGain();
                 g.gain.setValueAtTime(0.0001, t);
                 g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
                 g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
-                g.connect(ac.destination);
+                g.connect(sndOut());
                 [[1, 1], [2.76, 0.18]].forEach(([m, a]) => {
                     const o = ac.createOscillator(), og = ac.createGain();
                     o.type = 'sine'; o.frequency.value = f * m; og.gain.value = a;

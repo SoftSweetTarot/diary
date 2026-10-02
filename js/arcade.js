@@ -12,7 +12,6 @@
 
         const ARCADE_BEST_KEY = 'malang_arcade_best';      // 게스트용 (이 기기)
         const ARCADE_BEST_SYNC = 'diary_arcade_best';      // 설정 저장소 키 (드라이브 settings.json)
-        const ARCADE_MUTE_KEY = 'malang_arcade_mute';
         const AR_DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
         const AR_OPP = { up: 'down', down: 'up', left: 'right', right: 'left' };
         const arRand = (a, b) => a + Math.random() * (b - a);
@@ -870,7 +869,7 @@
         ];
 
         /* ---------- 오락실 본체 ---------- */
-        const ar = { built: false, open: false, game: null, inst: null, state: 'lobby', score: 0, t: 0, raf: 0, last: 0, ac: null, mute: false, best: {}, ptr: null, keys: {} };
+        const ar = { built: false, open: false, game: null, inst: null, state: 'lobby', score: 0, t: 0, raf: 0, last: 0, ac: null, best: {}, ptr: null, keys: {} };
         const arSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;     // 로그인 → 드라이브 설정 / 게스트 → 이 기기
         function arReadBest() {
             try { return JSON.parse(arSync() ? store.getItem(ARCADE_BEST_SYNC) : localStorage.getItem(ARCADE_BEST_KEY)) || {}; } catch (e) { return {}; }
@@ -879,7 +878,6 @@
             const t = JSON.stringify(ar.best);
             try { if (arSync()) store.setItem(ARCADE_BEST_SYNC, t); else localStorage.setItem(ARCADE_BEST_KEY, t); } catch (e) {}
         }
-        try { ar.mute = localStorage.getItem(ARCADE_MUTE_KEY) === '1'; } catch (e) {}
         const aq = id => document.getElementById(id);
         const arTouch = () => matchMedia('(pointer: coarse)').matches;
 
@@ -892,7 +890,7 @@
               <div class="ar-lobby" id="arLobby">
                 <div class="ar-head">
                   <div class="ar-sign"><span class="ar-neon">MALANG ARCADE</span><b>🕹️ 말랑 오락실</b></div>
-                  <button class="ar-ibtn" id="arMuteBtn" type="button" onclick="arToggleMute()" aria-label="소리 켜고 끄기">🔊</button>
+                  ${typeof sndFxBtn === 'function' ? sndFxBtn('ar-ibtn') : ''}
                   <button class="ar-ibtn" type="button" onclick="closeArcade()" aria-label="닫기">✕</button>
                 </div>
                 <p class="ar-coin">INSERT COIN <i>·</i> 게임을 골라 주세요</p>
@@ -977,7 +975,6 @@
             document.addEventListener('keyup', e => { if (ar.open && ar.inst && ar.inst.keyUp) ar.inst.keyUp(e.code); }, true);
             document.addEventListener('visibilitychange', () => { if (document.hidden && ar.state === 'play') arTogglePause(); });
             window.addEventListener('resize', () => { if (ar.game) arFit(); });
-            arRenderMute();
         }
 
         function arKey(e) {
@@ -1101,20 +1098,14 @@
         }
 
         /* ---------- 8비트 소리 (파일 없이 · 아이폰 무음 모드에서도) ---------- */
-        function arSound() {
-            if (ar.mute) return null;
-            try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-            if (!ar.ac) { try { ar.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
-            if (ar.ac.state !== 'running') { try { const p = ar.ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-            return ar.ac;
-        }
+        function arSound() { ar.ac = typeof sndFx === 'function' ? sndFx() : null; return ar.ac; }     // 연출 소리가 꺼져 있으면 null (js/sound.js)
         function arTone(f, d, type, vol, when, slide) {
-            const ac = ar.ac; if (!ac || ar.mute) return;
+            const ac = ar.ac; if (!ac || !sndOn('fx')) return;
             const t = ac.currentTime + (when || 0), o = ac.createOscillator(), g = ac.createGain();
             o.type = type || 'square'; o.frequency.setValueAtTime(f, t);
             if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
             g.gain.setValueAtTime(vol || .06, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
-            o.connect(g).connect(ac.destination); o.start(t); o.stop(t + d + .02);
+            o.connect(g).connect(sndOut()); o.start(t); o.stop(t + d + .02);
         }
         const AR_SFX = {
             pew: () => arTone(880, .06, 'square', .025, 0, 1400),
@@ -1129,13 +1120,7 @@
             over: () => [392, 330, 262, 196].forEach((f, i) => arTone(f, .16, 'square', .05, i * .14)),
             win: () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => arTone(f, .1, 'square', .05, i * .09))
         };
-        function arSfx(n) { if (ar.mute || !ar.ac) return; try { AR_SFX[n] && AR_SFX[n](); } catch (e) {} }
-        function arToggleMute() {
-            ar.mute = !ar.mute;
-            try { localStorage.setItem(ARCADE_MUTE_KEY, ar.mute ? '1' : '0'); } catch (e) {}
-            arRenderMute(); if (!ar.mute) { arSound(); arSfx('blip'); }
-        }
-        function arRenderMute() { const b = aq('arMuteBtn'); if (b) b.textContent = ar.mute ? '🔇' : '🔊'; }
+        function arSfx(n) { if (!ar.ac || !sndOn('fx')) return; try { AR_SFX[n] && AR_SFX[n](); } catch (e) {} }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['arcade'] = true;

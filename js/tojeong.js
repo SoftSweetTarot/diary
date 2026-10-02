@@ -188,6 +188,7 @@
             const el = document.createElement('div');
             el.id = 'tojeongRoom'; el.className = 'tj-room';
             el.innerHTML = `
+              <span id="tjSnd">${typeof sndFxBtn === 'function' ? sndFxBtn('tj-x tj-back') : ''}</span>
               <button class="tj-x tj-back" type="button" id="tjBack" onclick="tjShow('tjForm')" aria-label="생년월일 화면으로" hidden>←</button>
               <button class="tj-x" type="button" onclick="closeTojeong()" aria-label="닫기">✕</button>
               <div class="tj-wrap">
@@ -233,7 +234,7 @@
             document.querySelectorAll('.tj-cal button').forEach(b => b.classList.toggle('on', b.dataset.cal === c));
             tq('tjLeapWrap').hidden = c !== 'lunar';
         }
-        function tjShow(id) { if (window.ritualStop) ritualStop(); ['tjForm', 'tjResult'].forEach(s => { tq(s).hidden = s !== id; }); tq('tjBack').hidden = id === 'tjForm'; tq('tojeongRoom').scrollTop = 0; }
+        function tjShow(id) { if (window.ritualStop) ritualStop(); ['tjForm', 'tjResult'].forEach(s => { tq(s).hidden = s !== id; }); tq('tjBack').hidden = id === 'tjForm'; tq('tjSnd').hidden = id !== 'tjForm'; tq('tojeongRoom').scrollTop = 0; }
 
         function openTojeong() {
             if (typeof closeModal === 'function') closeModal('serviceModal');

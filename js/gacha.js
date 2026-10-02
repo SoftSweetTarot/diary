@@ -27,7 +27,7 @@
             turned: 0, ticks: 0, lastAng: null, dragged: false, taps: 0,
             balls: [], mixing: false, frozen: false, swirl: 1, swirlFlip: 0,
             bulbs: [], led: 'idle', ledPos: 0, ledLast: 0, mixStart: 0,
-            raf: 0, ac: null, rumble: null, sound: true, timers: []
+            raf: 0, rumble: null, timers: []
         };
         const gq = id => document.getElementById(id);
 
@@ -94,7 +94,7 @@
                 <div class="gc-result" id="gcResult" hidden></div>
                 <details class="gc-odds"><summary>🎲 확률 안내</summary><table id="gcOdds"></table>
                   <p>하루에 한 번 돌릴 수 있어요. 밤 12시가 지나면 코인이 다시 생겨요.</p></details>
-                <button class="gc-sound" id="gcSound" type="button">🔊 소리 켜짐</button>
+                <button class="gc-sound snd-fx snd-fx-text" id="gcSound" type="button" onclick="sndToggleFx()">${typeof sndOn === 'function' && !sndOn('fx') ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
               </div>
               <canvas class="gc-burst" id="gcBurst"></canvas>`;
             document.body.appendChild(el);
@@ -124,7 +124,7 @@
             ['pointerdown', 'touchend', 'click', 'keydown'].forEach(t => el.addEventListener(t, gcUnlockAudio, true));   // 화면 어디를 눌러도 소리 깨우기 (아이패드는 touchend·click 이 확실)
             gq('gcInsert').onclick = gcInsertCoin;
             gq('gcCapsule').onclick = gcTapCapsule;
-            gq('gcSound').onclick = () => { gcUnlockAudio(); gc.sound = !gc.sound; gq('gcSound').textContent = gc.sound ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'; if (!gc.sound) gcStopRumble(); };
+            document.addEventListener('snd-fx-off', gcStopRumble);
             const crank = gq('gcCrank');
             const angleOf = e => { const r = crank.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
             crank.addEventListener('pointerdown', e => { if (gc.stage !== 'turning') return; gc.lastAng = angleOf(e); gc.dragged = false; crank.setPointerCapture(e.pointerId); });
@@ -428,49 +428,15 @@
         }
 
         /* ---------- 소리 (파일 없이 WebAudio) · 진동 ---------- */
-        function gcAudio() { if (!gc.ac) { try { gc.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return gc.ac; }
-        /* 🔊 소리 켜기 : 브라우저는 사용자가 화면을 누를 때만 소리를 허락해요.
-           - 오디오가 '일시정지(suspended)'나 '중단(interrupted · 아이패드에서 앱을 오가면)' 상태면 resume() 으로 깨우기
-           - 아이폰·아이패드 무음 모드에서도 들리게
-               ① iOS / iPadOS 17 이상 : navigator.audioSession.type = 'playback' ('미디어 재생'으로 취급 → 무음 모드 무시)
-               ② 그보다 예전 기기 : 아주 짧은 '무음 소리 파일'을 한 번 재생해서 같은 효과 */
-        let gcSilentUrl = '';
-        function gcSilentWav() {                               // 0.2초짜리 무음 WAV 를 직접 만들기 (파일 없이)
-            if (gcSilentUrl) return gcSilentUrl;
-            const n = 1600, buf = new ArrayBuffer(44 + n), v = new DataView(buf);
-            const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
-            w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt ');
-            v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-            v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
-            w(36, 'data'); v.setUint32(40, n, true);
-            for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);   // 8비트 무음 = 128
-            gcSilentUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
-            return gcSilentUrl;
-        }
-        function gcUnlockAudio() {
-            try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}   // ①
-            const a = gcAudio();
-            if (a && a.state !== 'running') { try { const p = a.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-            if (!gc.unlocked) {
-                gc.unlocked = true;
-                try {                                            // ② 무음 소리 한 번 재생
-                    const el = new Audio(gcSilentWav());
-                    el.setAttribute('playsinline', ''); el.preload = 'auto';
-                    const pr = el.play(); if (pr && pr.catch) pr.catch(() => { gc.unlocked = false; });
-                } catch (e) { gc.unlocked = false; }
-                try {                                            // 사파리 : 무음 한 조각을 바로 재생해 오디오 길을 열어 둠
-                    const b = a.createBuffer(1, 1, 22050), src = a.createBufferSource();
-                    src.buffer = b; src.connect(a.destination); src.start(0);
-                } catch (e) {}
-            }
-        }
+        const gcAudio = () => typeof sndFx === 'function' ? sndFx() : null;     // 연출 소리가 꺼져 있으면 null (js/sound.js)
+        const gcUnlockAudio = () => { if (typeof sndUnlock === 'function') sndUnlock(); };     // 화면을 누를 때 소리 깨우기 (js/sound.js)
         function gcTone(freq, dur, type = 'sine', vol = .15, when = 0, slideTo) {
-            if (!gc.sound) return; const a = gcAudio(); if (!a) return;
+            const a = gcAudio(); if (!a) return;
             const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
             o.type = type; o.frequency.setValueAtTime(freq, t);
             if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
             g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
-            o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .02);
+            o.connect(g).connect(sndOut()); o.start(t); o.stop(t + dur + .02);
         }
         const gcSfx = {
             coin() { gcTone(1900, .08, 'triangle', .12); gcTone(2500, .18, 'triangle', .1, .07); gcTone(700, .12, 'square', .05, .6); },
@@ -483,7 +449,7 @@
             allOn() { gcTone(110, .12, 'square', .18); [784, 988, 1175].forEach(f => gcTone(f, .5, 'triangle', .08, .06)); }
         };
         function gcStartRumble(ms) {
-            if (!gc.sound) return; const a = gcAudio(); if (!a) return;
+            const a = gcAudio(); if (!a) return;
             const t = a.currentTime, len = a.sampleRate * 2, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
             for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
             const n = a.createBufferSource(); n.buffer = buf; n.loop = true;
@@ -491,12 +457,12 @@
             const o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(260, t + ms / 1000);
             const og = a.createGain(); og.gain.value = .035;
             const g = a.createGain(); g.gain.setValueAtTime(.02, t); g.gain.linearRampToValueAtTime(.16, t + ms / 1000);
-            n.connect(lp).connect(g); o.connect(og).connect(g); g.connect(a.destination);
+            n.connect(lp).connect(g); o.connect(og).connect(g); g.connect(sndOut());
             n.start(t); o.start(t);
             gc.rumble = { n, o, g };
         }
         function gcStopRumble() {
-            if (!gc.rumble) return; const a = gcAudio(), t = a.currentTime;
+            if (!gc.rumble) return; const t = snd.ac.currentTime;
             gc.rumble.g.gain.cancelScheduledValues(t); gc.rumble.g.gain.setValueAtTime(gc.rumble.g.gain.value, t); gc.rumble.g.gain.linearRampToValueAtTime(0, t + .04);
             gc.rumble.n.stop(t + .06); gc.rumble.o.stop(t + .06); gc.rumble = null;
         }

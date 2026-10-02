@@ -63,7 +63,7 @@
             const el = document.createElement('div');
             el.id = 'lbRoom'; el.className = 'lb-room';
             el.innerHTML = `
-              <div class="lb-bar"><button class="lb-x" type="button" id="lbBack" onclick="lbBackTo()" aria-label="뒤로" hidden>←</button><span class="lb-sp" id="lbSp"></span><b>💌 익명 편지함</b><button class="lb-x" type="button" onclick="closeLetterBox()" aria-label="닫기">✕</button></div>
+              <div class="lb-bar"><button class="lb-x" type="button" id="lbBack" onclick="lbBackTo()" aria-label="뒤로" hidden>←</button><span id="lbSp">${typeof sndFxBtn === 'function' ? sndFxBtn('lb-x') : ''}</span><b>💌 익명 편지함</b><button class="lb-x" type="button" onclick="closeLetterBox()" aria-label="닫기">✕</button></div>
               <div class="lb-wrap">
                 <div class="lb-head"><span class="lb-post">📮</span><p>이름 없이 마음을 주고받는<br><b>말랑이들의 우체통</b></p></div>
                 <div class="lb-tabs" id="lbTabs">

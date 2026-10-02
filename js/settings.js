@@ -484,7 +484,7 @@
         }
         document.querySelectorAll('.modal').forEach(mtDecorate);
         function openModal(id) {
-            if (id === 'settingsModal') { saveData(false); updateStorageInfo(); refreshStorageStats(); }
+            if (id === 'settingsModal') { saveData(false); updateStorageInfo(); refreshStorageStats(); if (typeof sndRenderSettings === 'function') sndRenderSettings(); }
             /* ☕ 서버 미리 깨우기 (js/service.js) : 설정 메뉴를 열면 건의함 서버, 놀이터를 열면 랜덤박스 서버 */
             if (typeof warmServer === 'function') {
                 if (id === 'settingsMenuModal' && typeof FEEDBACK_SCRIPT_URL !== 'undefined') warmServer(FEEDBACK_SCRIPT_URL);

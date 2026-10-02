@@ -286,6 +286,7 @@
 
             turn = { isCover, dir, W, pageEl, under, shadow, flapLayer, flap, d: 0 };
             updateCurl(0);
+            if (typeof sndDiary === 'function') sndDiary('page');
             return true;
         }
 

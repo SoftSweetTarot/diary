@@ -1,27 +1,22 @@
 /* 말랑달콤 다이어리 - js/ritual.js
    ✨ 결과 보기 연출 (꿈해몽 · 토정비결 · 심리테스트 공용)
    - 빛나는 구슬 + 별가루 → 글이 스르르 바뀌며 진행 → 3 · 2 · 1 → 결과 (포춘카드와 비슷한 7초 정도)
-   - 효과음은 파일 없이 만들어요 (아이폰 무음 모드에서도 들리게)
+   - 효과음은 파일 없이 만들어요 (✨ 연출 소리 · js/sound.js 의 설정을 따라요)
        night : 하프처럼 맑은 소리 (꿈해몽) · paper : 징 · 딱따기 (토정비결) · pink : 몽글몽글 방울 소리 (심리테스트)
    - ritual(상자, { theme, icon, msgs, alive }) → Promise (연출이 끝나면 true · 도중에 창을 닫으면 false)
    - ritualStop() : 진행 중인 연출 멈추기 (창을 닫을 때)
    ※ 이 파일이 없으면 각 기능이 연출 없이 바로 결과를 보여 줘요 */
 
         const RIT_MSG_MS = 1500, RIT_COUNT_MS = 900;
-        const rit = { ac: null, noise: null, timers: [], run: 0 };
+        const rit = { noise: null, timers: [], run: 0 };
 
         /* ---------- 🔊 소리 ---------- */
-        function ritAudio() {
-            try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-            if (!rit.ac) { try { rit.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
-            if (rit.ac.state !== 'running') { try { const p = rit.ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-            return rit.ac;
-        }
+        const ritAudio = () => typeof sndFx === 'function' ? sndFx() : null;      // 연출 소리가 꺼져 있으면 null (js/sound.js)
         function ritTone(f, dur, vol, type, at, partials) {
             const ac = ritAudio(); if (!ac) return;
             const t = ac.currentTime + (at || 0), g = ac.createGain();
             g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-            g.connect(ac.destination);
+            g.connect(sndOut());
             (partials || [[1, 1]]).forEach(([m, a]) => {
                 const o = ac.createOscillator(), og = ac.createGain();
                 o.type = type || 'sine'; o.frequency.value = f * m; og.gain.value = a;
@@ -34,7 +29,7 @@
             const t = ac.currentTime + (at || 0), s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
             s.buffer = rit.noise; f.type = 'bandpass'; f.frequency.value = freq || 2000; f.Q.value = q || 1;
             g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-            s.connect(f).connect(g).connect(ac.destination); s.start(t); s.stop(t + dur + 0.05);
+            s.connect(f).connect(g).connect(sndOut()); s.start(t); s.stop(t + dur + 0.05);
         }
         const RIT_BELL = [[1, 1], [2.76, .2], [5.4, .06]];
         const RIT_GONG = [[1, 1], [1.48, .45], [2.1, .25], [2.9, .12]];
