@@ -1,0 +1,55 @@
+말랑달콤 다이어리 · 🎵 배경음악 악보 출처
+
+이 폴더의 *.json 파일은 Mutopia Project(https://www.mutopiaproject.org)의 무료 공개 악보(LilyPond)를
+MIDI 로 바꾼 뒤 다이어리가 연주할 수 있는 숫자 목록으로 옮긴 것이에요.
+CC BY / CC BY-SA 악보로 만든 파일은 원래 악보와 같은 조건(CC BY-SA 는 같은 조건으로 나눔)을 따라요.
+
+mountain.json : 산왕의 궁전에서 (그리그 · 1875) — Mutopia Project · 악보 입력 Coyau · 퍼블릭 도메인
+toccata.json : 토카타와 푸가 d단조 (유령의 성) (바흐 · 1700년대) — Mutopia Project · 악보 입력 Anonymous · 퍼블릭 도메인
+blitz.json : 천둥과 번개 폴카 (요한 슈트라우스 2세 · 1868) — Mutopia Project · 악보 입력 Stan Sanderson · 퍼블릭 도메인
+inv8.json : 인벤션 8번 (8비트로 들으면 딱!) (바흐 · 1723) — Mutopia Project · 악보 입력 Mutopia · 퍼블릭 도메인
+inv1.json : 인벤션 1번 (바흐 · 1723) — Mutopia Project · 악보 입력 jeff covey · CC BY-SA 3.0
+elise.json : 엘리제를 위하여 (베토벤 · 1810) — Mutopia Project · 악보 입력 Stelios Samelis · 퍼블릭 도메인
+moonlight.json : 월광 소나타 1악장 (베토벤 · 1801) — Mutopia Project · 악보 입력 Stewart Holmes · CC BY-SA 2.5
+pathetique.json : 비창 소나타 2악장 (베토벤 · 1798) — Mutopia Project · 악보 입력 Chris Sawer · 퍼블릭 도메인
+fate.json : 운명 교향곡 1악장 (베토벤 · 1808) — Mutopia Project · 악보 입력 Stelios Samelis · Johannes Heinecke · 퍼블릭 도메인
+joy.json : 환희의 송가 (베토벤 · 1824) — Mutopia Project · 악보 입력 Peter Chubb · 퍼블릭 도메인
+nacht.json : 아이네 클라이네 나흐트무지크 1악장 (모차르트 · 1787) — Mutopia Project · 악보 입력 Anonymous · 퍼블릭 도메인
+newworld.json : 신세계 교향곡 2악장 (꿈속의 고향) (드보르자크 · 1893) — Mutopia Project · 악보 입력 Keith OHara · CC BY-SA 3.0
+air.json : G선상의 아리아 (바흐 · 1730년경) — Mutopia Project · 악보 입력 jeff covey · CC BY-SA 3.0
+anitra.json : 아니트라의 춤 (페르귄트) (그리그 · 1875) — Mutopia Project · 악보 입력 Deborah Lowrey · 퍼블릭 도메인
+wedding.json : 결혼 행진곡 (한여름 밤의 꿈) (멘델스존 · 1842) — Mutopia Project · 악보 입력 Alexander Brock · CC BY-SA 4.0
+hallelujah.json : 할렐루야 (메시아) (헨델 · 1741) — Mutopia Project · 악보 입력 Joshua Koo · 퍼블릭 도메인
+lullaby.json : 브람스 자장가 (브람스 · 1868) — Mutopia Project · 악보 입력 Diego Guillen · 퍼블릭 도메인
+gymno.json : 짐노페디 1번 (사티 · 1888) — Mutopia Project · 악보 입력 Evin Robertson · 퍼블릭 도메인
+clair.json : 달빛 (베르가마스크 모음곡) (드뷔시 · 1905) — Mutopia Project · 악보 입력 Keith OHara · 퍼블릭 도메인
+nocturne.json : 녹턴 Op.9 No.2 (쇼팽 · 1832) — Mutopia Project · 악보 입력 Renato Biolcati Rinaldi · CC BY-SA 3.0
+puppy.json : 강아지 왈츠 (쇼팽 · 1847) — Mutopia Project · 악보 입력 Magnus Lewis-Smith · 퍼블릭 도메인
+traumerei.json : 트로이메라이 (어린이 정경) (슈만 · 1838) — Mutopia Project · 악보 입력 Ying-Chun Liu · 퍼블릭 도메인
+consolation.json : 위안 3번 (리스트 · 1850) — Mutopia Project · 악보 입력 Ryan Prince · CC BY 3.0
+gondel.json : 베네치아의 뱃노래 (무언가) (멘델스존 · 1830) — Mutopia Project · 악보 입력 Ryan Prince · CC BY 3.0
+prelude1.json : 평균율 프렐류드 1번 (바흐 · 1722) — Mutopia Project · 악보 입력 Tobias Erbsland · 퍼블릭 도메인
+turkish.json : 터키 행진곡 (모차르트 · 1783) — Mutopia Project · 악보 입력 Rune Zedeler · Chris Sawer · 퍼블릭 도메인
+k545.json : 소나타 C장조 K.545 1악장 (모차르트 · 1788) — Mutopia Project · 악보 입력 Alejandro Sierra · CC BY-SA 3.0
+twinklevar.json : 작은 별 변주곡 (전곡 · 기타 이중주판) (모차르트 · 1781) — Mutopia Project · 악보 입력 Jeffrey Olson · 퍼블릭 도메인
+amaryllis.json : 아마릴리스 (기스 · 1867) — Mutopia Project · 악보 입력 Stan Sanderson · 퍼블릭 도메인
+entertainer.json : 엔터테이너 (스콧 조플린 · 1902) — Mutopia Project · 악보 입력 Chris Sawer · 퍼블릭 도메인
+maple.json : 메이플 리프 래그 (스콧 조플린 · 1899) — Mutopia Project · 악보 입력 Chris Sawer · 퍼블릭 도메인
+canon.json : 캐논 (파헬벨 · 1680년경) — Mutopia Project · 악보 입력 Anonymous (Jim Paterson 원본) · CC BY 3.0
+arabesque.json : 아라베스크 1번 (드뷔시 · 1891) — Mutopia Project · 악보 입력 Keith OHara · 퍼블릭 도메인
+minuet.json : 미뉴에트 G장조 (바흐 노트 · 1725) — Mutopia Project · 악보 입력 Mutopia · 퍼블릭 도메인
+sonatina.json : 소나티네 Op.36 No.1 (전 악장) (클레멘티 · 1797) — Mutopia Project · 악보 입력 Brian D. Rude · 퍼블릭 도메인
+farmer.json : 즐거운 농부 (슈만 · 1848) — Mutopia Project · 악보 입력 Philippe Hézaine · CC BY-SA 2.5
+candeur.json : 순진한 마음 (부르크뮐러 25 연습곡) (부르크뮐러 · 1851) — Mutopia Project · 악보 입력 Bas Wassink · 퍼블릭 도메인
+burgarab.json : 아라베스크 (부르크뮐러 25 연습곡) (부르크뮐러 · 1851) — Mutopia Project · 악보 입력 Bas Wassink · 퍼블릭 도메인
+pastorale.json : 목가 (부르크뮐러 25 연습곡) (부르크뮐러 · 1851) — Mutopia Project · 악보 입력 Bas Wassink · 퍼블릭 도메인
+soldiers.json : 나무 병정의 행진 (차이콥스키 · 1878) — Mutopia Project · 악보 입력 Anonymous · 퍼블릭 도메인
+homesweet.json : 즐거운 나의 집 (비숍 · 1823) — Mutopia Project · 악보 입력 Stan Sanderson · 퍼블릭 도메인
+loreley.json : 로렐라이 (질허 · 1837) — Mutopia Project · 악보 입력 Stan Sanderson · 퍼블릭 도메인
+roeslein.json : 들장미 (슈베르트 · 1815) — Mutopia Project · 악보 입력 Ph. Raynaud · 퍼블릭 도메인
+swanee.json : 스와니 강 (주제와 변주) (포스터 · 1851) — Mutopia Project · 악보 입력 Louie van Bommel · CC BY-SA 3.0
+greensleeves.json : 그린슬리브스 (영국 민요) — Mutopia Project · 악보 입력 Ralf Axel Gehlert · 퍼블릭 도메인
+amazing.json : 어메이징 그레이스 (영국 찬송가 · 1779) — Mutopia Project · 악보 입력 Breizh Partitions · CC BY-SA 3.0
+silent.json : 고요한 밤 거룩한 밤 (그루버 · 1818) — Mutopia Project · 악보 입력 Steve Dunlop · 퍼블릭 도메인
+adeste.json : 참 반가운 신도여 (웨이드 · 1751) — Mutopia Project · 악보 입력 Matt Corks · 퍼블릭 도메인
+joyworld.json : 기쁘다 구주 오셨네 (헨델 편곡 · 1839) — Mutopia Project · 악보 입력 Steve Dunlop · 퍼블릭 도메인

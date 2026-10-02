@@ -735,3 +735,8 @@
         .bgm-mini-x { padding: 7px 12px 7px 8px; color: var(--primary-accent); font-size: 14px; }
         @media (prefers-reduced-motion: reduce) { .bgm-eq.on i { animation: none; height: 10px; } }
         @media (max-width: 560px) { .bgm-mini { bottom: 52px; } }   /* 좁은 화면 : 왼쪽 아래 저장 표시와 겹치지 않게 한 줄 위로 */
+        .bgm-seek { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: #999; font-variant-numeric: tabular-nums; }
+        .bgm-seek input { flex: 1; min-width: 0; accent-color: var(--primary-accent); }
+        .bgm-seek input:disabled { opacity: .45; }
+        .bgm-song-len { margin-left: auto; padding-left: 6px; font-size: 11px; color: #aaa; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .bgm-note a { color: var(--primary-accent); }
