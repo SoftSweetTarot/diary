@@ -1151,3 +1151,18 @@
         .at-go { padding: 15px; border-radius: 14px; border: none; font-size: 17px; font-weight: bold; cursor: pointer; font-family: inherit;
             background: linear-gradient(#ff9a8b, #f2667a); color: #fff; box-shadow: 0 4px 0 #c94a5c; }
         .at-go:disabled { background: #f0e2da; color: #8a6a58; box-shadow: none; cursor: default; font-size: 15px; }
+
+        /* ===== 📲 앱으로 설치 (js/install.js) ===== */
+        .settings-grid .install-btn { grid-column: 1 / -1; background: linear-gradient(#fff0f5, #ffe1ec); border-color: #ff9ab3; }
+        .settings-grid .install-btn[hidden] { display: none; }
+        .modal-content.ins-content { max-width: 360px; }
+        .ins-lead { margin: 4px 0 12px; font-size: 15px; line-height: 1.6; text-align: center; color: #5a3d4a; }
+        .ins-steps { margin: 0; padding: 0; list-style: none; counter-reset: ins; display: flex; flex-direction: column; gap: 8px; }
+        .ins-steps li { counter-increment: ins; position: relative; padding: 12px 12px 12px 48px; background: #fff7fa; border: 1.5px solid #ffd3e0; border-radius: 14px;
+            font-size: 14.5px; line-height: 1.65; text-align: left; word-break: keep-all; }
+        .ins-steps li::before { content: counter(ins); position: absolute; left: 12px; top: 12px; width: 26px; height: 26px; border-radius: 50%;
+            background: #ff8fab; color: #fff; font-weight: bold; display: grid; place-items: center; font-size: 14px; }
+        .ins-ic { width: 22px; height: 22px; vertical-align: -5px; color: #2f7bf6; background: #eef4ff; border-radius: 6px; padding: 2px; }
+        .ins-key { display: inline-block; min-width: 22px; padding: 0 5px; border-radius: 6px; background: #eef0f4; color: #333; text-align: center; font-size: 15px; line-height: 22px; }
+        .ins-note { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: #8a6a78; text-align: left; word-break: keep-all; }
+        .ins-go { width: 100%; justify-content: center; font-size: 16px; padding: 12px; background: #ff8fab; color: #fff; border-color: #ff8fab; }

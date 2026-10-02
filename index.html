@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🎀 말랑달콤 다이어리 🎀</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffb6c1">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="말랑달콤">
     
     <!-- Google Fonts (UI 폰트 / 글쓰기 폰트 선택용) -->
     <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Gowun+Dodum&family=Sunflower:wght@500&family=Jua&family=Do+Hyeon&family=Hi+Melody&family=Poor+Story&family=Single+Day&family=Gamja+Flower&family=Yeon+Sung&family=East+Sea+Dokdo&family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&family=Nanum+Myeongjo&family=Cute+Font&family=Dongle&family=Song+Myung&family=Stylish&family=Kirang+Haerang&family=Gugi&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -11,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261002-57">
+    <link rel="stylesheet" href="css/style.css?v=20261002-58">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -160,6 +167,7 @@
                 <div class="help-rows">
                     <div class="help-k">📐 페이지 크기</div><div class="help-v">다이어리 가로·세로 크기</div>
                     <div class="help-k">⚙️ 설정</div><div class="help-v">폰트 · 자동 저장 주기 · 백업 · 저장 용량</div>
+                    <div class="help-k">📲 앱으로 설치</div><div class="help-v">⚙ 설정 → 📲 앱으로 설치하기 : 홈 화면에 아이콘이 생겨 앱처럼 열려요</div>
                     <div class="help-k">💌 💝</div><div class="help-v">건의함 · 후원</div>
                 </div>
                 <div class="help-note">💡 작은 창은 <b>제목을 끌어 옮기고</b>, <b>👀 꾹 눌러 보기</b>로 뒤의 다이어리를 확인할 수 있어요.</div>
@@ -519,8 +527,17 @@
                 <button class="btn service-btn" onclick="openFromSettingsMenu('settingsModal')"><span class="service-icon">⚙️</span>설정<small>폰트·저장·백업·용량</small></button>
                 <button class="btn service-btn" onclick="openFromSettingsMenu('feedbackModal')"><span class="service-icon">💌</span>건의함<small>제작자에게 의견 보내기</small></button>
                 <button class="btn service-btn" onclick="openFromSettingsMenu('donateModal')"><span class="service-icon">💝</span>후원<small>말랑달콤 응원하기</small></button>
+                <button class="btn service-btn install-btn" id="installBtn" onclick="openInstall()" hidden><span class="service-icon">📲</span>앱으로 설치하기<small>홈 화면에 말랑달콤 아이콘 만들기</small></button>
             </div>
             <button class="btn" style="width:100%; margin-top:12px; justify-content:center;" onclick="closeModal('settingsMenuModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 📲 앱으로 설치하는 방법 (js/install.js) -->
+    <div class="modal" id="installModal">
+        <div class="modal-content ins-content">
+            <div class="modal-title">📲 앱으로 설치하기</div>
+            <div id="installGuide"></div>
         </div>
     </div>
 
@@ -682,37 +699,38 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261002-57"></script>
-    <script src="js/app.js?v=20261002-57"></script>
-    <script src="js/page.js?v=20261002-57"></script>
-    <script src="js/elements.js?v=20261002-57"></script>
-    <script src="js/settings.js?v=20261002-57"></script>
-    <script src="js/patterns.js?v=20261002-57"></script>
+    <script src="js/drive.js?v=20261002-58"></script>
+    <script src="js/app.js?v=20261002-58"></script>
+    <script src="js/page.js?v=20261002-58"></script>
+    <script src="js/elements.js?v=20261002-58"></script>
+    <script src="js/settings.js?v=20261002-58"></script>
+    <script src="js/patterns.js?v=20261002-58"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261002-57"></script>
-    <script src="js/skins.js?v=20261002-57"></script>
-    <script src="js/pattern-maker.js?v=20261002-57"></script>
-    <script src="js/doll-render.js?v=20261002-57"></script>
-    <script src="js/doll-store.js?v=20261002-57"></script>
-    <script src="js/doll-room.js?v=20261002-57"></script>
-    <script src="js/service.js?v=20261002-57"></script>
+    <script src="js/pattern-recipe.js?v=20261002-58"></script>
+    <script src="js/skins.js?v=20261002-58"></script>
+    <script src="js/pattern-maker.js?v=20261002-58"></script>
+    <script src="js/doll-render.js?v=20261002-58"></script>
+    <script src="js/doll-store.js?v=20261002-58"></script>
+    <script src="js/doll-room.js?v=20261002-58"></script>
+    <script src="js/service.js?v=20261002-58"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261002-57"></script>
+    <script src="js/gacha.js?v=20261002-58"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261002-57"></script>
+    <script src="js/bgm.js?v=20261002-58"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261002-57"></script>
+    <script src="js/fortune.js?v=20261002-58"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261002-57"></script>
+    <script src="js/arcade.js?v=20261002-58"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/dream.js?v=20261002-57"></script>
+    <script src="js/dream.js?v=20261002-58"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261002-57"></script>
-    <script src="js/plant.js?v=20261002-57"></script>
-    <script src="js/attend.js?v=20261002-57"></script>
+    <script src="js/tojeong.js?v=20261002-58"></script>
+    <script src="js/plant.js?v=20261002-58"></script>
+    <script src="js/attend.js?v=20261002-58"></script>
+    <script src="js/install.js?v=20261002-58"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
