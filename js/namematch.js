@@ -3,11 +3,12 @@
    - 옛날 교실에서 하던 '획수 궁합' : 두 이름을 한 글자씩 번갈아 쓰고, 글자 획수를 옆끼리 더해(일의 자리만) 두 자리가 남을 때까지
    - 누가 먼저 쓰느냐에 따라 결과가 달라져요 → '반대로 보면' 도 함께
    - 사이 : 💕 썸·연인 · 👭 친구 · 🏡 가족 → 풀이 말이 달라져요
-   - 내 이름은 설정에 기억 (드라이브 settings.json 'diary_nm_name' · 게스트는 이 기기에만)
+   - 효과음 : 파일 없이 만든 소리 (글자 톡 · 숫자 또르륵 · 심장 두근 · 드럼 · 팡파레) · 🔊 버튼으로 끄고 켜기
+   - 이름은 어디에도 저장하지 않아요
    - 📌 다이어리에 붙이기 : 궁합 카드 그림 (SVG)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (이름 궁합만 '준비 중') */
 
-        const NM_KEY = 'diary_nm_name', NM_LOCAL = 'malang_nm_name', NM_MAX = 5;
+        const NM_MAX = 5;
         /* 글자 획수 : 초성 · 중성 · 종성 (유니코드 순서) */
         const NM_CHO = [1, 2, 1, 2, 4, 3, 3, 4, 8, 2, 4, 1, 3, 6, 4, 2, 3, 4, 3];
         const NM_JUNG = [2, 3, 3, 4, 2, 3, 3, 4, 2, 4, 5, 3, 3, 2, 4, 5, 3, 3, 1, 2, 1];
@@ -49,9 +50,8 @@
             friend: ['📸 네컷 사진 찍기', '🍰 디저트 투어', '🛍️ 소품샵 구경', '🎤 노래방 가기', '☕ 카페에서 수다', '🧁 같이 베이킹', '🚌 당일치기 여행', '🎮 같이 게임하기'],
             family: ['🍲 같이 저녁 먹기', '🌳 공원 산책', '🧺 소풍 가기', '🎬 집에서 영화 보기', '📷 가족사진 찍기', '🍓 과일 따기 체험', '♨️ 온천 여행', '🎂 작은 파티 하기']
         };
-        const nm = { built: false, rel: 'love', res: null, timer: [] };
+        const nm = { built: false, rel: 'love', res: null, timer: [], sound: true, ac: null, noise: null };
         const nmq = id => document.getElementById(id);
-        const nmSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
         const nmEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
         /* ---------- 계산 ---------- */
@@ -69,9 +69,48 @@
         }
         function nmSeed(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 
-        /* ---------- 내 이름 기억 ---------- */
-        function nmMyName() { try { return JSON.parse((nmSync() ? store.getItem(NM_KEY) : localStorage.getItem(NM_LOCAL)) || '""') || ''; } catch (e) { return ''; } }
-        function nmKeepName(v) { const t = JSON.stringify(v); try { if (nmSync()) { if (store.getItem(NM_KEY) !== t) store.setItem(NM_KEY, t); } else localStorage.setItem(NM_LOCAL, t); } catch (e) {} }
+        /* ---------- 🔊 효과음 (파일 없이 만들어요 · 아이폰 무음 모드에서도 들리게) ---------- */
+        function nmAudio() {
+            if (!nm.sound) return null;
+            try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+            if (!nm.ac) { try { nm.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+            if (nm.ac.state !== 'running') { try { const p = nm.ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+            return nm.ac;
+        }
+        function nmTone(f, dur, vol, type, at, f2) {      // 맑은 음 하나 (f2 : 끝 음높이로 미끄러지기)
+            const ac = nmAudio(); if (!ac) return;
+            const t = ac.currentTime + (at || 0), o = ac.createOscillator(), g = ac.createGain();
+            o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
+            if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+        }
+        function nmNoise(dur, vol, at, freq) {             // 드럼 · 바람 소리
+            const ac = nmAudio(); if (!ac) return;
+            if (!nm.noise) { const n = ac.sampleRate * 0.5, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; nm.noise = buf; }
+            const t = ac.currentTime + (at || 0), src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+            src.buffer = nm.noise; f.type = 'bandpass'; f.frequency.value = freq || 1800; f.Q.value = 1.2;
+            g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + dur + 0.02);
+        }
+        const NM_SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760];
+        const nmSfx = {
+            pop: i => nmTone(NM_SCALE[i % NM_SCALE.length], .16, .16, 'triangle'),                 // 글자 톡
+            tick: () => nmTone(1400 + Math.random() * 500, .04, .05, 'square'),                    // 숫자 굴러가는 소리
+            settle: i => nmTone(660 + (i || 0) * 40, .12, .1, 'sine', 0, 990 + (i || 0) * 40),    // 숫자 멈춤 또르륵
+            row: () => nmNoise(.18, .08, 0, 3200),                                                  // 줄 내려옴 슉
+            beat: () => { nmTone(70, .16, .5, 'sine', 0, 45); nmTone(64, .14, .38, 'sine', .2, 42); },   // 두근(쿵·쿵)
+            roll: ms => { for (let k = 0; k < ms / 45; k++) nmNoise(.05, .05 + .12 * k / (ms / 45), k * .045, 900); },   // 두구두구 (점점 크게)
+            reveal: () => { nmTone(1047, .5, .22, 'triangle'); nmTone(1568, .6, .12, 'sine', .05); nmNoise(.12, .15, 0, 600); },
+            fanfare: pct => {
+                const up = pct >= 75 ? [523, 659, 784, 1047, 1319, 1568] : pct >= 50 ? [523, 659, 784, 1047] : [392, 523, 494, 659];
+                up.forEach((f, i) => nmTone(f, .45, .16, 'triangle', i * .09));
+                for (let k = 0; k < 10; k++) nmTone(2000 + Math.random() * 2000, .25, .05, 'sine', .3 + k * .05);   // 반짝반짝
+            },
+            count: () => nmTone(500, .9, .07, 'sine', 0, 1500)
+        };
+        function nmToggleSound() { nm.sound = !nm.sound; nmSoundMark(); if (nm.sound) nmSfx.pop(4); }
+        const nmSoundMark = () => { const b = nmq('nmSnd'); if (b) { b.textContent = nm.sound ? '🔊' : '🔇'; b.setAttribute('aria-label', nm.sound ? '소리 끄기' : '소리 켜기'); } };
 
         /* ---------- 화면 ---------- */
         function nmBuild() {
@@ -117,7 +156,6 @@
             const a = clean(nmq('nmA').value), b = clean(nmq('nmB').value);
             if (!a || !b) { toast('💕 두 사람 이름을 모두 적어 주세요'); (a ? nmq('nmB') : nmq('nmA')).focus(); return; }
             if (!/^[가-힣]+$/.test(a + b)) { toast('💕 이름은 한글로만 적어 주세요 (예: 김말랑)'); return; }
-            nmKeepName(a);
             const r1 = nmCalc(a, b), r2 = nmCalc(b, a);
             const tier = NM_TIERS.find(t => r1.pct >= t.min), ti = NM_TIERS.indexOf(tier);
             const seed = nmSeed(a + '|' + b + '|' + nm.rel);
@@ -135,11 +173,12 @@
             let t = 0;
             const at = (ms, fn) => { t += ms; nm.timer.push(setTimeout(fn, t)); };
             const msg = m => { const el = nmq('nmMsg'); if (el) { el.textContent = m; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } };
-            const roll = (sp, v, ms) => {                 // 숫자가 슬롯처럼 굴러가다 멈춰요
+            const roll = (sp, v, ms, i, big) => {         // 숫자가 슬롯처럼 굴러가다 멈춰요
                 sp.classList.add('rolling');
-                const iv = setInterval(() => { sp.textContent = Math.floor(Math.random() * 10); }, 60);
+                let n = 0;
+                const iv = setInterval(() => { sp.textContent = Math.floor(Math.random() * 10); if (!big && n++ % 2 === 0) nmSfx.tick(); }, 60);
                 nm.timer.push(iv);
-                nm.timer.push(setTimeout(() => { clearInterval(iv); sp.textContent = v; sp.classList.remove('rolling'); sp.classList.add('done'); }, ms));
+                nm.timer.push(setTimeout(() => { clearInterval(iv); sp.textContent = v; sp.classList.remove('rolling'); sp.classList.add('done'); big ? nmSfx.reveal() : nmSfx.settle(i); }, ms));
             };
             const addRow = (vals, cls) => {
                 const row = document.createElement('div');
@@ -148,18 +187,19 @@
                 nmq('nmRows').appendChild(row);
                 return [...row.children];
             };
-            box.innerHTML = `<p class="nm-msg" id="nmMsg"></p>
+            box.innerHTML = `<button class="nm-snd" type="button" id="nmSnd" onclick="nmToggleSound()"></button><p class="nm-msg" id="nmMsg"></p>
               <div class="nm-row nm-chars">${r1.chars.map(([ch, w]) => `<span class="${w ? 'you' : 'me'}">${ch}</span>`).join('')}</div>
               <div id="nmRows" class="nm-rows"></div>`;
             const chars = [...box.querySelectorAll('.nm-chars span')], last = r1.rows.length - 1;
+            nmSoundMark();
             msg('✍️ 두 이름을 번갈아 써 볼게요');
-            chars.forEach((sp, i) => at(i ? 170 : 250, () => sp.classList.add('in')));
+            chars.forEach((sp, i) => at(i ? 170 : 250, () => { sp.classList.add('in'); nmSfx.pop(i); }));
             r1.rows.forEach((vals, ri) => {
                 if (ri < last) {
                     at(ri ? 520 : 500, () => {
                         msg(ri ? NM_MSGS[(ri - 1) % NM_MSGS.length] : '✏️ 한 글자씩 획수를 세는 중…');
-                        const sps = addRow(vals);
-                        sps.forEach((sp, i) => roll(sp, vals[i], ri ? 380 : 420 + i * 110));
+                        const sps = addRow(vals); nmSfx.row();
+                        sps.forEach((sp, i) => roll(sp, vals[i], ri ? 380 + i * 25 : 420 + i * 110, i));
                     });
                     if (!ri) t += vals.length * 110;
                     return;
@@ -168,14 +208,16 @@
                 at(ri ? 600 : 500, () => {
                     msg('결과는…');
                     nmq('nmRoom').classList.add('nm-tense');
-                    const sps = addRow(vals, 'nm-final');
+                    addRow(vals, 'nm-final'); nmSfx.row();
                     box.insertAdjacentHTML('beforeend', '<div class="nm-beat" id="nmBeat">💗</div>');
+                    [0, 750].forEach(d => nm.timer.push(setTimeout(nmSfx.beat, d + 60)));      // 하트 박자에 맞춰 두근 · 두근
                 });
-                at(1500, () => { const h = nmq('nmBeat'); if (h) h.remove(); msg('두구두구두구…'); roll(box.querySelector('.nm-final span'), vals[0], 650); });
-                at(1350, () => { msg('하나 더…!'); roll(box.querySelectorAll('.nm-final span')[vals.length > 1 ? 1 : 0], vals[vals.length - 1], 900); });
+                at(1500, () => { const h = nmq('nmBeat'); if (h) h.remove(); msg('두구두구두구…'); nmSfx.roll(650); roll(box.querySelector('.nm-final span'), vals[0], 650, 0, true); });
+                at(1350, () => { msg('하나 더…!'); nmSfx.roll(900); roll(box.querySelectorAll('.nm-final span')[vals.length > 1 ? 1 : 0], vals[vals.length - 1], 900, 1, true); });
                 at(1050, () => {
                     nmq('nmRoom').classList.remove('nm-tense');
                     msg(r1.pct >= 75 ? '꺄아! 💕' : r1.pct >= 50 ? '오오~ 💗' : '두둥! 🌈');
+                    nmSfx.fanfare(r1.pct);
                     const fx = document.createElement('div'); fx.className = 'nm-burst';
                     fx.innerHTML = Array.from({ length: 16 }, (_, i) => `<i style="--a:${i * 22.5}deg;--d:${70 + (i % 3) * 30}px">${['💗', '💕', '✨', '💖'][i % 4]}</i>`).join('');
                     box.appendChild(fx);
@@ -203,6 +245,7 @@
               </div>`;
             res.hidden = false;
             const num = nmq('nmNum'), t0 = performance.now(), dur = 900;
+            nmSfx.count();
             const tick = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); num.textContent = Math.round(r1.pct * e); if (k < 1 && nm.res && !res.hidden) requestAnimationFrame(tick); };
             requestAnimationFrame(tick);
             requestAnimationFrame(() => { nmq('nmFill').style.width = r1.pct + '%'; });
@@ -245,10 +288,9 @@ ${hearts}
         function openNameMatch() {
             if (typeof closeModal === 'function') closeModal('serviceModal');
             nmBuild(); nmSetRel(nm.rel); nmShow(1);
-            if (!nmq('nmA').value) nmq('nmA').value = nmMyName();
             nmq('nmRoom').classList.add('show');
             document.body.classList.add('fc-lock');
-            if (!/Mobi|Android|iPad/i.test(navigator.userAgent)) setTimeout(() => nmq(nmq('nmA').value ? 'nmB' : 'nmA').focus(), 60);
+            if (!/Mobi|Android|iPad/i.test(navigator.userAgent)) setTimeout(() => nmq('nmA').focus(), 60);
         }
         function closeNameMatch() {
             nm.timer.forEach(clearTimeout); nm.timer = [];
