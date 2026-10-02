@@ -11,6 +11,7 @@
   - 열기 : PC 크롬(또는 엣지)에서 https://softsweettarot.github.io/diary/recorder.html
            (다이어리와 같은 주소에서 열어야 마우스 커서 · 클릭 효과가 영상에 함께 찍혀요)
   - F2 : 녹화 시작 / 끝 → 끝날 때마다 mp4 파일로 저장 (저장 폴더를 골라 두면 그 폴더에 바로, 아니면 '다운로드' 폴더)
+  - 영상 : 1920×1080 (가로) · 1080×1920 (세로) 등 정해진 크기 · 1초 30장 · H.264 + AAC 보통 mp4 (mp4-muxer : MIT 라이선스)
   - 처음 F2 를 누르면 크롬이 '이 탭 공유' 창을 띄워요 → '탭 오디오도 공유' 를 켜고 [공유] (한 번만 하면 창을 닫을 때까지 계속 써요)
   - H : 오른쪽 설정판 숨기기 / 보이기 (설정판은 영상에 찍히지 않아요)
   - 설정은 이 PC 에 기억돼요.
@@ -86,6 +87,7 @@
     #toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); background: rgba(40,30,40,.88); color: #fff; padding: 9px 16px; border-radius: 12px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; }
     #toast.show { opacity: 1; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.js"></script>
 </head>
 <body>
 <div id="wrap">
@@ -98,6 +100,7 @@
 </div>
 <div id="hint">F2 녹화 시작/끝 · H 설정판 숨기기</div>
 <div id="toast"></div>
+<video id="srcVideo" muted playsinline style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none"></video>
 
 <aside id="panel">
     <h1>🎬 시연 영상 녹화</h1>
@@ -274,7 +277,7 @@
         [['size', '%'], ['ox', '%'], ['oy', '%'], ['tilt', '°']].forEach(([k, u]) => { $(k).value = S[k]; $(k + 'V').textContent = S[k] + u; });
         ['deco', 'showCursor', 'showClick'].forEach(k => { $(k).checked = !!S[k]; });
     }
-    function changed(relayout) { save(); renderPanel(); paintBg(); if (relayout) layoutStage(); else placeDevice(); }
+    function changed(relayout) { save(); renderPanel(); paintBg(); if (relayout) layoutStage(); else placeDevice(); info(); }
     ['size', 'ox', 'oy', 'tilt'].forEach(k => $(k).addEventListener('input', e => { S[k] = +e.target.value; $(k + 'V').textContent = S[k] + (k === 'tilt' ? '°' : '%'); placeDevice(); save(); }));
     ['deco', 'showCursor', 'showClick'].forEach(k => $(k).addEventListener('change', e => { S[k] = e.target.checked; save(); paintBg(); if (k === 'showCursor' && !S[k]) $('cursor').style.display = 'none'; }));
     $('c1').addEventListener('input', e => { bgImage = ''; S.c1 = e.target.value; if (S.kind === 'solid') S.c2 = S.c1; changed(); });
@@ -336,13 +339,17 @@
         w.innerHTML = '⚠️ 이 도구를 컴퓨터 파일로 직접 열어서 <b>마우스 커서 · 클릭 효과가 영상에 찍히지 않아요.</b><br>크롬 주소창에 <b>softsweettarot.github.io/diary/recorder.html</b> 을 열어 주세요.';
     }
 
-    /* ---------- 🎬 녹화 (F2) ---------- */
-    let stream = null, rec = null, chunks = [], t0 = 0, timer = 0, dirHandle = null, dirOk = false, cropped = false;
-    const MIMES = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1.4d0028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'];
-    const mime = () => (window.MediaRecorder && MIMES.find(m => MediaRecorder.isTypeSupported(m))) || '';
+    /* ---------- 🎬 녹화 (F2) ----------
+       크롬이 녹화한 영상을 그대로 저장하면 기기 · 플레이어에 따라 화면이 뭉개질 수 있어서,
+       ① 무대 화면을 정해진 크기(1920×1080 등)의 그림판에 1초 30번 옮겨 그리고
+       ② 그 그림을 H.264(영상) + AAC(소리)로 직접 압축해서 ③ 어디서나 열리는 '보통 mp4' 로 만들어요. (WebCodecs + mp4-muxer) */
+    let stream = null, R = null, timer = 0, dirHandle = null, dirOk = false, cropped = false;
+    const FPS = 30, KEY_EVERY = FPS * 2;
+    const OUT = { '16:9': [1920, 1080], '9:16': [1080, 1920], '1:1': [1080, 1080], '4:5': [1080, 1350] };
+    const canMp4 = () => !!(window.VideoEncoder && window.Mp4Muxer);
     function info() {
-        const m = mime();
-        $('recInfo').innerHTML = (m.startsWith('video/mp4') ? '✅ mp4 로 저장돼요' : '⚠️ 이 브라우저는 mp4 녹화를 못 해서 webm 으로 저장돼요 (크롬 최신 버전을 써 주세요)')
+        $('recInfo').innerHTML = (canMp4() ? '✅ mp4 (H.264) 로 저장돼요' : '⚠️ 이 브라우저는 mp4 를 만들 수 없어서 webm 으로 저장돼요 (PC 크롬 최신 버전을 써 주세요)')
+            + ` · ${(OUT[S.ratio] || OUT['16:9']).join('×')}`
             + '<br>' + (dirHandle ? (dirOk ? `📁 저장 폴더 : <b>${dirHandle.name}</b>` : `📁 <b>${dirHandle.name}</b> 폴더를 쓰려면 위 버튼을 한 번 눌러 허용해 주세요 (안 누르면 다운로드 폴더)`) : '📁 저장 폴더를 안 고르면 \'다운로드\' 폴더에 저장돼요')
             + (stream && !stream.getAudioTracks().length ? '<br>🔇 <b>지금은 소리 없이 녹화돼요.</b> 이 창을 새로고침한 뒤 공유 창에서 \'탭 오디오도 공유\'를 켜 주세요.'
                 : '<br>처음 녹화할 때 크롬 공유 창에서 <b>\'탭 오디오도 공유\'</b>를 켜야 소리가 같이 녹화돼요.');
@@ -350,36 +357,111 @@
     async function getStream() {
         if (stream && stream.getVideoTracks()[0] && stream.getVideoTracks()[0].readyState === 'live') return stream;
         stream = await navigator.mediaDevices.getDisplayMedia({
-            video: { frameRate: { ideal: 60 }, displaySurface: 'browser', cursor: 'never' },
+            video: { frameRate: { ideal: 60 }, displaySurface: 'browser' },
             audio: { suppressLocalAudioPlayback: false, echoCancellation: false, noiseSuppression: false, autoGainControl: false },
             preferCurrentTab: true, selfBrowserSurface: 'include', surfaceSwitching: 'exclude', systemAudio: 'include'
         });
         const v = stream.getVideoTracks()[0];
         cropped = false;
         try { if (window.CropTarget && v.cropTo) { await v.cropTo(await CropTarget.fromElement($('stage'))); cropped = true; } } catch (e) {}
-        v.addEventListener('ended', () => { if (rec && rec.state !== 'inactive') rec.stop(); stream = null; });
+        v.addEventListener('ended', () => { if (R) stopRec(); stream = null; });
+        const vid = $('srcVideo'); vid.srcObject = new MediaStream([v]); await vid.play().catch(() => {});
         info();
         return stream;
     }
+    async function pickVideoCodec(w, h) {
+        for (const codec of ['avc1.64002A', 'avc1.640028', 'avc1.4D002A', 'avc1.42E02A', 'vp09.00.40.08']) {   // H.264 이 안 되는 컴퓨터만 VP9
+            const avc = codec.startsWith('avc');
+            const c = Object.assign({ codec, width: w, height: h, bitrate: 10000000, framerate: FPS }, avc ? { avc: { format: 'avc' } } : {});
+            try { if ((await VideoEncoder.isConfigSupported(c)).supported) return [c, avc ? 'avc' : 'vp9']; } catch (e) {}
+        }
+        return [null];
+    }
+    async function pickAudioCodec(sr, ch) {
+        for (const [codec, mux] of [['mp4a.40.2', 'aac'], ['opus', 'opus']]) {
+            const c = { codec, sampleRate: sr, numberOfChannels: ch, bitrate: 192000 };
+            try { if ((await AudioEncoder.isConfigSupported(c)).supported) return [c, mux]; } catch (e) {}
+        }
+        return [null];
+    }
     async function startRec() {
+        if (R || $('recBtn').disabled) return;
         try { await getStream(); } catch (e) { toast('녹화를 시작하지 못했어요 (공유를 취소했거나 막혀 있어요)'); return; }
         if (!cropped) document.body.classList.add('nopanel'), layoutStage();
-        chunks = [];
-        const m = mime();
-        rec = new MediaRecorder(stream, m ? { mimeType: m, videoBitsPerSecond: 12000000, audioBitsPerSecond: 192000 } : undefined);
-        rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-        rec.onstop = saveRec;
-        rec.start(1000);
-        t0 = Date.now();
+        const [W, H] = OUT[S.ratio] || OUT['16:9'];
+        const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+        const cx = cv.getContext('2d', { alpha: false });
+        const vid = $('srcVideo');
+        const draw = () => { if (vid.videoWidth) cx.drawImage(vid, 0, 0, W, H); };
+        R = { W, H, cv, last: -1, t0: performance.now(), stopping: false };
+        const aTrack = stream.getAudioTracks()[0];
+        const [vcfg, vmux] = canMp4() ? await pickVideoCodec(W, H) : [null];
+        if (vcfg) {
+            const as = aTrack ? aTrack.getSettings() : {}, sr = as.sampleRate || 48000, ch = Math.min(2, as.channelCount || 2);
+            const [acfg, amux] = aTrack && window.AudioEncoder && window.MediaStreamTrackProcessor ? await pickAudioCodec(sr, ch) : [null];
+            R.mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), fastStart: 'in-memory', firstTimestampBehavior: 'offset',
+                video: { codec: vmux, width: W, height: H, frameRate: FPS }, audio: acfg ? { codec: amux, sampleRate: sr, numberOfChannels: ch } : undefined });
+            R.venc = new VideoEncoder({ output: (c, m) => R.mux.addVideoChunk(c, m), error: e => console.error(e) });
+            R.venc.configure(vcfg);
+            if (acfg) {
+                R.aenc = new AudioEncoder({ output: (c, m) => R.mux.addAudioChunk(c, m), error: e => console.error(e) });
+                R.aenc.configure(acfg);
+                R.aTrack = aTrack.clone();
+                R.aReader = new MediaStreamTrackProcessor({ track: R.aTrack }).readable.getReader();
+                (async () => {
+                    while (R && !R.stopping) {
+                        const { value, done } = await R.aReader.read().catch(() => ({ done: true }));
+                        if (done || !value) break;
+                        if (R.aenc.state === 'configured' && value.sampleRate === sr) R.aenc.encode(value);
+                        value.close();
+                    }
+                })();
+            }
+            R.tick = () => {
+                draw();
+                const k = Math.round((performance.now() - R.t0) * FPS / 1000);      // 지금이 몇 번째 장면인지 (시간에 딱 맞춰서)
+                if (k <= R.last || R.venc.encodeQueueSize > 4) return;              // 이미 찍은 장면 · 컴퓨터가 바쁘면 건너뛰기
+                const key = R.last < 0 || Math.floor(k / KEY_EVERY) > Math.floor(R.last / KEY_EVERY);
+                R.last = k;
+                const f = new VideoFrame(R.cv, { timestamp: Math.round(k * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+                R.venc.encode(f, { keyFrame: key }); f.close();
+            };
+        } else {                                                                  // mp4 를 못 만드는 브라우저 : webm
+            const out = new MediaStream([...cv.captureStream(FPS).getVideoTracks(), ...(aTrack ? [aTrack] : [])]);
+            const type = ['video/webm;codecs=vp9,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t));
+            R.chunks = []; R.rec = new MediaRecorder(out, { mimeType: type, videoBitsPerSecond: 10000000 });
+            R.rec.ondataavailable = e => { if (e.data.size) R.chunks.push(e.data); };
+            R.rec.start(1000);
+            R.tick = draw;
+        }
+        draw(); R.tick();
+        R.iv = setInterval(R.tick, 1000 / FPS);
         $('recState').classList.add('on'); $('recBtn').textContent = '⏹ 녹화 끝 (F2)';
-        timer = setInterval(() => { const s = (Date.now() - t0) / 1000 | 0; $('recState').textContent = `녹화 중 ${String(s / 60 | 0).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }, 250);
+        timer = setInterval(() => { const s = (performance.now() - R.t0) / 1000 | 0; $('recState').textContent = `녹화 중 ${String(s / 60 | 0).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }, 250);
     }
-    function stopRec() { if (rec && rec.state !== 'inactive') rec.stop(); }
-    async function saveRec() {
-        clearInterval(timer);
-        $('recState').classList.remove('on'); $('recState').textContent = '저장하는 중…'; $('recBtn').textContent = '⏺ 녹화 시작 (F2)';
-        const type = (rec && rec.mimeType) || 'video/webm', ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
-        const blob = new Blob(chunks, { type }); chunks = []; rec = null;
+    async function stopRec() {
+        if (!R || R.stopping) return;
+        const r = R; r.stopping = true;
+        clearInterval(r.iv); clearInterval(timer);
+        $('recState').classList.remove('on'); $('recState').textContent = '저장하는 중…'; $('recBtn').textContent = '⏺ 녹화 시작 (F2)'; $('recBtn').disabled = true;
+        let blob, ext;
+        try {
+            if (r.venc) {
+                if (r.aReader) { try { await r.aReader.cancel(); } catch (e) {} r.aTrack.stop(); }
+                await r.venc.flush(); if (r.aenc) await r.aenc.flush();
+                r.mux.finalize();
+                blob = new Blob([r.mux.target.buffer], { type: 'video/mp4' }); ext = 'mp4';
+                r.venc.close(); if (r.aenc) r.aenc.close();
+            } else {
+                await new Promise(res => { r.rec.onstop = res; r.rec.stop(); });
+                blob = new Blob(r.chunks, { type: 'video/webm' }); ext = 'webm';
+            }
+        } catch (e) { console.error(e); toast('⚠️ 영상을 만들지 못했어요 : ' + (e.message || e)); R = null; $('recBtn').disabled = false; $('recState').textContent = '대기 중'; return; }
+        R = null;
+        await saveFile(blob, ext);
+        $('recBtn').disabled = false;
+    }
+    async function saveFile(blob, ext) {
         const n = new Date(), p = v => String(v).padStart(2, '0');
         const name = `말랑다이어리_${n.getFullYear()}${p(n.getMonth() + 1)}${p(n.getDate())}_${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}.${ext}`;
         let where = '다운로드 폴더';
@@ -395,7 +477,7 @@
         $('recState').textContent = '대기 중';
         toast(`💾 저장했어요 : ${where} / ${name} (${(blob.size / 1048576).toFixed(1)}MB)`);
     }
-    function toggleRec() { (rec && rec.state === 'recording') ? stopRec() : startRec(); }
+    function toggleRec() { R ? stopRec() : startRec(); }
     function onKey(e) {
         if (e.key === 'F2') { e.preventDefault(); e.stopPropagation(); toggleRec(); return; }
         const tag = (e.target && e.target.tagName) || '';
