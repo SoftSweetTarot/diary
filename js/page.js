@@ -55,10 +55,27 @@
             return selectedElement ? selectedElement.querySelector('textarea') : null;
         }
 
+        /* 📷 사진 틀을 씌울 수 있는 사진 (SVG 그림 · 스티커 · 테이프 · 펜 그림은 제외) */
+        function getSelectedPhoto() {
+            const img = selectedElement && !selectedElement.querySelector('textarea') ? selectedElement.querySelector('img') : null;
+            if (!img || typeof setFrame !== 'function') return null;
+            return /^data:image\/svg/i.test(img.dataset.src || '') ? null : img;
+        }
+
         function updateTextPanel() {
             const panel = document.getElementById('textPanel');
             const ta = getSelectedTextarea();
+            if (!ta && getSelectedPhoto()) {                 // 사진 → 사진 꾸미기 (틀 · 글씨)
+                panel.dataset.mode = 'photo';
+                document.getElementById('textPanelTitle').textContent = '✥ 사진 꾸미기';
+                if (typeof updateFrameChips === 'function') updateFrameChips();
+                panel.style.display = 'flex';
+                positionTextPanel();
+                return;
+            }
             if (!ta) { panel.style.display = 'none'; return; }
+            panel.dataset.mode = 'text';
+            document.getElementById('textPanelTitle').textContent = '✥ 글 꾸미기';
 
             const fontSel = document.getElementById('textFontSelect');
             const font = ta.dataset.font || DEFAULT_TEXT_FONT;
@@ -85,7 +102,7 @@
 
         function positionTextPanel() {
             const panel = document.getElementById('textPanel');
-            if (!selectedElement || !getSelectedTextarea() || panel.style.display === 'none') return;
+            if (!selectedElement || !(getSelectedTextarea() || getSelectedPhoto()) || panel.style.display === 'none') return;
 
             const er = selectedElement.getBoundingClientRect();
             const pw = panel.offsetWidth, ph = panel.offsetHeight;
@@ -203,7 +220,7 @@
             return { type: ({ i: 'image', t: 'text', s: 'sticker', d: 'doll' })[d.t] || 'sticker', content: d.c,
                 posX: d.x || 0, posY: d.y || 0, scale: d.s || 1, rotation: d.r || 0,
                 width: d.w ? d.w + 'px' : '', height: d.h ? d.h + 'px' : '', zIndex: d.z || 1,
-                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp };
+                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp, frame: d.fr, caption: d.cp };
         }
 
         function readDayData(date) {

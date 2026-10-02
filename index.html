@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261002-68">
+    <link rel="stylesheet" href="css/style.css?v=20261002-69">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -88,22 +88,30 @@
     <!-- 글상자 꾸미기 패널 -->
     <div class="text-panel" id="textPanel">
         <div class="text-panel-handle" id="textPanelHandle">
-            <span>✥ 글 꾸미기</span>
+            <span id="textPanelTitle">✥ 글 꾸미기</span>
             <button class="panel-close" onclick="closeTextPanel()" title="옵션 닫기">✕</button>
         </div>
-        <div class="text-panel-row">
+        <div class="text-panel-row text-only">
             <label>글꼴</label>
             <select id="textFontSelect" class="btn" onchange="applyTextStyle()"></select>
         </div>
-        <div class="text-panel-row">
+        <div class="text-panel-row text-only">
             <label>색상</label>
             <input type="color" id="textColorInput" value="#444444" oninput="applyTextStyle()">
             <label>크기</label>
             <input type="number" id="textSizeInput" class="btn" min="8" max="120" value="18" oninput="applyTextStyle()">
         </div>
-        <div class="text-panel-row paper-row" id="paperRow" hidden>
+        <div class="text-panel-row paper-row text-only" id="paperRow" hidden>
             <label>모양</label>
             <div class="paper-chips" id="paperChips"></div>
+        </div>
+        <div class="text-panel-row paper-row photo-only" id="frameRow" hidden>
+            <label>틀</label>
+            <div class="paper-chips" id="frameChips"></div>
+        </div>
+        <div class="text-panel-row photo-only" id="captionRow" hidden>
+            <label>글씨</label>
+            <input type="text" id="captionInput" class="btn caption-input" placeholder="사진 아래에 쓸 말" oninput="applyCaption(this.value)">
         </div>
     </div>
 
@@ -136,6 +144,7 @@
                 <div class="help-rows">
                     <div class="help-k">누르기</div><div class="help-v">고르기 (빈 곳을 누르면 풀려요)</div>
                     <div class="help-k">끌기</div><div class="help-v">옮기기</div>
+                    <div class="help-k">📷 사진 틀</div><div class="help-v">사진을 누르고 ✥ 사진 꾸미기 → 틀 : 폴라로이드 · 필름 · 하트 … (폴라로이드는 아래에 글씨도!)</div>
                     <div class="help-k">🖍️ 펜</div><div class="help-v">펜 · 형광펜으로 그리고 밑줄 긋기 · ✓ 완료하면 그림 하나가 돼요</div>
                     <div class="help-k">📝 글상자 모양</div><div class="help-v">글상자를 고르고 ✥ 글 꾸미기 → 모양 : 줄노트 · 포스트잇 · 말풍선 · 편지지 · 칠판 …</div>
                     <div class="help-k">🎀 마스킹테이프</div><div class="help-v">🎨 스티커 → 🎀 마스킹테이프 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>
@@ -714,46 +723,47 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261002-68"></script>
-    <script src="js/app.js?v=20261002-68"></script>
-    <script src="js/page.js?v=20261002-68"></script>
-    <script src="js/elements.js?v=20261002-68"></script>
-    <script src="js/settings.js?v=20261002-68"></script>
-    <script src="js/patterns.js?v=20261002-68"></script>
+    <script src="js/drive.js?v=20261002-69"></script>
+    <script src="js/app.js?v=20261002-69"></script>
+    <script src="js/page.js?v=20261002-69"></script>
+    <script src="js/elements.js?v=20261002-69"></script>
+    <script src="js/settings.js?v=20261002-69"></script>
+    <script src="js/patterns.js?v=20261002-69"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261002-68"></script>
-    <script src="js/skins.js?v=20261002-68"></script>
-    <script src="js/pattern-maker.js?v=20261002-68"></script>
-    <script src="js/doll-render.js?v=20261002-68"></script>
-    <script src="js/doll-store.js?v=20261002-68"></script>
-    <script src="js/doll-room.js?v=20261002-68"></script>
-    <script src="js/service.js?v=20261002-68"></script>
+    <script src="js/pattern-recipe.js?v=20261002-69"></script>
+    <script src="js/skins.js?v=20261002-69"></script>
+    <script src="js/pattern-maker.js?v=20261002-69"></script>
+    <script src="js/doll-render.js?v=20261002-69"></script>
+    <script src="js/doll-store.js?v=20261002-69"></script>
+    <script src="js/doll-room.js?v=20261002-69"></script>
+    <script src="js/service.js?v=20261002-69"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261002-68"></script>
+    <script src="js/gacha.js?v=20261002-69"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261002-68"></script>
+    <script src="js/bgm.js?v=20261002-69"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261002-68"></script>
+    <script src="js/fortune.js?v=20261002-69"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261002-68"></script>
-    <script src="js/hof.js?v=20261002-68"></script>
+    <script src="js/arcade.js?v=20261002-69"></script>
+    <script src="js/hof.js?v=20261002-69"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/dream.js?v=20261002-68"></script>
+    <script src="js/dream.js?v=20261002-69"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261002-68"></script>
-    <script src="js/plant.js?v=20261002-68"></script>
-    <script src="js/attend-stickers.js?v=20261002-68"></script>
-    <script src="js/attend.js?v=20261002-68"></script>
-    <script src="js/luck.js?v=20261002-68"></script>
-    <script src="js/question-data.js?v=20261002-68"></script>
-    <script src="js/question.js?v=20261002-68"></script>
-    <script src="js/tape.js?v=20261002-68"></script>
-    <script src="js/paper.js?v=20261002-68"></script>
-    <script src="js/draw.js?v=20261002-68"></script>
-    <script src="js/install.js?v=20261002-68"></script>
+    <script src="js/tojeong.js?v=20261002-69"></script>
+    <script src="js/plant.js?v=20261002-69"></script>
+    <script src="js/attend-stickers.js?v=20261002-69"></script>
+    <script src="js/attend.js?v=20261002-69"></script>
+    <script src="js/luck.js?v=20261002-69"></script>
+    <script src="js/question-data.js?v=20261002-69"></script>
+    <script src="js/question.js?v=20261002-69"></script>
+    <script src="js/tape.js?v=20261002-69"></script>
+    <script src="js/paper.js?v=20261002-69"></script>
+    <script src="js/draw.js?v=20261002-69"></script>
+    <script src="js/frame.js?v=20261002-69"></script>
+    <script src="js/install.js?v=20261002-69"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

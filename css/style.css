@@ -1433,3 +1433,44 @@
         .draw-hint { font-size: 13px; color: #8a6a78; }
         .draw-done { background: #4caf7a !important; color: #fff !important; border-color: #4caf7a !important; font-weight: bold; padding: 8px 22px !important; }
         .draw-cancel { color: #a07888 !important; }
+
+        /* ===== 📷 사진 틀 (js/frame.js) : .fr-이름 은 다이어리 사진과 고르기 칩에 함께 쓰여요 ===== */
+        .text-panel[data-mode="photo"] .text-only, .text-panel[data-mode="text"] .photo-only { display: none !important; }
+        .caption-input { flex: 1; min-width: 0; font-family: 'Nanum Pen Script', cursive; font-size: 18px; padding: 4px 8px; }
+        #captionRow[hidden], #frameRow[hidden] { display: none; }
+        .fr-chip { position: relative; display: block; width: 30px; height: 26px; box-sizing: border-box; }
+        .fr-chip i { display: block; width: 100%; height: 100%; background: linear-gradient(135deg, #ffd1dc, #a8d8ff); }
+        .element-box[class*="fr-"] img { object-fit: cover; }
+        /* 폴라로이드 · 인스탁스 : 아래 넓은 여백 + 손글씨 */
+        .fr-polaroid, .fr-instax { background: #fff; padding: 9px 9px 38px !important; box-shadow: 0 6px 14px rgba(0,0,0,.18); }
+        .fr-instax { padding: 7px 7px 26px !important; border-radius: 4px; }
+        .element-box.fr-polaroid::after, .element-box.fr-instax::after { content: attr(data-caption); position: absolute; left: 8px; right: 8px; bottom: 6px; height: 26px;
+            font-family: 'Nanum Pen Script', 'Gaegu', cursive; font-size: 22px; line-height: 26px; color: #4a4a4a; text-align: center; white-space: nowrap; overflow: hidden; pointer-events: none; }
+        .element-box.fr-instax::after { bottom: 2px; height: 22px; font-size: 18px; line-height: 22px; }
+        .fr-chip.fr-polaroid { padding: 3px 3px 8px !important; } .fr-chip.fr-instax { padding: 2px 2px 6px !important; }
+        /* 필름 : 위아래 구멍 */
+        .fr-film, .fr-film2 { --fb: #1e1e1e; --fh: rgba(255,255,255,.85); padding: 16px 6px !important; border-radius: 2px;
+            background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='16'%3E%3Crect x='3' y='5' width='6' height='7' rx='1.5' fill='%23fff' fill-opacity='.85'/%3E%3C/svg%3E") repeat-x 0 0 / 12px 16px,
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='16'%3E%3Crect x='3' y='4' width='6' height='7' rx='1.5' fill='%23fff' fill-opacity='.85'/%3E%3C/svg%3E") repeat-x 0 100% / 12px 16px, var(--fb);
+            box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+        .fr-film2 { --fb: #7a4a2a; }
+        .fr-chip.fr-film, .fr-chip.fr-film2 { padding: 6px 2px !important; background-size: 6px 6px, 6px 6px, auto; }
+        /* 빈티지 스냅 : 톱니 모양 흰 테두리 */
+        .fr-snap { padding: 10px !important; filter: drop-shadow(0 3px 5px rgba(0,0,0,.2));
+            background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 2 L2 0 L4 2 L6 0 L8 2 L10 0 L12 2 L14 0 L16 2 L18 0 L20 2 L22 0 L24 2 L26 0 L28 2 L30 0 L32 2 L34 0 L36 2 L38 0 L40 2 L42 0 L44 2 L46 0 L48 2 L50 0 L52 2 L54 0 L56 2 L58 0 L60 2 L62 0 L64 2 L66 0 L68 2 L70 0 L72 2 L74 0 L76 2 L78 0 L80 2 L82 0 L84 2 L86 0 L88 2 L90 0 L92 2 L94 0 L96 2 L98 0 L100 2 L100 98 L98 100 L96 98 L94 100 L92 98 L90 100 L88 98 L86 100 L84 98 L82 100 L80 98 L78 100 L76 98 L74 100 L72 98 L70 100 L68 98 L66 100 L64 98 L62 100 L60 98 L58 100 L56 98 L54 100 L52 98 L50 100 L48 98 L46 100 L44 98 L42 100 L40 98 L38 100 L36 98 L34 100 L32 98 L30 100 L28 98 L26 100 L24 98 L22 100 L20 98 L18 100 L16 98 L14 100 L12 98 L10 100 L8 98 L6 100 L4 98 L2 100 L0 98Z' fill='%23fffdf6'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+        .element-box.fr-snap img { filter: sepia(.25) saturate(.9); }
+        .fr-chip.fr-snap { padding: 3px !important; }
+        /* 테이프 붙인 사진 : 흰 테두리 + 모서리 테이프 두 장 */
+        .fr-tape { background: #fff; padding: 6px !important; box-shadow: 0 4px 10px rgba(0,0,0,.15); }
+        .fr-tape::before, .fr-tape::after { content: ''; position: absolute; width: 46px; height: 16px; background: rgba(255,214,120,.75); pointer-events: none;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 4px, transparent 4px 8px); }
+        .fr-tape::before { top: -5px; left: -14px; transform: rotate(-35deg); }
+        .fr-tape::after { bottom: -5px; right: -14px; transform: rotate(-35deg); }
+        .fr-chip.fr-tape { padding: 3px !important; } .fr-chip.fr-tape::before, .fr-chip.fr-tape::after { width: 14px; height: 6px; left: -4px; top: -1px; }
+        .fr-chip.fr-tape::after { left: auto; top: auto; right: -4px; bottom: -1px; }
+        /* 동그라미 · 하트 · 구름 : 사진 모양만 바꿔요 (손잡이는 그대로) */
+        .element-box.fr-round img, .fr-chip.fr-round i { border-radius: 50%; box-shadow: 0 0 0 4px #fff, 0 4px 10px rgba(0,0,0,.18); aspect-ratio: 1; height: auto; }
+        .element-box.fr-heart img, .fr-chip.fr-heart i { -webkit-mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 92'%3E%3Cpath d='M50 90 C10 62 0 40 6 22 C12 4 36 -2 50 18 C64 -2 88 4 94 22 C100 40 90 62 50 90Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+            mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 92'%3E%3Cpath d='M50 90 C10 62 0 40 6 22 C12 4 36 -2 50 18 C64 -2 88 4 94 22 C100 40 90 62 50 90Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+        .element-box.fr-cloud img, .fr-chip.fr-cloud i { -webkit-mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 70'%3E%3Cpath d='M22 68 C6 68 0 56 4 46 C8 36 18 34 22 36 C22 18 38 8 52 14 C60 2 82 4 86 22 C98 24 102 40 96 52 C92 62 84 68 74 68Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+            mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 70'%3E%3Cpath d='M22 68 C6 68 0 56 4 46 C8 36 18 34 22 36 C22 18 38 8 52 14 C60 2 82 4 86 22 C98 24 102 40 96 52 C92 62 84 68 74 68Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }

@@ -493,6 +493,10 @@
                 if (h) item.h = Math.round(h);
                 item.z = parseInt(el.style.zIndex) || 1;
                 item.bw = el.offsetWidth; item.bh = el.offsetHeight;
+                if (img && el.dataset.frame) {                                  // 📷 사진 틀 (js/frame.js)
+                    item.fr = el.dataset.frame;
+                    if (el.dataset.caption) item.cp = el.dataset.caption;
+                }
                 if (textarea) {
                     if (el.dataset.paper) item.pp = el.dataset.paper;            // 📝 글상자 모양 (js/paper.js)
                     const fid = fontIdOf(textarea.dataset.font);
@@ -543,6 +547,10 @@
                 const img = document.createElement('img');
                 bindImage(img, data.content);
                 el.appendChild(img);
+                if (data.frame && /^[a-z0-9]{1,10}$/.test(data.frame)) {
+                    el.classList.add('fr-' + data.frame); el.dataset.frame = data.frame;
+                    if (data.caption) el.dataset.caption = String(data.caption).slice(0, 40);
+                }
             } else {
                 const span = document.createElement('span');
                 span.style.cssText = 'font-size:45px; display:inline-block;';
