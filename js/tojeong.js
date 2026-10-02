@@ -98,9 +98,7 @@
         }
 
 
-        /* ---------- 👵 토정비결 할머니 : 결과를 말해 주는 그림 ----------
-           images/tojeong-master.png 파일을 넣어 두면 그 그림을 쓰고 (AI 그림 등), 없으면 아래에 직접 그린 할머니 그림을 써요. */
-        const TJ_MASTER_IMG = 'images/tojeong-master.png';
+        /* ---------- 👵 토정비결 할머니 : 결과를 말해 주는 그림 (직접 그린 그림 · 파일 없음) ---------- */
         const TJ_MASTER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 240">
   <defs>
     <radialGradient id="cheek"><stop offset="0" stop-color="#ff9fb0" stop-opacity=".75"/><stop offset="1" stop-color="#ff9fb0" stop-opacity="0"/></radialGradient>
@@ -163,29 +161,14 @@
 `;
         const tjX = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const tjSvgUrl = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        function tjMasterUrl() { return tj.masterUrl || tjSvgUrl(TJ_MASTER_SVG); }
-        function tjFindMaster() {                         // 그림 파일이 있는지 한 번만 확인
-            if (tj.masterChecked) return;
-            tj.masterChecked = true;
-            const im = new Image();
-            im.onload = () => {
-                try {                                     // 다이어리에 붙일 때 쓰도록 작은 그림으로 바꿔 두기
-                    const k = Math.min(1, 360 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
-                    c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
-                    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-                    tj.masterUrl = c.toDataURL('image/png');
-                } catch (e) { tj.masterUrl = TJ_MASTER_IMG; }
-                document.querySelectorAll('.tj-master img').forEach(x => { x.src = tj.masterUrl; });
-            };
-            im.src = TJ_MASTER_IMG;
-        }
+        const TJ_MASTER_URL = tjSvgUrl(TJ_MASTER_SVG);
         /* 다이어리에 붙일 그림 : 할머니 + 말풍선 */
         function tjStickSvg(g, r) {
             const S = TJ_SANG[g.sang - 1], J = TJ_JUNG[g.jung - 1];
             const F = "'Nanum Myeongjo','AppleMyungjo','Batang','Noto Serif KR',serif";
             const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
             return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 360 250" width="360" height="250">
-<image href="${tjX(tjMasterUrl())}" xlink:href="${tjX(tjMasterUrl())}" x="0" y="40" width="190" height="207" preserveAspectRatio="xMidYMax meet"/>
+<image href="${tjX(TJ_MASTER_URL)}" xlink:href="${tjX(TJ_MASTER_URL)}" x="0" y="40" width="190" height="207" preserveAspectRatio="xMidYMax meet"/>
 <path d="M150 18 h196 a12 12 0 0 1 12 12 v118 a12 12 0 0 1 -12 12 h-150 l-26 22 l6 -22 h-26 a12 12 0 0 1 -12 -12 v-118 a12 12 0 0 1 12 -12z" fill="#fffaf0" stroke="#d8c39c" stroke-width="2" transform="translate(-12 0)"/>
 <text x="246" y="46" font-size="11" text-anchor="middle" fill="#8a7460" font-family="${F}">${g.year} ${tjX(g.yearName)} · ${g.ly}년생 ${tjX(g.animal)}띠</text>
 <text x="246" y="80" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#3b2c22" font-family="${F}">${tjX(S.head)}</text>
@@ -260,7 +243,6 @@
             document.body.classList.add('fc-lock');
             tjShow('tjForm');
             tjLoad().catch(() => {});
-            tjFindMaster();
         }
         function closeTojeong() {
             tj.open = false; clearTimeout(tj.timer);
@@ -292,7 +274,7 @@
             const star = n => '★'.repeat(n) + '☆'.repeat(5 - n);
             tq('tjResult').innerHTML = `
               <div class="tj-scene">
-                <div class="tj-master"><img src="${tjMasterUrl()}" alt="토정비결 할머니"></div>
+                <div class="tj-master"><img src="${TJ_MASTER_URL}" alt="토정비결 할머니"></div>
                 <div class="tj-bubble">
                   <small>어디 보자… ${g.ly}년생 ${g.animal}띠 손님이구먼.</small>
                   <b>${S.head}<br>${J.tail}</b>
