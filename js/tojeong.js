@@ -41,7 +41,7 @@
             { star: 0, t: '처음과 끝이 고르게 이어지는 운이에요. 큰 굴곡 없이 차분하게 한 해를 걸어가요.' },
             { star: -1, t: '마무리에 조금 더 마음을 써야 하는 운이에요. 욕심을 덜어 내고 하던 일을 정성껏 매듭지으면 들어온 복이 새지 않아요.' }
         ];
-        const tj = { built: false, open: false, libLoad: null, last: null, timer: 0 };
+        const tj = { built: false, open: false, libLoad: null, last: null };
         const tq = id => document.getElementById(id);
 
         /* 음력 계산 도구 불러오기 (처음 한 번) */
@@ -233,7 +233,7 @@
             document.querySelectorAll('.tj-cal button').forEach(b => b.classList.toggle('on', b.dataset.cal === c));
             tq('tjLeapWrap').hidden = c !== 'lunar';
         }
-        function tjShow(id) { ['tjForm', 'tjResult'].forEach(s => { tq(s).hidden = s !== id; }); tq('tjBack').hidden = id === 'tjForm'; tq('tojeongRoom').scrollTop = 0; }
+        function tjShow(id) { if (window.ritualStop) ritualStop(); ['tjForm', 'tjResult'].forEach(s => { tq(s).hidden = s !== id; }); tq('tjBack').hidden = id === 'tjForm'; tq('tojeongRoom').scrollTop = 0; }
 
         function openTojeong() {
             if (typeof closeModal === 'function') closeModal('serviceModal');
@@ -245,7 +245,7 @@
             tjLoad().catch(() => {});
         }
         function closeTojeong() {
-            tj.open = false; clearTimeout(tj.timer);
+            tj.open = false; if (window.ritualStop) ritualStop();
             const r = tq('tojeongRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }
@@ -262,10 +262,12 @@
             }
             try { localStorage.setItem(TJ_BIRTH_KEY, JSON.stringify(b)); } catch (e) {}
             tj.last = { g, r: tjRead(g) };
-            tq('tjResult').innerHTML = '<div class="tj-reading"><span>📜</span><p>한 해의 괘를 짓고 있어요…</p></div>';
+            const box = tq('tjResult'), L = tj.last;      // ✨ 괘를 짓는 연출 (js/ritual.js)
+            box.innerHTML = '';
             tjShow('tjResult');
-            clearTimeout(tj.timer);
-            tj.timer = setTimeout(tjRender, 1300);
+            if (window.ritual && !(await ritual(box, { theme: 'paper', icon: '📜', msgs: [`📜 ${g.year}년의 괘를 짓고 있어요…`, '🖌️ 상괘 · 중괘 · 하괘를 맞춰 보는 중…', '🧓 할머니가 풀이를 읽고 있어요…'], alive: () => tj.open && tj.last === L }))) return;
+            tjRender();
+            if (window.ritStagger) ritStagger(box);
         }
 
         function tjRender() {

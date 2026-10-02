@@ -6,7 +6,7 @@
    - 📌 다이어리에 붙이기 : 결과 카드 그림 (SVG)
    ※ 문제는 js/psytest-data.js · 이 파일이 없어도 다이어리는 정상 동작 (심리테스트만 '준비 중') */
 
-        const PSY_KEY = 'diary_psy', PSY_LOCAL = 'malang_psy', PSY_THINK_MS = 900;
+        const PSY_KEY = 'diary_psy', PSY_LOCAL = 'malang_psy';
         const psy = { built: false, test: null, qi: 0, ans: [], order: [], res: null, timer: 0 };
         const pyq = id => document.getElementById(id);
         const psySync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
@@ -36,6 +36,7 @@
         }
         function psyShow(id) {
             clearTimeout(psy.timer); psy.timer = 0;
+            if (window.ritualStop) ritualStop();
             ['psyList', 'psyQ', 'psyRes'].forEach(s => { pyq(s).hidden = s !== id; });
             pyq('psyBack').hidden = id === 'psyList'; pyq('psySp').hidden = id !== 'psyList';
             pyq('psyTitle').textContent = id === 'psyList' || !psy.test ? '🧠 심리테스트' : psy.test.e + ' ' + psy.test.t;
@@ -82,16 +83,19 @@
             if (!pyq('psyQ').hidden && psy.qi > 0) { psy.qi--; psyQuestion(); return; }
             psyList();
         }
-        function psyThink() {
+        async function psyThink() {
             const t = psy.test, sc = t.r.map(() => 0);
             let last = 0;
             psy.ans.forEach((k, i) => { const r = t.q[i][1][k][1]; sc[r]++; last = r; });
             const max = Math.max(...sc);
             const idx = sc[last] === max ? last : sc.indexOf(max);       // 동점이면 마지막에 고른 쪽
             psy.res = idx; psyKeep(t.id, idx);
-            pyq('psyRes').innerHTML = `<div class="psy-think"><span>${t.e}</span><p>마음을 들여다보는 중…</p><div class="psy-dots"><i></i><i></i><i></i></div></div>`;
+            const box = pyq('psyRes');                     // ✨ 마음을 들여다보는 연출 (js/ritual.js)
+            box.innerHTML = '';
             psyShow('psyRes');
-            psy.timer = setTimeout(() => { psy.timer = 0; psyResult(); }, PSY_THINK_MS);
+            if (window.ritual && !(await ritual(box, { theme: 'pink', icon: t.e, msgs: ['💭 고른 답을 모으는 중…', '🧩 마음 지도를 그리는 중…', '💝 나와 닮은 결과를 고르는 중…'], alive: () => !box.hidden && psy.test === t }))) return;
+            psyResult();
+            if (window.ritStagger) ritStagger(box);
         }
         function psyResult() {
             const t = psy.test, r = t.r[psy.res], m = t.r[r.m];

@@ -8,7 +8,6 @@
    ※ 이 파일이 없어도 다이어리는 정상 동작 (꿈해몽만 '준비 중') */
 
         const DM_SHOW_DICT = false;                       // 📖 상징 사전 버튼 (false = 숨김 · 기능은 그대로 남아 있어요)
-        const DM_READ_MS = 1400;                          // '꿈 이야기를 읽고 있어요' 잠깐 보여 주기
         const DM_MAX = 500;                              // 꿈 글 최대 글자 수
         const DM_SHOW = 6;                               // 한 번에 보여 줄 상징 수
         const DM_MOODS = [
@@ -78,7 +77,7 @@
             el.className = 'fc-room dm-room';
             el.innerHTML = `
               <div class="fc-sky" aria-hidden="true"><i class="fc-aurora a1"></i><i class="fc-aurora a2"></i><i class="fc-stars"></i><i class="fc-stars s2"></i></div>
-              <button class="fc-x fc-back" type="button" id="drBack" onclick="dmShow('drWrite')" aria-label="꿈 적는 화면으로" hidden>←</button>
+              <button class="fc-x fc-left" type="button" id="drBack" onclick="dmShow('drWrite')" aria-label="꿈 적는 화면으로" hidden>←</button>
               <button class="fc-x" type="button" onclick="closeDream()" aria-label="닫기">✕</button>
               <div class="dm-wrap">
                 <section id="drWrite" class="dm-stage">
@@ -122,6 +121,7 @@
         }
         function dmRenderMoods() { document.querySelectorAll('.dm-mood').forEach(b => b.classList.toggle('on', b.dataset.m === dm.mood)); }
         function dmShow(id) {
+            if (window.ritualStop) ritualStop();
             ['drWrite', 'drResult', 'drDict'].forEach(s => { dq(s).hidden = s !== id; });
             dq('drBack').hidden = id === 'drWrite';                // ← 는 꿈 적는 화면이 아닐 때만
             dq('dreamRoom').scrollTop = 0;
@@ -151,10 +151,12 @@
             const hits = dmFind(text);
             dm.last = { text, hits, mood: dm.mood };
             dm.from = 'write';
-            const box = dq('drResult');                   // 꿈 이야기를 읽는 시간 (잠깐)
-            box.innerHTML = '<div class="dm-reading"><span>✍️</span><p>꿈 이야기를 읽고 있어요…</p></div>';
+            const box = dq('drResult');                   // ✨ 꿈을 읽는 연출 (js/ritual.js)
+            box.innerHTML = '';
             dmShow('drResult');
-            setTimeout(() => { if (dm.open && dm.last && dm.last.text === text) dmRenderResult(); }, DM_READ_MS);
+            if (window.ritual && !(await ritual(box, { theme: 'night', icon: '🌙', msgs: ['🌙 꿈 이야기를 읽고 있어요…', '✨ 꿈속 상징을 하나씩 찾는 중…', '🔮 해몽을 풀어 쓰는 중…'], alive: () => dm.open && dm.last && dm.last.text === text }))) return;
+            dmRenderResult();
+            if (window.ritStagger) ritStagger(box);
         }
 
 

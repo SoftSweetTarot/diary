@@ -960,9 +960,6 @@
         .dm-sum p { margin: 0; font-size: 15px; line-height: 1.75; font-weight: bold; word-break: keep-all; }
         .dm-letter .dm-luck { margin: 0; font-size: 13px; color: #8a7aa8; }
         .dm-luck b { color: #c0508a; }
-        .dm-reading { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 70px 0; }
-        .dm-reading span { font-size: 46px; animation: fcFloat 1.2s ease-in-out infinite; }
-        .dm-reading p { margin: 0; font-size: 16px; color: rgba(255,255,255,.9); }
 
         /* ===== 🎍 토정비결 (js/tojeong.js) : 한지 위에 먹과 붉은 도장 ===== */
         .tj-room { --tj-ink: #3b2c22; --tj-red: #b8332a; --tj-paper: #fbf5e9; --tj-line: #e6d6bb;
@@ -992,9 +989,6 @@
         .tj-go:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a2219; }
         .tj-go.ghost { background: #fff; color: var(--tj-ink); box-shadow: 0 5px 0 var(--tj-line); border: 1.5px solid var(--tj-line); }
         .tj-note { margin: 12px 0 0; text-align: center; font-size: 12px; color: #9a8470; word-break: keep-all; }
-        .tj-reading { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 80px 0; }
-        .tj-reading span { font-size: 46px; animation: fcFloat 1.2s ease-in-out infinite; }
-        .tj-reading p { margin: 0; color: #7a6450; }
 
         .tj-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
         .tj-who b { font-size: 16px; }
@@ -1050,7 +1044,7 @@
         .mt-btn.mt-none { visibility: hidden; pointer-events: none; }
         .mt-moved { display: none !important; }
         .svc-extra { padding: 12px 8px; }
-        .fc-x.fc-back, .tj-x.tj-back { right: auto; left: 12px; }
+        .fc-x.fc-left, .tj-x.tj-back { right: auto; left: 12px; }
         /* 말풍선은 위, 할머니는 아래 (할머니가 말하는 모습) */
         .tj-scene { flex-direction: column; align-items: center; gap: 0; }
         .tj-bubble { width: 100%; box-sizing: border-box; align-self: stretch; padding: 16px 18px 18px; }
@@ -1935,11 +1929,6 @@
         .psy-opts button { border: 2px solid #f0dbe7; background: #fff; border-radius: 16px; padding: 14px 16px; font: inherit; font-size: 15px; text-align: left; color: #5a3d4a; cursor: pointer; transition: transform .12s, background .15s, border-color .15s; word-break: keep-all; }
         .psy-opts button:hover { border-color: #f5b5cf; }
         .psy-opts button.on { background: #ffe3ef; border-color: #ff8fb4; transform: scale(.98); font-weight: bold; }
-        .psy-think { text-align: center; padding: 70px 0 40px; } .psy-think span { font-size: 64px; display: inline-block; animation: psyBob 1s ease-in-out infinite; }
-        .psy-think p { margin: 10px 0; font-weight: bold; color: #8a6a78; }
-        .psy-dots { display: flex; gap: 6px; justify-content: center; } .psy-dots i { width: 8px; height: 8px; border-radius: 50%; background: #f7a8c8; animation: psyDot 1s ease-in-out infinite; }
-        .psy-dots i:nth-child(2) { animation-delay: .15s; } .psy-dots i:nth-child(3) { animation-delay: .3s; }
-        @keyframes psyDot { 0%, 100% { opacity: .3; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
         .psy-hero { text-align: center; border-radius: 26px; padding: 18px 16px 20px; background: linear-gradient(150deg, var(--a), var(--b)); box-shadow: 0 8px 20px rgba(160,100,140,.16); animation: psyPop .5s cubic-bezier(.2,1.4,.4,1) both; }
         @keyframes psyPop { from { opacity: 0; transform: scale(.85); } }
         .psy-hero small { font-size: 12.5px; color: #8a6a78; }
@@ -1957,5 +1946,38 @@
         .psy-acts button, .psy-other { flex: 1; border: 1.5px solid #ecd3f0; background: #fff; border-radius: 16px; padding: 12px 8px; font: inherit; font-size: 14.5px; font-weight: bold; cursor: pointer; color: #5a3d4a; }
         .psy-acts .psy-main { flex: 1.4; border: none; background: linear-gradient(135deg, #f7a8c8, #c79bf2); color: #fff; box-shadow: 0 4px 12px rgba(199,155,242,.35); }
         .psy-other { background: transparent; border-style: dashed; }
-        @media (prefers-reduced-motion: reduce) { .psy-card-e, .psy-big, .psy-think span { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .psy-card-e, .psy-big { animation: none; } }
         .nm-snd { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #ffd0df; background: #fff; font-size: 15px; cursor: pointer; padding: 0; z-index: 2; }
+
+        /* ===== ✨ 결과 보기 연출 (rit-) : 꿈해몽 · 토정비결 · 심리테스트 ===== */
+        .rit { --c1: #fff; --c2: #ffd6f0; --glow: rgba(255,214,240,.75); --ink: #fff; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 54px 0 40px; min-height: 360px; }
+        .rit-night { --c1: #fff8e1; --c2: #c9b8ff; --glow: rgba(214,196,255,.8); --ink: #fff; }
+        .rit-paper { --c1: #fffaf0; --c2: #f0c48a; --glow: rgba(214,120,60,.45); --ink: #5a3d2a; }
+        .rit-pink { --c1: #fff; --c2: #ffc3dc; --glow: rgba(255,143,180,.55); --ink: #a0507a; }
+        .rit-orb { position: relative; width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center;
+            background: radial-gradient(circle at 38% 32%, var(--c1), var(--c2) 70%); box-shadow: 0 0 40px var(--glow), 0 0 90px var(--glow), inset 0 -10px 24px rgba(0,0,0,.08);
+            animation: ritFloat 3s ease-in-out infinite, ritGlow 2.4s ease-in-out infinite; }
+        .rit-ico { font-size: 66px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.15)); animation: ritSpin 6s ease-in-out infinite; }
+        .rit-ring { position: absolute; inset: -16px; border-radius: 50%; border: 2px dashed var(--c2); opacity: .7; animation: ritRot 9s linear infinite; }
+        .rit-ring.r2 { inset: -30px; border-style: dotted; opacity: .45; animation-duration: 14s; animation-direction: reverse; }
+        .rit-dust { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: var(--c1); box-shadow: 0 0 10px var(--glow);
+            transform: rotate(var(--a)) translateY(-92px); animation: ritDust 2.4s ease-in-out infinite; animation-delay: var(--d); }
+        .rit-msg { margin: 0; min-height: 26px; font-size: 16.5px; font-weight: bold; color: var(--ink); text-align: center; opacity: 0; word-break: keep-all; }
+        .rit-msg.on { animation: ritMsg .6s ease both; }
+        .rit-count { height: 64px; font-size: 56px; font-weight: bold; color: var(--ink); text-shadow: 0 0 20px var(--glow); }
+        .rit-count.pop { animation: ritCount .9s ease both; }
+        .rit.charge .rit-orb { animation: ritShake .18s linear infinite, ritGlow .6s ease-in-out infinite; }
+        .rit.charge .rit-ring { animation-duration: 2s; }
+        .rit.burst .rit-orb { animation: ritBurst .45s ease-in forwards; }
+        .rit-up { animation: ritUp .6s cubic-bezier(.2,.8,.3,1) both; }
+        @keyframes ritFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes ritGlow { 0%, 100% { box-shadow: 0 0 30px var(--glow), 0 0 70px var(--glow); } 50% { box-shadow: 0 0 50px var(--glow), 0 0 120px var(--glow); } }
+        @keyframes ritSpin { 0%, 100% { transform: rotate(-8deg) scale(1); } 50% { transform: rotate(8deg) scale(1.08); } }
+        @keyframes ritRot { to { transform: rotate(360deg); } }
+        @keyframes ritDust { 0%, 100% { opacity: .2; transform: rotate(var(--a)) translateY(-86px) scale(.6); } 50% { opacity: 1; transform: rotate(calc(var(--a) + 20deg)) translateY(-104px) scale(1.2); } }
+        @keyframes ritMsg { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+        @keyframes ritCount { 0% { opacity: 0; transform: scale(2.2); } 25% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(.7); } }
+        @keyframes ritShake { 0%, 100% { transform: translate(0, 0) scale(1.04); } 25% { transform: translate(-2px, 1px) scale(1.06); } 75% { transform: translate(2px, -1px) scale(1.05); } }
+        @keyframes ritBurst { 0% { transform: scale(1.05); opacity: 1; } 60% { transform: scale(1.5); opacity: .9; filter: brightness(1.6); } 100% { transform: scale(2.4); opacity: 0; filter: brightness(2.2); } }
+        @keyframes ritUp { from { opacity: 0; transform: translateY(22px) scale(.97); } }
+        @media (prefers-reduced-motion: reduce) { .rit-orb, .rit-ico, .rit-ring, .rit-dust, .rit.charge .rit-orb { animation: none; } }
