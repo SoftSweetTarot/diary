@@ -1156,3 +1156,44 @@
         .pl-msg small { color: #9a7a66; }
         .pl-basket { text-align: center; font-size: 15px; }
         .pl-basket span { margin-left: 8px; }
+
+        /* ===== 📅 출석 도장판 (js/attend.js) ===== */
+        .at-room { position: fixed; inset: 0; z-index: 1600; display: none; overflow-y: auto; overscroll-behavior: contain; color: #5a3d2b;
+            background: #fdf3ec radial-gradient(rgba(230,150,120,.12) 1.5px, transparent 2px) 0 0 / 16px 16px; }
+        .at-room.show { display: block; }
+        .at-bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+            background: rgba(253,243,236,.92); backdrop-filter: blur(6px); }
+        .at-bar b { flex: 1; text-align: center; font-size: 17px; }
+        .at-sp, .at-x { width: 38px; height: 38px; flex: none; }
+        .at-x { border-radius: 50%; border: 1.5px solid #ecc9b8; background: #fff8f4; color: #5a3d2b; font-size: 16px; cursor: pointer; }
+        .at-wrap { max-width: 460px; margin: 0 auto; padding: 4px 14px max(30px, env(safe-area-inset-bottom)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; }
+        .at-board { background: #fffdf9; border-radius: 20px; padding: 14px 12px 12px; border: 2px dashed #f0c4b0; box-shadow: 0 6px 18px rgba(150,90,60,.12); }
+        .at-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .at-head b { font-size: 18px; }
+        .at-nav { width: 36px; height: 36px; border-radius: 50%; border: none; background: #fbe6dc; color: #8a5a44; font-size: 22px; line-height: 1; cursor: pointer; }
+        .at-week, .at-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .at-week span { text-align: center; font-size: 12px; color: #a68572; padding-bottom: 2px; }
+        .at-week span:first-child { color: #e2667a; } .at-week span:last-child { color: #5c8fd6; }
+        .at-cell { position: relative; aspect-ratio: 1; border-radius: 50%; background: #fbeee7; display: grid; place-items: center; }
+        .at-cell i { font-style: normal; font-size: 12px; color: #b49482; }
+        .at-empty { background: none; }
+        .at-fut { background: #fdf6f2; } .at-fut i { opacity: .45; }
+        .at-today { box-shadow: 0 0 0 2px #f39a7e inset; } .at-today i { color: #e2667a; font-weight: bold; }
+        .at-on i { position: absolute; top: -3px; left: 0; font-size: 9px; opacity: .7; }
+        .at-cell em { --c: #e8546e; font-style: normal; width: 88%; height: 88%; border-radius: 50%; display: grid; place-items: center;
+            font-size: clamp(15px, 5.2vw, 22px); border: 2.5px solid var(--c); background: color-mix(in srgb, var(--c) 14%, #fff);
+            box-shadow: 0 0 0 2px #fff inset; transform: rotate(-12deg); }
+        .at-pop em { animation: atStamp .55s cubic-bezier(.3,1.6,.5,1) both; }
+        @keyframes atStamp { 0% { transform: scale(2.4) rotate(-30deg); opacity: 0; } 60% { transform: scale(.88) rotate(-8deg); opacity: 1; } 100% { transform: scale(1) rotate(-12deg); } }
+        .at-count { margin-top: 10px; text-align: center; font-size: 14px; }
+        .at-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .at-stats div { background: #fff8f4; border-radius: 14px; padding: 10px 4px; text-align: center; font-size: 13px; box-shadow: 0 3px 10px rgba(150,90,60,.08); }
+        .at-stats small { display: block; color: #a68572; font-size: 12px; margin-bottom: 2px; }
+        .at-stats b { font-size: 22px; color: #e2667a; margin-right: 2px; }
+        .at-medals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .at-medals span { text-align: center; font-size: 26px; opacity: .25; filter: grayscale(1); }
+        .at-medals span.on { opacity: 1; filter: none; }
+        .at-medals small { display: block; font-size: 11px; color: #8a6a58; }
+        .at-go { padding: 15px; border-radius: 14px; border: none; font-size: 17px; font-weight: bold; cursor: pointer; font-family: inherit;
+            background: linear-gradient(#ff9a8b, #f2667a); color: #fff; box-shadow: 0 4px 0 #c94a5c; }
+        .at-go:disabled { background: #f0e2da; color: #8a6a58; box-shadow: none; cursor: default; font-size: 15px; }
