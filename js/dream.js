@@ -3,15 +3,19 @@
    - 상징 사전은 js/dream-data.js (꿈해몽을 처음 열 때만 불러와요 · 서버 없음 · 트래픽 거의 없음)
    - 꿈 글은 이 기기 안에서만 읽고, 어디에도 보내거나 저장하지 않아요.
    - 📌 다이어리에 붙이기 : 해몽 결과를 글상자로 오늘 페이지에 붙여요
+   - 사용자는 '내 꿈 이야기를 읽고 풀어 주는' 느낌만 받도록 : 꿈에 쓴 내용만 풀이하고, 쓰지 않은 경우(크기·다른 상황 등)는 말하지 않아요.
+   - 📖 상징 사전 화면은 지금은 숨겨 두었어요. 다시 보이게 하려면 아래 DM_SHOW_DICT 를 true 로 바꾸면 돼요.
    ※ 이 파일이 없어도 다이어리는 정상 동작 (꿈해몽만 '준비 중') */
 
+        const DM_SHOW_DICT = false;                       // 📖 상징 사전 버튼 (false = 숨김 · 기능은 그대로 남아 있어요)
+        const DM_READ_MS = 1400;                          // '꿈 이야기를 읽고 있어요' 잠깐 보여 주기
         const DM_MAX = 500;                              // 꿈 글 최대 글자 수
         const DM_SHOW = 6;                               // 한 번에 보여 줄 상징 수
         const DM_MOODS = [
-            { id: 'happy', e: '😊', t: '기분 좋았어요', end: '꿈에서 느낀 좋은 기분이 오늘 하루에도 이어질 거예요.' },
-            { id: 'scary', e: '😨', t: '무서웠어요', end: '무서운 꿈은 대부분 피로와 걱정이 모습을 바꿔 나타난 거예요. 나쁜 일이 생긴다는 뜻은 아니니 마음 편히 가져요.' },
-            { id: 'sad', e: '😢', t: '슬펐어요', end: '슬픈 꿈은 마음속 감정을 씻어 내는 꿈이에요. 오늘은 나에게 다정한 말을 한마디 건네 주세요.' },
-            { id: 'odd', e: '🤔', t: '이상했어요', end: '알쏭달쏭한 꿈일수록 마음이 많은 걸 정리하고 있다는 뜻이에요. 꿈속 상징을 오늘의 작은 힌트로 삼아 보세요.' }
+            { id: 'happy', e: '😊', t: '기분 좋았어요', open: '기분 좋은 꿈이었다니 저도 덩달아 기뻐요.', end: '꿈에서 느낀 좋은 기분이 오늘 하루에도 이어질 거예요.' },
+            { id: 'scary', e: '😨', t: '무서웠어요', open: '무서운 꿈을 꾸셨군요. 많이 놀라셨죠?', end: '무서운 꿈은 대부분 피로와 걱정이 모습을 바꿔 나타난 거예요. 나쁜 일이 생긴다는 뜻은 아니니 마음 편히 가져요.' },
+            { id: 'sad', e: '😢', t: '슬펐어요', open: '마음이 먹먹한 꿈이었군요.', end: '슬픈 꿈은 마음속 감정을 씻어 내는 꿈이에요. 오늘은 나에게 다정한 말을 한마디 건네 주세요.' },
+            { id: 'odd', e: '🤔', t: '이상했어요', open: '알쏭달쏭한 꿈이었네요.', end: '알쏭달쏭한 꿈일수록 마음이 많은 걸 정리하고 있다는 뜻이에요. 꿈속 상징을 오늘의 작은 힌트로 삼아 보세요.' }
         ];
         const DM_TONE = { good: { t: '좋은 꿈', c: 'good' }, mix: { t: '반반', c: 'mix' }, care: { t: '살펴보기', c: 'care' } };
         const DM_COLORS = ['하늘색', '연분홍', '민트', '라벤더', '노랑', '살구색', '하얀색', '연두색', '코랄', '보라색'];
@@ -56,9 +60,9 @@
         function dmVerdict(hits) {
             const w = { good: 2, mix: 1, care: 0 };
             const avg = hits.reduce((s, h) => s + w[h.sym.t], 0) / hits.length;
-            if (avg >= 1.5) return { e: '🌟', t: '길몽에 가까운 꿈이에요', c: 'good' };
-            if (avg >= .8) return { e: '🌗', t: '좋은 기운과 살필 점이 함께 있는 꿈이에요', c: 'mix' };
-            return { e: '🌧️', t: '마음을 살펴 달라는 꿈이에요', c: 'care' };
+            if (avg >= 1.5) return { e: '🌟', t: '길몽에 가까운 꿈이에요', c: 'good', sum: '전체적으로 좋은 기운이 가득한 꿈이에요. 요즘 애쓴 일에 기분 좋은 소식이 따라올 것 같아요.' };
+            if (avg >= .8) return { e: '🌗', t: '좋은 기운과 살필 점이 함께 있는 꿈이에요', c: 'mix', sum: '좋은 기운과 함께, 나를 조금 더 챙겨 달라는 마음이 담긴 꿈이에요.' };
+            return { e: '🌧️', t: '마음을 살펴 달라는 꿈이에요', c: 'care', sum: '요즘 마음이 조금 지쳐 있다고 알려 주는 꿈이에요. 나쁜 일이 생긴다는 뜻은 아니니 걱정하지 마세요.' };
         }
         function dmLucky(text) {                          // 같은 날 같은 꿈이면 같은 행운 숫자
             const d = new Date(), key = text + d.getFullYear() + d.getMonth() + d.getDate();
@@ -80,7 +84,7 @@
                 <section id="drWrite" class="dm-stage">
                   <div class="dm-moon">🌙</div>
                   <h2 class="fc-title">꿈해몽</h2>
-                  <p class="fc-sub">어젯밤 꿈을 적어 주세요. 꿈속 상징을 찾아 풀어 드릴게요.</p>
+                  <p class="fc-sub">어젯밤 꾼 꿈 이야기를 들려주세요.</p>
                   <div class="dm-box">
                     <textarea id="drText" maxlength="${DM_MAX}" rows="5" placeholder="예) 커다란 뱀이 집으로 들어와서 내 손을 물었어요. 무섭지는 않았어요."></textarea>
                     <div class="dm-count"><span id="drCount">0</span> / ${DM_MAX}</div>
@@ -89,7 +93,7 @@
                   <div class="dm-moods" id="drMoods"></div>
                   <div class="dm-actions">
                     <button class="fc-btn" type="button" onclick="dmInterpret()">🔮 해몽 보기</button>
-                    <button class="fc-btn ghost" type="button" onclick="dmShowDict()">📖 상징 사전</button>
+                    <button class="fc-btn ghost" type="button" onclick="dmShowDict()" ${DM_SHOW_DICT ? '' : 'hidden'}>📖 상징 사전</button>
                   </div>
                   <p class="dm-note">꿈 내용은 이 기기 안에서만 읽고 어디에도 저장하거나 보내지 않아요.</p>
                 </section>
@@ -146,10 +150,19 @@
             const hits = dmFind(text);
             dm.last = { text, hits, mood: dm.mood };
             dm.from = 'write';
-            dmRenderResult();
+            const box = dq('drResult');                   // 꿈 이야기를 읽는 시간 (잠깐)
+            box.innerHTML = '<div class="dm-reading"><span>✍️</span><p>꿈 이야기를 읽고 있어요…</p></div>';
+            dmShow('drResult');
+            setTimeout(() => { if (dm.open && dm.last && dm.last.text === text) dmRenderResult(); }, DM_READ_MS);
         }
 
-        function dmCard(h) {
+        /* 기본 풀이에서 꿈에 쓰지 않은 조건 이야기(…할수록 · …면 ~해요)는 빼고, 꿈에 쓴 상황 풀이만 덧붙여요 */
+        function dmText(h) {
+            const sents = h.sym.m.split(/(?<=[.!?])\s+/).filter(x => x && !/수록|^하지만|^특히|^무서웠다면/.test(x));
+            if (h.cases && h.cases.length) return [sents[0]].concat(h.cases).join(' ');
+            return sents.join(' ');
+        }
+        function dmCard(h) {                              // (상징 사전 화면용)
             const s = h.sym, tone = DM_TONE[s.t];
             return `<article class="dm-card">
                 <div class="dm-card-h"><span class="dm-card-e">${s.e}</span><b>${dmEsc(s.n)}</b><span class="dm-tone ${tone.c}">${tone.t}</span></div>
@@ -161,32 +174,35 @@
         function dmRenderResult() {
             const { text, hits, mood } = dm.last, box = dq('drResult');
             const m = DM_MOODS.find(x => x.id === mood) || DM_MOODS[0];
+            const quote = dmEsc(text.length > 140 ? text.slice(0, 140) + '…' : text);
             if (!hits.length) {
                 box.innerHTML = `
-                  <div class="dm-verdict mix"><span>🌫️</span><b>꿈속 상징을 찾지 못했어요</b></div>
-                  <div class="dm-quote">“${dmEsc(text.length > 120 ? text.slice(0, 120) + '…' : text)}”</div>
-                  <p class="dm-tip">꿈에 나온 <b>동물 · 사람 · 물건 · 장소 · 한 일</b>을 낱말로 적어 주면 더 잘 찾아요.<br>예) 바다, 돼지, 엄마, 시험, 쫓기다</p>
-                  <p class="dm-label">많이 찾는 꿈</p>
-                  <div class="dm-chips">${DM_POPULAR.map(n => `<button type="button" class="dm-chip" data-n="${dmEsc(n)}">${dmEsc(n)}</button>`).join('')}</div>
-                  <div class="dm-actions"><button class="fc-btn" type="button" onclick="dmShow('drWrite')">✏️ 다시 적기</button><button class="fc-btn ghost" type="button" onclick="dmShowDict()">📖 상징 사전</button></div>`;
-                box.querySelectorAll('.dm-chip').forEach(b => b.onclick = () => dmOpenSymbol(b.dataset.n));
+                  <article class="dm-letter">
+                    <div class="dm-letter-h">🌙 꿈 이야기를 읽어 봤어요</div>
+                    <div class="dm-quote">“${quote}”</div>
+                    <p>${dmEsc(m.open)} 그런데 이 이야기만으로는 꿈이 전하려는 뜻을 풀기가 조금 어려워요.</p>
+                    <p>꿈에서 <b>본 것</b>(사람, 동물, 물건, 장소)이나 <b>한 일</b>을 조금 더 자세히 들려주시면 다시 풀어 드릴게요.</p>
+                  </article>
+                  <div class="dm-actions"><button class="fc-btn" type="button" onclick="dmShow('drWrite')">✏️ 이어서 적기</button></div>`;
                 dmShow('drResult');
                 return;
             }
             const v = dmVerdict(hits), lucky = dmLucky(text), shown = hits.slice(0, DM_SHOW);
             box.innerHTML = `
-              <div class="dm-verdict ${v.c}"><span>${v.e}</span><b>${v.t}</b></div>
-              <div class="dm-quote">“${dmEsc(text.length > 120 ? text.slice(0, 120) + '…' : text)}”</div>
-              <p class="dm-found">꿈속 상징 ${hits.length}개 : ${hits.map(h => h.sym.e + ' ' + dmEsc(h.sym.n)).join(' · ')}</p>
-              <div class="dm-cards">${shown.map(dmCard).join('')}</div>
-              ${hits.length > DM_SHOW ? `<p class="dm-tip">상징이 많아서 먼저 나온 ${DM_SHOW}개만 풀었어요.</p>` : ''}
-              <div class="dm-end"><span>${m.e}</span><p>${dmEsc(m.end)}</p></div>
-              <div class="dm-lucky"><div><small>오늘의 행운 숫자</small><b>${lucky.n}</b></div><div><small>오늘의 행운 색</small><b>${lucky.c}</b></div></div>
+              <article class="dm-letter">
+                <div class="dm-letter-h">🌙 꿈 이야기를 읽어 봤어요</div>
+                <div class="dm-quote">“${quote}”</div>
+                <p>${dmEsc(m.open)}</p>
+                ${shown.map(h => `<div class="dm-part"><b>${h.sym.e} ${dmEsc(h.sym.n)}</b><p>${dmEsc(dmText(h))}</p></div>`).join('')}
+                <div class="dm-sum ${v.c}"><span>${v.e}</span><p>${dmEsc(v.sum)}</p></div>
+                <p>${dmEsc(m.end)}</p>
+                <p class="dm-luck">오늘의 행운 숫자 <b>${lucky.n}</b> · 행운의 색 <b>${lucky.c}</b></p>
+              </article>
               <div class="dm-actions">
                 <button class="fc-btn" type="button" onclick="dmStick()">📌 다이어리에 붙이기</button>
                 <button class="fc-btn ghost" type="button" onclick="dmNew()">✏️ 다른 꿈 풀기</button>
               </div>
-              <p class="dm-note">재미로 보는 꿈해몽이에요. 옛날부터 전해 오는 해몽을 바탕으로 말랑달콤이 풀었어요.</p>`;
+              <p class="dm-note">재미로 보는 꿈해몽이에요.</p>`;
             dmShow('drResult');
         }
         function dmNew() { dq('drText').value = ''; dq('drCount').textContent = '0'; dmShow('drWrite'); }
@@ -197,7 +213,7 @@
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { closeDream(); showMsg('먼저 다이어리를 열어주세요!'); return; }
             const { text, hits } = dm.last, v = dmVerdict(hits);
             const short = text.length > 60 ? text.slice(0, 60) + '…' : text;
-            const body = `🌙 오늘의 꿈해몽\n“${short}”\n${v.e} ${v.t}\n${hits.slice(0, 4).map(h => h.sym.e + ' ' + h.sym.n).join('  ')}`;
+            const body = `🌙 오늘의 꿈해몽\n“${short}”\n${v.e} ${v.t}`;
             closeDream();
             if (typeof addText !== 'function') return;
             addText();

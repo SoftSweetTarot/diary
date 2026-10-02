@@ -964,3 +964,20 @@
         .dm-sym span { font-size: 26px; }
         .dm-back { align-self: center; }
         @media (prefers-reduced-motion: reduce) { .dm-moon { animation: none; } }
+        .dm-letter { background: rgba(255,255,255,.96); color: #3a2f55; border-radius: 22px; padding: 20px 18px; text-align: left; box-shadow: 0 10px 26px rgba(20,10,50,.32); }
+        .dm-letter > p { margin: 0 0 12px; font-size: 15px; line-height: 1.8; word-break: keep-all; }
+        .dm-letter-h { font-size: 17px; font-weight: bold; color: #6a4a9a; margin-bottom: 10px; }
+        .dm-letter .dm-quote { color: #8a7aa8; text-align: left; margin-bottom: 14px; padding-left: 10px; border-left: 3px solid #e6dcff; }
+        .dm-part { margin: 0 0 14px; }
+        .dm-part b { display: block; font-size: 15px; color: #5a3d8a; margin-bottom: 4px; }
+        .dm-part p { margin: 0; font-size: 15px; line-height: 1.8; word-break: keep-all; }
+        .dm-sum { display: flex; gap: 10px; align-items: flex-start; border-radius: 16px; padding: 12px 14px; margin: 4px 0 14px; background: #f3eeff; }
+        .dm-sum.good { background: #fff6dc; }
+        .dm-sum.care { background: #e9f1ff; }
+        .dm-sum span { font-size: 24px; line-height: 1.2; }
+        .dm-sum p { margin: 0; font-size: 15px; line-height: 1.75; font-weight: bold; word-break: keep-all; }
+        .dm-letter .dm-luck { margin: 0; font-size: 13px; color: #8a7aa8; }
+        .dm-luck b { color: #c0508a; }
+        .dm-reading { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 70px 0; }
+        .dm-reading span { font-size: 46px; animation: fcFloat 1.2s ease-in-out infinite; }
+        .dm-reading p { margin: 0; font-size: 16px; color: rgba(255,255,255,.9); }
