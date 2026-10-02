@@ -142,7 +142,7 @@
             atq('atStkNext').innerHTML = msg.length ? '🎯 ' + msg.join('<br>🎯 ') : '🏆 스티커를 모두 모았어요!';
             atq('atStkGrid').innerHTML = list.map(k => atHasStk(k, v)
                 ? `<span class="at-stk-it on"><img src="${atStkUrl(k)}" alt="${k.name}"><small>${k.name}</small></span>`
-                : `<span class="at-stk-it"><img src="${atStkUrl(k)}" alt=""><small>🔒 ${atNeedText(k)}</small></span>`).join('');
+                : `<span class="at-stk-it"><img src="${atStkUrl(k)}" alt="${k.name}"><small>${atNeedText(k)}</small></span>`).join('');
         }
         function atPopShow(ids) {
             atS.pop = ids.slice();
@@ -177,7 +177,7 @@
             const v = atStkView(), grid = atq('stickerGrid');
             grid.innerHTML = '<div class="at-sg-note">📅 출석 도장을 모으면 움직이는 스티커가 하나씩 열려요</div>' + atStk().map(k => atHasStk(k, v)
                 ? `<button type="button" class="at-sg on" onclick="attendStickerAdd('${k.id}')"><img src="${atStkUrl(k)}" alt="${k.name}"><small>${k.name}</small></button>`
-                : `<span class="at-sg"><img src="${atStkUrl(k)}" alt=""><small>🔒 ${atNeedText(k)}</small></span>`).join('');
+                : `<span class="at-sg"><img src="${atStkUrl(k)}" alt="${k.name}"><small>${atNeedText(k)}</small></span>`).join('');
         }
 
         function atMove(dir) {
