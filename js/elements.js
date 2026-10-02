@@ -8,7 +8,6 @@
             makeTransformable(el);
             document.getElementById('canvasArea').appendChild(el);
             closeModal('stickerModal');
-            if (typeof sndDiary === 'function') sndDiary('put');
         }
 
         function addText() {
@@ -23,7 +22,6 @@
             makeTransformable(el);
             document.getElementById('canvasArea').appendChild(el);
             selectElement(el);
-            if (typeof sndDiary === 'function') sndDiary('put');
         }
 
         function triggerImageUpload() { document.getElementById('imgInput').click(); }
@@ -57,7 +55,6 @@
             el.appendChild(img);
             makeTransformable(el);
             document.getElementById('canvasArea').appendChild(el);
-            if (typeof sndDiary === 'function') sndDiary('put');
             return true;
         }
 
@@ -505,7 +502,7 @@
             layerMark();
         }
         function deleteSelected() {
-            if (selectedElement) { selectedElement.remove(); selectedElement = null; if (typeof sndDiary === 'function') sndDiary('remove'); }
+            if (selectedElement) { selectedElement.remove(); selectedElement = null; }
             updateTextPanel();
         }
 
@@ -569,7 +566,6 @@
                 return;
             }
             const ok = await flushUpload({ force: true });   // 파일이 없으면 생성, 있으면 덮어쓰기
-            if (ok && typeof sndDiary === 'function') sndDiary('save');
             showMsg(ok
                 ? '☁ 웹(구글 드라이브)에 저장했어요!<br><span style="font-size:12px;color:#777;">' + dayPathText(currentDate) + '</span>'
                 : '⚠ 구글 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');

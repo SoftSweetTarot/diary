@@ -94,7 +94,7 @@
                 <div class="gc-result" id="gcResult" hidden></div>
                 <details class="gc-odds"><summary>🎲 확률 안내</summary><table id="gcOdds"></table>
                   <p>하루에 한 번 돌릴 수 있어요. 밤 12시가 지나면 코인이 다시 생겨요.</p></details>
-                <button class="gc-sound snd-fx snd-fx-text" id="gcSound" type="button" onclick="sndToggleFx()">${typeof sndOn === 'function' && !sndOn('fx') ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
+                <button class="gc-sound snd-fx snd-fx-text" id="gcSound" type="button" onclick="sndToggleFx()">${typeof sndOn === 'function' && !sndOn() ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
               </div>
               <canvas class="gc-burst" id="gcBurst"></canvas>`;
             document.body.appendChild(el);

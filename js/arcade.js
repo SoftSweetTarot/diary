@@ -1100,7 +1100,7 @@
         /* ---------- 8비트 소리 (파일 없이 · 아이폰 무음 모드에서도) ---------- */
         function arSound() { ar.ac = typeof sndFx === 'function' ? sndFx() : null; return ar.ac; }     // 연출 소리가 꺼져 있으면 null (js/sound.js)
         function arTone(f, d, type, vol, when, slide) {
-            const ac = ar.ac; if (!ac || !sndOn('fx')) return;
+            const ac = ar.ac; if (!ac || !sndOn()) return;
             const t = ac.currentTime + (when || 0), o = ac.createOscillator(), g = ac.createGain();
             o.type = type || 'square'; o.frequency.setValueAtTime(f, t);
             if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
@@ -1120,7 +1120,7 @@
             over: () => [392, 330, 262, 196].forEach((f, i) => arTone(f, .16, 'square', .05, i * .14)),
             win: () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => arTone(f, .1, 'square', .05, i * .09))
         };
-        function arSfx(n) { if (!ar.ac || !sndOn('fx')) return; try { AR_SFX[n] && AR_SFX[n](); } catch (e) {} }
+        function arSfx(n) { if (!ar.ac || !sndOn()) return; try { AR_SFX[n] && AR_SFX[n](); } catch (e) {} }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['arcade'] = true;
