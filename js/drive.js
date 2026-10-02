@@ -127,7 +127,41 @@
         function dayKeyOf(y, m, d) { return `diary_${y}_${String(m).padStart(2, '0')}_${String(d).padStart(2, '0')}`; }
         function parseDayKey(k) { const r = DAY_KEY_RE.exec(k); return r ? { y: +r[1], m: +r[2], d: +r[3] } : null; }
         function isDayKey(k) { return DAY_KEY_RE.test(k); }
-        function isSettingKey(k) { return k.startsWith('diary_') && !isDayKey(k) && k !== PAGE_SIZE_KEY; }
+        function isSettingKey(k) { return (k.startsWith('diary_') || VAULT_KEYS.includes(k)) && !isDayKey(k) && k !== PAGE_SIZE_KEY; }
+
+        /* 🔐 암호 보관 : 출석 · 화분 기록은 settings.json 에서 무엇인지 알아볼 수 없게 저장해요
+           - 이름도 뜻 없는 글자 (VAULT_KEYS) · 내용은 뒤섞은 글자 + 앞 7자리 확인 표시
+           - 누가 글자를 하나라도 고치면 확인 표시가 맞지 않아서 그 기록은 버리고 처음부터 (고칠 이유가 없게) */
+        const VAULT_KEYS = ['zq7k2m', 'xr4p9w'];
+        const VAULT_SALT = 'mL4q!z9Rw2';
+        function vaultHash(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36).padStart(7, '0').slice(-7); }
+        function vaultMix(bytes) {
+            let s = parseInt(vaultHash(VAULT_SALT), 36) || 1;
+            return bytes.map(b => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return b ^ (s & 255); });
+        }
+        function vaultSeal(obj) {
+            const bytes = vaultMix(Array.from(new TextEncoder().encode(JSON.stringify(obj))));
+            const b64 = btoa(String.fromCharCode.apply(null, bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            return vaultHash(VAULT_SALT + b64) + b64;
+        }
+        function vaultOpen(text) {
+            if (typeof text !== 'string' || text.length < 8) return null;
+            const chk = text.slice(0, 7), b64 = text.slice(7);
+            if (vaultHash(VAULT_SALT + b64) !== chk) return null;                     // 누가 고쳤어요 → 버리기
+            try {
+                const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+                const bytes = vaultMix(Array.from(bin, c => c.charCodeAt(0)));
+                return JSON.parse(new TextDecoder().decode(new Uint8Array(bytes)));
+            } catch (e) { return null; }
+        }
+        /* 읽기 · 쓰기 (로그인 → 드라이브 설정 / 게스트 → 이 기기) */
+        function vaultGet(key, sync) {
+            try { const raw = sync ? store.getItem(key) : localStorage.getItem(key); return raw ? vaultOpen(JSON.parse(raw)) : null; } catch (e) { return null; }
+        }
+        function vaultPut(key, obj, sync) {
+            const t = JSON.stringify(vaultSeal(obj));
+            try { if (sync) store.setItem(key, t); else localStorage.setItem(key, t); } catch (e) {}
+        }
         function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
         function dayPathText(date) {
             return `${ROOT_PATH.join('/')}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;

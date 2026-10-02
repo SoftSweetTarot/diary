@@ -4,12 +4,11 @@
    - 열매를 따면 바구니에 모이고, 새 씨앗을 심어요. (어떤 씨앗인지는 꽃이 필 때까지 비밀)
    - 사흘 넘게 물을 못 주면 시들시들해지지만 죽지는 않아요. 물을 주면 다시 기운을 차려요.
    - '오늘 일기를 썼는지' = 오늘 날짜 페이지에 글·스티커·그림이 하나라도 있는지
-   - 화분 상태는 설정(settings.json)에 함께 저장돼요 → 다른 기기에서도 같은 화분. (하루 한 번 물 줄 때만 바뀌어요)
+   - 화분 상태는 설정(settings.json)에 암호로 저장돼요 (🔐 js/drive.js 암호 보관) → 다른 기기에서도 같은 화분. (하루 한 번 물 줄 때만 바뀌어요)
      로그인하지 않은(게스트) 때만 이 기기에 기억해요.
    ※ 이 파일이 없어도 다이어리는 정상 동작 (화분 키우기만 '준비 중') */
 
-        const PL_KEY = 'diary_plant';                 // 설정 저장소 키 (드라이브 settings.json)
-        const PL_LOCAL = 'malang_plant';              // 게스트용 (이 기기)
+        const PL_KEY = VAULT_KEYS[1];                 // 🔐 암호 보관 (js/drive.js)
         const PL_STEPS = [0, 1, 3, 6, 10, 14];        // 이 횟수만큼 물을 주면 다음 단계
         const PL_STAGE = ['씨앗', '새싹', '잎', '꽃봉오리', '꽃', '열매'];
         const PL_THIRSTY_DAYS = 3;
@@ -39,13 +38,11 @@
         }
         const plSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;     // 로그인 → 드라이브 설정 / 게스트 → 이 기기
         function plRead() {
-            let x = null;
-            try { x = JSON.parse(plSync() ? store.getItem(PL_KEY) : localStorage.getItem(PL_LOCAL)); } catch (e) {}
+            const x = vaultGet(PL_KEY, plSync());
             return x && PL_KINDS[x.kind] && typeof x.w === 'number' ? x : plNew(null);
         }
         function plWrite() {
-            const t = JSON.stringify(pl.s);
-            try { if (plSync()) store.setItem(PL_KEY, t); else localStorage.setItem(PL_LOCAL, t); } catch (e) {}
+            vaultPut(PL_KEY, pl.s, plSync());
         }
         function plStage(w) { let s = 0; PL_STEPS.forEach((n, i) => { if (w >= n) s = i; }); return s; }
 
