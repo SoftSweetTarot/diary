@@ -30,7 +30,7 @@
         }
 
         /* =====================================================================
-           🎠 놀이터 창 : 인형방 · 인형극 · 달콤영상 · 포춘카드 · 꿈해몽 · 오락실 · 만화방 · 음악듣기 · 랜덤박스 · 말랑상점 · 카페이동 · 도움말
+           🎠 놀이터 창 : 인형방 · 인형극 · 달콤영상 · 포춘카드 · 꿈해몽 · 토정비결 · 오락실 · 만화방 · 음악듣기 · 팟캐스트 · 오디오북 · 랜덤박스 · 말랑상점 · 카페이동 · 도움말
            - 아직 안 만든 기능은 버튼에 '(준비중)'이 붙어 있고, 누르면 안내 메시지만 떠요.
              기능을 만들면 index.html 버튼의 class 에서 'soon' 과 <small>(준비중)</small> 을 빼고 아래 함수 내용을 바꾸면 돼요.
            ===================================================================== */
@@ -52,6 +52,8 @@
             else window.open(FORTUNE_URL, '_blank', 'noopener');
         }
         function openComics() { comingSoon('📚 만화방'); }
+        function openPodcast() { comingSoon('🎙️ 팟캐스트'); }
+        function openAudiobook() { comingSoon('📖 오디오북'); }
         function openMusic() { comingSoon('🎧 음악듣기'); }      // AI로 만든 음악 목록 (툴바 🎵 배경음악과는 다른 기능)
         function openRandomBox() { if (typeof openGacha === 'function') openGacha(); else comingSoon('🎁 랜덤박스'); }   // js/gacha.js
         function openShop() { showMsg('🛍️ 말랑상점은 준비 중이에요.<br>예쁜 패턴과 꾸미기 이미지를 곧 만나보세요!'); }

@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261002-47">
+    <link rel="stylesheet" href="css/style.css?v=20261002-48">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -152,6 +152,7 @@
                     <div class="help-k">👧 인형방</div><div class="help-v">인형을 만들어 일기에 붙이기 · 붙인 인형을 두 번 누르면 표정 바꾸기</div>
                     <div class="help-k">🕹️ 오락실</div><div class="help-v">오락실 게임 6가지 · 🧠 두뇌 게임 7가지 · 최고 점수는 이 기기에만 기억</div>
                     <div class="help-k">🌙 꿈해몽</div><div class="help-v">꿈 이야기를 적으면 풀어 드려요 · 📌 다이어리에 붙이기</div>
+                    <div class="help-k">🎍 토정비결</div><div class="help-v">생년월일로 한 해의 운세와 달마다의 운세 보기</div>
                     <div class="help-k">🔮 포춘카드</div><div class="help-v">마음속 질문을 떠올리고 카드 한 장 고르기 · 📌 다이어리에 붙이기</div>
                     <div class="help-k">☕ 카페이동</div><div class="help-v">말랑달콤 카페가 새 창으로 열려요</div>
                     <div class="help-k">(준비중)</div><div class="help-v">곧 열려요!</div>
@@ -564,9 +565,12 @@
                 <button class="btn service-btn soon" onclick="openSweetVideo()"><span class="service-icon">🎬</span>달콤영상<small>(준비중)</small></button>
                 <button class="btn service-btn" onclick="openFortune()"><span class="service-icon">🔮</span>포춘카드</button>
                 <button class="btn service-btn" onclick="window.openDream ? openDream() : comingSoon('🌙 꿈해몽')"><span class="service-icon">🌙</span>꿈해몽<small>내 꿈 풀어 보기</small></button>
+                <button class="btn service-btn" onclick="window.openTojeong ? openTojeong() : comingSoon('🎍 토정비결')"><span class="service-icon">🎍</span>토정비결<small>한 해의 운세</small></button>
                 <button class="btn service-btn" onclick="window.openArcade ? openArcade() : comingSoon('🕹️ 오락실')"><span class="service-icon">🕹️</span>오락실<small>게임 13가지</small></button>
                 <button class="btn service-btn soon" onclick="openComics()"><span class="service-icon">📚</span>만화방<small>(준비중)</small></button>
                 <button class="btn service-btn soon" onclick="openMusic()"><span class="service-icon">🎧</span>음악듣기<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openPodcast()"><span class="service-icon">🎙️</span>팟캐스트<small>(준비중)</small></button>
+                <button class="btn service-btn soon" onclick="openAudiobook()"><span class="service-icon">📖</span>오디오북<small>(준비중)</small></button>
                 <button class="btn service-btn" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스<small>하루 한 번 뽑기</small></button>
                 <button class="btn service-btn soon" onclick="openShop()"><span class="service-icon">🛍️</span>말랑상점<small>(준비중)</small></button>
                 <button class="btn service-btn" onclick="goCafe()"><span class="service-icon">☕</span>카페이동</button>
@@ -637,33 +641,35 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261002-47"></script>
-    <script src="js/app.js?v=20261002-47"></script>
-    <script src="js/page.js?v=20261002-47"></script>
-    <script src="js/elements.js?v=20261002-47"></script>
-    <script src="js/settings.js?v=20261002-47"></script>
-    <script src="js/patterns.js?v=20261002-47"></script>
+    <script src="js/drive.js?v=20261002-48"></script>
+    <script src="js/app.js?v=20261002-48"></script>
+    <script src="js/page.js?v=20261002-48"></script>
+    <script src="js/elements.js?v=20261002-48"></script>
+    <script src="js/settings.js?v=20261002-48"></script>
+    <script src="js/patterns.js?v=20261002-48"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261002-47"></script>
-    <script src="js/skins.js?v=20261002-47"></script>
-    <script src="js/pattern-maker.js?v=20261002-47"></script>
-    <script src="js/doll-render.js?v=20261002-47"></script>
-    <script src="js/doll-store.js?v=20261002-47"></script>
-    <script src="js/doll-room.js?v=20261002-47"></script>
-    <script src="js/service.js?v=20261002-47"></script>
+    <script src="js/pattern-recipe.js?v=20261002-48"></script>
+    <script src="js/skins.js?v=20261002-48"></script>
+    <script src="js/pattern-maker.js?v=20261002-48"></script>
+    <script src="js/doll-render.js?v=20261002-48"></script>
+    <script src="js/doll-store.js?v=20261002-48"></script>
+    <script src="js/doll-room.js?v=20261002-48"></script>
+    <script src="js/service.js?v=20261002-48"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261002-47"></script>
+    <script src="js/gacha.js?v=20261002-48"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261002-47"></script>
+    <script src="js/bgm.js?v=20261002-48"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261002-47"></script>
+    <script src="js/fortune.js?v=20261002-48"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261002-47"></script>
+    <script src="js/arcade.js?v=20261002-48"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/dream.js?v=20261002-47"></script>
+    <script src="js/dream.js?v=20261002-48"></script>
+    <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
+    <script src="js/tojeong.js?v=20261002-48"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
