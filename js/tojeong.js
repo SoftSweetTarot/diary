@@ -138,80 +138,102 @@
         }
 
 
-        /* ---------- 🖼 토정비결 그림 카드 : 상괘(하늘·연못·불·우레·바람·물·산·땅)마다 다른 풍경 (직접 그린 그림 · 파일 없음) ---------- */
+        /* ---------- 👵 토정비결 할머니 : 결과를 말해 주는 그림 ----------
+           images/tojeong-master.png 파일을 넣어 두면 그 그림을 쓰고 (AI 그림 등), 없으면 아래에 직접 그린 할머니 그림을 써요. */
+        const TJ_MASTER_IMG = 'images/tojeong-master.png';
+        const TJ_MASTER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 240">
+  <defs>
+    <radialGradient id="cheek"><stop offset="0" stop-color="#ff9fb0" stop-opacity=".75"/><stop offset="1" stop-color="#ff9fb0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e9ef"/><stop offset="1" stop-color="#c9c9d4"/></linearGradient>
+  </defs>
+  <!-- 뒷머리 · 쪽머리 · 비녀 (얼굴 뒤) -->
+  <ellipse cx="110" cy="90" rx="50" ry="52" fill="url(#hair)"/>
+  <ellipse cx="110" cy="134" rx="34" ry="15" fill="#c4c4cf"/>
+  <rect x="58" y="129" width="104" height="6" rx="3" fill="#e2b24a"/>
+  <circle cx="58" cy="132" r="5.5" fill="#e2b24a"/><circle cx="162" cy="132" r="4.5" fill="#d9534f"/>
+  <!-- 치마 -->
+  <path d="M38 240 C44 196 64 168 110 166 C156 168 176 196 182 240 Z" fill="#46508f"/>
+  <path d="M60 240 C66 204 80 182 110 180" fill="none" stroke="#5b66a8" stroke-width="3"/>
+  <!-- 저고리 -->
+  <path d="M46 214 C48 176 70 150 110 148 C150 150 172 176 174 214 C160 220 140 222 110 222 C80 222 60 220 46 214 Z" fill="#f7d9e3"/>
+  <!-- 소매 끝동 -->
+  <path d="M46 214 C47 204 50 196 54 190 L70 200 C66 206 64 212 64 218 Z" fill="#c95a7a"/>
+  <path d="M174 214 C173 204 170 196 166 190 L150 200 C154 206 156 212 156 218 Z" fill="#c95a7a"/>
+  <!-- 깃 · 동정 -->
+  <path d="M92 150 L110 184 L128 150" fill="none" stroke="#fff" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M92 150 L110 184 L128 150" fill="none" stroke="#9a4a6a" stroke-width="2.5" stroke-linejoin="round" transform="translate(0 5)"/>
+  <!-- 고름 -->
+  <path d="M112 186 C124 190 132 198 128 214" fill="none" stroke="#c0392b" stroke-width="7" stroke-linecap="round"/>
+  <path d="M112 186 C118 196 116 206 108 218" fill="none" stroke="#d9534f" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="112" cy="186" r="5" fill="#c0392b"/>
+  <!-- 손과 책 -->
+  <g transform="translate(110 206)">
+    <path d="M-34 -6 L0 2 L34 -6 L34 18 L0 26 L-34 18 Z" fill="#fff8e6" stroke="#c9a46a" stroke-width="2"/>
+    <line x1="0" y1="2" x2="0" y2="26" stroke="#c9a46a" stroke-width="2"/>
+    <g stroke="#b9a07a" stroke-width="1.4"><line x1="-28" y1="4" x2="-6" y2="8"/><line x1="-28" y1="9" x2="-6" y2="13"/><line x1="6" y1="8" x2="28" y2="4"/><line x1="6" y1="13" x2="28" y2="9"/></g>
+    <ellipse cx="-36" cy="10" rx="9" ry="7" fill="#ffd9bf"/><ellipse cx="36" cy="10" rx="9" ry="7" fill="#ffd9bf"/>
+  </g>
+  <!-- 목 -->
+  <rect x="100" y="126" width="20" height="26" rx="8" fill="#ffd9bf"/>
+  <!-- 얼굴 -->
+  <ellipse cx="110" cy="92" rx="44" ry="46" fill="#ffe1c9"/>
+  <!-- 머리 (가르마) -->
+  <path d="M66 92 C62 54 86 38 110 38 C134 38 158 54 154 92 C150 72 136 60 110 58 C84 60 70 72 66 92 Z" fill="url(#hair)"/>
+  <path d="M110 40 L110 58" stroke="#b0b0bc" stroke-width="2"/>
+  <path d="M72 70 C84 60 96 58 108 58" fill="none" stroke="#d6d6de" stroke-width="2"/>
+  <path d="M148 70 C136 60 124 58 112 58" fill="none" stroke="#d6d6de" stroke-width="2"/>
+  <!-- 귀 -->
+  <ellipse cx="66" cy="98" rx="6" ry="9" fill="#ffd4b6"/><ellipse cx="154" cy="98" rx="6" ry="9" fill="#ffd4b6"/>
+  <!-- 눈썹 · 눈 (웃는 눈) -->
+  <path d="M84 80 q9 -5 18 0" fill="none" stroke="#a9a9b4" stroke-width="3" stroke-linecap="round"/>
+  <path d="M118 80 q9 -5 18 0" fill="none" stroke="#a9a9b4" stroke-width="3" stroke-linecap="round"/>
+  <path d="M86 94 q7 -7 14 0" fill="none" stroke="#5a4036" stroke-width="3" stroke-linecap="round"/>
+  <path d="M120 94 q7 -7 14 0" fill="none" stroke="#5a4036" stroke-width="3" stroke-linecap="round"/>
+  <!-- 눈가 주름 -->
+  <g stroke="#e8b89a" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M80 96 l-5 2"/><path d="M80 92 l-5 -1"/><path d="M140 96 l5 2"/><path d="M140 92 l5 -1"/></g>
+  <!-- 둥근 안경 -->
+  <g fill="none" stroke="#8a6a4a" stroke-width="2"><circle cx="93" cy="94" r="12"/><circle cx="127" cy="94" r="12"/><path d="M105 94 q5 -4 10 0"/></g>
+  <!-- 볼 · 코 · 입 -->
+  <circle cx="84" cy="110" r="10" fill="url(#cheek)"/><circle cx="136" cy="110" r="10" fill="url(#cheek)"/>
+  <path d="M108 104 q2 4 4 0" fill="none" stroke="#e0a888" stroke-width="2" stroke-linecap="round"/>
+  <path d="M100 116 q10 9 20 0" fill="#d9706a" stroke="#b9504a" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- 반짝 -->
+  <g fill="#ffd36b"><path d="M30 60 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z"/><path d="M186 40 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2z"/></g>
+</svg>
+`;
         const tjX = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        function tjSky(id, a, b) { return `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`; }
-        const TJ_SCENES = [
-            /* 1 ☰ 하늘 : 해와 구름, 새 */
-            () => `<defs>${tjSky('s', '#8fcaf5', '#fff1cc')}</defs><rect width="260" height="230" fill="url(#s)"/>
-              <g stroke="#ffd36b" stroke-width="4" stroke-linecap="round" opacity=".8">${Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6; return `<line x1="${130 + Math.cos(a) * 50}" y1="${92 + Math.sin(a) * 50}" x2="${130 + Math.cos(a) * 66}" y2="${92 + Math.sin(a) * 66}"/>`; }).join('')}</g>
-              <circle cx="130" cy="92" r="40" fill="#ffc94a"/><circle cx="130" cy="92" r="30" fill="#ffdb7a"/>
-              <g fill="#fff"><ellipse cx="46" cy="170" rx="44" ry="16"/><ellipse cx="80" cy="160" rx="30" ry="18"/><ellipse cx="210" cy="180" rx="50" ry="16"/><ellipse cx="190" cy="170" rx="28" ry="16"/></g>
-              <g fill="none" stroke="#5a6a8a" stroke-width="2.4" stroke-linecap="round"><path d="M40 52 q7 -7 14 0 q7 -7 14 0"/><path d="M196 40 q6 -6 12 0 q6 -6 12 0"/><path d="M214 66 q5 -5 10 0 q5 -5 10 0"/></g>`,
-            /* 2 ☱ 연못 : 달과 연꽃 */
-            () => `<defs>${tjSky('s', '#1f3360', '#5b7cb4')}</defs><rect width="260" height="230" fill="url(#s)"/>
-              <circle cx="190" cy="58" r="24" fill="#fff4c9"/><circle cx="190" cy="58" r="34" fill="#fff4c9" opacity=".18"/>
-              <rect y="138" width="260" height="92" fill="#2e5e8e"/><ellipse cx="190" cy="168" rx="20" ry="6" fill="#fff4c9" opacity=".7"/><ellipse cx="190" cy="184" rx="12" ry="3" fill="#fff4c9" opacity=".45"/>
-              <g fill="#4f9a6a"><ellipse cx="60" cy="180" rx="34" ry="10"/><ellipse cx="120" cy="204" rx="28" ry="8"/><ellipse cx="226" cy="214" rx="26" ry="7"/></g>
-              <g transform="translate(64 170)"><ellipse cx="0" cy="-14" rx="7" ry="16" fill="#ffb3c8"/><ellipse cx="-10" cy="-8" rx="7" ry="14" fill="#ff9fbb" transform="rotate(-30 -10 -8)"/><ellipse cx="10" cy="-8" rx="7" ry="14" fill="#ff9fbb" transform="rotate(30 10 -8)"/><circle cy="-6" r="4" fill="#ffe27a"/></g>`,
-            /* 3 ☲ 불 : 노을과 등불 */
-            () => `<defs>${tjSky('s', '#3a1f45', '#f08a52')}<radialGradient id="g"><stop offset="0" stop-color="#ffe08a" stop-opacity=".9"/><stop offset="1" stop-color="#ffe08a" stop-opacity="0"/></radialGradient></defs><rect width="260" height="230" fill="url(#s)"/>
-              <circle cx="130" cy="150" r="46" fill="#ff7a4a"/>
-              <path d="M0 170 Q60 130 120 168 T260 160 V230 H0Z" fill="#4a2338"/><path d="M0 196 Q80 170 150 196 T260 190 V230 H0Z" fill="#2e1526"/>
-              ${[[60, 54], [130, 40], [200, 58]].map(([x, y]) => `<circle cx="${x}" cy="${y + 26}" r="34" fill="url(#g)"/><line x1="${x}" y1="0" x2="${x}" y2="${y}" stroke="#6a3a2a" stroke-width="2"/><rect x="${x - 9}" y="${y}" width="18" height="5" rx="2" fill="#e8b04a"/><rect x="${x - 15}" y="${y + 5}" width="30" height="40" rx="12" fill="#e2453a"/><rect x="${x - 9}" y="${y + 45}" width="18" height="5" rx="2" fill="#e8b04a"/><line x1="${x}" y1="${y + 50}" x2="${x}" y2="${y + 62}" stroke="#e8b04a" stroke-width="2"/>`).join('')}`,
-            /* 4 ☳ 우레 : 번개와 새싹 */
-            () => `<defs>${tjSky('s', '#aebbe0', '#eaf4d6')}</defs><rect width="260" height="230" fill="url(#s)"/>
-              <g fill="#6f7aa0"><ellipse cx="90" cy="40" rx="70" ry="26"/><ellipse cx="160" cy="34" rx="60" ry="24"/><ellipse cx="210" cy="48" rx="50" ry="20"/></g>
-              <polygon points="140,52 112,118 134,118 116,170 168,98 144,98 162,52" fill="#ffd93b" stroke="#f5b400" stroke-width="2"/>
-              <path d="M0 176 Q130 150 260 176 V230 H0Z" fill="#8fcf7a"/>
-              <g stroke="#3f8f4a" stroke-width="3" fill="#6fbf5a" stroke-linecap="round">${[30, 70, 190, 226].map(x => `<line x1="${x}" y1="200" x2="${x}" y2="184"/><ellipse cx="${x - 7}" cy="182" rx="8" ry="4" transform="rotate(-25 ${x - 7} 182)"/><ellipse cx="${x + 7}" cy="182" rx="8" ry="4" transform="rotate(25 ${x + 7} 182)"/>`).join('')}</g>
-              <g>${[[50, 212], [110, 206], [160, 214], [210, 208]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="#ff9fc0"/>`).join('')}</g>`,
-            /* 5 ☴ 바람 : 버드나무와 연 */
-            () => `<defs>${tjSky('s', '#cdeeff', '#fff4df')}</defs><rect width="260" height="230" fill="url(#s)"/>
-              <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".9"><path d="M20 70 q40 -24 80 0 t60 -6"/><path d="M120 110 q30 -18 60 0 t50 -4"/><path d="M30 130 q24 -14 48 0"/></g>
-              <polygon points="190,30 214,56 190,82 166,56" fill="#ff8fb1" stroke="#fff" stroke-width="2"/><line x1="166" y1="56" x2="214" y2="56" stroke="#fff" stroke-width="1.5"/><path d="M190 82 q-10 20 4 36 q-12 14 2 30" fill="none" stroke="#ff8fb1" stroke-width="2"/>
-              <path d="M0 196 Q130 180 260 196 V230 H0Z" fill="#a8d98a"/>
-              <path d="M46 196 C44 150 50 120 60 96" stroke="#7a5a3a" stroke-width="7" fill="none" stroke-linecap="round"/>
-              <g stroke="#6fbf5a" stroke-width="2.5" fill="none" stroke-linecap="round">${Array.from({ length: 9 }, (_, i) => `<path d="M${58 + i * 3} ${98 + i} q${12 + i * 2} 30 ${20 + i * 3} ${60 + i * 4}"/>`).join('')}</g>`,
-            /* 6 ☵ 물 : 강과 작은 배 */
-            () => `<defs>${tjSky('s', '#cfe2ea', '#f6f1e6')}</defs><rect width="260" height="230" fill="url(#s)"/>
-              <path d="M0 110 L40 70 L80 104 L130 56 L180 100 L220 74 L260 104 V140 H0Z" fill="#b8c9cf" opacity=".8"/>
-              <rect y="130" width="260" height="100" fill="#7fb3cc"/>
-              <g fill="none" stroke="#e8f6fb" stroke-width="2.5" stroke-linecap="round">${[146, 166, 186, 206].map((y, i) => `<path d="M${10 + i * 14} ${y} q15 -8 30 0 t30 0 t30 0"/><path d="M${150 - i * 10} ${y + 6} q15 -8 30 0 t30 0"/>`).join('')}</g>
-              <path d="M96 156 h70 l-12 14 h-46z" fill="#8a5a3a"/><line x1="131" y1="156" x2="131" y2="104" stroke="#6a4a2a" stroke-width="3"/><path d="M133 106 L162 150 H133Z" fill="#fff8e8"/>`,
-            /* 7 ☶ 산 : 겹겹이 산과 소나무 */
-            () => `<defs>${tjSky('s', '#f6efdf', '#ece0c8')}</defs><rect width="260" height="230" fill="url(#s)"/>
-              <circle cx="196" cy="54" r="18" fill="#d9483b"/>
-              <path d="M0 140 L50 76 L90 120 L140 60 L200 128 L240 92 L260 112 V230 H0Z" fill="#b9c4b4"/>
-              <path d="M0 170 L40 124 L90 166 L150 108 L210 168 L260 136 V230 H0Z" fill="#7f9184"/>
-              <path d="M0 200 L60 160 L120 200 L180 170 L260 206 V230 H0Z" fill="#4c5e53"/>
-              <g transform="translate(40 120)"><rect x="-3" y="20" width="6" height="56" fill="#5a3a2a"/><g fill="#2f5a3e"><ellipse cx="0" cy="22" rx="26" ry="8"/><ellipse cx="6" cy="8" rx="20" ry="7"/><ellipse cx="-4" cy="-4" rx="14" ry="6"/></g></g>`,
-            /* 8 ☷ 땅 : 밭고랑과 씨앗 */
-            () => `<defs>${tjSky('s', '#ffe2b8', '#fff6e8')}</defs><rect width="260" height="230" fill="url(#s)"/>
-              <circle cx="190" cy="74" r="28" fill="#ffb347"/>
-              <path d="M0 120 Q130 100 260 120 V230 H0Z" fill="#c9965e"/>
-              <g fill="none" stroke="#a87444" stroke-width="5" stroke-linecap="round">${[136, 156, 178, 202].map((y, i) => `<path d="M-10 ${y} Q130 ${y - 18 + i * 3} 270 ${y}"/>`).join('')}</g>
-              <g stroke="#3f8f4a" stroke-width="2.5" fill="#6fbf5a" stroke-linecap="round">${[[40, 146], [90, 141], [150, 141], [200, 146], [64, 168], [130, 162], [196, 168], [100, 190], [170, 190]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x}" y2="${y - 10}"/><ellipse cx="${x - 5}" cy="${y - 11}" rx="5" ry="2.6" transform="rotate(-25 ${x - 5} ${y - 11})"/><ellipse cx="${x + 5}" cy="${y - 11}" rx="5" ry="2.6" transform="rotate(25 ${x + 5} ${y - 11})"/>`).join('')}</g>`
-        ];
-        function tjCardSvg(g, r) {
+        const tjSvgUrl = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        function tjMasterUrl() { return tj.masterUrl || tjSvgUrl(TJ_MASTER_SVG); }
+        function tjFindMaster() {                         // 그림 파일이 있는지 한 번만 확인
+            if (tj.masterChecked) return;
+            tj.masterChecked = true;
+            const im = new Image();
+            im.onload = () => {
+                try {                                     // 다이어리에 붙일 때 쓰도록 작은 그림으로 바꿔 두기
+                    const k = Math.min(1, 360 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+                    c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+                    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+                    tj.masterUrl = c.toDataURL('image/png');
+                } catch (e) { tj.masterUrl = TJ_MASTER_IMG; }
+                document.querySelectorAll('.tj-master img').forEach(x => { x.src = tj.masterUrl; });
+            };
+            im.src = TJ_MASTER_IMG;
+        }
+        /* 다이어리에 붙일 그림 : 할머니 + 말풍선 */
+        function tjStickSvg(g, r) {
             const S = TJ_SANG[g.sang - 1], J = TJ_JUNG[g.jung - 1];
             const F = "'Nanum Myeongjo','AppleMyungjo','Batang','Noto Serif KR',serif";
             const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
-            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420" width="300" height="420">
-<defs><clipPath id="sc"><rect x="20" y="20" width="260" height="230" rx="14"/></clipPath></defs>
-<rect width="300" height="420" rx="22" fill="#fbf5e9"/>
-<rect x="8" y="8" width="284" height="404" rx="16" fill="none" stroke="#d8c39c" stroke-width="2"/>
-<g clip-path="url(#sc)"><g transform="translate(20 20)">${TJ_SCENES[g.sang - 1]()}</g></g>
-<rect x="20" y="20" width="260" height="230" rx="14" fill="none" stroke="#d8c39c" stroke-width="1.5"/>
-<g transform="translate(244 228) rotate(4)"><rect x="-26" y="-26" width="52" height="52" rx="8" fill="#b8332a"/><text y="2" font-size="17" font-weight="bold" text-anchor="middle" fill="#fff3e6" font-family="${F}">${r.code}</text><text y="18" font-size="10" text-anchor="middle" fill="#fff3e6" font-family="${F}">괘</text></g>
-<text x="150" y="290" font-size="16" font-weight="bold" text-anchor="middle" fill="#3b2c22" font-family="${F}">${tjX(S.head)}</text>
-<text x="150" y="314" font-size="16" font-weight="bold" text-anchor="middle" fill="#3b2c22" font-family="${F}">${tjX(J.tail)}</text>
-<text x="150" y="344" font-size="17" text-anchor="middle" fill="#d4a017" letter-spacing="3">${stars}</text>
-<line x1="70" y1="362" x2="230" y2="362" stroke="#e2d2b4" stroke-width="1"/>
-<text x="150" y="388" font-size="13" text-anchor="middle" fill="#8a7460" font-family="${F}">${S.s}  ${g.year} ${tjX(g.yearName)} 토정비결</text>
+            return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 360 250" width="360" height="250">
+<image href="${tjX(tjMasterUrl())}" xlink:href="${tjX(tjMasterUrl())}" x="0" y="40" width="190" height="207" preserveAspectRatio="xMidYMax meet"/>
+<path d="M150 18 h196 a12 12 0 0 1 12 12 v118 a12 12 0 0 1 -12 12 h-150 l-26 22 l6 -22 h-26 a12 12 0 0 1 -12 -12 v-118 a12 12 0 0 1 12 -12z" fill="#fffaf0" stroke="#d8c39c" stroke-width="2" transform="translate(-12 0)"/>
+<text x="246" y="46" font-size="11" text-anchor="middle" fill="#8a7460" font-family="${F}">${g.year} ${tjX(g.yearName)} · ${g.ly}년생 ${tjX(g.animal)}띠</text>
+<text x="246" y="80" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#3b2c22" font-family="${F}">${tjX(S.head)}</text>
+<text x="246" y="102" font-size="14.5" font-weight="bold" text-anchor="middle" fill="#3b2c22" font-family="${F}">${tjX(J.tail)}</text>
+<text x="246" y="130" font-size="15" text-anchor="middle" fill="#d4a017" letter-spacing="2">${stars}</text>
+<g transform="translate(330 166) rotate(5)"><rect x="-20" y="-20" width="40" height="40" rx="6" fill="#b8332a"/><text y="2" font-size="13" font-weight="bold" text-anchor="middle" fill="#fff3e6" font-family="${F}">${r.code}</text><text y="14" font-size="8" text-anchor="middle" fill="#fff3e6" font-family="${F}">괘</text></g>
 </svg>`;
         }
-        const tjSvgUrl = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 
         /* ---------- 화면 ---------- */
         function tjBuild() {
@@ -223,6 +245,7 @@
             const el = document.createElement('div');
             el.id = 'tojeongRoom'; el.className = 'tj-room';
             el.innerHTML = `
+              <button class="tj-x tj-back" type="button" id="tjBack" onclick="tjShow('tjForm')" aria-label="생년월일 화면으로" hidden>←</button>
               <button class="tj-x" type="button" onclick="closeTojeong()" aria-label="닫기">✕</button>
               <div class="tj-wrap">
                 <section id="tjForm" class="tj-stage">
@@ -267,7 +290,7 @@
             document.querySelectorAll('.tj-cal button').forEach(b => b.classList.toggle('on', b.dataset.cal === c));
             tq('tjLeapWrap').hidden = c !== 'lunar';
         }
-        function tjShow(id) { ['tjForm', 'tjResult'].forEach(s => { tq(s).hidden = s !== id; }); tq('tojeongRoom').scrollTop = 0; }
+        function tjShow(id) { ['tjForm', 'tjResult'].forEach(s => { tq(s).hidden = s !== id; }); tq('tjBack').hidden = id === 'tjForm'; tq('tojeongRoom').scrollTop = 0; }
 
         function openTojeong() {
             if (typeof closeModal === 'function') closeModal('serviceModal');
@@ -277,6 +300,7 @@
             document.body.classList.add('fc-lock');
             tjShow('tjForm');
             tjLoad().catch(() => {});
+            tjFindMaster();
         }
         function closeTojeong() {
             tj.open = false; clearTimeout(tj.timer);
@@ -312,30 +336,37 @@
         }
         function tjRender() {
             if (!tj.open || !tj.last) return;
-            const { g, r } = tj.last;
-            tj.cardUrl = tjSvgUrl(tjCardSvg(g, r));
+            const { g, r } = tj.last, S = TJ_SANG[g.sang - 1], J = TJ_JUNG[g.jung - 1];
+            const star = n => '★'.repeat(n) + '☆'.repeat(5 - n);
             tq('tjResult').innerHTML = `
-              <div class="tj-pic"><img src="${tj.cardUrl}" alt="토정비결 그림 카드"></div>
+              <div class="tj-scene">
+                <div class="tj-master"><img src="${tjMasterUrl()}" alt="토정비결 할머니"></div>
+                <div class="tj-bubble">
+                  <small>어디 보자… ${g.ly}년생 ${g.animal}띠 손님이구먼.</small>
+                  <b>${S.head}<br>${J.tail}</b>
+                  <span class="tj-stars">${star(r.stars)}</span>
+                  <span class="tj-seal2">${r.code}<i>괘</i></span>
+                </div>
+              </div>
               <article class="tj-paper">
-                <div class="tj-who"><b>${g.year}년 ${g.yearName} 운세</b><small>${g.ly}년생 ${g.animal}띠 · 음력 ${g.lm}월 ${g.ld}일 · ${g.age}세</small></div>
+                <div class="tj-who"><b>${g.year}년 ${g.yearName} 운세</b><small>음력 ${g.lm}월 ${g.ld}일생 · ${g.age}세</small></div>
                 ${r.text.map(t => `<p>${t}</p>`).join('')}
                 <p class="tj-key">올해의 낱말 <b>${r.key}</b></p>
               </article>
               <div class="tj-actions">
                 <button class="tj-go" type="button" onclick="tjStick()">📌 다이어리에 붙이기</button>
-                <button class="tj-go ghost" type="button" onclick="tjShow('tjForm')">✏️ 다시 보기</button>
               </div>
               <p class="tj-note">재미로 보는 신년운세예요.</p>`;
         }
 
         /* 📌 다이어리에 붙이기 */
         function tjStick() {
-            if (!tj.last || !tj.cardUrl) return;
+            if (!tj.last) return;
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { closeTojeong(); showMsg('먼저 다이어리를 열어주세요!'); return; }
             closeTojeong();
-            if (typeof addImage === 'function' && addImage(tj.cardUrl)) {
-                const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '170px';
-                toast('📌 토정비결 카드를 다이어리에 붙였어요');
+            if (typeof addImage === 'function' && addImage(tjSvgUrl(tjStickSvg(tj.last.g, tj.last.r)))) {
+                const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '230px';
+                toast('📌 토정비결을 다이어리에 붙였어요');
             }
         }
 

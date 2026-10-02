@@ -1069,3 +1069,41 @@
         .svc-panel-head b { font-size: 16px; color: var(--primary-accent); }
         .svc-help { width: 100%; justify-content: center; margin-top: 10px; font-size: 13px; }
         #serviceModal [hidden] { display: none !important; }
+        /* 토정비결 할머니가 말해 주는 장면 (그림 + 말풍선) */
+        .tj-scene { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 4px; }
+        .tj-master { width: 42%; max-width: 190px; flex-shrink: 0; animation: tjPop .7s cubic-bezier(.2,.9,.3,1.2) both; }
+        .tj-master img { width: 100%; height: auto; display: block; }
+        .tj-bubble { position: relative; flex: 1; min-width: 0; align-self: center; background: #fffaf0; border: 2px solid var(--tj-line); border-radius: 18px; padding: 14px 14px 16px;
+            display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; box-shadow: 0 8px 18px rgba(90,60,30,.12); animation: tjPop .7s .25s cubic-bezier(.2,.9,.3,1.2) both; }
+        .tj-bubble::before { content: ''; position: absolute; left: -12px; bottom: 26px; border: 10px solid transparent; border-right: 12px solid var(--tj-line); border-left: 0; }
+        .tj-bubble::after { content: ''; position: absolute; left: -9px; bottom: 28px; border: 8px solid transparent; border-right: 10px solid #fffaf0; border-left: 0; }
+        .tj-bubble small { font-size: 12px; color: #8a7460; word-break: keep-all; }
+        .tj-bubble b { font-family: 'Nanum Myeongjo', 'Song Myung', serif; font-size: clamp(.95rem, 4.2vw, 1.15rem); line-height: 1.55; word-break: keep-all; }
+        .tj-bubble .tj-stars { margin: 0; font-size: 15px; letter-spacing: 2px; }
+        .tj-seal2 { position: absolute; right: -8px; top: -14px; width: 42px; height: 42px; border-radius: 8px; background: var(--tj-red); color: #fff3e6; transform: rotate(6deg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Nanum Myeongjo', serif; font-weight: bold; font-size: 14px; line-height: 1; }
+        .tj-seal2 i { font-style: normal; font-size: 9px; margin-top: 2px; }
+        @keyframes tjPop { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+
+        /* ===== 창 제목 줄 : ← 제목 ✕ (js/settings.js mtDecorate) ===== */
+        .modal-title.mt-bar { display: flex; align-items: center; gap: 8px; }
+        .mt-text { flex: 1; min-width: 0; text-align: center; }
+        .mt-btn { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--border-color); background: #fff; color: #888; padding: 0;
+            font: inherit; font-size: 15px; font-weight: bold; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+        .mt-btn:hover { background: var(--border-color); color: #fff; }
+        .mt-btn.mt-none { visibility: hidden; pointer-events: none; }
+        .mt-moved { display: none !important; }
+        .svc-extra { padding: 12px 8px; }
+        .fc-x.fc-back, .tj-x.tj-back { right: auto; left: 12px; }
+        /* 말풍선은 위, 할머니는 아래 (할머니가 말하는 모습) */
+        .tj-scene { flex-direction: column; align-items: center; gap: 0; }
+        .tj-bubble { width: 100%; box-sizing: border-box; align-self: stretch; padding: 16px 18px 18px; }
+        .tj-bubble::before { left: 50%; bottom: -16px; top: auto; margin-left: -12px; border: 12px solid transparent; border-top: 16px solid var(--tj-line); border-bottom: 0; }
+        .tj-bubble::after { left: 50%; bottom: -12px; top: auto; margin-left: -10px; border: 10px solid transparent; border-top: 13px solid #fffaf0; border-bottom: 0; }
+        .tj-bubble b { font-size: clamp(1.05rem, 4.8vw, 1.25rem); }
+        .tj-seal2 { right: auto; left: -8px; top: -14px; transform: rotate(-6deg); }
+        .tj-master { width: 46%; max-width: 180px; margin-top: 10px; }
+        /* 할머니 아래 말풍선 : 꼬리는 위로 (할머니 쪽) */
+        .tj-master { margin: 0 0 14px; }
+        .tj-bubble::before { top: -16px; bottom: auto; border: 12px solid transparent; border-bottom: 16px solid var(--tj-line); border-top: 0; }
+        .tj-bubble::after { top: -12px; bottom: auto; border: 10px solid transparent; border-bottom: 13px solid #fffaf0; border-top: 0; }

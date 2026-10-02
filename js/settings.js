@@ -452,6 +452,34 @@
             autoSaveTimer = setInterval(() => { if (!turn) saveData(false); }, autoSaveMinutes * 60 * 1000);
         }
 
+        /* ---------- 창 제목 줄 : 왼쪽 ← (앞 화면으로) · 가운데 제목 · 오른쪽 ✕ (닫기) ----------
+           창 아래에 있던 '닫기' · '← …' 버튼은 숨기고, 제목 줄 버튼이 그 버튼을 대신 눌러 줘요. (원래 버튼의 동작 · 막힘 상태를 그대로 따라요)
+           나중에 만들어지는 창(배경음악 · 인형 등)도 처음 열 때 똑같이 바꿔요. */
+        function mtDecorate(modal) {
+            if (!modal || modal.dataset.mt || modal.id === 'customAlertModal') return;
+            const box = modal.querySelector('.modal-content'); if (!box) return;
+            const title = [...box.children].find(c => c.classList.contains('modal-title')); if (!title) return;
+            modal.dataset.mt = '1';
+            if (title.classList.contains('mt-bar')) return;                                   // 이미 직접 만든 제목 줄 (놀이터)
+            const btns = [...box.querySelectorAll('button')];
+            const closeBtn = btns.filter(b => b.textContent.trim() === '닫기').pop();
+            const backBtn = btns.find(b => /^←/.test(b.textContent.trim()));
+            const mk = (txt, label, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'mt-btn ' + cls; b.textContent = txt; b.setAttribute('aria-label', label); b.onclick = e => { e.stopPropagation(); fn(); }; return b; };
+            const span = document.createElement('span'); span.className = 'mt-text';
+            while (title.firstChild) span.appendChild(title.firstChild);
+            if (title.id) { span.id = title.id; title.removeAttribute('id'); }
+            const back = mk('←', backBtn ? backBtn.textContent.replace('←', '').trim() || '뒤로' : '뒤로', 'mt-back' + (backBtn ? '' : ' mt-none'), () => backBtn && backBtn.click());
+            const x = mk('✕', '닫기', 'mt-x', () => closeBtn ? closeBtn.click() : closeModal(modal.id));
+            title.classList.add('mt-bar');
+            title.append(back, span, x);
+            [closeBtn, backBtn].forEach(b => {
+                if (!b) return;
+                b.classList.add('mt-moved');
+                const p = b.parentElement;
+                if (p && p !== box && ![...p.children].some(c => !c.classList.contains('mt-moved') && !c.hidden && c.tagName !== 'INPUT')) p.classList.add('mt-moved');
+            });
+        }
+        document.querySelectorAll('.modal').forEach(mtDecorate);
         function openModal(id) {
             if (id === 'settingsModal') { saveData(false); updateStorageInfo(); refreshStorageStats(); }
             /* ☕ 서버 미리 깨우기 (js/service.js) : 설정 메뉴를 열면 건의함 서버, 놀이터를 열면 랜덤박스 서버 */
@@ -460,7 +488,8 @@
                 if (id === 'serviceModal' && typeof GACHA_API_URL !== 'undefined') warmServer(GACHA_API_URL);
                 if (id === 'serviceModal' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) warmServer(FORTUNE_API_URL);
             }
-            if (id === 'serviceModal' && typeof svcShowCats === 'function') svcShowCats();       // 놀이터는 늘 카테고리부터
+            if (id === 'serviceModal' && typeof svcShowCats === 'function') svcShowCats();
+            mtDecorate(document.getElementById(id));       // 놀이터는 늘 카테고리부터
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }

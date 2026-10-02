@@ -79,6 +79,7 @@
             el.className = 'fc-room dm-room';
             el.innerHTML = `
               <div class="fc-sky" aria-hidden="true"><i class="fc-aurora a1"></i><i class="fc-aurora a2"></i><i class="fc-stars"></i><i class="fc-stars s2"></i></div>
+              <button class="fc-x fc-back" type="button" id="drBack" onclick="dmShow('drWrite')" aria-label="꿈 적는 화면으로" hidden>←</button>
               <button class="fc-x" type="button" onclick="closeDream()" aria-label="닫기">✕</button>
               <div class="dm-wrap">
                 <section id="drWrite" class="dm-stage">
@@ -123,6 +124,7 @@
         function dmRenderMoods() { document.querySelectorAll('.dm-mood').forEach(b => b.classList.toggle('on', b.dataset.m === dm.mood)); }
         function dmShow(id) {
             ['drWrite', 'drResult', 'drDict'].forEach(s => { dq(s).hidden = s !== id; });
+            dq('drBack').hidden = id === 'drWrite';                // ← 는 꿈 적는 화면이 아닐 때만
             dq('dreamRoom').scrollTop = 0;
             if (id === 'drWrite') setTimeout(() => { if (!/Mobi|Android/i.test(navigator.userAgent)) dq('drText').focus(); }, 50);
         }

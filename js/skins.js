@@ -146,7 +146,7 @@
                 title.title = '끌어서 창을 옮길 수 있어요';
                 let start = null;
                 title.addEventListener('pointerdown', e => {
-                    if (e.button > 0) return;
+                    if (e.button > 0 || e.target.closest('button')) return;      // 제목 줄의 ← · ✕ · 👀 버튼은 끌기 아님
                     const p = posOf[modal.id] || { x: 0, y: 0 };
                     start = { x: e.clientX, y: e.clientY, ox: p.x, oy: p.y };
                     title.setPointerCapture(e.pointerId);

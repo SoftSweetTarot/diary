@@ -42,12 +42,16 @@
             const cats = document.getElementById('svcCats'); if (!cats) return;
             cats.hidden = false;
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = true; });
-            const t = document.querySelector('#serviceModal .modal-title'); if (t) t.textContent = '🎠 놀이터';
+            document.getElementById('svcTitle').textContent = '🎠 놀이터';
+            document.getElementById('svcBack').classList.add('mt-none');      // 맨 처음 화면에서는 ← 숨김
         }
+        const SVC_CAT_NAMES = { daily: '🌱 매일 말랑', fortune: '🔮 운세·마음', make: '🎨 만들기·꾸미기', game: '🕹️ 게임', watch: '🎧 보고·듣기', together: '💌 함께하기' };
         function svcOpenCat(id) {
             const panel = document.getElementById('svcPanel-' + id); if (!panel) return;
             document.getElementById('svcCats').hidden = true;
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = p !== panel; });
+            document.getElementById('svcTitle').textContent = SVC_CAT_NAMES[id] || '🎠 놀이터';
+            document.getElementById('svcBack').classList.remove('mt-none');
         }
         function openHelpFromService() {
             closeModal('serviceModal');

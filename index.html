@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261002-50">
+    <link rel="stylesheet" href="css/style.css?v=20261002-51">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -154,6 +154,7 @@
                     <div class="help-k">🎨 만들기·꾸미기</div><div class="help-v">👧 인형방 : 인형을 만들어 붙이기 · 두 번 누르면 표정 바꾸기</div>
                     <div class="help-k">🕹️ 게임</div><div class="help-v">오락실 게임 6가지 · 🧠 두뇌 게임 7가지 · 최고 점수는 이 기기에만</div>
                     <div class="help-k">🎧 보고·듣기 · 💌 함께하기</div><div class="help-v">☕ 카페이동 · 나머지는 곧 열려요!</div>
+                    <div class="help-k">창 닫기</div><div class="help-v">창 제목 오른쪽 ✕ 로 닫고, 왼쪽 ← 로 앞 화면으로 돌아가요</div>
                 </div>
                 <div class="help-section-title">⚙ 설정</div>
                 <div class="help-rows">
@@ -556,7 +557,7 @@
     <!-- 🎠 놀이터 모달 (코드 안에서는 serviceModal 이라는 이름을 그대로 써요) -->
     <div class="modal" id="serviceModal">
         <div class="modal-content">
-            <div class="modal-title">🎠 놀이터</div>
+            <div class="modal-title mt-bar"><button class="mt-btn mt-back mt-none" type="button" id="svcBack" onclick="svcShowCats()" aria-label="놀이터로">←</button><span class="mt-text" id="svcTitle">🎠 놀이터</span><button class="mt-btn mt-x" type="button" onclick="closeModal('serviceModal')" aria-label="닫기">✕</button></div>
             <!-- 1단계 : 카테고리 고르기 -->
             <div class="svc-cats" id="svcCats">
                 <button class="svc-cat" type="button" onclick="svcOpenCat('daily')"><span class="svc-cat-icon">🌱</span><b>매일 말랑</b><small>매일 들르면 좋은 것</small><i>출석 도장판 · 말랑 화분 · 오늘의 질문 · 오늘의 행운 · 랜덤박스</i></button>
@@ -564,11 +565,12 @@
                 <button class="svc-cat" type="button" onclick="svcOpenCat('make')"><span class="svc-cat-icon">🎨</span><b>만들기·꾸미기</b><small>다이어리에 붙이는 작품</small><i>인형방 · 포토부스 · 스티커 만들기 · 색칠놀이</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('game')"><span class="svc-cat-icon">🕹️</span><b>게임</b><small>오락실 · 두뇌 게임</small><i>오락실 · 명예의 전당</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('watch')"><span class="svc-cat-icon">🎧</span><b>보고·듣기</b><small>음악 · 이야기 · 영상</small><i>음악듣기 · 팟캐스트 · 오디오북 · 만화방 · 달콤영상 · 인형극</i></button>
-                <button class="svc-cat" type="button" onclick="svcOpenCat('together')"><span class="svc-cat-icon">💌</span><b>함께하기</b><small>말랑이들과 나누기</small><i>익명 편지함 · 카페이동 · 말랑상점</i></button>
+                <button class="svc-cat" type="button" onclick="svcOpenCat('together')"><span class="svc-cat-icon">💌</span><b>함께하기</b><small>말랑이들과 나누기</small><i>익명 편지함 · 카페이동</i></button>
+                <button class="svc-cat svc-extra" type="button" onclick="openShop()"><span class="svc-cat-icon">🛍️</span><b>말랑상점</b><small>(준비중)</small></button>
+                <button class="svc-cat svc-extra" type="button" onclick="openHelpFromService()"><span class="svc-cat-icon">❓</span><b>다이어리 도움말</b><small>사용법 한눈에</small></button>
             </div>
             <!-- 2단계 : 카테고리 안에서 놀이 고르기 -->
             <div class="svc-panel" id="svcPanel-daily" hidden>
-                <div class="svc-panel-head"><button class="btn" type="button" onclick="svcShowCats()">← 놀이터</button><b>🌱 매일 말랑</b></div>
                 <div class="service-grid">
                     <button class="btn service-btn soon" onclick="comingSoon('📅 출석 도장판')"><span class="service-icon">📅</span>출석 도장판<small>(준비중)</small></button>
                     <button class="btn service-btn soon" onclick="comingSoon('🌷 말랑 화분')"><span class="service-icon">🌷</span>말랑 화분<small>(준비중)</small></button>
@@ -578,7 +580,6 @@
                 </div>
             </div>
             <div class="svc-panel" id="svcPanel-fortune" hidden>
-                <div class="svc-panel-head"><button class="btn" type="button" onclick="svcShowCats()">← 놀이터</button><b>🔮 운세·마음</b></div>
                 <div class="service-grid">
                     <button class="btn service-btn" onclick="openFortune()"><span class="service-icon">🔮</span>포춘카드</button>
                     <button class="btn service-btn" onclick="window.openDream ? openDream() : comingSoon('🌙 꿈해몽')"><span class="service-icon">🌙</span>꿈해몽<small>내 꿈 풀어 보기</small></button>
@@ -588,7 +589,6 @@
                 </div>
             </div>
             <div class="svc-panel" id="svcPanel-make" hidden>
-                <div class="svc-panel-head"><button class="btn" type="button" onclick="svcShowCats()">← 놀이터</button><b>🎨 만들기·꾸미기</b></div>
                 <div class="service-grid">
                     <button class="btn service-btn" onclick="openDollPicker()"><span class="service-icon">👧</span>인형방<small>나만의 인형 만들기</small></button>
                     <button class="btn service-btn soon" onclick="comingSoon('📸 말랑 포토부스')"><span class="service-icon">📸</span>포토부스<small>(준비중)</small></button>
@@ -597,14 +597,12 @@
                 </div>
             </div>
             <div class="svc-panel" id="svcPanel-game" hidden>
-                <div class="svc-panel-head"><button class="btn" type="button" onclick="svcShowCats()">← 놀이터</button><b>🕹️ 게임</b></div>
                 <div class="service-grid">
                     <button class="btn service-btn" onclick="window.openArcade ? openArcade() : comingSoon('🕹️ 오락실')"><span class="service-icon">🕹️</span>오락실<small>게임 13가지</small></button>
                     <button class="btn service-btn soon" onclick="comingSoon('🏆 명예의 전당')"><span class="service-icon">🏆</span>명예의 전당<small>(준비중)</small></button>
                 </div>
             </div>
             <div class="svc-panel" id="svcPanel-watch" hidden>
-                <div class="svc-panel-head"><button class="btn" type="button" onclick="svcShowCats()">← 놀이터</button><b>🎧 보고·듣기</b></div>
                 <div class="service-grid">
                     <button class="btn service-btn soon" onclick="openMusic()"><span class="service-icon">🎧</span>음악듣기<small>(준비중)</small></button>
                     <button class="btn service-btn soon" onclick="openPodcast()"><span class="service-icon">🎙️</span>팟캐스트<small>(준비중)</small></button>
@@ -615,15 +613,11 @@
                 </div>
             </div>
             <div class="svc-panel" id="svcPanel-together" hidden>
-                <div class="svc-panel-head"><button class="btn" type="button" onclick="svcShowCats()">← 놀이터</button><b>💌 함께하기</b></div>
                 <div class="service-grid">
                     <button class="btn service-btn soon" onclick="comingSoon('💌 익명 편지함')"><span class="service-icon">💌</span>익명 편지함<small>(준비중)</small></button>
                     <button class="btn service-btn" onclick="goCafe()"><span class="service-icon">☕</span>카페이동</button>
-                    <button class="btn service-btn soon" onclick="openShop()"><span class="service-icon">🛍️</span>말랑상점<small>(준비중)</small></button>
                 </div>
             </div>
-            <button class="btn svc-help" type="button" onclick="openHelpFromService()">❓ 놀이터 도움말</button>
-            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('serviceModal')">닫기</button>
         </div>
     </div>
 
@@ -688,35 +682,35 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261002-50"></script>
-    <script src="js/app.js?v=20261002-50"></script>
-    <script src="js/page.js?v=20261002-50"></script>
-    <script src="js/elements.js?v=20261002-50"></script>
-    <script src="js/settings.js?v=20261002-50"></script>
-    <script src="js/patterns.js?v=20261002-50"></script>
+    <script src="js/drive.js?v=20261002-51"></script>
+    <script src="js/app.js?v=20261002-51"></script>
+    <script src="js/page.js?v=20261002-51"></script>
+    <script src="js/elements.js?v=20261002-51"></script>
+    <script src="js/settings.js?v=20261002-51"></script>
+    <script src="js/patterns.js?v=20261002-51"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261002-50"></script>
-    <script src="js/skins.js?v=20261002-50"></script>
-    <script src="js/pattern-maker.js?v=20261002-50"></script>
-    <script src="js/doll-render.js?v=20261002-50"></script>
-    <script src="js/doll-store.js?v=20261002-50"></script>
-    <script src="js/doll-room.js?v=20261002-50"></script>
-    <script src="js/service.js?v=20261002-50"></script>
+    <script src="js/pattern-recipe.js?v=20261002-51"></script>
+    <script src="js/skins.js?v=20261002-51"></script>
+    <script src="js/pattern-maker.js?v=20261002-51"></script>
+    <script src="js/doll-render.js?v=20261002-51"></script>
+    <script src="js/doll-store.js?v=20261002-51"></script>
+    <script src="js/doll-room.js?v=20261002-51"></script>
+    <script src="js/service.js?v=20261002-51"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261002-50"></script>
+    <script src="js/gacha.js?v=20261002-51"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261002-50"></script>
+    <script src="js/bgm.js?v=20261002-51"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261002-50"></script>
+    <script src="js/fortune.js?v=20261002-51"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261002-50"></script>
+    <script src="js/arcade.js?v=20261002-51"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/dream.js?v=20261002-50"></script>
+    <script src="js/dream.js?v=20261002-51"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261002-50"></script>
+    <script src="js/tojeong.js?v=20261002-51"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
