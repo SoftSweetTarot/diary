@@ -143,7 +143,7 @@
         function gcRenderOdds(odds) {
             const v = odds ? odds.video : 2000, im = odds ? odds.image : 8000;
             const pct = n => (n / 10000).toFixed(n && n < 10000 ? 1 : 0) + '%';
-            gq('gcOdds').innerHTML = `<tr><td>🎬 말랑 영상</td><td>${pct(v)}</td></tr><tr><td>🖼 말랑 이미지</td><td>${pct(im)}</td></tr><tr><td>🍀 꽝 (오늘의 한마디)</td><td>${pct(1000000 - v - im)}</td></tr>`;
+            gq('gcOdds').innerHTML = `<tr><td>🎬 스마트폰 라이브 배경화면</td><td>${pct(v)}</td></tr><tr><td>🖼 스마트폰 배경화면 이미지</td><td>${pct(im)}</td></tr><tr><td>🍀 꽝 (오늘의 한마디)</td><td>${pct(1000000 - v - im)}</td></tr>`;
         }
 
         /* ---------- 열기 · 닫기 ---------- */
@@ -310,7 +310,7 @@
                     : (id ? `<iframe class="gc-prize video" src="https://drive.google.com/file/d/${id}/preview" allow="autoplay" title="당첨 영상"></iframe>`
                           : `<video class="gc-prize video" src="${o.url}" controls playsinline></video>`);
                 box.innerHTML = `<h3>🎉 당첨!</h3>
-                    <p><b>${o.kind === 'image' ? '🖼 말랑 이미지' : '🎬 말랑 영상'}</b></p>
+                    <p><b>${o.kind === 'image' ? '🖼 스마트폰 배경화면 이미지' : '🎬 스마트폰 라이브 배경화면'}</b></p>
                     ${preview}
                     <a class="gc-main gc-dl" href="${dl}" target="_blank" rel="noopener">⬇ 내려받기</a>
                     <p class="gc-small">새 창에서 파일이 열리면 내려받기를 눌러 저장하세요.</p>
