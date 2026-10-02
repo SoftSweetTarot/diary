@@ -109,7 +109,6 @@
             return null;
         }
 
-        const RECIPE_KIND_NAMES = { stripe: '줄무늬', dot: '도트', check: '깅엄 체크', grid: '격자', scallop: '물결', tile: '이미지/그림' };
 
         /* 🎨 공유 스킨 : 색 5개뿐 → {"bg":"#ffe6f0","cover":"#ff9a9e","page":"#fff0f5","border":"#ffb6c1","accent":"#ff6b81"}
            '#'+6자리 색만 통과 (하나라도 이상하면 null) */

@@ -19,7 +19,6 @@
         ];
         const DM_TONE = { good: { t: '좋은 꿈', c: 'good' }, mix: { t: '반반', c: 'mix' }, care: { t: '살펴보기', c: 'care' } };
         const DM_COLORS = ['하늘색', '연분홍', '민트', '라벤더', '노랑', '살구색', '하얀색', '연두색', '코랄', '보라색'];
-        const DM_POPULAR = ['뱀', '돼지', '이가 빠지는 꿈', '똥', '물', '불', '돌아가신 분', '쫓기는 꿈', '떨어지는 꿈', '돈', '죽는 꿈', '시험', '아기', '하늘을 나는 꿈'];
 
         const dm = { built: false, open: false, mood: 'happy', loaded: null, last: null, cat: '전체', from: 'write' };
         const dq = id => document.getElementById(id);

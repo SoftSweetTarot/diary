@@ -143,7 +143,6 @@
         }
 
         /* 로그인·로그아웃으로 사람이 바뀌면 목록을 새로 읽도록 */
-        function resetDollCache() { dollCache.list = null; }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['doll-store'] = true;

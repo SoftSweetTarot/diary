@@ -4,7 +4,7 @@
      서버 코드 : 포춘카드_앱스크립트.gs (포춘카드 시트 → 확장 프로그램 → Apps Script 에 붙여 넣기)
      배포한 웹 앱 주소를 아래 FORTUNE_API_URL 에 넣어요.
    - 로그인하지 않아도(둘러보기) 뽑을 수 있어요. 뽑은 카드는 📌 다이어리에 붙일 수 있어요.
-   - 이 파일이 없거나 주소가 비어 있으면 놀이터의 포춘카드는 예전 포춘카드 사이트를 새 창으로 열어요.
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (포춘카드만 '준비 중')
    ※ 파일 불러오는 순서: … → service → gacha → bgm → fortune */
 
         const FORTUNE_API_URL = 'https://script.google.com/macros/s/AKfycbwWsQSPOirHEvIb1K3v-GUrzr7zYMgnQtj7loWVDCMKdWvzRTUuly24NYwqQomm-GSrSA/exec';                     // ← 포춘카드 앱스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)

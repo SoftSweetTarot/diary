@@ -188,8 +188,7 @@
             margin: 14px 0 6px 0; padding-bottom: 3px; border-bottom: 2px dashed var(--border-color);
         }
         .help-section-title:first-child { margin-top: 0; }
-        .help-item { margin-bottom: 7px; }
-        .help-item b { color: #333; }
+
         .help-note {
             background: #fff0f5; border: 1px dashed var(--border-color); border-radius: 10px;
             padding: 8px 10px; margin: 6px 0; font-size: 14px;
@@ -213,15 +212,6 @@
         }
         .sticker-item { font-size: 1.8rem; text-align: center; cursor: pointer; padding: 4px; border-radius: 8px; }
         .sticker-item:hover { background: #ffe6f0; transform: scale(1.15); transition: transform 0.1s; }
-
-        .storage-bar-bg {
-            width: 100%; height: 22px; background: #eaeaea; border-radius: 15px; overflow: hidden; margin: 10px 0 6px 0;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .storage-bar-fill {
-            height: 100%; background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
-            width: 0%; transition: width 0.4s ease; border-radius: 15px;
-        }
 
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 14px; margin-bottom: 4px; color: #555; }
@@ -926,13 +916,9 @@
         .dm-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 6px; }
         .dm-actions .fc-btn { padding: 12px 22px; font-size: 15px; }
         .dm-note { margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,.6); text-align: center; word-break: keep-all; }
-        .dm-verdict { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.14); border: 1.5px solid rgba(255,255,255,.3); }
-        .dm-verdict span { font-size: 34px; }
-        .dm-verdict b { font-size: clamp(1rem, 4.6vw, 1.25rem); word-break: keep-all; }
-        .dm-verdict.good { background: rgba(255,226,140,.18); border-color: rgba(255,226,140,.6); }
-        .dm-verdict.care { background: rgba(140,180,255,.16); border-color: rgba(160,190,255,.5); }
+
         .dm-quote { font-size: 14px; color: rgba(255,255,255,.8); text-align: center; font-style: italic; word-break: keep-all; line-height: 1.6; }
-        .dm-found { margin: 0; font-size: 13px; color: #ffe7a8; text-align: center; word-break: keep-all; line-height: 1.6; }
+
         .dm-cards { display: flex; flex-direction: column; gap: 10px; }
         .dm-card { background: rgba(255,255,255,.95); color: #3a2f55; border-radius: 18px; padding: 14px 16px; text-align: left; box-shadow: 0 8px 22px rgba(20,10,50,.3); }
         .dm-card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -945,16 +931,10 @@
         .dm-card p { margin: 0; font-size: 14.5px; line-height: 1.7; word-break: keep-all; }
         .dm-card p + p { margin-top: 6px; }
         .dm-case { color: #7a4a9a; }
-        .dm-end { display: flex; gap: 10px; align-items: flex-start; background: rgba(255,255,255,.12); border-radius: 16px; padding: 12px 14px; text-align: left; }
-        .dm-end span { font-size: 26px; }
-        .dm-end p { margin: 0; font-size: 14px; line-height: 1.7; word-break: keep-all; }
-        .dm-lucky { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .dm-lucky div { background: rgba(255,255,255,.12); border-radius: 14px; padding: 10px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
-        .dm-lucky small { font-size: 11px; color: rgba(255,255,255,.7); }
-        .dm-lucky b { font-size: 18px; color: #ffe7a8; }
+
         .dm-tip { margin: 0; font-size: 13px; color: rgba(255,255,255,.75); text-align: center; line-height: 1.7; word-break: keep-all; }
-        .dm-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-        .dm-chip, .dm-cat { border: 1.5px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+        .dm-cat { border: 1.5px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
         .dm-cat.on { background: rgba(255,255,255,.92); color: #5a2f86; font-weight: bold; }
         .dm-search { width: 100%; box-sizing: border-box; border-radius: 14px; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.95); color: #3a2f55; padding: 11px 14px; font: inherit; font-size: 16px; user-select: text; -webkit-user-select: text; }
         .dm-cats { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
@@ -1013,43 +993,20 @@
         .tj-reading { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 80px 0; }
         .tj-reading span { font-size: 46px; animation: fcFloat 1.2s ease-in-out infinite; }
         .tj-reading p { margin: 0; color: #7a6450; }
-        .tj-top { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1.5px dashed var(--tj-line); }
-        .tj-gwae { font-size: 44px; line-height: 1; color: var(--tj-red); }
+
         .tj-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
         .tj-who b { font-size: 16px; }
         .tj-who small { font-size: 12px; color: #8a7460; }
-        .tj-code { width: 58px; height: 58px; border-radius: 10px; background: var(--tj-red); color: #fff3e6; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-family: 'Nanum Myeongjo', serif; font-weight: bold; font-size: 19px; transform: rotate(3deg); flex-shrink: 0; }
-        .tj-code small { font-size: 11px; }
-        .tj-head { margin: 14px 0 4px; font-family: 'Nanum Myeongjo', 'Song Myung', serif; font-size: clamp(1.1rem, 5vw, 1.35rem); line-height: 1.5; text-align: center; word-break: keep-all; text-wrap: balance; }
+
         .tj-stars { text-align: center; color: #d4a017; font-size: 18px; letter-spacing: 3px; margin-bottom: 10px; }
         .tj-paper > p { margin: 0 0 10px; font-size: 15px; line-height: 1.85; word-break: keep-all; }
-        .tj-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
-        .tj-keys div { background: #fff; border: 1px solid var(--tj-line); border-radius: 12px; padding: 8px 6px; text-align: center; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-        .tj-keys small { font-size: 11px; color: #8a7460; }
-        .tj-keys b { font-size: 13px; word-break: keep-all; }
-        .tj-mh { margin: 10px 0 0; font-family: 'Nanum Myeongjo', serif; font-size: 17px; }
-        .tj-mh small { font-size: 12px; color: #8a7460; font-weight: normal; }
-        .tj-months { display: flex; flex-direction: column; gap: 6px; }
-        .tj-month { display: flex; gap: 12px; align-items: flex-start; background: var(--tj-paper); border: 1.5px solid var(--tj-line); border-radius: 14px; padding: 10px 12px; transition: box-shadow .6s; }
-        .tj-month.t2 { border-left: 5px solid #e8b04a; }
-        .tj-month.t1 { border-left: 5px solid #c9b79a; }
-        .tj-month.t0 { border-left: 5px solid #9fb3c8; }
-        .tj-month.now { background: #fff; }
-        .tj-month.glow { box-shadow: 0 0 0 3px rgba(184,51,42,.35); }
-        .tj-mm { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 34px; flex-shrink: 0; }
-        .tj-mm b { font-size: 15px; }
-        .tj-mt { min-width: 0; }
-        .tj-tone { font-size: 11.5px; color: #8a7460; }
-        .tj-mt p { margin: 3px 0 0; font-size: 14.5px; line-height: 1.6; word-break: keep-all; }
+
         .tj-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .tj-actions .tj-go { margin: 8px 0 0; }
-        @media (max-width: 380px) { .tj-keys { grid-template-columns: 1fr; } }
         .dm-pic { display: flex; justify-content: center; margin-bottom: 4px; }
         .dm-pic img { width: min(72vw, 260px); height: auto; border-radius: 20px; box-shadow: 0 14px 34px rgba(10,5,40,.45); animation: dmPic .9s cubic-bezier(.2,.8,.3,1) both; }
         @keyframes dmPic { from { opacity: 0; transform: translateY(16px) rotateY(70deg) scale(.92); } to { opacity: 1; transform: none; } }
-        .tj-pic { display: flex; justify-content: center; }
-        .tj-pic img { width: min(76vw, 280px); height: auto; border-radius: 20px; box-shadow: 0 14px 30px rgba(90,60,30,.28); animation: dmPic .9s cubic-bezier(.2,.8,.3,1) both; }
+
         .tj-paper .tj-who { padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1.5px dashed var(--tj-line); }
         .tj-key { text-align: center; color: #8a7460; font-size: 14px !important; margin: 4px 0 0 !important; }
         .tj-key b { color: var(--tj-red); font-size: 16px; margin-left: 4px; }
@@ -1064,10 +1021,7 @@
         .svc-cat b { font-size: 15px; }
         .svc-cat small { font-size: 11px; color: #999; }
         .svc-cat i { font-style: normal; font-size: 10.5px; color: var(--primary-accent); line-height: 1.4; margin-top: 4px; word-break: keep-all; opacity: .85; }
-        .svc-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .svc-panel-head .btn { font-size: 13px; padding: 4px 10px; flex-shrink: 0; }
-        .svc-panel-head b { font-size: 16px; color: var(--primary-accent); }
-        .svc-help { width: 100%; justify-content: center; margin-top: 10px; font-size: 13px; }
+
         #serviceModal [hidden] { display: none !important; }
         /* 토정비결 할머니가 말해 주는 장면 (그림 + 말풍선) */
         .tj-scene { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 4px; }

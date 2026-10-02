@@ -35,7 +35,6 @@
              기능을 만들면 index.html 버튼의 class 에서 'soon' 과 <small>(준비중)</small> 을 빼고 아래 함수 내용을 바꾸면 돼요.
            ===================================================================== */
         const CAFE_URL = 'https://cafe.naver.com/sarangloveis';   // ☕ 말랑달콤 카페
-        const FORTUNE_URL = 'https://softsweettarot.github.io/Message/';   // 🔮 포춘카드
 
         /* 🎠 놀이터 : 1단계 카테고리 → 2단계 놀이 (놀이터를 열 때마다 카테고리부터 · js/settings.js openModal) */
         function svcShowCats() {
@@ -63,10 +62,7 @@
         function comingSoon(name) { showMsg(name + ' 기능은 준비 중이에요.<br>조금만 기다려 주세요!'); }
         function openPuppetShow() { comingSoon('🎭 인형극'); }
         function openSweetVideo() { comingSoon('🎬 달콤영상'); }
-        function openFortune() {                         // js/fortune.js 가 있고 서버 주소가 있으면 다이어리 안에서, 아니면 예전 포춘카드 사이트
-            if (typeof openFortuneCard === 'function' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) openFortuneCard();
-            else window.open(FORTUNE_URL, '_blank', 'noopener');
-        }
+        function openFortune() { if (typeof openFortuneCard === 'function') openFortuneCard(); else comingSoon('🔮 포춘카드'); }   // js/fortune.js
         function openComics() { comingSoon('📚 만화방'); }
         function openPodcast() { comingSoon('🎙️ 팟캐스트'); }
         function openAudiobook() { comingSoon('📖 오디오북'); }
