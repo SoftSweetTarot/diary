@@ -1045,3 +1045,11 @@
         .tj-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .tj-actions .tj-go { margin: 8px 0 0; }
         @media (max-width: 380px) { .tj-keys { grid-template-columns: 1fr; } }
+        .dm-pic { display: flex; justify-content: center; margin-bottom: 4px; }
+        .dm-pic img { width: min(72vw, 260px); height: auto; border-radius: 20px; box-shadow: 0 14px 34px rgba(10,5,40,.45); animation: dmPic .9s cubic-bezier(.2,.8,.3,1) both; }
+        @keyframes dmPic { from { opacity: 0; transform: translateY(16px) rotateY(70deg) scale(.92); } to { opacity: 1; transform: none; } }
+        .tj-pic { display: flex; justify-content: center; }
+        .tj-pic img { width: min(76vw, 280px); height: auto; border-radius: 20px; box-shadow: 0 14px 30px rgba(90,60,30,.28); animation: dmPic .9s cubic-bezier(.2,.8,.3,1) both; }
+        .tj-paper .tj-who { padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1.5px dashed var(--tj-line); }
+        .tj-key { text-align: center; color: #8a7460; font-size: 14px !important; margin: 4px 0 0 !important; }
+        .tj-key b { color: var(--tj-red); font-size: 16px; margin-left: 4px; }

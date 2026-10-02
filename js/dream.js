@@ -156,6 +156,45 @@
             setTimeout(() => { if (dm.open && dm.last && dm.last.text === text) dmRenderResult(); }, DM_READ_MS);
         }
 
+
+        /* ---------- 🖼 꿈 카드 그림 (직접 그린 그림 · 파일 없음) ---------- */
+        const dmX = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        function dmSeed(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296; }
+        function dmCardSvg(text, hits, v) {
+            const rnd = dmSeed(text);
+            const SKY = { good: ['#2b2a6b', '#b0629e', '#ffc48f'], mix: ['#1e2457', '#5a4a9a', '#c4a0dc'], care: ['#121a3a', '#2c3f74', '#6f8fc4'] }[v.c];
+            const d = new Date(), date = `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}`;
+            let stars = '';
+            for (let i = 0; i < 34; i++) { const x = 18 + rnd() * 264, y = 18 + rnd() * 250, r = .6 + rnd() * 1.6; stars += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" fill="#fff" opacity="${(.35 + rnd() * .6).toFixed(2)}"/>`; }
+            const emo = hits.slice(0, 3).map(h => h.sym.e);
+            const side = [[78, 268, -10], [226, 258, 12]];
+            const F = "'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif";
+            const EF = "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420" width="300" height="420">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SKY[0]}"/><stop offset=".62" stop-color="${SKY[1]}"/><stop offset="1" stop-color="${SKY[2]}"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".55" stop-color="#ffe9f6" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<mask id="moon"><rect width="300" height="420" fill="#fff"/><circle cx="244" cy="58" r="22" fill="#000"/></mask>
+<clipPath id="card"><rect x="0" y="0" width="300" height="420" rx="22"/></clipPath>
+</defs>
+<g clip-path="url(#card)">
+<rect width="300" height="420" fill="url(#sky)"/>
+${stars}
+<circle cx="232" cy="66" r="26" fill="#fff3c4" mask="url(#moon)"/>
+<circle cx="150" cy="188" r="104" fill="url(#glow)"/>
+<text x="150" y="222" font-size="96" text-anchor="middle" font-family="${EF}">${emo[0]}</text>
+${emo.slice(1).map((e, i) => `<text x="${side[i][0]}" y="${side[i][1]}" font-size="40" text-anchor="middle" font-family="${EF}" transform="rotate(${side[i][2]} ${side[i][0]} ${side[i][1]})" opacity=".95">${e}</text>`).join('')}
+<g fill="#fff" opacity=".9"><ellipse cx="40" cy="330" rx="70" ry="26"/><ellipse cx="120" cy="342" rx="80" ry="28"/><ellipse cx="220" cy="334" rx="90" ry="30"/><ellipse cx="290" cy="346" rx="60" ry="24"/></g>
+<rect x="0" y="340" width="300" height="80" fill="#fff" opacity=".9"/>
+<text x="150" y="372" font-size="16" font-weight="bold" text-anchor="middle" fill="#5a3d8a" font-family="${F}">${dmX(v.e + ' ' + v.t)}</text>
+<text x="150" y="398" font-size="12" text-anchor="middle" fill="#9a8ab8" font-family="${F}">${date} 의 꿈</text>
+</g>
+<rect x="9" y="9" width="282" height="402" rx="16" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2"/>
+<rect x="15" y="15" width="270" height="390" rx="12" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1"/>
+</svg>`;
+        }
+        const dmSvgUrl = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
         /* 기본 풀이에서 꿈에 쓰지 않은 조건 이야기(…할수록 · …면 ~해요)는 빼고, 꿈에 쓴 상황 풀이만 덧붙여요 */
         function dmText(h) {
             const sents = h.sym.m.split(/(?<=[.!?])\s+/).filter(x => x && !/수록|^하지만|^특히|^무서웠다면/.test(x));
@@ -188,7 +227,9 @@
                 return;
             }
             const v = dmVerdict(hits), lucky = dmLucky(text), shown = hits.slice(0, DM_SHOW);
+            dm.cardUrl = dmSvgUrl(dmCardSvg(text, hits, v));
             box.innerHTML = `
+              <div class="dm-pic"><img src="${dm.cardUrl}" alt="꿈 그림 카드"></div>
               <article class="dm-letter">
                 <div class="dm-letter-h">🌙 꿈 이야기를 읽어 봤어요</div>
                 <div class="dm-quote">“${quote}”</div>
@@ -209,21 +250,13 @@
 
         /* 📌 다이어리에 붙이기 : 결과를 글상자로 */
         function dmStick() {
-            if (!dm.last || !dm.last.hits.length) return;
+            if (!dm.last || !dm.last.hits.length || !dm.cardUrl) return;
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { closeDream(); showMsg('먼저 다이어리를 열어주세요!'); return; }
-            const { text, hits } = dm.last, v = dmVerdict(hits);
-            const short = text.length > 60 ? text.slice(0, 60) + '…' : text;
-            const body = `🌙 오늘의 꿈해몽\n“${short}”\n${v.e} ${v.t}`;
             closeDream();
-            if (typeof addText !== 'function') return;
-            addText();
-            const ta = document.querySelector('#canvasArea .element-box:last-child textarea');
-            if (ta) {
-                ta.value = body;
-                const box = ta.closest('.element-box'); box.style.width = '230px'; box.style.height = '130px';
-                ta.dispatchEvent(new Event('input', { bubbles: true }));
+            if (typeof addImage === 'function' && addImage(dm.cardUrl)) {
+                const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '170px';
+                toast('📌 꿈 카드를 다이어리에 붙였어요');
             }
-            toast('📌 꿈해몽을 다이어리에 붙였어요');
         }
 
         /* ---------- 📖 상징 사전 ---------- */
