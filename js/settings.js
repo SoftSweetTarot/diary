@@ -248,6 +248,7 @@
                 showMsg('💎 유료 스킨은 준비 중이에요.<br>조금만 기다려 주세요!');
                 return false;
             }
+            if (opts.save !== false && typeof seasonStop === 'function') seasonStop();   // 다른 스킨을 고르면 계절 테마 끄기 (js/season.js)
             setSkinVars(hit.skin);
             syncSkinPickers(hit.skin);
             currentSkinId = id;
@@ -265,9 +266,11 @@
         function restoreSkin() {
             let rec = null;
             try { rec = JSON.parse(store.getItem(SKIN_KEY)); } catch (e) { rec = null; }
-            if (rec && typeof rec.id === 'string' && applySkinPreset(rec.id, { save: false, inline: rec.c })) return;
-            renderSkinSelect();
-            updateSkinShareUI();
+            if (!(rec && typeof rec.id === 'string' && applySkinPreset(rec.id, { save: false, inline: rec.c }))) {
+                renderSkinSelect();
+                updateSkinShareUI();
+            }
+            if (typeof seasonRestore === 'function') seasonRestore();          // 🌸 계절 테마가 켜져 있으면 그 색으로 (js/season.js)
         }
 
         /* 스킨 목록 선택 칸 다시 그리기 : 기본 · 🌟 모두의 스킨 · 🎨 내 스킨 */

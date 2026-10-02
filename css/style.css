@@ -1474,3 +1474,30 @@
             mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 92'%3E%3Cpath d='M50 90 C10 62 0 40 6 22 C12 4 36 -2 50 18 C64 -2 88 4 94 22 C100 40 90 62 50 90Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
         .element-box.fr-cloud img, .fr-chip.fr-cloud i { -webkit-mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 70'%3E%3Cpath d='M22 68 C6 68 0 56 4 46 C8 36 18 34 22 36 C22 18 38 8 52 14 C60 2 82 4 86 22 C98 24 102 40 96 52 C92 62 84 68 74 68Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
             mask: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 70'%3E%3Cpath d='M22 68 C6 68 0 56 4 46 C8 36 18 34 22 36 C22 18 38 8 52 14 C60 2 82 4 86 22 C98 24 102 40 96 52 C92 62 84 68 74 68Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+
+        /* ===== 🌸 계절 테마 (js/season.js) ===== */
+        .season-layer { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+        html.season-fx body { background-color: transparent; }
+        .season-layer i { position: absolute; top: -30px; display: block; background: center / contain no-repeat; opacity: .85; animation: ssFall linear infinite; }
+        .season-su i { top: auto; bottom: -30px; animation-name: ssRise; opacity: .7; }
+        @keyframes ssFall { 0% { transform: translate(0, -30px) rotate(0); } 100% { transform: translate(var(--dx), 110vh) rotate(var(--r)); } }
+        @keyframes ssRise { 0% { transform: translate(0, 30px) scale(.6); } 100% { transform: translate(var(--dx), -110vh) scale(1.2); } }
+        .season-card { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+        .ss-now { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; text-align: left; }
+        .ss-now span { font-size: 30px; }
+        .ss-now b { display: block; font-size: 15px; } .ss-now small { font-size: 12px; color: #777; }
+        .ss-now.ss-sp { background: linear-gradient(90deg, #ffe3ec, #fff5f8); } .ss-now.ss-su { background: linear-gradient(90deg, #d8f1ff, #f3fbff); }
+        .ss-now.ss-au { background: linear-gradient(90deg, #ffe4cc, #fff6ec); } .ss-now.ss-wi { background: linear-gradient(90deg, #e3ebfb, #f6f9ff); }
+        .ss-go { width: 100%; justify-content: center; font-weight: bold; }
+        .ss-go.on { background: var(--primary-accent); color: #fff; border-color: var(--primary-accent); }
+        .ss-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .ss-list span { text-align: center; font-size: 22px; opacity: .45; } .ss-list span.on { opacity: 1; }
+        .ss-list small { display: block; font-size: 10.5px; color: #888; }
+        .ss-note { margin: 0; font-size: 12px; line-height: 1.6; color: #888; text-align: center; word-break: keep-all; }
+        .cat-btn.ss-cat[hidden] { display: none; }
+        .cat-btn.ss-cat:not(.active) { background: #fff4ea; border-color: #ffb27a; }
+        .sticker-grid .ss-sg-head { grid-column: 1 / -1; font-size: 13.5px; font-weight: bold; color: #6a4a3a; padding: 8px 2px 0; }
+        .sticker-grid .ss-sg-head em { font-style: normal; font-size: 11.5px; color: #fff; background: var(--primary-accent); border-radius: 999px; padding: 2px 8px; margin-left: 4px; }
+        .sticker-grid .ss-sg-head small { font-weight: normal; font-size: 11.5px; color: #999; margin-left: 4px; }
+        .sticker-grid .ss-lock img { opacity: .5; filter: saturate(.6); }
+        .season-corner { position: absolute; right: 4px; bottom: 4px; width: 76px; height: 76px; background: center / contain no-repeat; pointer-events: none; z-index: 0; opacity: .9; }
