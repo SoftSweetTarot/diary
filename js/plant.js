@@ -220,19 +220,7 @@
 
         function plGoWrite() {
             closePlant();
-            if (typeof isCoverOpen === 'undefined') return;
-            if (!isCoverOpen) { if (typeof openCoverAnimated === 'function') openCoverAnimated(); }
-            if (typeof currentDate !== 'undefined' && plDay(currentDate) !== plDay()) {
-                const go = () => {
-                    if (!isCoverOpen) return;
-                    currentDate.setTime(Date.now());
-                    selectedElement = null;
-                    pq('pageDateDisplay').innerText = formatDate(currentDate);
-                    loadData();
-                    if (typeof prefetchInitial === 'function') prefetchInitial();
-                };
-                if (isCoverOpen) go(); else setTimeout(go, 900);
-            }
+            if (typeof goToToday === 'function') goToToday();
         }
 
         function openPlant() {

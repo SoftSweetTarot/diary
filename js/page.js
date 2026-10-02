@@ -343,6 +343,36 @@
             updateTextPanel();
         }
 
+        /* 📅 오늘 페이지로 가기 (표지가 닫혀 있으면 열고, 다른 날짜면 저장한 뒤 오늘로) → 오늘 일기를 다 불러온 뒤 done() */
+        function goToToday(done) {
+            const today = new Date();
+            const ready = () => {
+                const key = getDateKey(currentDate); let n = 0;
+                const w = () => {
+                    if (!turn && (drive.guest || drive.loadedDays.has(key))) { if (done) done(); }
+                    else if (n++ < 60) setTimeout(w, 150);
+                };
+                w();
+            };
+            const jump = () => {
+                if (getDateKey(currentDate) !== getDateKey(today)) {
+                    saveData(false);
+                    currentDate.setTime(today.getTime());
+                    selectedElement = null;
+                    document.getElementById('pageDateDisplay').innerText = formatDate(currentDate);
+                    loadData();
+                    prefetchInitial();
+                }
+                ready();
+            };
+            if (isCoverOpen) { jump(); return; }
+            if (getDateKey(currentDate) !== getDateKey(today)) currentDate.setTime(today.getTime());
+            openCoverAnimated();
+            let n = 0;
+            const w = () => { if (isCoverOpen && !turn) jump(); else if (n++ < 40) setTimeout(w, 100); };
+            setTimeout(w, 100);
+        }
+
         function changeDate(delta) {
             if (!isCoverOpen || turn) return;
             if (beginCurl(false, delta > 0 ? 1 : -1)) animateCurlTo(turn.W, true);

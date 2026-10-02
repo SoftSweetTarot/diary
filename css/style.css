@@ -1308,3 +1308,34 @@
         .hof-nick-err { min-height: 18px; font-size: 13px; color: #e2556f; }
         .hof-go { padding: 13px; border: none; border-radius: 14px; font: inherit; font-size: 16px; font-weight: bold; background: linear-gradient(#ffd86b, #ffb52e); color: #4a3200; box-shadow: 0 4px 0 #c9861a; cursor: pointer; }
         .hof-later { border: none; background: none; color: #a08850; font: inherit; font-size: 14px; padding: 6px; cursor: pointer; }
+
+        /* ===== 💬 오늘의 질문 (js/question.js) ===== */
+        .qa-room { position: fixed; inset: 0; z-index: 1600; display: none; overflow-y: auto; overscroll-behavior: contain; color: #4a3a5e;
+            background: linear-gradient(#f6f1ff, #fdeff6); }
+        .qa-room.show { display: block; }
+        .qa-bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+            background: rgba(246,241,255,.92); backdrop-filter: blur(6px); }
+        .qa-bar b { flex: 1; text-align: center; font-size: 17px; }
+        .qa-sp, .qa-x { width: 38px; height: 38px; flex: none; }
+        .qa-x { border-radius: 50%; border: 1.5px solid #d9cdf2; background: #fcfaff; color: #4a3a5e; font-size: 16px; cursor: pointer; }
+        .qa-wrap { max-width: 460px; margin: 0 auto; padding: 4px 16px max(30px, env(safe-area-inset-bottom)); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; }
+        .qa-card { position: relative; padding: 22px 20px 24px; border-radius: 24px; background: linear-gradient(135deg, #b9a4ff, #ff9fc6); color: #fff; text-align: center;
+            box-shadow: 0 10px 24px rgba(160,120,220,.3); overflow: hidden; }
+        .qa-card::before, .qa-card::after { content: '✦'; position: absolute; font-size: 22px; opacity: .55; animation: qaTw 2s ease-in-out infinite; }
+        @keyframes qaTw { 0%, 100% { opacity: .25; transform: scale(.7); } 50% { opacity: .8; transform: scale(1); } }
+        .qa-card::before { top: 12px; left: 16px; } .qa-card::after { bottom: 10px; right: 18px; animation-delay: 1s; }
+        .qa-card small { font-size: 13px; opacity: .9; }
+        .qa-q { margin-top: 8px; font-size: clamp(1.15rem, 5.4vw, 1.4rem); font-weight: bold; line-height: 1.5; word-break: keep-all; }
+        .qa-write { background: #fff; border-radius: 18px; padding: 12px; border: 2px solid #e6dcfb; }
+        .qa-write textarea { width: 100%; min-height: 130px; border: none; outline: none; resize: vertical; font: inherit; font-size: 16px; line-height: 1.7; color: #4a3a5e;
+            background: repeating-linear-gradient(transparent 0 26px, #f0eafc 26px 27px); box-sizing: border-box; }
+        .qa-count { text-align: right; font-size: 12px; color: #a898c0; }
+        .qa-go { padding: 14px; border-radius: 14px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit;
+            background: linear-gradient(#b9a4ff, #9b82f0); color: #fff; box-shadow: 0 4px 0 #7a62d0; }
+        .qa-past { background: rgba(255,255,255,.75); border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+        .qa-past > b { font-size: 15px; }
+        .qa-old { background: #fff; border-radius: 12px; padding: 10px 12px; border-left: 4px solid #c8b6ff; }
+        .qa-old small { font-size: 12px; color: #9b82f0; font-weight: bold; }
+        .qa-old p { margin: 4px 0 0; font-size: 14.5px; line-height: 1.6; white-space: pre-line; word-break: keep-all; }
+        .qa-none { font-size: 13.5px; line-height: 1.7; color: #8a7aa6; text-align: center; padding: 6px 0; }
+        .qa-tip { margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.7); border: 1px dashed #d4c6f2; font-size: 13px; line-height: 1.6; color: #6a5a86; word-break: keep-all; }
