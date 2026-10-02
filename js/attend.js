@@ -3,11 +3,11 @@
    - 오늘 날짜에만 찍을 수 있어요. 지나간 날은 나중에 찍을 수 없어요.
    - 날마다 도장 그림이 달라요. (날짜로 정해져서 어느 기기에서 봐도 같은 그림)
    - 연속 7·14·21일, 한 달 개근이면 메달 도장이 생겨요.
-   - 기록은 설정(settings.json)에 함께 저장 → 다른 기기에서도 같은 도장판. 이 기기에도 한 벌 기억(로그인 전·게스트용)
+   - 기록은 설정(settings.json)에 함께 저장 → 다른 기기에서도 같은 도장판. 로그인하지 않은(게스트) 때만 이 기기에 기억
    ※ 이 파일이 없어도 다이어리는 정상 동작 (출석 도장판만 '준비 중') */
 
         const AT_KEY = 'diary_attend';            // 설정 저장소 키 → { "2026-10": [1,2,5], ... }
-        const AT_LOCAL = 'malang_attend';
+        const AT_LOCAL = 'malang_attend';         // 게스트용 (이 기기)
         const AT_STAMPS = ['🐰', '🍓', '🌷', '⭐', '🐻', '🍑', '🌈', '🐥', '🍀', '🧁', '🐱', '🌙', '🍒', '🦊', '🌻', '🐶', '🍰', '🐳', '🎀', '🐹', '🍋', '🦄', '🌸', '🐧', '🍩', '☁️', '🐨', '🍉', '🌼', '🐼', '💖'];
         const AT_COLORS = ['#e8546e', '#f08a3c', '#e2a400', '#4caf7a', '#3d9be0', '#8a6be0', '#e06bb5'];
         const AT_MEDALS = [[7, '🥉', '7일 연속'], [14, '🥈', '14일 연속'], [21, '🥇', '21일 연속']];
@@ -19,18 +19,13 @@
         function atStamp(y, m, d) { const i = (y * 372 + m * 31 + d) * 7 % AT_STAMPS.length; return { e: AT_STAMPS[i], c: AT_COLORS[(y + m * 3 + d) % AT_COLORS.length] }; }
 
         /* ---------- 저장 ---------- */
+        const atSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;     // 로그인 → 드라이브 설정 / 게스트 → 이 기기
         function atRead() {
-            const clean = o => { const r = {}; if (o && typeof o === 'object') Object.keys(o).forEach(k => { if (/^\d{4}-\d{2}$/.test(k) && Array.isArray(o[k])) r[k] = o[k].filter(n => n >= 1 && n <= 31); }); return r; };
-            let a = {}, b = {};
-            try { if (typeof store !== 'undefined') a = clean(JSON.parse(store.getItem(AT_KEY))); } catch (e) {}
-            try { b = clean(JSON.parse(localStorage.getItem(AT_LOCAL))); } catch (e) {}
-            Object.keys(b).forEach(k => { a[k] = Array.from(new Set((a[k] || []).concat(b[k]))).sort((x, y) => x - y); });   // 두 곳을 합치기 (잃어버리지 않게)
-            return a;
+            try { const o = JSON.parse(atSync() ? store.getItem(AT_KEY) : localStorage.getItem(AT_LOCAL)); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; }
         }
         function atWrite() {
             const t = JSON.stringify(atS.d);
-            try { localStorage.setItem(AT_LOCAL, t); } catch (e) {}
-            try { if (typeof store !== 'undefined') store.setItem(AT_KEY, t); } catch (e) {}
+            try { if (atSync()) store.setItem(AT_KEY, t); else localStorage.setItem(AT_LOCAL, t); } catch (e) {}
         }
         function atHas(y, m, d) { const a = atS.d[atYm(y, m)]; return !!a && a.includes(d); }
 

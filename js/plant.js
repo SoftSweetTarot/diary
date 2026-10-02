@@ -5,11 +5,11 @@
    - 사흘 넘게 물을 못 주면 시들시들해지지만 죽지는 않아요. 물을 주면 다시 기운을 차려요.
    - '오늘 일기를 썼는지' = 오늘 날짜 페이지에 글·스티커·그림이 하나라도 있는지
    - 화분 상태는 설정(settings.json)에 함께 저장돼요 → 다른 기기에서도 같은 화분. (하루 한 번 물 줄 때만 바뀌어요)
-     로그인 전·게스트일 때를 위해 이 기기에도 한 벌 기억해요.
+     로그인하지 않은(게스트) 때만 이 기기에 기억해요.
    ※ 이 파일이 없어도 다이어리는 정상 동작 (화분 키우기만 '준비 중') */
 
         const PL_KEY = 'diary_plant';                 // 설정 저장소 키 (드라이브 settings.json)
-        const PL_LOCAL = 'malang_plant';              // 이 기기 보관본
+        const PL_LOCAL = 'malang_plant';              // 게스트용 (이 기기)
         const PL_STEPS = [0, 1, 3, 6, 10, 14];        // 이 횟수만큼 물을 주면 다음 단계
         const PL_STAGE = ['씨앗', '새싹', '잎', '꽃봉오리', '꽃', '열매'];
         const PL_THIRSTY_DAYS = 3;
@@ -37,19 +37,15 @@
             if (prev && prev.kind === kind) kind = ks[(ks.indexOf(kind) + 1) % ks.length];   // 같은 씨앗이 연달아 나오지 않게
             return { kind: kind, w: 0, last: prev ? prev.last : '', start: plDay(), basket: prev ? prev.basket : {}, total: prev ? prev.total : 0 };
         }
+        const plSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;     // 로그인 → 드라이브 설정 / 게스트 → 이 기기
         function plRead() {
-            let a = null, b = null;
-            try { if (typeof store !== 'undefined') a = JSON.parse(store.getItem(PL_KEY)); } catch (e) {}
-            try { b = JSON.parse(localStorage.getItem(PL_LOCAL)); } catch (e) {}
-            const ok = x => x && PL_KINDS[x.kind] && typeof x.w === 'number';
-            if (!ok(a)) a = null; if (!ok(b)) b = null;
-            if (a && b) return (b.total || 0) > (a.total || 0) ? b : a;     // 더 많이 키운 쪽
-            return a || b || plNew(null);
+            let x = null;
+            try { x = JSON.parse(plSync() ? store.getItem(PL_KEY) : localStorage.getItem(PL_LOCAL)); } catch (e) {}
+            return x && PL_KINDS[x.kind] && typeof x.w === 'number' ? x : plNew(null);
         }
         function plWrite() {
             const t = JSON.stringify(pl.s);
-            try { localStorage.setItem(PL_LOCAL, t); } catch (e) {}
-            try { if (typeof store !== 'undefined') store.setItem(PL_KEY, t); } catch (e) {}
+            try { if (plSync()) store.setItem(PL_KEY, t); else localStorage.setItem(PL_LOCAL, t); } catch (e) {}
         }
         function plStage(w) { let s = 0; PL_STEPS.forEach((n, i) => { if (w >= n) s = i; }); return s; }
 

@@ -2,14 +2,16 @@
    🕹️ 말랑 오락실 : 옛날 오락실 느낌의 미니 게임 + 🧠 두뇌 게임 (놀이터 → 🕹️ 오락실)
    - 옛날 게임을 그대로 옮긴 게 아니라, 누구나 쓸 수 있는 '게임 방식'으로 새로 만든 말랑달콤 게임이에요.
    - 그림은 이모지 + 직접 그린 도형, 소리는 브라우저가 만드는 8비트 소리 (파일 없음 · 트래픽 0)
-   - 최고 점수는 이 기기에만 기억 (드라이브에 저장하지 않음)
+   - 최고 점수는 설정(settings.json)에 함께 저장 → PC · 휴대폰 어디서나 같은 기록 (새 기록이 나올 때만 바뀌어요)
+     로그인하지 않은(게스트) 때만 이 기기에 기억
    - 휴대폰 : 손가락(끌기 · 탭 · 밀기) + 화면 방향 버튼 / PC : 키보드(방향키 · 스페이스) · 마우스
    - 새 게임 추가 : 아래 ARCADE_GAMES 에 { id, name, icon, desc, how, W, H, pad, create } 를 하나 더 넣어요.
        create(host) 는 { update(dt), draw(ctx), down(x,y), move(x,y,dx,dy), up(), key(code), swipe(dir) } 를 돌려줘요. (필요한 것만)
        host : score(n) · addScore(n) · lives(n) · over() · sfx(이름) · W · H · t(놀이 시간)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (오락실만 '준비 중') */
 
-        const ARCADE_BEST_KEY = 'malang_arcade_best';
+        const ARCADE_BEST_KEY = 'malang_arcade_best';      // 게스트용 (이 기기)
+        const ARCADE_BEST_SYNC = 'diary_arcade_best';      // 설정 저장소 키 (드라이브 settings.json)
         const ARCADE_MUTE_KEY = 'malang_arcade_mute';
         const AR_DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
         const AR_OPP = { up: 'down', down: 'up', left: 'right', right: 'left' };
@@ -869,7 +871,14 @@
 
         /* ---------- 오락실 본체 ---------- */
         const ar = { built: false, open: false, game: null, inst: null, state: 'lobby', score: 0, t: 0, raf: 0, last: 0, ac: null, mute: false, best: {}, ptr: null, keys: {} };
-        try { ar.best = JSON.parse(localStorage.getItem(ARCADE_BEST_KEY)) || {}; } catch (e) {}
+        const arSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;     // 로그인 → 드라이브 설정 / 게스트 → 이 기기
+        function arReadBest() {
+            try { return JSON.parse(arSync() ? store.getItem(ARCADE_BEST_SYNC) : localStorage.getItem(ARCADE_BEST_KEY)) || {}; } catch (e) { return {}; }
+        }
+        function arSaveBest() {
+            const t = JSON.stringify(ar.best);
+            try { if (arSync()) store.setItem(ARCADE_BEST_SYNC, t); else localStorage.setItem(ARCADE_BEST_KEY, t); } catch (e) {}
+        }
         try { ar.mute = localStorage.getItem(ARCADE_MUTE_KEY) === '1'; } catch (e) {}
         const aq = id => document.getElementById(id);
         const arTouch = () => matchMedia('(pointer: coarse)').matches;
@@ -891,7 +900,7 @@
                 <div class="ar-cabs" id="arCabs"></div>
                 <h3 class="ar-group">🧠 두뇌 게임 <small>기억력 · 집중력 · 계산력</small></h3>
                 <div class="ar-cabs" id="arCabsBrain"></div>
-                <p class="ar-foot">최고 점수는 이 기기에만 기억돼요.</p>
+                <p class="ar-foot">최고 점수는 내 드라이브에 저장돼서 PC·휴대폰 어디서나 같아요.</p>
               </div>
               <div class="ar-play" id="arPlay" hidden>
                 <div class="ar-bar">
@@ -987,6 +996,7 @@
         function openArcade() {
             if (typeof closeModal === 'function') closeModal('serviceModal');
             arBuild();
+            ar.best = arReadBest();
             ar.open = true;
             aq('arcadeRoom').classList.add('show');
             document.body.classList.add('fc-lock');
@@ -1047,7 +1057,7 @@
         function arGameOver() {
             ar.state = 'over';
             const g = ar.game, best = ar.best[g.id] || 0, isNew = ar.score > best;
-            if (isNew) { ar.best[g.id] = ar.score; try { localStorage.setItem(ARCADE_BEST_KEY, JSON.stringify(ar.best)); } catch (e) {} aq('arBest').textContent = ar.score; }
+            if (isNew) { ar.best[g.id] = ar.score; arSaveBest(); aq('arBest').textContent = ar.score; }
             arSfx(isNew ? 'win' : 'over');
             setTimeout(() => { if (ar.state === 'over' && ar.game === g) arOverlay('over', isNew); }, 500);
         }
