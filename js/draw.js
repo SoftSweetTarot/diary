@@ -1,15 +1,15 @@
 /* 말랑달콤 다이어리 - js/draw.js
    🖍️ 펜 · 형광펜 : 다이어리 위에 손으로 그리고 밑줄 긋기 (툴바 → 🖍️ 펜)
    - 펜 : 또렷한 선 · 형광펜 : 반투명한 굵은 선 (글 위에 그어도 글씨가 비쳐 보여요)
-   - 지우개는 '선 하나'를 통째로 지워요 · ↶ 는 마지막 선 지우기
+   - 지우개는 문지른 부분만 지워요 (굵기 3가지) · ↶ 는 방금 한 일(그리기 · 지우기) 되돌리기
    - ✓ 완료를 누르면 이번에 그린 선들이 그림 하나가 돼요 → 다른 그림처럼 옮기기 · 돌리기 · 크기 · 삭제
    - 그림은 SVG 로 일기에 담겨요 (파일 없음) · 선을 아주 많이 그리면 그날 일기 파일이 조금 커져요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (펜 버튼만 '준비 중') */
 
         const DRAW_PEN_COLORS = ['#333333', '#e2556f', '#ff8a3d', '#3d9be0', '#4caf7a', '#8a6be0', '#8a5a44', '#ffffff'];
         const DRAW_HI_COLORS = ['#ffe14d', '#ff9ec4', '#9be59b', '#9fd3ff', '#ffc078', '#cdb4ff'];
-        const DRAW_SIZES = { pen: [2, 4, 7], hi: [12, 18, 26] };
-        const dw = { on: false, tool: 'pen', color: { pen: DRAW_PEN_COLORS[0], hi: DRAW_HI_COLORS[0] }, size: { pen: 1, hi: 1 }, strokes: [], cur: null, svg: null, k: 1 };
+        const DRAW_SIZES = { pen: [2, 4, 7], hi: [12, 18, 26], erase: [12, 24, 40] };
+        const dw = { on: false, tool: 'pen', color: { pen: DRAW_PEN_COLORS[0], hi: DRAW_HI_COLORS[0] }, size: { pen: 1, hi: 1, erase: 1 }, strokes: [], hist: [], cur: null, ring: null, svg: null, k: 1 };
         const drq = id => document.getElementById(id);
         const DRAW_NS = 'http://www.w3.org/2000/svg';
 
@@ -30,7 +30,7 @@
                 : { stroke: s.color, 'stroke-width': s.w, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', fill: 'none' };
         }
         function penRender() {
-            const g = dw.svg; if (!g) return;
+            const g = dw.svg && dw.svg.firstChild; if (!g) return;
             g.innerHTML = '';
             dw.strokes.concat(dw.cur ? [dw.cur] : []).forEach(s => {
                 const p = document.createElementNS(DRAW_NS, 'path');
@@ -38,7 +38,7 @@
                 const a = penAttrs(s); Object.keys(a).forEach(k => p.setAttribute(k, a[k]));
                 g.appendChild(p);
             });
-            drq('penUndo').disabled = !dw.strokes.length;
+            drq('penUndo').disabled = !dw.hist.length;
         }
 
         /* ---------- 그리기 모드 ---------- */
@@ -50,12 +50,14 @@
             const canvas = drq('canvasArea');
             const svg = document.createElementNS(DRAW_NS, 'svg');
             svg.id = 'penLayer'; svg.setAttribute('class', 'draw-layer');
+            svg.innerHTML = '<g></g><circle class="draw-ring" r="10" cx="-99" cy="-99"/>';
             canvas.appendChild(svg);
-            dw.svg = svg; dw.strokes = []; dw.cur = null; dw.on = true;
+            dw.svg = svg; dw.ring = svg.lastChild; dw.strokes = []; dw.hist = []; dw.cur = null; dw.on = true;
             svg.addEventListener('pointerdown', penDown);
             svg.addEventListener('pointermove', penMove);
             svg.addEventListener('pointerup', penUp);
             svg.addEventListener('pointercancel', penUp);
+            svg.addEventListener('pointerleave', () => penRing(null));
             document.body.classList.add('draw-on');
             drq('penBar').hidden = false;
             penSetTool(dw.tool);
@@ -70,14 +72,16 @@
             e.preventDefault(); e.stopPropagation();
             try { dw.svg.setPointerCapture(e.pointerId); } catch (err) {}
             const pt = penPoint(e);
-            if (dw.tool === 'erase') { dw.erasing = true; penEraseAt(pt); return; }
+            if (dw.tool === 'erase') { dw.erasing = true; dw.hist.push(dw.strokes); dw.erased = false; penRing(pt); penEraseAt(pt); return; }
             dw.cur = { tool: dw.tool, color: dw.color[dw.tool], w: DRAW_SIZES[dw.tool][dw.size[dw.tool]], pts: [pt] };
             penRender();
         }
         function penMove(e) {
+            if (dw.tool === 'erase' && !dw.erasing) penRing(penPoint(e));
             if (!dw.cur && !dw.erasing) return;
             e.preventDefault(); e.stopPropagation();
             const pt = penPoint(e);
+            if (dw.erasing) penRing(pt);
             if (dw.erasing) { penEraseAt(pt); return; }
             const l = dw.cur.pts[dw.cur.pts.length - 1];
             if (Math.hypot(pt[0] - l[0], pt[1] - l[1]) < 1.5) return;
@@ -87,20 +91,51 @@
         }
         function penUp(e) {
             if (e) e.stopPropagation();
-            dw.erasing = false;
-            if (dw.cur) { dw.strokes.push(dw.cur); dw.cur = null; penRender(); }
+            if (dw.erasing) { dw.erasing = false; if (!dw.erased) dw.hist.pop(); if (e && e.pointerType !== 'mouse') penRing(null); penRender(); }
+            if (dw.cur) { dw.hist.push(dw.strokes); dw.strokes = dw.strokes.concat([dw.cur]); dw.cur = null; penRender(); }
+        }
+        /* 🧽 지우개 : 동그라미에 닿은 부분만 지우고, 선이 끊기면 두 개로 나눠요 */
+        function penRing(pt) {
+            const c = dw.ring; if (!c) return;
+            c.setAttribute('r', DRAW_SIZES.erase[dw.size.erase] / 2);
+            c.setAttribute('cx', pt ? pt[0] : -99); c.setAttribute('cy', pt ? pt[1] : -99);
+        }
+        function penDense(pts) {                       // 점 사이가 멀면 촘촘하게 (곧은 형광펜도 부분 지우기)
+            const out = [pts[0]];
+            for (let i = 1; i < pts.length; i++) {
+                const a = pts[i - 1], b = pts[i], n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 2);
+                for (let k = 1; k <= n; k++) out.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]);
+            }
+            return out;
         }
         function penEraseAt(pt) {
-            const n = dw.strokes.length;
-            dw.strokes = dw.strokes.filter(s => !s.pts.some(p => Math.hypot(p[0] - pt[0], p[1] - pt[1]) < s.w / 2 + 8));
-            if (dw.strokes.length !== n) penRender();
+            const r = DRAW_SIZES.erase[dw.size.erase] / 2;
+            const near = (p, s) => Math.hypot(p[0] - pt[0], p[1] - pt[1]) < r + s.w * .35;
+            let hit = false;
+            const out = [];
+            dw.strokes.forEach(s => {
+                const pts = penDense(s.pts);
+                if (!pts.some(p => near(p, s))) { out.push(s); return; }
+                hit = true;
+                let run = [];
+                const keep = () => { if (run.length > (s.tool === 'hi' ? 1 : 0)) out.push({ tool: s.tool, color: s.color, w: s.w, pts: run }); run = []; };
+                pts.forEach(p => { if (near(p, s)) keep(); else run.push(p); });
+                keep();
+            });
+            if (hit) { dw.strokes = out; dw.erased = true; penRender(); }
         }
-        function penUndo() { dw.strokes.pop(); penRender(); }
+        function penUndo() { if (dw.hist.length) { dw.strokes = dw.hist.pop(); penRender(); } }
         function penSetTool(t) {
             dw.tool = t;
             document.querySelectorAll('#penBar [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
             const opt = drq('penOpts');
-            if (t === 'erase') { opt.innerHTML = '<span class="draw-hint">지우고 싶은 선을 문질러요</span>'; return; }
+            drq('penLayer').classList.toggle('erasing', t === 'erase');
+            if (t !== 'erase') penRing(null);
+            if (t === 'erase') {
+                opt.innerHTML = '<span class="draw-hint">지울 곳을 문질러요</span><span class="draw-sep"></span>'
+                    + DRAW_SIZES.erase.map((w, i) => `<button type="button" class="draw-size${i === dw.size.erase ? ' on' : ''}" onclick="penSetSize(${i})" aria-label="지우개 크기"><i style="width:${w / 2 + 4}px;height:${w / 2 + 4}px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px #c9a3b2"></i></button>`).join('');
+                return;
+            }
             const cols = t === 'hi' ? DRAW_HI_COLORS : DRAW_PEN_COLORS;
             opt.innerHTML = cols.map(c => `<button type="button" class="draw-col${c === dw.color[t] ? ' on' : ''}" style="--c:${c}" onclick="penSetColor('${c}')" aria-label="색"></button>`).join('')
                 + '<span class="draw-sep"></span>'
@@ -150,7 +185,7 @@
             penClose();
         }
         function penClose() {
-            dw.on = false; dw.cur = null; dw.strokes = [];
+            dw.on = false; dw.cur = null; dw.strokes = []; dw.hist = []; dw.ring = null;
             const l = drq('penLayer'); if (l) l.remove();
             dw.svg = null;
             const bar = drq('penBar'); if (bar) bar.hidden = true;
