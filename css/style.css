@@ -1534,3 +1534,48 @@
         .lock-on-btn { width: 100%; justify-content: center; background: var(--primary-accent); color: #fff; border-color: var(--primary-accent); font-weight: bold; }
         .lock-note { font-size: 12px; line-height: 1.6; color: #8a7a80; margin: 12px 0 0; text-align: left; word-break: keep-all; }
         body.lock-on #customAlertModal { z-index: 9500; }
+
+        /* ===== 🩷 생리 달력 (js/cycle.js) ===== */
+        .cy-room { position: fixed; inset: 0; z-index: 1600; display: none; overflow-y: auto; overscroll-behavior: contain; color: #5a3d4a; background: linear-gradient(#fff3f6, #fdeef4); }
+        .cy-room.show { display: block; }
+        .cy-bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: max(10px, env(safe-area-inset-top)) 12px 10px; background: rgba(255,243,246,.94); backdrop-filter: blur(6px); }
+        .cy-bar b { flex: 1; text-align: center; font-size: 17px; }
+        .cy-sp, .cy-x { width: 38px; height: 38px; flex: none; }
+        .cy-x { border-radius: 50%; border: 1.5px solid #f3c6d4; background: #fffafc; color: #5a3d4a; font-size: 16px; cursor: pointer; }
+        .cy-wrap { max-width: 460px; margin: 0 auto; padding: 4px 14px max(30px, env(safe-area-inset-bottom)); box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; }
+        .cy-now { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 20px; background: linear-gradient(135deg, #ff9fb8, #ffc2d1); color: #fff; box-shadow: 0 8px 18px rgba(240,110,150,.25); }
+        .cy-now > span { font-size: 34px; }
+        .cy-now b { display: block; font-size: 19px; } .cy-now small { font-size: 13px; opacity: .95; }
+        .cy-cal { background: #fff; border-radius: 20px; padding: 12px; box-shadow: 0 4px 14px rgba(200,100,130,.1); }
+        .cy-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .cy-head b { font-size: 17px; }
+        .cy-head button { width: 34px; height: 34px; border-radius: 50%; border: none; background: #fff0f4; color: #c0506a; font-size: 20px; cursor: pointer; }
+        .cy-week, .cy-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .cy-week span { text-align: center; font-size: 12px; color: #b08898; }
+        .cy-c { position: relative; aspect-ratio: 1; border-radius: 50%; border: none; background: none; font: inherit; font-size: 14px; color: #5a3d4a; cursor: pointer; padding: 0; }
+        .cy-e { background: none; }
+        .cy-c.cy-p { background: #ff6f91; color: #fff; font-weight: bold; }
+        .cy-c.cy-pp { box-shadow: inset 0 0 0 2px #ff9fb8; border: 0; background: repeating-linear-gradient(135deg, #fff0f4 0 4px, #fff 4px 8px); }
+        .cy-c.cy-fe { background: #ece3ff; }
+        .cy-c.cy-ov { background: #c9b2ff; color: #fff; font-weight: bold; }
+        .cy-c.cy-today { outline: 2px solid #5a3d4a; outline-offset: -2px; }
+        .cy-c.cy-sel { transform: scale(1.12); box-shadow: 0 3px 8px rgba(0,0,0,.18); }
+        .cy-c i { position: absolute; bottom: 3px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: #ffb02e; }
+        .cy-legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 8px; font-size: 11.5px; color: #8a6a78; }
+        .cy-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 3px; vertical-align: -1px; }
+        .l-p { background: #ff6f91; } .l-pp { box-shadow: inset 0 0 0 2px #ff9fb8; } .l-fe { background: #ece3ff; } .l-ov { background: #c9b2ff; }
+        .cy-day { background: #fff; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 14px rgba(200,100,130,.1); }
+        .cy-day-h b { font-size: 15px; } .cy-day-h small { margin-left: 6px; font-size: 12px; color: #b08898; }
+        .cy-pbtn { padding: 12px; border-radius: 14px; border: 2px solid #ff9fb8; background: #fff; color: #e2556f; font: inherit; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .cy-pbtn.on { background: #ff6f91; border-color: #ff6f91; color: #fff; }
+        .cy-pbtn:disabled { opacity: .4; }
+        .cy-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .cy-row small { width: 100%; font-size: 12px; color: #8a6a78; }
+        .cy-row button { border: 1.5px solid #f3d2dc; background: #fff; border-radius: 999px; padding: 6px 11px; font: inherit; font-size: 13px; cursor: pointer; color: #6a4a5a; }
+        .cy-row button.on { background: #ffe3eb; border-color: #ff8fab; color: #c0405f; font-weight: bold; }
+        .cy-row button:disabled { opacity: .4; }
+        .cy-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .cy-stats div { background: #fff; border-radius: 14px; padding: 10px 4px; text-align: center; box-shadow: 0 3px 10px rgba(200,100,130,.08); }
+        .cy-stats small { display: block; font-size: 12px; color: #b08898; } .cy-stats b { font-size: 20px; color: #e2556f; }
+        .cy-stats p { grid-column: 1 / -1; margin: 0; font-size: 12px; color: #a08890; text-align: center; }
+        .cy-note { margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.75); border: 1px dashed #f3c6d4; font-size: 12.5px; line-height: 1.7; color: #8a6a78; word-break: keep-all; }
