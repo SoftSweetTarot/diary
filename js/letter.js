@@ -7,7 +7,7 @@
    - 로그인한 사람만 쓸 수 있어요 (구글 계정으로 진짜 사용자인지만 확인 · 이메일이나 이름은 보내지 않아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (익명 편지함만 '준비 중') */
 
-        const LB_API_URL = '';                       // ← 익명 편지함 앱스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
+        const LB_API_URL = 'https://script.google.com/macros/s/AKfycbxjsaT_LZphZAkzx5PDTINh_uuEsSLaBb8c7KeBV_1wjV64Iv_MC99bk519sByxrjiv6A/exec';                       // ← 익명 편지함 앱스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
         const LB_MAX = 300, LB_MIN = 5;
         const LB_PAPERS = [
             { id: 'pink', n: '분홍 하트', bg: '#fff0f5', line: '#ffd1e1', ac: '#ff7fa3', deco: '💗' },
