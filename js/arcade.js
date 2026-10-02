@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/arcade.js
-   🕹️ 말랑 오락실 : 옛날 오락실 느낌의 미니 게임 7가지 (놀이터 → 🕹️ 오락실)
+   🕹️ 말랑 오락실 : 옛날 오락실 느낌의 미니 게임 + 🧠 두뇌 게임 (놀이터 → 🕹️ 오락실)
    - 옛날 게임을 그대로 옮긴 게 아니라, 누구나 쓸 수 있는 '게임 방식'으로 새로 만든 말랑달콤 게임이에요.
    - 그림은 이모지 + 직접 그린 도형, 소리는 브라우저가 만드는 8비트 소리 (파일 없음 · 트래픽 0)
    - 최고 점수는 이 기기에만 기억 (드라이브에 저장하지 않음)
@@ -551,6 +551,304 @@
             };
         }
 
+        /* =====================================================================
+           🧠 두뇌 게임 : 기억력 · 집중력 · 계산력 · 생각하는 힘
+           ===================================================================== */
+        let AR_KFONT = '';
+        function arKText(ctx, s, x, y, size, color, align, weight) {
+            if (!AR_KFONT) AR_KFONT = getComputedStyle(document.documentElement).getPropertyValue('--system-font').trim() || 'sans-serif';
+            ctx.font = (weight || 'bold') + ' ' + size + 'px ' + AR_KFONT;
+            ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = color; ctx.fillText(s, x, y);
+        }
+        const arIn = (x, y, r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+        function arBg(c, W, H, a, b) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, a); g.addColorStop(1, b); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+        function arBtn(c, r, fill, label, size, color, pressed) {
+            c.fillStyle = 'rgba(0,0,0,.12)'; arRound(c, r.x, r.y + 4, r.w, r.h, 14); c.fill();
+            c.fillStyle = fill; arRound(c, r.x, r.y + (pressed ? 3 : 0), r.w, r.h, 14); c.fill();
+            if (label !== undefined) arKText(c, label, r.x + r.w / 2, r.y + r.h / 2 + (pressed ? 3 : 0), size || 22, color || '#3a2a4a');
+        }
+        function arTimeBar(c, W, left, total) {
+            c.fillStyle = 'rgba(0,0,0,.12)'; arRound(c, 16, 14, W - 32, 12, 6); c.fill();
+            c.fillStyle = left < 10 ? '#ff6b81' : '#7c5cff'; arRound(c, 16, 14, Math.max(0, (W - 32) * left / total), 12, 6); c.fill();
+        }
+
+        /* 1. 🎵 말랑 따라하기 : 불이 들어온 순서를 기억해서 똑같이 누르기 (순서 기억) */
+        function arSimon(h) {
+            const W = h.W, H = h.H, S = 150, G = 14, ox = (W - S * 2 - G) / 2, oy = 96;
+            const pads = [0, 1, 2, 3].map(i => ({ x: ox + (i % 2) * (S + G), y: oy + Math.floor(i / 2) * (S + G), w: S, h: S }));
+            const COL = ['#ff9fbe', '#8fd3ff', '#ffe08a', '#a8e6a1'], EMO = ['🍓', '🫐', '🍋', '🍀'], NOTE = [523, 659, 784, 1047];
+            let seq = [], mode = 'wait', t = .9, idx = 0, lit = -1, litT = 0, input = 0, msg = '잘 보세요 👀';
+            h.lives(-1);
+            function light(i, d) { lit = i; litT = d; arTone(NOTE[i], d * .9, 'triangle', .09); }
+            return {
+                down(x, y) {
+                    if (mode !== 'input') return;
+                    const i = pads.findIndex(p => arIn(x, y, p)); if (i < 0) return;
+                    light(i, .25);
+                    if (seq[input] !== i) { mode = 'end'; msg = '앗! 순서가 달라요'; h.sfx('hurt'); setTimeout(() => h.over(), 700); return; }
+                    input++;
+                    if (input >= seq.length) { h.score(seq.length * 10); h.sfx('up'); mode = 'wait'; t = .9; msg = '좋아요! ✨'; }
+                },
+                keyDown(c) { const k = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3 }[c]; if (k !== undefined) { const p = pads[k]; this.down(p.x + 5, p.y + 5); } },
+                update(dt) {
+                    if (litT > 0) { litT -= dt; if (litT <= 0) lit = -1; }
+                    if (mode === 'wait' && (t -= dt) <= 0) { seq.push(Math.floor(Math.random() * 4)); mode = 'show'; idx = 0; t = .3; msg = '잘 보세요 👀'; }
+                    else if (mode === 'show' && (t -= dt) <= 0) {
+                        const sp = Math.max(.28, .55 - seq.length * .02);
+                        if (idx < seq.length) { light(seq[idx++], sp); t = sp + .15; }
+                        else { mode = 'input'; input = 0; msg = '따라 해 보세요!'; }
+                    }
+                },
+                draw(c) {
+                    arBg(c, W, H, '#fff4fa', '#efe6ff');
+                    arKText(c, msg, W / 2, 36, 20, '#6b4a8a');
+                    arKText(c, mode === 'input' ? `${input} / ${seq.length}` : `${seq.length}단계`, W / 2, 66, 14, '#a07ab8', 'center', 'normal');
+                    pads.forEach((p, i) => {
+                        c.globalAlpha = lit === i ? 1 : .55;
+                        arBtn(c, p, COL[i], undefined, 0, 0, lit === i);
+                        arEmoji(c, EMO[i], p.x + p.w / 2, p.y + p.h / 2 + (lit === i ? 3 : 0), lit === i ? 64 : 52);
+                        c.globalAlpha = 1;
+                        if (lit === i) { c.strokeStyle = '#fff'; c.lineWidth = 5; arRound(c, p.x + 3, p.y + 6, p.w - 6, p.h - 6, 12); c.stroke(); }
+                    });
+                    arKText(c, '키보드 1 2 3 4 로도 눌러요', W / 2, H - 22, 12, '#b9a0cc', 'center', 'normal');
+                }
+            };
+        }
+
+        /* 2. ✨ 반짝 위치 기억 : 잠깐 빛난 칸의 자리를 기억해서 누르기 (공간 기억) */
+        function arFlash(h) {
+            const W = h.W, H = h.H, AREA = 320, OX = (W - AREA) / 2, OY = 90;
+            let level = 1, lives = 3, n, k, cells, targets, found, mode, t, msg;
+            h.lives(lives);
+            function start() {
+                n = level < 3 ? 3 : level < 6 ? 4 : level < 10 ? 5 : 6;
+                k = Math.min(n * n - 2, 2 + level);
+                cells = Array.from({ length: n * n }, () => 0);                 // 0 · 1 맞음 · 2 틀림
+                targets = new Set(); while (targets.size < k) targets.add(Math.floor(Math.random() * n * n));
+                found = 0; mode = 'show'; t = .9 + k * .18; msg = '빛나는 칸을 기억하세요 👀';
+            }
+            start();
+            const cellAt = (x, y) => { const s = AREA / n, i = Math.floor((x - OX) / s), j = Math.floor((y - OY) / s); return i >= 0 && j >= 0 && i < n && j < n ? j * n + i : -1; };
+            return {
+                down(x, y) {
+                    if (mode !== 'input') return;
+                    const i = cellAt(x, y); if (i < 0 || cells[i]) return;
+                    if (targets.has(i)) {
+                        cells[i] = 1; found++; h.sfx('blip');
+                        if (found === k) { h.addScore(k * 10); h.sfx('up'); mode = 'next'; t = .8; msg = '정답! ✨'; level++; }
+                    } else {
+                        cells[i] = 2; lives--; h.lives(lives); h.sfx('hurt'); mode = 'reveal'; t = 1.2; msg = '아쉬워요! 정답은 여기';
+                    }
+                },
+                update(dt) {
+                    if (mode === 'show' && (t -= dt) <= 0) { mode = 'input'; msg = `${k}칸을 눌러 주세요`; }
+                    else if ((mode === 'next' || mode === 'reveal') && (t -= dt) <= 0) { if (lives <= 0) { mode = 'end'; h.over(); } else start(); }
+                },
+                draw(c) {
+                    arBg(c, W, H, '#f2f7ff', '#efe6ff');
+                    arKText(c, msg, W / 2, 34, 18, '#4a5a8a');
+                    arKText(c, `${level}단계 · ${n}×${n}`, W / 2, 62, 13, '#8a9ac0', 'center', 'normal');
+                    const s = AREA / n;
+                    for (let i = 0; i < n * n; i++) {
+                        const r = { x: OX + (i % n) * s + 4, y: OY + Math.floor(i / n) * s + 4, w: s - 8, h: s - 8 };
+                        let col = '#ffffff';
+                        if (mode === 'show' && targets.has(i)) col = '#ffd84d';
+                        if (cells[i] === 1) col = '#9be7a5';
+                        if (cells[i] === 2) col = '#ff9a9a';
+                        if (mode === 'reveal' && targets.has(i) && !cells[i]) col = '#ffe9a8';
+                        c.fillStyle = 'rgba(80,90,140,.12)'; arRound(c, r.x, r.y + 3, r.w, r.h, 10); c.fill();
+                        c.fillStyle = col; arRound(c, r.x, r.y, r.w, r.h, 10); c.fill();
+                        if (mode === 'show' && targets.has(i)) arEmoji(c, '⭐', r.x + r.w / 2, r.y + r.h / 2, s * .4);
+                    }
+                }
+            };
+        }
+
+        /* 3. 🔢 숫자 기억 : 하나씩 나오는 숫자를 기억했다가 그대로 입력 (작업 기억) */
+        function arDigits(h) {
+            const W = h.W, H = h.H;
+            const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'];
+            const keys = KEYS.map((k, i) => ({ k, x: 20 + (i % 3) * 110, y: 214 + Math.floor(i / 3) * 74, w: 100, h: 62 }));
+            let len = 3, lives = 3, seq = '', typed = '', mode = 'wait', t = .8, idx = 0, cur = '', msg = '', press = null;
+            h.lives(lives);
+            function next() { seq = ''; for (let i = 0; i < len; i++) seq += Math.floor(Math.random() * 10); mode = 'show'; idx = 0; t = .4; cur = ''; typed = ''; msg = '숫자를 기억하세요 👀'; }
+            function key(k) {
+                if (mode !== 'input') return;
+                h.sfx('tick');
+                if (k === '⌫') typed = typed.slice(0, -1);
+                else if (k === '✓') submit();
+                else if (typed.length < len) { typed += k; if (typed.length === len) setTimeout(submit, 250); }
+            }
+            function submit() {
+                if (mode !== 'input' || !typed) return;
+                if (typed === seq) { h.addScore(len * 10); h.sfx('up'); msg = '정답! 한 자리 더 ✨'; len++; mode = 'wait'; t = 1; }
+                else { lives--; h.lives(lives); h.sfx('hurt'); msg = '정답은 ' + seq; mode = lives > 0 ? 'wait' : 'end'; t = 1.8; if (lives <= 0) setTimeout(() => h.over(), 1500); }
+            }
+            return {
+                down(x, y) { const b = keys.find(b => arIn(x, y, b)); if (b) { press = b; key(b.k); setTimeout(() => { if (press === b) press = null; }, 120); } },
+                keyDown(c) {
+                    const m = c.match(/^(?:Digit|Numpad)(\d)$/); if (m) return key(m[1]);
+                    if (c === 'Backspace') key('⌫'); if (c === 'Enter' || c === 'NumpadEnter') key('✓');
+                },
+                update(dt) {
+                    if (mode === 'wait' && (t -= dt) <= 0) next();
+                    else if (mode === 'show' && (t -= dt) <= 0) {
+                        if (cur) { cur = ''; t = .22; }
+                        else if (idx < seq.length) { cur = seq[idx++]; t = Math.max(.55, .9 - len * .03); h.sfx('blip'); }
+                        else { mode = 'input'; msg = `${len}자리를 입력하세요`; }
+                    }
+                },
+                draw(c) {
+                    arBg(c, W, H, '#fffaf0', '#ffeef5');
+                    arKText(c, msg, W / 2, 34, 18, '#8a5a3a');
+                    arKText(c, `${len}자리`, W / 2, 62, 13, '#c0a080', 'center', 'normal');
+                    c.fillStyle = '#ffffff'; arRound(c, 30, 86, W - 60, 100, 18); c.fill();
+                    if (mode === 'show') arText(c, cur || '', W / 2, 138, 44, '#ff6b9a');
+                    else {
+                        const shown = mode === 'input' ? typed + '_'.repeat(Math.max(0, len - typed.length)) : typed;
+                        arText(c, shown.split('').join(' '), W / 2, 138, len > 8 ? 16 : 22, '#4a3a6a');
+                    }
+                    keys.forEach(b => arBtn(c, b, b.k === '✓' ? '#a8e6a1' : b.k === '⌫' ? '#ffd0d0' : '#ffffff', b.k, 26, '#4a3a6a', press === b));
+                    if (mode !== 'input') { c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, 204, W, H - 204); }
+                }
+            };
+        }
+
+        /* 4. ➕ 빠른 셈 : 60초 동안 계산 문제를 최대한 많이 (계산력 · 집중력) */
+        function arMath(h) {
+            const W = h.W, H = h.H, TOTAL = 60;
+            const btns = [0, 1, 2, 3].map(i => ({ x: 20 + (i % 2) * 165, y: 250 + Math.floor(i / 2) * 104, w: 155, h: 90 }));
+            let left = TOTAL, q, combo = 0, right = 0, flash = 0, flashOk = true, press = -1, done = false;
+            h.lives(-1);
+            const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+            function make() {
+                const lv = 1 + Math.floor(right / 5); let a, b, op, ans;
+                const kind = lv === 1 ? 0 : lv === 2 ? arPick([0, 1]) : lv === 3 ? arPick([0, 1, 2]) : arPick([0, 1, 2, 3]);
+                if (kind === 0) { a = ri(1, lv > 1 ? 49 : 9); b = ri(1, lv > 1 ? 49 : 9); op = '+'; ans = a + b; }
+                else if (kind === 1) { a = ri(10, 60); b = ri(1, a); op = '−'; ans = a - b; }
+                else if (kind === 2) { a = ri(2, 9); b = ri(2, lv > 3 ? 12 : 9); op = '×'; ans = a * b; }
+                else { b = ri(2, 9); ans = ri(2, 12); a = b * ans; op = '÷'; }
+                const ch = new Set([ans]);
+                while (ch.size < 4) { const d = ans + arPick([-10, -2, -1, 1, 2, 10, -3, 3]) * (Math.random() < .5 ? 1 : ri(1, 2)); if (d >= 0) ch.add(d); }
+                q = { s: `${a} ${op} ${b}`, ans, ch: Array.from(ch).sort(() => Math.random() - .5) };
+            }
+            make();
+            function pick(i) {
+                if (done) return;
+                press = i; setTimeout(() => { if (press === i) press = -1; }, 120);
+                if (q.ch[i] === q.ans) { combo++; right++; h.addScore(10 + Math.min(20, combo * 2)); h.sfx('blip'); flashOk = true; }
+                else { combo = 0; left -= 3; h.sfx('hurt'); flashOk = false; }
+                flash = .25; make();
+            }
+            return {
+                down(x, y) { const i = btns.findIndex(b => arIn(x, y, b)); if (i >= 0) pick(i); },
+                keyDown(c) { const k = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3 }[c]; if (k !== undefined) pick(k); },
+                update(dt) { if (done) return; left -= dt; flash = Math.max(0, flash - dt); if (left <= 0) { left = 0; done = true; h.over(); } },
+                draw(c) {
+                    arBg(c, W, H, '#effaff', '#f0ecff');
+                    arTimeBar(c, W, left, TOTAL);
+                    arText(c, Math.ceil(left) + 's', W / 2, 46, 11, '#5a6a9a');
+                    if (combo >= 3) arText(c, combo + ' COMBO', W - 18, 46, 9, '#ff6b81', 'right');
+                    c.fillStyle = flash ? (flashOk ? '#dff7e2' : '#ffe0e0') : '#ffffff'; arRound(c, 20, 74, W - 40, 150, 20); c.fill();
+                    arKText(c, q.s + ' = ?', W / 2, 150, 40, '#3a3a6a');
+                    btns.forEach((b, i) => arBtn(c, b, ['#ffd6e7', '#d6ecff', '#fff1c2', '#dcf5d6'][i], String(q.ch[i]), 30, '#3a3a6a', press === i));
+                    arKText(c, '틀리면 3초가 줄어요 · 키보드 1~4', W / 2, H - 18, 12, '#9aa0c0', 'center', 'normal');
+                }
+            };
+        }
+
+        /* 5. 🎨 색깔 헷갈리기 : 글자의 뜻이 아니라 '글자 색'을 고르기 (집중력 · 스트룹) */
+        function arStroop(h) {
+            const W = h.W, H = h.H, TOTAL = 45;
+            const COLS = [['빨강', '#ef4444'], ['파랑', '#3b82f6'], ['초록', '#16a34a'], ['노랑', '#eab308']];
+            const btns = [0, 1, 2, 3].map(i => ({ x: 20 + (i % 2) * 165, y: 250 + Math.floor(i / 2) * 104, w: 155, h: 90 }));
+            let left = TOTAL, q, combo = 0, flash = 0, flashOk = true, press = -1, done = false;
+            h.lives(-1);
+            function make() {
+                const word = Math.floor(Math.random() * 4); let ink = Math.floor(Math.random() * 4);
+                if (Math.random() < .75) while (ink === word) ink = Math.floor(Math.random() * 4);
+                q = { word, ink };
+            }
+            make();
+            function pick(i) {
+                if (done) return;
+                press = i; setTimeout(() => { if (press === i) press = -1; }, 120);
+                if (i === q.ink) { combo++; h.addScore(10 + Math.min(20, combo * 2)); h.sfx('blip'); flashOk = true; }
+                else { combo = 0; left -= 2; h.sfx('hurt'); flashOk = false; }
+                flash = .25; make();
+            }
+            return {
+                down(x, y) { const i = btns.findIndex(b => arIn(x, y, b)); if (i >= 0) pick(i); },
+                keyDown(c) { const k = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3 }[c]; if (k !== undefined) pick(k); },
+                update(dt) { if (done) return; left -= dt; flash = Math.max(0, flash - dt); if (left <= 0) { left = 0; done = true; h.over(); } },
+                draw(c) {
+                    arBg(c, W, H, '#fbf7ff', '#fff3f6');
+                    arTimeBar(c, W, left, TOTAL);
+                    arText(c, Math.ceil(left) + 's', W / 2, 46, 11, '#7a5a9a');
+                    if (combo >= 3) arText(c, combo + ' COMBO', W - 18, 46, 9, '#ff6b81', 'right');
+                    c.fillStyle = flash ? (flashOk ? '#dff7e2' : '#ffe0e0') : '#ffffff'; arRound(c, 20, 74, W - 40, 150, 20); c.fill();
+                    arKText(c, '글자의 색깔은?', W / 2, 100, 14, '#9a8ab0', 'center', 'normal');
+                    arKText(c, COLS[q.word][0], W / 2, 160, 56, COLS[q.ink][1]);
+                    btns.forEach((b, i) => {
+                        arBtn(c, b, '#ffffff', undefined, 0, 0, press === i);
+                        const y = b.y + (press === i ? 3 : 0);
+                        c.fillStyle = COLS[i][1]; c.beginPath(); c.arc(b.x + 36, y + b.h / 2, 16, 0, 7); c.fill();
+                        arKText(c, COLS[i][0], b.x + b.w / 2 + 16, y + b.h / 2, 24, '#3a3a4a');
+                    });
+                    arKText(c, '틀리면 2초가 줄어요 · 키보드 1~4', W / 2, H - 18, 12, '#b0a0c0', 'center', 'normal');
+                }
+            };
+        }
+
+        /* 6. 🧩 숫자 퍼즐 : 칸을 밀어서 1부터 차례대로 맞추기 (생각하는 힘 · 계획) */
+        function arSlide(h) {
+            const W = h.W, H = h.H, N = 3, AREA = 300, OX = (W - AREA) / 2, OY = 100, S = AREA / N;
+            const COL = ['#ffb3c7', '#ffd1a3', '#fff0a3', '#c4f0b8', '#b3e2ff', '#c9c0ff', '#f5c0ff', '#ffc9b3'];
+            let tiles = [1, 2, 3, 4, 5, 6, 7, 8, 0], moves = 0, done = false, anim = {};
+            const near = i => [i - N, i + N, i % N ? i - 1 : -1, i % N < N - 1 ? i + 1 : -1].filter(j => j >= 0 && j < N * N);
+            let blank = 8, prev = -1;
+            for (let s = 0; s < 160 || tiles.join() === '1,2,3,4,5,6,7,8,0'; s++) {   // 맞출 수 있는 배치만 (정답에서 거꾸로 섞기)
+                const opts = near(blank).filter(j => j !== prev), j = arPick(opts);
+                tiles[blank] = tiles[j]; tiles[j] = 0; prev = blank; blank = j;
+            }
+            h.lives(-1);
+            function slide(i) {
+                if (done) return;
+                const b = tiles.indexOf(0);
+                if (!near(b).includes(i)) { h.sfx('tick'); return; }
+                anim[tiles[i]] = { from: i, t: 0 };
+                tiles[b] = tiles[i]; tiles[i] = 0; moves++; h.sfx('blip');
+                if (tiles.join() === '1,2,3,4,5,6,7,8,0') {
+                    done = true; h.score(Math.max(100, 2000 - moves * 10 - Math.floor(h.t) * 5)); h.sfx('win'); setTimeout(() => h.over(), 900);
+                }
+            }
+            return {
+                down(x, y) { const i = Math.floor((x - OX) / S), j = Math.floor((y - OY) / S); if (i >= 0 && j >= 0 && i < N && j < N) slide(j * N + i); },
+                keyDown(c) {
+                    const b = tiles.indexOf(0), bx = b % N, by = Math.floor(b / N);
+                    const m = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] }[c];   // 방향키 = 빈칸 쪽으로 미는 방향
+                    if (m) { const x = bx + m[0], y = by + m[1]; if (x >= 0 && y >= 0 && x < N && y < N) slide(y * N + x); }
+                },
+                update(dt) { Object.keys(anim).forEach(k => { anim[k].t += dt * 9; if (anim[k].t >= 1) delete anim[k]; }); },
+                draw(c) {
+                    arBg(c, W, H, '#f6fff4', '#eef3ff');
+                    arKText(c, '1부터 8까지 차례대로 맞춰요', W / 2, 34, 17, '#4a6a5a');
+                    arText(c, 'MOVES ' + moves + '   ' + Math.floor(h.t) + 's', W / 2, 66, 10, '#6a8a7a');
+                    c.fillStyle = 'rgba(60,90,80,.12)'; arRound(c, OX - 8, OY - 8, AREA + 16, AREA + 16, 18); c.fill();
+                    tiles.forEach((v, i) => {
+                        if (!v) return;
+                        let x = OX + (i % N) * S, y = OY + Math.floor(i / N) * S;
+                        const a = anim[v];
+                        if (a) { const fx = OX + (a.from % N) * S, fy = OY + Math.floor(a.from / N) * S, e = 1 - Math.pow(1 - a.t, 3); x = fx + (x - fx) * e; y = fy + (y - fy) * e; }
+                        const ok = tiles[v - 1] === v;
+                        arBtn(c, { x: x + 5, y: y + 5, w: S - 10, h: S - 10 }, COL[v - 1], String(v), 40, ok ? '#2f7a4a' : '#4a3a5a');
+                    });
+                    arKText(c, '빈칸 옆의 칸을 눌러 밀어요', W / 2, H - 20, 12, '#8aa09a', 'center', 'normal');
+                }
+            };
+        }
+
         /* ---------- 게임 목록 ---------- */
         const ARCADE_GAMES = [
             { id: 'shooter', name: '별사탕 비행대', icon: '🚀', color: '#6c5ce7', desc: '말랑 비행기로 캔디 몬스터를 물리쳐요', how: ['손가락으로 끌어서 움직여요 · 발사는 자동', '방향키로 움직여요 · 발사는 자동'], W: 360, H: 560, create: arShooter },
@@ -559,7 +857,14 @@
             { id: 'mole', name: '말랑이 뿅망치', icon: '🐹', color: '#00b894', desc: '45초 동안 튀어나오는 말랑이를 톡톡! 💣는 피해요', how: ['튀어나온 말랑이를 손가락으로 톡', '튀어나온 말랑이를 마우스로 클릭'], W: 360, H: 480, create: arMole },
             { id: 'snake', name: '애벌레 냠냠', icon: '🐛', color: '#55a630', desc: '과일을 먹고 길어져요 · 벽과 내 몸은 조심', how: ['화면을 밀거나 아래 버튼으로 방향을 바꿔요', '방향키로 방향을 바꿔요'], W: 360, H: 380, pad: true, create: arSnake },
             { id: 'runner', name: '토끼 점프', icon: '🐰', color: '#0984e3', desc: '장애물을 뛰어넘으며 멀리 달려요 · 🍬는 보너스', how: ['화면을 톡 하면 점프 (두 번 톡 = 2단 점프)', '스페이스로 점프 (두 번 = 2단 점프)'], W: 360, H: 420, create: arRunner },
-            { id: 'memory', name: '말랑 짝꿍', icon: '🃏', color: '#e84393', desc: '카드를 뒤집어 같은 그림을 찾아요 · 빠를수록 고득점', how: ['카드를 톡 해서 뒤집어요', '카드를 클릭해서 뒤집어요'], W: 360, H: 500, create: arMemory }
+            { id: 'memory', name: '말랑 짝꿍', icon: '🃏', color: '#e84393', group: 'brain', skill: '기억력', desc: '카드를 뒤집어 같은 그림을 찾아요 · 빠를수록 고득점', how: ['카드를 톡 해서 뒤집어요', '카드를 클릭해서 뒤집어요'], W: 360, H: 500, create: arMemory },
+            /* 🧠 두뇌 게임 */
+            { id: 'simon', name: '말랑 따라하기', icon: '🎵', color: '#a55eea', group: 'brain', skill: '순서 기억', desc: '빛나는 순서를 기억해서 똑같이 눌러요 · 한 단계씩 길어져요', how: ['불이 들어온 순서대로 톡톡', '순서대로 클릭하거나 키보드 1~4'], W: 360, H: 440, create: arSimon },
+            { id: 'flash', name: '반짝 위치 기억', icon: '✨', color: '#3867d6', group: 'brain', skill: '공간 기억', desc: '잠깐 빛난 칸의 자리를 기억해서 눌러요', how: ['빛났던 칸을 모두 톡', '빛났던 칸을 모두 클릭'], W: 360, H: 440, create: arFlash },
+            { id: 'digits', name: '숫자 기억', icon: '🔢', color: '#fa8231', group: 'brain', skill: '작업 기억', desc: '하나씩 나오는 숫자를 기억했다가 그대로 입력해요', how: ['숫자를 본 뒤 아래 버튼으로 입력', '숫자를 본 뒤 키보드로 입력하고 Enter'], W: 360, H: 520, create: arDigits },
+            { id: 'math', name: '빠른 셈', icon: '➕', color: '#20bf6b', group: 'brain', skill: '계산력', desc: '60초 동안 계산 문제를 최대한 많이 풀어요', how: ['정답 버튼을 톡', '정답을 클릭하거나 키보드 1~4'], W: 360, H: 480, create: arMath },
+            { id: 'stroop', name: '색깔 헷갈리기', icon: '🎨', color: '#eb3b5a', group: 'brain', skill: '집중력', desc: '글자의 뜻 말고 글자의 색깔을 골라요', how: ['글자 색과 같은 버튼을 톡', '글자 색을 클릭하거나 키보드 1~4'], W: 360, H: 480, create: arStroop },
+            { id: 'slide', name: '숫자 퍼즐', icon: '🧩', color: '#0fb9b1', group: 'brain', skill: '생각하는 힘', desc: '칸을 밀어서 1부터 8까지 차례대로 맞춰요', how: ['빈칸 옆의 칸을 톡', '칸을 클릭하거나 방향키'], W: 360, H: 450, create: arSlide }
         ];
 
         /* ---------- 오락실 본체 ---------- */
@@ -582,7 +887,10 @@
                   <button class="ar-ibtn" type="button" onclick="closeArcade()" aria-label="닫기">✕</button>
                 </div>
                 <p class="ar-coin">INSERT COIN <i>·</i> 게임을 골라 주세요</p>
+                <h3 class="ar-group">🕹️ 오락실 게임</h3>
                 <div class="ar-cabs" id="arCabs"></div>
+                <h3 class="ar-group">🧠 두뇌 게임 <small>기억력 · 집중력 · 계산력</small></h3>
+                <div class="ar-cabs" id="arCabsBrain"></div>
                 <p class="ar-foot">최고 점수는 이 기기에만 기억돼요.</p>
               </div>
               <div class="ar-play" id="arPlay" hidden>
@@ -608,12 +916,13 @@
                 </div>
               </div>`;
             document.body.appendChild(el);
-            const cabs = aq('arCabs');
             ARCADE_GAMES.forEach(g => {
+                const cabs = aq(g.group === 'brain' ? 'arCabsBrain' : 'arCabs');
                 const b = document.createElement('button');
                 b.type = 'button'; b.className = 'ar-cab'; b.style.setProperty('--c', g.color);
-                b.innerHTML = `<span class="ar-cab-scr"><span class="ar-cab-ico">${g.icon}</span></span><b></b><small></small><span class="ar-cab-best" data-best="${g.id}"></span>`;
+                b.innerHTML = `<span class="ar-cab-scr"><span class="ar-cab-ico">${g.icon}</span>${g.skill ? '<span class="ar-cab-skill"></span>' : ''}</span><b></b><small></small><span class="ar-cab-best" data-best="${g.id}"></span>`;
                 b.querySelector('b').textContent = g.name; b.querySelector('small').textContent = g.desc;
+                if (g.skill) b.querySelector('.ar-cab-skill').textContent = '🧠 ' + g.skill;
                 b.onclick = () => arOpenGame(g);
                 cabs.appendChild(b);
             });
@@ -667,7 +976,7 @@
             e.stopPropagation();                                         // 오락실이 열려 있는 동안 다이어리 단축키는 쉬기
             if (e.key === 'Escape') { e.preventDefault(); if (ar.game) arBackToLobby(); else closeArcade(); return; }
             if (!ar.game) return;
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Backspace', 'Enter'].includes(e.code)) e.preventDefault();
             arSound();
             if (e.code === 'KeyP') { arTogglePause(); return; }
             if ((e.code === 'Space' || e.code === 'Enter') && (ar.state === 'ready' || ar.state === 'over')) { if (!e.repeat) arStart(); return; }

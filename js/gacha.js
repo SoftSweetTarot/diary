@@ -165,6 +165,7 @@
         }
         function closeGacha() {
             gc.open = false;
+            clearInterval(gc.coinTick);
             cancelAnimationFrame(gc.raf);
             gc.timers.forEach(clearTimeout); gc.timers = [];
             gcStopRumble();
@@ -184,6 +185,9 @@
         }
         /* 코인 상태 : checking(확인 중) · ready(오늘 1개) · used(오늘 씀) · error(로그인 필요 등) */
         function gcSetCoin(state, err) {
+            gc.coin = state;
+            clearInterval(gc.coinTick);
+            if (state === 'used' && !gc.test) gc.coinTick = setInterval(gcCoinTick, 1000);      // 다음 코인까지 남은 시간 (1초마다)
             const chip = gq('gcChip'), txt = gq('gcChipText'), btn = gq('gcInsert'), say = gq('gcSay');
             chip.classList.toggle('empty', state !== 'ready');
             txt.textContent = gc.test && state !== 'error' && state !== 'checking' ? '🧪 테스트 모드 · 무제한'
@@ -191,6 +195,24 @@
             btn.disabled = state !== 'ready';
             say.textContent = state === 'ready' ? '코인을 넣고 손잡이를 돌려 보세요!'
                 : state === 'used' ? GC_ERR.used : state === 'checking' ? '…' : (GC_ERR[err] || GC_ERR.server);
+            if (state === 'used' && !gc.test) { txt.textContent = '⏳ 다음 코인 ' + gcLeft().txt; say.textContent = '오늘은 이미 돌렸어요.\n다음 코인까지 ' + gcLeft().txt; }
+        }
+        /* 다음 코인까지 남은 시간 : 한국 시간 밤 12시 (서버와 같은 기준) */
+        function gcLeft() {
+            const kst = Date.now() + 9 * 3600000;
+            const s = Math.max(0, Math.floor((86400000 - kst % 86400000) / 1000)), z = n => String(n).padStart(2, '0');
+            return { s, txt: `${z(Math.floor(s / 3600))}:${z(Math.floor(s % 3600 / 60))}:${z(s % 60)}` };
+        }
+        async function gcCoinTick() {
+            if (!gc.open || gc.coin !== 'used') { clearInterval(gc.coinTick); return; }
+            const l = gcLeft();
+            gq('gcChipText').textContent = '⏳ 다음 코인 ' + l.txt;
+            const say = gq('gcSay');
+            if (say.textContent.startsWith('오늘은 이미 돌렸어요')) say.textContent = '오늘은 이미 돌렸어요.\n다음 코인까지 ' + l.txt;
+            if (l.s <= 1 && gc.stage === 'idle') {                  // 밤 12시가 지나면 코인 다시 확인
+                clearInterval(gc.coinTick);
+                setTimeout(async () => { const r = await gcApi('status'); if (gc.open && gc.stage === 'idle' && r.ok) gcSetCoin(r.used ? 'used' : 'ready'); }, 2500);
+            }
         }
 
         /* ---------- 1. 코인 넣기 ---------- */
@@ -329,9 +351,7 @@
         }
         function gcTimer() {
             const el = gq('gcTimer'); if (!el || !gc.open) return;
-            const kst = Date.now() + 9 * 3600000;               // 한국 시간 밤 12시까지 (서버와 같은 기준)
-            const s = Math.max(0, Math.floor((86400000 - kst % 86400000) / 1000)), z = n => String(n).padStart(2, '0');
-            el.textContent = `${z(Math.floor(s / 3600))}:${z(Math.floor(s % 3600 / 60))}:${z(s % 60)}`;
+            el.textContent = gcLeft().txt;                      // 한국 시간 밤 12시까지 (서버와 같은 기준)
             gcLater(gcTimer, 1000);
         }
 

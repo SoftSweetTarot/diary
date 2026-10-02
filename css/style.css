@@ -668,7 +668,7 @@
         @keyframes gcAway { to { opacity: 0; transform: translateY(10px) scale(.8); } }
         .gc-tap { position: absolute; top: 102px; font-size: 12px; color: #66708a; font-weight: bold; }
 
-        .gc-say { text-align: center; font-size: 1.1rem; font-weight: bold; min-height: 1.6em; }
+        .gc-say { text-align: center; font-size: 1.1rem; font-weight: bold; min-height: 1.6em; white-space: pre-line; word-break: keep-all; font-variant-numeric: tabular-nums; }
         .gc-main { display: block; width: 100%; text-align: center; text-decoration: none; font: inherit; font-weight: bold; font-size: 1.1rem; border-radius: 14px; cursor: pointer;
             background: #ffc93c; border: 2px solid #e0a90f; color: #4a3300; box-shadow: 0 4px 0 #d39b0b; padding: 10px 16px; }
         .gc-main:active { transform: translateY(3px); box-shadow: 0 1px 0 #d39b0b; }
@@ -898,3 +898,7 @@
         .ar-pad [data-d="right"] { grid-column: 3; grid-row: 2; }
         @media (max-width: 380px) { .ar-cabs { grid-template-columns: 1fr 1fr; gap: 10px; } .ar-cab-ico { font-size: 34px; } .ar-stat { min-width: 40px; } }
         @media (prefers-reduced-motion: reduce) { .ar-coin, .ar-cab-ico, .ar-blink, .ar-new { animation: none; } }
+        .ar-group { margin: 18px 2px 10px; font-size: 15px; color: #ffd6f0; display: flex; align-items: baseline; gap: 8px; }
+        .ar-group small { font-size: 11px; color: #7ff3ff; font-weight: normal; }
+        .ar-cab-scr { position: relative; }
+        .ar-cab-skill { position: absolute; left: 6px; bottom: 5px; font-size: 10px; background: rgba(255,255,255,.88); color: #4a3a6a; border-radius: 8px; padding: 2px 6px; font-weight: bold; }
