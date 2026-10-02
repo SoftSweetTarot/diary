@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>말랑달콤 시연 영상 녹화 도구</title>
+<!--
+  🎬 말랑달콤 다이어리 - 시연 영상 녹화 도구 (recorder.html)
+  - 여백이 있는 예쁜 바탕 위에, 기기(아이폰 · 갤럭시 · 아이패드 · 노트북 · 모니터) 안에 들어간 다이어리를 보여 주고 그대로 녹화해요.
+  - 열기 : PC 크롬(또는 엣지)에서 https://softsweettarot.github.io/diary/recorder.html
+           (다이어리와 같은 주소에서 열어야 마우스 커서 · 클릭 효과가 영상에 함께 찍혀요)
+  - F2 : 녹화 시작 / 끝 → 끝날 때마다 mp4 파일로 저장 (저장 폴더를 골라 두면 그 폴더에 바로, 아니면 '다운로드' 폴더)
+  - 처음 F2 를 누르면 크롬이 '이 탭 공유' 창을 띄워요 → '탭 오디오도 공유' 를 켜고 [공유] (한 번만 하면 창을 닫을 때까지 계속 써요)
+  - H : 오른쪽 설정판 숨기기 / 보이기 (설정판은 영상에 찍히지 않아요)
+  - 설정은 이 PC 에 기억돼요.
+-->
+<style>
+    :root { --pink: #ff6b81; --line: #ffd0dc; --ink: #4a3a42; --muted: #9a8a92; --panel: 310px; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #2b2730; font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: var(--ink); }
+    #wrap { position: fixed; inset: 0; right: var(--panel); display: flex; align-items: center; justify-content: center; transition: right .25s; }
+    body.nopanel #wrap { right: 0; }
+    #stage { position: relative; overflow: hidden; background: #ffe6f0; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+    #bg, #bgDeco { position: absolute; inset: 0; }
+    #bgDeco { pointer-events: none; overflow: hidden; }
+    #bgDeco i { position: absolute; font-style: normal; opacity: .55; animation: fly linear infinite; }
+    @keyframes fly { from { transform: translateY(0) rotate(0); } to { transform: translateY(-120vh) rotate(260deg); } }
+
+    /* ---------- 기기 ---------- */
+    #device { position: absolute; left: 50%; top: 50%; transform-origin: center center; }
+    .dv-body { position: relative; width: max-content; margin: 0 auto; background: var(--bezel); border-radius: var(--r); padding: var(--b);
+        box-shadow: 0 0 0 var(--edge) var(--frame), 0 0 0 calc(var(--edge) + 1px) rgba(0,0,0,.25), 0 40px 80px rgba(40,10,40,.35), 0 12px 24px rgba(40,10,40,.2); }
+    .dv-body::after { content: ''; position: absolute; inset: calc(var(--edge) * -1); border-radius: calc(var(--r) + var(--edge)); pointer-events: none;
+        background: linear-gradient(135deg, rgba(255,255,255,.35), transparent 30%, transparent 70%, rgba(255,255,255,.12)); mix-blend-mode: soft-light; }
+    .dv-screen { position: relative; overflow: hidden; border-radius: var(--sr); background: #fff; display: flex; flex-direction: column; }
+    .dv-top { flex: none; position: relative; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; font-weight: 600; color: #222; background: var(--appbg, #ffe6f0); z-index: 2; }
+    .dv-top .ic { display: flex; gap: 6px; align-items: center; }
+    #app { border: 0; display: block; flex: 1; width: 100%; background: #fff; }
+    .island { position: absolute; left: 50%; top: 11px; width: 122px; height: 35px; margin-left: -61px; border-radius: 20px; background: #000; z-index: 3; }
+    .punch { position: absolute; left: 50%; top: 10px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #000; z-index: 3; box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
+    .cam { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #2a2a33; box-shadow: inset 0 0 0 2px #444; z-index: 3; }
+    .btn-side { position: absolute; width: 4px; border-radius: 3px; background: var(--frame); filter: brightness(.9); }
+    .browser { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: #f3eef1; border-bottom: 1px solid #e6dde2; }
+    .browser .dots { display: flex; gap: 6px; } .browser .dots i { width: 11px; height: 11px; border-radius: 50%; background: #ff6159; } .browser .dots i:nth-child(2) { background: #ffbd2e; } .browser .dots i:nth-child(3) { background: #28c941; }
+    .browser .addr { flex: 1; max-width: 520px; margin: 0 auto; height: 26px; border-radius: 13px; background: #fff; display: flex; align-items: center; gap: 6px; padding: 0 12px; font-size: 13px; color: #666; }
+    .laptop-base { position: relative; margin: 0 auto; height: 22px; border-radius: 0 0 22px 22px; background: linear-gradient(var(--frame), color-mix(in srgb, var(--frame) 70%, #000)); box-shadow: 0 30px 50px rgba(40,10,40,.3); }
+    .laptop-base::before { content: ''; position: absolute; left: 50%; top: 0; width: 140px; height: 8px; margin-left: -70px; border-radius: 0 0 10px 10px; background: rgba(0,0,0,.12); }
+    .stand-neck { margin: 0 auto; width: 130px; height: 80px; background: linear-gradient(90deg, color-mix(in srgb, var(--frame) 80%, #000), var(--frame), color-mix(in srgb, var(--frame) 80%, #000)); clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%); }
+    .stand-foot { margin: 0 auto; width: 300px; height: 16px; border-radius: 10px 10px 6px 6px; background: var(--frame); box-shadow: 0 20px 40px rgba(40,10,40,.3); }
+
+    /* ---------- 커서 · 클릭 ---------- */
+    #cursor { position: absolute; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; z-index: 50; display: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+    .ripple { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; pointer-events: none; z-index: 49;
+        border: 3px solid rgba(255,107,129,.9); background: rgba(255,143,171,.25); animation: rip .55s ease-out forwards; }
+    @keyframes rip { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
+
+    /* ---------- 설정판 ---------- */
+    #panel { position: fixed; top: 0; right: 0; bottom: 0; width: var(--panel); background: #fff7fa; overflow-y: auto; padding: 14px 14px 30px; transition: transform .25s; font-size: 13px; }
+    body.nopanel #panel { transform: translateX(100%); }
+    #panel h1 { margin: 0 0 4px; font-size: 17px; color: var(--pink); }
+    #panel .sub { margin: 0 0 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .sec { background: #fff; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px; margin-bottom: 10px; }
+    .sec h2 { margin: 0 0 8px; font-size: 13.5px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chips button, .btn { font: inherit; font-size: 12.5px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 5px 10px; cursor: pointer; }
+    .chips button.on { background: var(--pink); border-color: var(--pink); color: #fff; font-weight: bold; }
+    .btn.big { width: 100%; border-radius: 12px; padding: 9px; font-weight: bold; font-size: 14px; }
+    .btn.pink { background: var(--pink); border-color: var(--pink); color: #fff; }
+    .row { display: flex; align-items: center; gap: 8px; margin-top: 8px; } .row label { flex: none; width: 54px; color: var(--muted); }
+    .row input[type=range] { flex: 1; accent-color: var(--pink); } .row b { width: 38px; text-align: right; font-size: 12px; }
+    .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+    .swatches button { aspect-ratio: 1; border-radius: 9px; border: 2px solid #fff; box-shadow: 0 0 0 1px #e5d5dc; cursor: pointer; padding: 0; }
+    .swatches button.on { box-shadow: 0 0 0 2.5px var(--pink); }
+    .frames { display: flex; gap: 6px; } .frames button { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #ccc; cursor: pointer; padding: 0; }
+    .frames button.on { box-shadow: 0 0 0 2.5px var(--pink); }
+    .colors { display: flex; align-items: center; gap: 6px; margin-top: 8px; } .colors input[type=color] { width: 36px; height: 28px; border: 0; padding: 0; background: none; cursor: pointer; }
+    .chk { display: flex; align-items: center; gap: 6px; margin-top: 6px; cursor: pointer; }
+    #rec { text-align: center; }
+    #recState { font-size: 15px; font-weight: bold; margin: 2px 0 6px; }
+    #recState.on { color: #e53950; } #recState.on::before { content: '● '; animation: blink 1s steps(2) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    #recInfo { color: var(--muted); font-size: 11.5px; line-height: 1.6; margin-top: 6px; }
+    #warn { display: none; background: #fff1d6; border: 1.5px solid #ffc46b; border-radius: 12px; padding: 8px 10px; font-size: 12px; line-height: 1.6; margin-bottom: 10px; }
+    #hint { position: fixed; left: 12px; bottom: 10px; color: rgba(255,255,255,.6); font-size: 12px; }
+    #toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); background: rgba(40,30,40,.88); color: #fff; padding: 9px 16px; border-radius: 12px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; }
+    #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="wrap">
+    <div id="stage">
+        <div id="bg"></div>
+        <div id="bgDeco"></div>
+        <div id="device"></div>
+        <svg id="cursor" viewBox="0 0 26 26"><path d="M3 2 L3 21 L8.2 16.4 L11.6 24 L15 22.5 L11.7 15 L19 15 Z" fill="#fff" stroke="#222" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </div>
+</div>
+<div id="hint">F2 녹화 시작/끝 · H 설정판 숨기기</div>
+<div id="toast"></div>
+
+<aside id="panel">
+    <h1>🎬 시연 영상 녹화</h1>
+    <p class="sub">F2 로 녹화를 시작하고 끝내요.<br>H 를 누르면 이 설정판이 숨어요. 설정판은 영상에 찍히지 않아요.</p>
+    <div id="warn"></div>
+    <div class="sec" id="rec">
+        <div id="recState">대기 중</div>
+        <button class="btn big pink" id="recBtn" type="button">⏺ 녹화 시작 (F2)</button>
+        <div class="row" style="margin-top:8px"><button class="btn" id="dirBtn" type="button" style="flex:1">📁 저장 폴더 고르기</button></div>
+        <div id="recInfo"></div>
+    </div>
+    <div class="sec">
+        <h2>📐 영상 비율</h2>
+        <div class="chips" id="ratios"></div>
+    </div>
+    <div class="sec">
+        <h2>📱 기기</h2>
+        <div class="chips" id="devices"></div>
+        <div class="row"><label>기기 색</label><div class="frames" id="frames"></div></div>
+        <div class="row"><label>크기</label><input type="range" id="size" min="30" max="100" step="1"><b id="sizeV"></b></div>
+        <div class="row"><label>좌우</label><input type="range" id="ox" min="-40" max="40" step="1"><b id="oxV"></b></div>
+        <div class="row"><label>위아래</label><input type="range" id="oy" min="-40" max="40" step="1"><b id="oyV"></b></div>
+        <div class="row"><label>기울기</label><input type="range" id="tilt" min="-12" max="12" step="1"><b id="tiltV"></b></div>
+    </div>
+    <div class="sec">
+        <h2>🎨 바탕</h2>
+        <div class="swatches" id="presets"></div>
+        <div class="colors">직접 <input type="color" id="c1"><input type="color" id="c2"><div class="chips" id="kinds"></div></div>
+        <div class="chips" id="patterns" style="margin-top:8px"></div>
+        <div class="row" style="gap:6px">
+            <button class="btn" id="randBtn" type="button" style="flex:1">🎲 랜덤 바탕</button>
+            <button class="btn" id="imgBtn" type="button" style="flex:1">🖼 이미지 바탕</button>
+            <input type="file" id="imgFile" accept="image/*" hidden>
+        </div>
+        <label class="chk"><input type="checkbox" id="deco"> 떠다니는 하트 · 별 장식</label>
+    </div>
+    <div class="sec">
+        <h2>🖱 마우스</h2>
+        <label class="chk"><input type="checkbox" id="showCursor"> 영상에 마우스 커서 보이기</label>
+        <label class="chk"><input type="checkbox" id="showClick"> 클릭할 때 동그라미 효과</label>
+    </div>
+    <div class="sec">
+        <h2>🔄 다이어리</h2>
+        <button class="btn big" id="reloadBtn" type="button">다이어리 새로고침</button>
+    </div>
+</aside>
+
+<script>
+(() => {
+    const $ = id => document.getElementById(id);
+    const DIARY_URL = location.protocol.startsWith('http') ? new URL('./index.html', location.href).href : 'https://softsweettarot.github.io/diary/';
+    const SAVE_KEY = 'malang_recorder';
+
+    /* ---------- 기기 (w·h = 다이어리가 보이는 화면 크기 · top = 위쪽 상태 표시줄) ---------- */
+    const DEVICES = {
+        iphone:  { name: '아이폰',        w: 390,  h: 844,  b: 12, edge: 4, r: 58, sr: 46, top: 50, kind: 'phone', notch: 'island' },
+        galaxy:  { name: '갤럭시',        w: 412,  h: 915,  b: 9,  edge: 3, r: 44, sr: 36, top: 34, kind: 'phone', notch: 'punch' },
+        ipad:    { name: '아이패드 세로', w: 820,  h: 1180, b: 24, edge: 4, r: 42, sr: 20, top: 30, kind: 'tablet', cam: 'top' },
+        ipadL:   { name: '아이패드 가로', w: 1180, h: 820,  b: 24, edge: 4, r: 42, sr: 20, top: 30, kind: 'tablet', cam: 'left' },
+        tab:     { name: '갤럭시탭',      w: 1280, h: 800,  b: 20, edge: 3, r: 30, sr: 14, top: 28, kind: 'tablet', cam: 'top' },
+        laptop:  { name: '노트북',        w: 1440, h: 860,  b: 18, edge: 2, r: 18, sr: 6,  top: 40, kind: 'laptop' },
+        monitor: { name: '모니터',        w: 1600, h: 900,  b: 16, edge: 2, r: 14, sr: 4,  top: 40, kind: 'monitor' }
+    };
+    const FRAMES = [['#1d1d22', '블랙'], ['#d9dbe0', '실버'], ['#f6d3dc', '핑크'], ['#d8cdf2', '라벤더'], ['#cfe6dd', '민트'], ['#fbfbfb', '화이트']];
+    const RATIOS = [['16:9', 16 / 9, '가로 영상'], ['9:16', 9 / 16, '쇼츠 · 릴스'], ['1:1', 1, '정사각'], ['4:5', 4 / 5, '인스타 세로']];
+    const PRESETS = [
+        ['linear', '#ffd6e4', '#ffeef5'], ['linear', '#ffe3ec', '#e9dcff'], ['linear', '#fff1d6', '#ffd6e4'], ['linear', '#d9f2ff', '#f3e3ff'],
+        ['linear', '#dcf7ea', '#fff4d6'], ['radial', '#fff7fb', '#ffc9dc'], ['radial', '#fffaf0', '#ffd9b3'], ['linear', '#2d2550', '#7a4f9e'],
+        ['solid', '#ffe6f0', '#ffe6f0'], ['solid', '#f4efe9', '#f4efe9'], ['solid', '#e8f1ff', '#e8f1ff'], ['linear', '#fbe3e8', '#e3f0fb']
+    ];
+    const PATTERNS = [['none', '무늬 없음'], ['dot', '도트'], ['check', '체크'], ['stripe', '줄무늬'], ['heart', '하트'], ['star', '별']];
+    const KINDS = [['solid', '단색'], ['linear', '그라데이션'], ['radial', '동그란 빛']];
+
+    const DEF = { ratio: '16:9', dev: 'iphone', frame: '#1d1d22', size: 86, ox: 0, oy: 0, tilt: 0, kind: 'linear', c1: '#ffd6e4', c2: '#ffeef5', pat: 'dot', deco: true, showCursor: true, showClick: true };
+    let S = Object.assign({}, DEF);
+    try { Object.assign(S, JSON.parse(localStorage.getItem(SAVE_KEY) || '{}')); } catch (e) {}
+    if (!DEVICES[S.dev]) S.dev = DEF.dev;
+    let bgImage = '';
+    const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} };
+    const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); };
+
+    /* ---------- 무대 크기 (비율 맞춰 화면에 꽉) ---------- */
+    function layoutStage() {
+        const wrap = $('wrap').getBoundingClientRect(), pad = 28;
+        const ratio = (RATIOS.find(r => r[0] === S.ratio) || RATIOS[0])[1];
+        let w = wrap.width - pad * 2, h = w / ratio;
+        if (h > wrap.height - pad * 2) { h = wrap.height - pad * 2; w = h * ratio; }
+        const st = $('stage'); st.style.width = Math.round(w) + 'px'; st.style.height = Math.round(h) + 'px';
+        placeDevice();
+    }
+
+    /* ---------- 기기 그리기 ---------- */
+    let built = '', devScale = 1;
+    function buildDevice() {
+        const d = DEVICES[S.dev], el = $('device');
+        const light = ['#fbfbfb', '#d9dbe0', '#f6d3dc', '#d8cdf2', '#cfe6dd'].includes(S.frame);
+        const bezel = d.kind === 'tablet' && S.frame === '#fbfbfb' ? '#fbfbfb' : '#0b0b0e';
+        el.style.setProperty('--frame', S.frame); el.style.setProperty('--bezel', bezel);
+        el.style.setProperty('--b', d.b + 'px'); el.style.setProperty('--edge', d.edge + 'px'); el.style.setProperty('--r', d.r + 'px'); el.style.setProperty('--sr', d.sr + 'px');
+        if (built === S.dev) return;                         // 같은 기기면 다이어리를 다시 불러오지 않아요
+        built = S.dev;
+        const time = '9:41', icons = '<span class="ic">📶<span style="font-size:13px">🔋</span></span>';
+        let top = '', extra = '', after = '';
+        if (d.kind === 'phone') top = `<div class="dv-top" style="height:${d.top}px;font-size:15px">${time}${icons}</div>` + (d.notch === 'island' ? '<i class="island"></i>' : '<i class="punch"></i>');
+        if (d.kind === 'tablet') top = `<div class="dv-top" style="height:${d.top}px;font-size:13px">${time}${icons}</div>`;
+        if (d.kind === 'laptop' || d.kind === 'monitor') top = `<div class="browser" style="height:${d.top}px"><span class="dots"><i></i><i></i><i></i></span><span class="addr">🔒 softsweettarot.github.io/diary</span><span style="width:50px"></span></div>`;
+        if (d.kind === 'phone') extra = `<i class="btn-side" style="left:-${d.edge + 3}px;top:170px;height:34px"></i><i class="btn-side" style="left:-${d.edge + 3}px;top:220px;height:60px"></i><i class="btn-side" style="left:-${d.edge + 3}px;top:290px;height:60px"></i><i class="btn-side" style="right:-${d.edge + 3}px;top:240px;height:96px"></i>`;
+        if (d.kind === 'tablet') extra = d.cam === 'left' ? `<i class="cam" style="left:${d.b / 2 - 4}px;top:50%;margin-top:-4px"></i>` : `<i class="cam" style="top:${d.b / 2 - 4}px;left:50%;margin-left:-4px"></i>`;
+        if (d.kind === 'laptop' || d.kind === 'monitor') extra = `<i class="cam" style="top:${d.b / 2 - 4}px;left:50%;margin-left:-4px"></i>`;
+        const totalW = d.w + d.b * 2;
+        if (d.kind === 'laptop') after = `<div class="laptop-base" style="width:${Math.round(totalW * 1.14)}px"></div>`;
+        if (d.kind === 'monitor') after = '<div class="stand-neck"></div><div class="stand-foot"></div>';
+        el.innerHTML = `<div class="dv-body">${extra}<div class="dv-screen" style="width:${d.w}px;height:${d.h}px">${top}<iframe id="app" src="${DIARY_URL}" allow="camera; microphone; autoplay; clipboard-write; fullscreen"></iframe></div></div>${after}`;
+        $('app').addEventListener('load', hookApp);
+    }
+    function deviceBox() {                                     // 기기 전체 크기 (받침대까지)
+        const d = DEVICES[S.dev], w = d.w + d.b * 2 + d.edge * 2;
+        let h = d.h + d.b * 2 + d.edge * 2;
+        if (d.kind === 'laptop') return [w * 1.14, h + 22];
+        if (d.kind === 'monitor') return [w, h + 96];
+        return [w, h];
+    }
+    function placeDevice() {
+        buildDevice();
+        const st = $('stage').getBoundingClientRect(), [w, h] = deviceBox();
+        const k = devScale = Math.min(st.width * .94 / w, st.height * .94 / h) * S.size / 100;
+        const el = $('device');
+        el.style.width = w + 'px'; el.style.marginLeft = (-w / 2) + 'px'; el.style.marginTop = (-h / 2) + 'px';
+        el.style.transform = `translate(${S.ox * st.width / 100}px, ${S.oy * st.height / 100}px) rotate(${S.tilt}deg) scale(${k})`;
+    }
+
+    /* ---------- 바탕 ---------- */
+    function patternCss(c) {
+        const a = 'rgba(255,255,255,.55)';
+        switch (S.pat) {
+            case 'dot': return `radial-gradient(${a} 2.2px, transparent 2.6px) 0 0 / 26px 26px`;
+            case 'check': return `repeating-conic-gradient(rgba(255,255,255,.35) 0 25%, transparent 0 50%) 0 0 / 44px 44px`;
+            case 'stripe': return `repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 12px, transparent 12px 28px)`;
+            case 'heart': return `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><path d="M30 40 C 18 30 20 20 27 22 C 30 23 30 26 30 26 C 30 26 30 23 33 22 C 40 20 42 30 30 40Z" fill="rgba(255,255,255,0.6)"/></svg>')}") 0 0 / 60px 60px`;
+            case 'star': return `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70"><path d="M20 12 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z M52 44 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="rgba(255,255,255,0.65)"/></svg>')}") 0 0 / 70px 70px`;
+        }
+        return '';
+    }
+    function paintBg() {
+        const bg = $('bg');
+        if (bgImage) { bg.style.background = `center / cover no-repeat url("${bgImage}")`; }
+        else {
+            const base = S.kind === 'solid' ? S.c1 : S.kind === 'radial' ? `radial-gradient(circle at 50% 45%, ${S.c1}, ${S.c2})` : `linear-gradient(135deg, ${S.c1}, ${S.c2})`;
+            const pat = patternCss();
+            bg.style.background = pat ? `${pat}, ${base}` : base;
+        }
+        const deco = $('bgDeco');
+        deco.innerHTML = S.deco ? Array.from({ length: 16 }, (_, i) => {
+            const e = ['💗', '✨', '💕', '⭐', '🌸', '💖'][i % 6];
+            return `<i style="left:${(i * 61) % 100}%;top:${100 + (i * 37) % 30}%;font-size:${16 + (i * 7) % 18}px;animation-duration:${14 + (i * 5) % 12}s;animation-delay:-${(i * 3.7) % 20}s">${e}</i>`;
+        }).join('') : '';
+        $('c1').value = S.c1; $('c2').value = S.c2;
+    }
+
+    /* ---------- 설정판 ---------- */
+    function chips(id, list, cur, onPick) {
+        $(id).innerHTML = list.map(([k, n, sub]) => `<button type="button" data-k="${k}" class="${k === cur ? 'on' : ''}" title="${sub || ''}">${n}</button>`).join('');
+        $(id).onclick = e => { const b = e.target.closest('button'); if (b) onPick(b.dataset.k); };
+    }
+    function renderPanel() {
+        chips('ratios', RATIOS.map(r => [r[0], r[0] + ' ' + r[2]]), S.ratio, k => { S.ratio = k; changed(true); });
+        chips('devices', Object.entries(DEVICES).map(([k, d]) => [k, d.name]), S.dev, k => { S.dev = k; S.ox = S.oy = 0; changed(); });
+        $('frames').innerHTML = FRAMES.map(([c, n]) => `<button type="button" title="${n}" style="background:${c}" class="${c === S.frame ? 'on' : ''}" data-c="${c}"></button>`).join('');
+        $('frames').onclick = e => { const b = e.target.closest('button'); if (b) { S.frame = b.dataset.c; changed(); } };
+        $('presets').innerHTML = PRESETS.map((p, i) => `<button type="button" data-i="${i}" style="background:${p[0] === 'solid' ? p[1] : `linear-gradient(135deg, ${p[1]}, ${p[2]})`}" class="${!bgImage && S.c1 === p[1] && S.c2 === p[2] && S.kind === p[0] ? 'on' : ''}"></button>`).join('');
+        $('presets').onclick = e => { const b = e.target.closest('button'); if (!b) return; const p = PRESETS[+b.dataset.i]; bgImage = ''; S.kind = p[0]; S.c1 = p[1]; S.c2 = p[2]; changed(); };
+        chips('kinds', KINDS, S.kind, k => { bgImage = ''; S.kind = k; changed(); });
+        chips('patterns', PATTERNS, S.pat, k => { S.pat = k; changed(); });
+        [['size', '%'], ['ox', '%'], ['oy', '%'], ['tilt', '°']].forEach(([k, u]) => { $(k).value = S[k]; $(k + 'V').textContent = S[k] + u; });
+        ['deco', 'showCursor', 'showClick'].forEach(k => { $(k).checked = !!S[k]; });
+    }
+    function changed(relayout) { save(); renderPanel(); paintBg(); if (relayout) layoutStage(); else placeDevice(); }
+    ['size', 'ox', 'oy', 'tilt'].forEach(k => $(k).addEventListener('input', e => { S[k] = +e.target.value; $(k + 'V').textContent = S[k] + (k === 'tilt' ? '°' : '%'); placeDevice(); save(); }));
+    ['deco', 'showCursor', 'showClick'].forEach(k => $(k).addEventListener('change', e => { S[k] = e.target.checked; save(); paintBg(); if (k === 'showCursor' && !S[k]) $('cursor').style.display = 'none'; }));
+    $('c1').addEventListener('input', e => { bgImage = ''; S.c1 = e.target.value; if (S.kind === 'solid') S.c2 = S.c1; changed(); });
+    $('c2').addEventListener('input', e => { bgImage = ''; S.c2 = e.target.value; if (S.kind === 'solid') S.kind = 'linear'; changed(); });
+    $('randBtn').onclick = () => {
+        const rh = () => { const h = Math.random() * 360; return `hsl(${h.toFixed(0)}, ${70 + Math.random() * 25 | 0}%, ${86 + Math.random() * 8 | 0}%)`; };
+        const toHex = c => { const x = document.createElement('canvas').getContext('2d'); x.fillStyle = c; return x.fillStyle; };
+        bgImage = ''; S.kind = ['linear', 'linear', 'radial'][Math.random() * 3 | 0]; S.c1 = toHex(rh()); S.c2 = toHex(rh());
+        S.pat = PATTERNS[Math.random() * PATTERNS.length | 0][0];
+        S.frame = FRAMES[Math.random() * FRAMES.length | 0][0];
+        S.tilt = [0, 0, -4, 4, -7, 7][Math.random() * 6 | 0];
+        changed();
+    };
+    $('imgBtn').onclick = () => $('imgFile').click();
+    $('imgFile').onchange = e => { const f = e.target.files[0]; if (!f) return; if (bgImage) URL.revokeObjectURL(bgImage); bgImage = URL.createObjectURL(f); e.target.value = ''; changed(); toast('🖼 이미지 바탕은 이 창을 닫으면 다시 골라야 해요'); };
+    $('reloadBtn').onclick = () => { const f = $('app'); if (f) f.src = DIARY_URL; };
+    window.addEventListener('resize', layoutStage);
+
+    /* ---------- 🖱 영상용 커서 · 클릭 효과 (다이어리 안에서 움직여도 따라가요) ---------- */
+    let sameOrigin = true;
+    function stagePoint(x, y) { const r = $('stage').getBoundingClientRect(); return [x - r.left, y - r.top]; }
+    function moveCursor(sx, sy) {                             // sx · sy = 무대 안 좌표
+        const c = $('cursor'); if (!S.showCursor) return;
+        const r = $('stage').getBoundingClientRect();
+        const inside = sx >= 0 && sy >= 0 && sx <= r.width && sy <= r.height;
+        c.style.display = inside ? 'block' : 'none';
+        c.style.transform = `translate(${sx - 3}px, ${sy - 2}px)`;
+    }
+    function clickFx(sx, sy) {
+        if (!S.showClick) return;
+        const d = document.createElement('div');
+        d.className = 'ripple'; d.style.left = sx + 'px'; d.style.top = sy + 'px';
+        $('stage').appendChild(d); setTimeout(() => d.remove(), 600);
+    }
+    document.addEventListener('pointermove', e => moveCursor(...stagePoint(e.clientX, e.clientY)), true);
+    document.addEventListener('pointerdown', e => clickFx(...stagePoint(e.clientX, e.clientY)), true);
+    /* 다이어리 안의 좌표 → 무대 좌표 (기기의 크기 · 위치 · 기울기를 그대로 계산) */
+    function appToStage(f, e) {
+        const dev = $('device'); let x = e.clientX, y = e.clientY, el = f;
+        while (el && el !== dev) { x += el.offsetLeft + el.clientLeft; y += el.offsetTop + el.clientTop; el = el.offsetParent; }
+        const st = $('stage').getBoundingClientRect(), w = dev.offsetWidth, h = dev.offsetHeight, [w2, h2] = [w / 2, h / 2];
+        const a = S.tilt * Math.PI / 180, k = devScale, dx = (x - w2) * k, dy = (y - h2) * k;
+        return [dev.offsetLeft + w2 + S.ox * st.width / 100 + dx * Math.cos(a) - dy * Math.sin(a), dev.offsetTop + h2 + S.oy * st.height / 100 + dx * Math.sin(a) + dy * Math.cos(a)];
+    }
+    function hookApp() {
+        const f = $('app');
+        let doc;
+        try { doc = f.contentDocument; void doc.body; } catch (e) { doc = null; }
+        if (!doc) { sameOrigin = false; showWarn(); return; }
+        if (doc.__malangRec) return; doc.__malangRec = true;
+        doc.addEventListener('pointermove', e => moveCursor(...appToStage(f, e)), true);
+        doc.addEventListener('pointerdown', e => clickFx(...appToStage(f, e)), true);
+        doc.addEventListener('keydown', onKey, true);
+        try { const c = getComputedStyle(doc.body).backgroundColor; if (c && c !== 'rgba(0, 0, 0, 0)') $('device').style.setProperty('--appbg', c); } catch (e) {}
+    }
+    setInterval(() => { try { const f = $('app'); if (f && f.contentDocument && !f.contentDocument.__malangRec) hookApp(); } catch (e) {} }, 1000);
+    function showWarn() {
+        const w = $('warn'); w.style.display = 'block';
+        w.innerHTML = '⚠️ 이 도구를 컴퓨터 파일로 직접 열어서 <b>마우스 커서 · 클릭 효과가 영상에 찍히지 않아요.</b><br>크롬 주소창에 <b>softsweettarot.github.io/diary/recorder.html</b> 을 열어 주세요.';
+    }
+
+    /* ---------- 🎬 녹화 (F2) ---------- */
+    let stream = null, rec = null, chunks = [], t0 = 0, timer = 0, dirHandle = null, dirOk = false, cropped = false;
+    const MIMES = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1.4d0028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'];
+    const mime = () => (window.MediaRecorder && MIMES.find(m => MediaRecorder.isTypeSupported(m))) || '';
+    function info() {
+        const m = mime();
+        $('recInfo').innerHTML = (m.startsWith('video/mp4') ? '✅ mp4 로 저장돼요' : '⚠️ 이 브라우저는 mp4 녹화를 못 해서 webm 으로 저장돼요 (크롬 최신 버전을 써 주세요)')
+            + '<br>' + (dirHandle ? (dirOk ? `📁 저장 폴더 : <b>${dirHandle.name}</b>` : `📁 <b>${dirHandle.name}</b> 폴더를 쓰려면 위 버튼을 한 번 눌러 허용해 주세요 (안 누르면 다운로드 폴더)`) : '📁 저장 폴더를 안 고르면 \'다운로드\' 폴더에 저장돼요')
+            + (stream && !stream.getAudioTracks().length ? '<br>🔇 <b>지금은 소리 없이 녹화돼요.</b> 이 창을 새로고침한 뒤 공유 창에서 \'탭 오디오도 공유\'를 켜 주세요.'
+                : '<br>처음 녹화할 때 크롬 공유 창에서 <b>\'탭 오디오도 공유\'</b>를 켜야 소리가 같이 녹화돼요.');
+    }
+    async function getStream() {
+        if (stream && stream.getVideoTracks()[0] && stream.getVideoTracks()[0].readyState === 'live') return stream;
+        stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { frameRate: { ideal: 60 }, displaySurface: 'browser', cursor: 'never' },
+            audio: { suppressLocalAudioPlayback: false, echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+            preferCurrentTab: true, selfBrowserSurface: 'include', surfaceSwitching: 'exclude', systemAudio: 'include'
+        });
+        const v = stream.getVideoTracks()[0];
+        cropped = false;
+        try { if (window.CropTarget && v.cropTo) { await v.cropTo(await CropTarget.fromElement($('stage'))); cropped = true; } } catch (e) {}
+        v.addEventListener('ended', () => { if (rec && rec.state !== 'inactive') rec.stop(); stream = null; });
+        info();
+        return stream;
+    }
+    async function startRec() {
+        try { await getStream(); } catch (e) { toast('녹화를 시작하지 못했어요 (공유를 취소했거나 막혀 있어요)'); return; }
+        if (!cropped) document.body.classList.add('nopanel'), layoutStage();
+        chunks = [];
+        const m = mime();
+        rec = new MediaRecorder(stream, m ? { mimeType: m, videoBitsPerSecond: 12000000, audioBitsPerSecond: 192000 } : undefined);
+        rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+        rec.onstop = saveRec;
+        rec.start(1000);
+        t0 = Date.now();
+        $('recState').classList.add('on'); $('recBtn').textContent = '⏹ 녹화 끝 (F2)';
+        timer = setInterval(() => { const s = (Date.now() - t0) / 1000 | 0; $('recState').textContent = `녹화 중 ${String(s / 60 | 0).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }, 250);
+    }
+    function stopRec() { if (rec && rec.state !== 'inactive') rec.stop(); }
+    async function saveRec() {
+        clearInterval(timer);
+        $('recState').classList.remove('on'); $('recState').textContent = '저장하는 중…'; $('recBtn').textContent = '⏺ 녹화 시작 (F2)';
+        const type = (rec && rec.mimeType) || 'video/webm', ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
+        const blob = new Blob(chunks, { type }); chunks = []; rec = null;
+        const n = new Date(), p = v => String(v).padStart(2, '0');
+        const name = `말랑다이어리_${n.getFullYear()}${p(n.getMonth() + 1)}${p(n.getDate())}_${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}.${ext}`;
+        let where = '다운로드 폴더';
+        try {
+            if (dirHandle && dirOk) {
+                const fh = await dirHandle.getFileHandle(name, { create: true }), w = await fh.createWritable();
+                await w.write(blob); await w.close(); where = dirHandle.name + ' 폴더';
+            } else throw 0;
+        } catch (e) {
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+            document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+        }
+        $('recState').textContent = '대기 중';
+        toast(`💾 저장했어요 : ${where} / ${name} (${(blob.size / 1048576).toFixed(1)}MB)`);
+    }
+    function toggleRec() { (rec && rec.state === 'recording') ? stopRec() : startRec(); }
+    function onKey(e) {
+        if (e.key === 'F2') { e.preventDefault(); e.stopPropagation(); toggleRec(); return; }
+        const tag = (e.target && e.target.tagName) || '';
+        if ((e.key === 'h' || e.key === 'H') && !e.ctrlKey && !e.metaKey && !e.altKey && !/INPUT|TEXTAREA|SELECT/.test(tag) && !(e.target && e.target.isContentEditable)) {
+            if (e.target.ownerDocument !== document) return;            // 다이어리 안에서 글을 쓸 때는 무시
+            document.body.classList.toggle('nopanel'); setTimeout(layoutStage, 260);
+        }
+    }
+    document.addEventListener('keydown', onKey, true);
+    $('recBtn').onclick = toggleRec;
+
+    /* 📁 저장 폴더 (한 번 고르면 이 PC 에 기억) */
+    const idb = (mode, fn) => new Promise((res, rej) => { const o = indexedDB.open('malang_recorder', 1); o.onupgradeneeded = () => o.result.createObjectStore('h'); o.onsuccess = () => { const t = o.result.transaction('h', mode); const r = fn(t.objectStore('h')); t.oncomplete = () => res(r && r.result); t.onerror = rej; }; o.onerror = rej; });
+    const dirLabel = () => { $('dirBtn').textContent = dirHandle && !dirOk ? '📁 저장 폴더 다시 허용하기' : '📁 저장 폴더 고르기'; info(); };
+    $('dirBtn').onclick = async () => {
+        if (!window.showDirectoryPicker) { toast('이 브라우저는 폴더 고르기를 못 해요. 다운로드 폴더에 저장돼요.'); return; }
+        try {
+            if (dirHandle && !dirOk) { dirOk = (await dirHandle.requestPermission({ mode: 'readwrite' })) === 'granted'; if (dirOk) { dirLabel(); return; } }
+            dirHandle = await showDirectoryPicker({ id: 'malang-rec', mode: 'readwrite', startIn: 'videos' }); dirOk = true;
+            await idb('readwrite', s => s.put(dirHandle, 'dir')); dirLabel(); toast('📁 저장 폴더 : ' + dirHandle.name);
+        } catch (e) {}
+    };
+    (async () => {                                             // 다시 연 날 : 크롬이 폴더 허용을 한 번 더 물어봐요 (버튼 한 번)
+        try { const h = await idb('readonly', s => s.get('dir')); if (h) { dirHandle = h; dirOk = (await h.queryPermission({ mode: 'readwrite' })) === 'granted'; dirLabel(); } } catch (e) {}
+    })();
+
+    renderPanel(); paintBg(); layoutStage(); info();
+    if (!location.protocol.startsWith('http')) showWarn();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) toast('이 브라우저는 화면 녹화를 못 해요. PC 크롬을 써 주세요.');
+})();
+</script>
+</body>
+</html>
