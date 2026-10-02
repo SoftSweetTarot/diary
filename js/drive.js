@@ -458,6 +458,7 @@
             loadUIFont();
             if (isCoverOpen) loadData();
             updateStorageInfo();
+            if (typeof lockAfterLoad === 'function') lockAfterLoad();       // 🔒 다이어리 잠금 (js/lock.js)
         }
 
         /* ---------- 화면(UI) ---------- */

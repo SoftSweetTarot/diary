@@ -1501,3 +1501,36 @@
         .sticker-grid .ss-sg-head small { font-weight: normal; font-size: 11.5px; color: #999; margin-left: 4px; }
         .sticker-grid .ss-lock img { opacity: .5; filter: saturate(.6); }
         .season-corner { position: absolute; right: 4px; bottom: 4px; width: 76px; height: 76px; background: center / contain no-repeat; pointer-events: none; z-index: 0; opacity: .9; }
+
+        /* ===== 🔒 다이어리 잠금 (js/lock.js) ===== */
+        .lock-screen { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; padding: 20px;
+            background: radial-gradient(circle at 30% 20%, #ffe3ec, transparent 60%), radial-gradient(circle at 80% 90%, #e6dcff, transparent 55%), #fff5f8; }
+        .lock-screen[hidden] { display: none; }
+        body.lock-on { overflow: hidden; }
+        .lock-box { width: min(320px, 100%); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: #5a3d4a; }
+        .lock-ico { font-size: 44px; animation: lockBob 2.4s ease-in-out infinite; }
+        @keyframes lockBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .lock-box > b { font-size: 19px; }
+        .lock-box > p { margin: 0; font-size: 14px; color: #8a6a78; min-height: 20px; }
+        .lock-box > p.err { color: #e2556f; font-weight: bold; }
+        .lock-dots { display: flex; gap: 16px; margin: 6px 0 10px; }
+        .lock-dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #ff9ab3; transition: background .15s, transform .15s; }
+        .lock-dots i.on { background: #ff8fab; transform: scale(1.1); }
+        .lock-dots.shake { animation: lockShake .4s; }
+        @keyframes lockShake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+        .lock-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+        .lock-pad button { width: 72px; height: 72px; border-radius: 50%; border: none; background: #fff; box-shadow: 0 3px 10px rgba(220,120,150,.18);
+            font: inherit; font-size: 26px; color: #5a3d4a; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .lock-pad button:active { background: #ffe3ec; transform: scale(.95); }
+        .lock-pad .lock-sub { background: none; box-shadow: none; font-size: 17px; color: #a07888; }
+        .lock-pad .lock-sub:empty { visibility: hidden; }
+        .lock-forgot { margin-top: 8px; border: none; background: none; color: #a07888; font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
+        .lock-forgot[hidden] { display: none; }
+        .modal-content.lock-content { max-width: 340px; }
+        .lock-state { text-align: center; font-size: 16px; font-weight: bold; padding: 12px; border-radius: 14px; background: #f5f0f2; margin-bottom: 10px; }
+        .lock-state.on { background: #ffe9f0; color: #d94a76; }
+        .lock-label { display: block; font-size: 13px; margin: 6px 0 4px; color: #8a6a78; }
+        .lock-btns { display: flex; gap: 6px; margin-top: 10px; } .lock-btns .btn { flex: 1; justify-content: center; font-size: 13px; }
+        .lock-on-btn { width: 100%; justify-content: center; background: var(--primary-accent); color: #fff; border-color: var(--primary-accent); font-weight: bold; }
+        .lock-note { font-size: 12px; line-height: 1.6; color: #8a7a80; margin: 12px 0 0; text-align: left; word-break: keep-all; }
+        body.lock-on #customAlertModal { z-index: 9500; }
