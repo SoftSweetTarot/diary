@@ -5,16 +5,47 @@
            📢 겉표지 공지 이미지
            - NOTICE_IMAGE_SRC 에 파일 경로(예: 'images/notice.gif') 또는 인터넷 주소(https://…)를 넣으세요.
            - jpg · png · webp · 움직이는 gif 모두 표시됩니다.
-           - 비워 두거나 이미지를 못 찾으면 아래의 임시 공지 이미지가 대신 보입니다.
+           - 비워 두거나 이미지를 못 찾으면 아래의 기본 그림(말랑달콤 환영 카드 · 반짝이는 별 · 편지)이 보입니다.
            ===================================================================== */
         const NOTICE_IMAGE_SRC = '';
         const NOTICE_PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
             '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200" viewBox="0 0 360 200">' +
-            '<rect x="4" y="4" width="352" height="192" rx="18" fill="#ffffff" fill-opacity="0.92" stroke="#ffb6c1" stroke-width="4" stroke-dasharray="10 6"/>' +
-            '<text x="180" y="52" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="bold" fill="#ff6b81">📢 공지사항</text>' +
-            '<text x="180" y="96" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#555">말랑달콤 다이어리에 오신 것을 환영해요!</text>' +
-            '<text x="180" y="124" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#555">업데이트 소식과 공지가 이곳에 표시됩니다.</text>' +
-            '<text x="180" y="166" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#999">(임시 공지 이미지)</text>' +
+            '<defs>' +
+            '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3f8"/><stop offset=".55" stop-color="#ffe4ef"/><stop offset="1" stop-color="#efe6ff"/></linearGradient>' +
+            '<linearGradient id="rb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9fbd"/><stop offset="1" stop-color="#ff7aa2"/></linearGradient>' +
+            '<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>' +
+            '<style>' +
+            '.tw{animation:tw 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}' +
+            '.tw.b{animation-delay:-.8s}.tw.c{animation-delay:-1.6s}' +
+            '@keyframes tw{0%,100%{opacity:.25;transform:scale(.6)}50%{opacity:1;transform:scale(1.15)}}' +
+            '.fl{animation:fl 3.2s ease-in-out infinite}.fl.b{animation-delay:-1.6s}' +
+            '@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}' +
+            '.env{animation:env 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center}' +
+            '@keyframes env{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg) translateY(-3px)}}' +
+            '</style>' +
+            '</defs>' +
+            '<rect x="3" y="3" width="354" height="194" rx="22" fill="url(#bg)" stroke="#ffc2d6" stroke-width="3"/>' +
+            '<rect x="11" y="11" width="338" height="178" rx="16" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="7 6"/>' +
+            '<g fill="#fff" opacity=".85"><circle cx="318" cy="182" r="10"/><circle cx="334" cy="176" r="13"/><circle cx="348" cy="186" r="9"/><circle cx="14" cy="186" r="9"/><circle cx="28" cy="178" r="12"/><circle cx="44" cy="186" r="9"/></g>' +
+            '<g class="fl"><path d="M38 52 C 30 44 34 34 42 38 C 50 34 54 44 46 52 L 42 56Z" fill="#ffb3c8"/></g>' +
+            '<g class="fl b"><path d="M318 46 C 312 40 315 32 321 35 C 327 32 330 40 324 46 L 321 49Z" fill="#c9b5ff"/></g>' +
+            '<path class="tw" d="M70 92 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#ffd36b"/>' +
+            '<path class="tw b" d="M292 96 l2.5 6 6 2.5 -6 2.5 -2.5 6 -2.5 -6 -6 -2.5 6 -2.5z" fill="#ffb3c8"/>' +
+            '<path class="tw c" d="M318 98 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#a8d8ff"/>' +
+            '<path class="tw" d="M40 100 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#c9b5ff"/>' +
+            '<circle class="tw b" cx="122" cy="112" r="3" fill="#ffd36b"/><circle class="tw c" cx="238" cy="80" r="3" fill="#ff9fbd"/>' +
+            '<path d="M106 32 h-28 l9 11 -9 11 h28z" fill="#ff86a9"/><path d="M254 32 h28 l-9 11 9 11 h-28z" fill="#ff86a9"/>' +
+            '<path d="M106 54 l8 6 v-6z M254 54 l-8 6 v-6z" fill="#e0628a"/>' +
+            '<rect x="106" y="26" width="148" height="28" rx="3" fill="url(#rb)"/>' +
+            '<text x="180" y="45" text-anchor="middle" font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',\'Noto Sans KR\',sans-serif" font-size="15" font-weight="bold" fill="#fff" letter-spacing="1">말랑달콤 다이어리</text>' +
+            '<circle cx="180" cy="102" r="34" fill="url(#glow)"/>' +
+            '<g class="env">' +
+            '<rect x="156" y="88" width="48" height="34" rx="6" fill="#fff" stroke="#ff9fbd" stroke-width="2.5"/>' +
+            '<path d="M158 91 L180 108 L202 91" fill="none" stroke="#ff9fbd" stroke-width="2.5" stroke-linejoin="round"/>' +
+            '<path d="M180 104 C 175 99 176 94 180 96.5 C 184 94 185 99 180 104Z" fill="#ff6f9c"/>' +
+            '</g>' +
+            '<text x="180" y="146" text-anchor="middle" font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',\'Noto Sans KR\',sans-serif" font-size="15" font-weight="bold" fill="#7a4a62">오늘 하루도 말랑하게, 달콤하게 💕</text>' +
+            '<text x="180" y="167" text-anchor="middle" font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',\'Noto Sans KR\',sans-serif" font-size="12" fill="#a07890">표지를 넘겨 오늘의 이야기를 남겨 보세요</text>' +
             '</svg>');
 
         function loadCoverNotice() {
@@ -22,7 +53,7 @@
             const img = document.getElementById('coverNoticeImg');
             if (!box || !img) return;
             img.onerror = () => {
-                if (img.src !== NOTICE_PLACEHOLDER) img.src = NOTICE_PLACEHOLDER;   // 공지 이미지를 못 찾으면 임시 공지로
+                if (img.src !== NOTICE_PLACEHOLDER) img.src = NOTICE_PLACEHOLDER;   // 공지 이미지를 못 찾으면 기본 그림으로
                 else box.classList.add('empty');
             };
             img.onload = () => box.classList.remove('empty');
