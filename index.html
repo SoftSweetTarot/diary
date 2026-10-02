@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261002-75">
+    <link rel="stylesheet" href="css/style.css?v=20261002-76">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -187,6 +187,8 @@
                 <div class="help-rows">
                     <div class="help-k">📐 페이지 크기</div><div class="help-v">다이어리 가로·세로 크기</div>
                     <div class="help-k">⚙️ 설정</div><div class="help-v">폰트 · 자동 저장 주기 · 백업 · 저장 용량</div>
+                    <div class="help-k">⏳ D-day</div><div class="help-v">놀이터 → 매일 말랑 → D-day : 다가오는 날 · 함께한 날 · 해마다 오는 날 · 📌 페이지에 보이기</div>
+                    <div class="help-k">👀 보이는 것</div><div class="help-v">⚙ 설정 → 설정 → 👀 페이지에 보이는 것 : 기분 · 날씨 도장 / D-day / 계절 장식 켜고 끄기</div>
                     <div class="help-k">🔍 검색</div><div class="help-v">툴바 🔍 검색 : 낱말로 지난 일기 찾기 · 기분 이모지를 누르면 그 기분이었던 날 모아 보기</div>
                     <div class="help-k">😊 기분 · 날씨 도장</div><div class="help-v">페이지 오른쪽 위 동그라미를 눌러 오늘의 기분 · 날씨를 콕! (한 달 모아보기에도 보여요)</div>
                     <div class="help-k">📅 한 달 모아보기</div><div class="help-v">다이어리 위쪽 날짜를 누르면 한 달 달력 · 날짜를 누르면 그날 일기로</div>
@@ -505,6 +507,11 @@
         <div class="modal-content">
             <div class="modal-title">⚙️ 설정</div>
 
+            <div class="form-group show-group">
+                <label>👀 페이지에 보이는 것</label>
+                <div id="showSwitches"></div>
+            </div>
+
             <div class="form-group">
                 <label>🔤 전체 UI 폰트 (글상자 폰트와 별개):</label>
                 <select id="uiFontSelect" class="btn" style="width:100%;" onchange="applyUIFont(this.value, true)"></select>
@@ -616,7 +623,7 @@
             <div class="modal-title mt-bar"><button class="mt-btn mt-back mt-none" type="button" id="svcBack" onclick="svcShowCats()" aria-label="놀이터로">←</button><span class="mt-text" id="svcTitle">🎠 놀이터</span><button class="mt-btn mt-x" type="button" onclick="closeModal('serviceModal')" aria-label="닫기">✕</button></div>
             <!-- 1단계 : 카테고리 고르기 -->
             <div class="svc-cats" id="svcCats">
-                <button class="svc-cat" type="button" id="svcCatDaily" onclick="svcOpenCat('daily')"><span class="svc-cat-icon">🌱</span><b>매일 말랑</b><small>매일 들르면 좋은 것</small><i>출석 도장판 · 화분 키우기 · 오늘의 질문 · 오늘의 행운 · 랜덤박스 · 생리 달력</i></button>
+                <button class="svc-cat" type="button" id="svcCatDaily" onclick="svcOpenCat('daily')"><span class="svc-cat-icon">🌱</span><b>매일 말랑</b><small>매일 들르면 좋은 것</small><i>출석 도장판 · 화분 키우기 · 오늘의 질문 · 오늘의 행운 · 랜덤박스 · 생리 달력 · D-day</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('fortune')"><span class="svc-cat-icon">🔮</span><b>운세·마음</b><small>재미로 보는 운세</small><i>포춘카드 · 꿈해몽 · 토정비결 · 이름 궁합 · 심리테스트</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('make')"><span class="svc-cat-icon">🎨</span><b>만들기·꾸미기</b><small>다이어리에 붙이는 작품</small><i>인형방 · 포토부스 · 스티커 만들기 · 색칠놀이</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('game')"><span class="svc-cat-icon">🕹️</span><b>게임</b><small>오락실 · 두뇌 게임</small><i>오락실 · 명예의 전당</i></button>
@@ -634,6 +641,7 @@
                     <button class="btn service-btn" id="svcBtnLuck" onclick="window.openLuck ? openLuck() : comingSoon('🍀 오늘의 행운')"><span class="service-icon">🍀</span>오늘의 행운<small>네잎클로버 찾기</small></button>
                     <button class="btn service-btn" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스<small>하루 한 번 뽑기</small></button>
                     <button class="btn service-btn" onclick="window.openCycle ? openCycle() : comingSoon('🩷 생리 달력')"><span class="service-icon">🩷</span>생리 달력<small>예정일 · 가임기</small></button>
+                    <button class="btn service-btn" onclick="window.openDday ? openDday() : comingSoon('⏳ D-day')"><span class="service-icon">⏳</span>D-day<small>기다리는 날 세기</small></button>
                 </div>
                 <p class="svc-tip">💡 <b>오늘 일기를 쓰면</b> 🌷 화분에 물을 줄 수 있어요. 💬 오늘의 질문에 대답해도 일기를 쓴 걸로 쳐요. 📅 출석 도장을 모으면 <b>움직이는 특별 스티커</b>를 받아요. 🎁 랜덤박스 코인은 매일 자정에 새로 생겨요.</p>
             </div>
@@ -743,54 +751,56 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261002-75"></script>
-    <script src="js/app.js?v=20261002-75"></script>
-    <script src="js/page.js?v=20261002-75"></script>
-    <script src="js/elements.js?v=20261002-75"></script>
-    <script src="js/settings.js?v=20261002-75"></script>
-    <script src="js/patterns.js?v=20261002-75"></script>
+    <script src="js/drive.js?v=20261002-76"></script>
+    <script src="js/app.js?v=20261002-76"></script>
+    <script src="js/page.js?v=20261002-76"></script>
+    <script src="js/elements.js?v=20261002-76"></script>
+    <script src="js/settings.js?v=20261002-76"></script>
+    <script src="js/patterns.js?v=20261002-76"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261002-75"></script>
-    <script src="js/skins.js?v=20261002-75"></script>
-    <script src="js/pattern-maker.js?v=20261002-75"></script>
-    <script src="js/doll-render.js?v=20261002-75"></script>
-    <script src="js/doll-store.js?v=20261002-75"></script>
-    <script src="js/doll-room.js?v=20261002-75"></script>
-    <script src="js/service.js?v=20261002-75"></script>
+    <script src="js/pattern-recipe.js?v=20261002-76"></script>
+    <script src="js/skins.js?v=20261002-76"></script>
+    <script src="js/pattern-maker.js?v=20261002-76"></script>
+    <script src="js/doll-render.js?v=20261002-76"></script>
+    <script src="js/doll-store.js?v=20261002-76"></script>
+    <script src="js/doll-room.js?v=20261002-76"></script>
+    <script src="js/service.js?v=20261002-76"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261002-75"></script>
+    <script src="js/gacha.js?v=20261002-76"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261002-75"></script>
+    <script src="js/bgm.js?v=20261002-76"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261002-75"></script>
+    <script src="js/fortune.js?v=20261002-76"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261002-75"></script>
-    <script src="js/hof.js?v=20261002-75"></script>
+    <script src="js/arcade.js?v=20261002-76"></script>
+    <script src="js/hof.js?v=20261002-76"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/dream.js?v=20261002-75"></script>
+    <script src="js/dream.js?v=20261002-76"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261002-75"></script>
-    <script src="js/plant.js?v=20261002-75"></script>
-    <script src="js/attend-stickers.js?v=20261002-75"></script>
-    <script src="js/attend.js?v=20261002-75"></script>
-    <script src="js/luck.js?v=20261002-75"></script>
-    <script src="js/question-data.js?v=20261002-75"></script>
-    <script src="js/question.js?v=20261002-75"></script>
-    <script src="js/tape.js?v=20261002-75"></script>
-    <script src="js/paper.js?v=20261002-75"></script>
-    <script src="js/draw.js?v=20261002-75"></script>
-    <script src="js/frame.js?v=20261002-75"></script>
-    <script src="js/season-data.js?v=20261002-75"></script>
-    <script src="js/season.js?v=20261002-75"></script>
-    <script src="js/lock.js?v=20261002-75"></script>
-    <script src="js/cycle.js?v=20261002-75"></script>
-    <script src="js/month.js?v=20261002-75"></script>
-    <script src="js/stamp.js?v=20261002-75"></script>
-    <script src="js/search.js?v=20261002-75"></script>
-    <script src="js/install.js?v=20261002-75"></script>
+    <script src="js/tojeong.js?v=20261002-76"></script>
+    <script src="js/plant.js?v=20261002-76"></script>
+    <script src="js/attend-stickers.js?v=20261002-76"></script>
+    <script src="js/attend.js?v=20261002-76"></script>
+    <script src="js/luck.js?v=20261002-76"></script>
+    <script src="js/question-data.js?v=20261002-76"></script>
+    <script src="js/question.js?v=20261002-76"></script>
+    <script src="js/tape.js?v=20261002-76"></script>
+    <script src="js/paper.js?v=20261002-76"></script>
+    <script src="js/draw.js?v=20261002-76"></script>
+    <script src="js/frame.js?v=20261002-76"></script>
+    <script src="js/season-data.js?v=20261002-76"></script>
+    <script src="js/season.js?v=20261002-76"></script>
+    <script src="js/lock.js?v=20261002-76"></script>
+    <script src="js/cycle.js?v=20261002-76"></script>
+    <script src="js/month.js?v=20261002-76"></script>
+    <script src="js/stamp.js?v=20261002-76"></script>
+    <script src="js/search.js?v=20261002-76"></script>
+    <script src="js/dday.js?v=20261002-76"></script>
+    <script src="js/show.js?v=20261002-76"></script>
+    <script src="js/install.js?v=20261002-76"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

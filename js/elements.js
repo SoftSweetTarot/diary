@@ -607,6 +607,7 @@
             let raw = null; try { raw = JSON.parse(store.getItem(key)); } catch (e) {}
             pageStamps.mo = raw && raw.mo || ''; pageStamps.we = raw && raw.we || '';
             if (typeof psRender === 'function') psRender();
+            if (typeof ddRefresh === 'function') ddRefresh();               // ⏳ 이 페이지 날짜 기준 D-day (js/dday.js)
         }
         const pageStamps = { mo: '', we: '' };            // 지금 페이지의 기분 · 날씨 도장
 

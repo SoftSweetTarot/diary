@@ -1,0 +1,39 @@
+/* 말랑달콤 다이어리 - js/show.js
+   👀 페이지에 보이는 것 : 다이어리 페이지에 붙는 기능을 켜고 끄는 스위치 (⚙ 설정 → 설정 → 👀 페이지에 보이는 것)
+   - 😊 기분 · 날씨 도장 · ⏳ D-day · 🌸 계절 장식
+   - 끈 것만 설정(settings.json)에 저장 ('diary_show' = { stamp: 0, … }) · 게스트는 이 기기에만
+   - 꺼도 이미 찍은 도장 · 만든 D-day 는 지워지지 않아요 (다시 켜면 그대로 보여요)
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (모두 보임) */
+
+        const SHOW_KEY = 'diary_show', SHOW_LOCAL = 'malang_show';
+        const SHOW_ITEMS = [
+            ['stamp', '😊 기분 · 날씨 도장', '페이지 오른쪽 위 동그라미'],
+            ['dday', '⏳ D-day', '📌 한 D-day 를 페이지 왼쪽 위에'],
+            ['corner', '🌸 계절 장식', '계절 테마를 켰을 때 페이지 모서리 그림']
+        ];
+        const showSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
+        function showRead() {
+            let o = null; try { o = JSON.parse(showSync() ? store.getItem(SHOW_KEY) : localStorage.getItem(SHOW_LOCAL)); } catch (e) {}
+            return o && typeof o === 'object' ? o : {};
+        }
+        function showApply() {
+            const o = showRead(), root = document.documentElement;
+            SHOW_ITEMS.forEach(([k]) => root.classList.toggle('hide-' + k, o[k] === 0));
+            showRenderSwitches();
+        }
+        function showSet(k, on) {
+            const o = showRead();
+            if (on) delete o[k]; else o[k] = 0;
+            const t = JSON.stringify(o);
+            try { if (showSync()) store.setItem(SHOW_KEY, t); else localStorage.setItem(SHOW_LOCAL, t); } catch (e) {}
+            showApply();
+        }
+        function showRenderSwitches() {
+            const box = document.getElementById('showSwitches'); if (!box) return;
+            const o = showRead();
+            box.innerHTML = SHOW_ITEMS.map(([k, name, sub]) => `<label class="show-row"><span><b>${name}</b><small>${sub}</small></span>`
+                + `<input type="checkbox" class="show-sw" ${o[k] === 0 ? '' : 'checked'} onchange="showSet('${k}', this.checked)"></label>`).join('');
+        }
+        showApply();
+        window.showApply = showApply;
+        window.showSet = showSet;
