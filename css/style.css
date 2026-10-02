@@ -1258,3 +1258,53 @@
         .lk-go { padding: 14px; border-radius: 14px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit;
             background: linear-gradient(#7fd27a, #4fb65a); color: #fff; box-shadow: 0 4px 0 #3a8f43; }
         .lk-tip { margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.7); border: 1px dashed #b5dca9; font-size: 13px; line-height: 1.6; color: #4f7a45; word-break: keep-all; }
+
+        /* ===== 🏆 명예의 전당 (js/hof.js) ===== */
+        .ar-btn.hof { background: linear-gradient(#ffd86b, #ffb52e); box-shadow: 0 4px 0 #c9861a; margin-top: 4px; }
+        .ar-btn.hof:disabled { opacity: .7; }
+        .ar-hof-note { font-size: 12.5px; opacity: .85; margin: 4px 0 0; }
+        .ar-hof-done { font-size: 14px; line-height: 1.7; text-align: center; color: #ffe66b; }
+        .ar-hof-done b { color: #fff; }
+        .ar-hof-done .ar-btn { margin-top: 6px; }
+        .hof-room { position: fixed; inset: 0; z-index: 1700; display: none; overflow-y: auto; overscroll-behavior: contain; color: #4a3a20;
+            background: linear-gradient(#fff9e8, #fff1cc); }
+        .hof-room.show { display: block; }
+        .hof-room [hidden], .hof-nick-wrap[hidden] { display: none !important; }
+        .hof-bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+            background: rgba(255,249,232,.94); backdrop-filter: blur(6px); }
+        .hof-bar b { flex: 1; text-align: center; font-size: 17px; }
+        .hof-sp, .hof-x { width: 38px; height: 38px; flex: none; }
+        .hof-x { border-radius: 50%; border: 1.5px solid #f0d58a; background: #fffdf5; color: #4a3a20; font-size: 16px; cursor: pointer; }
+        .hof-wrap { max-width: 480px; margin: 0 auto; padding: 4px 14px max(30px, env(safe-area-inset-bottom)); box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; }
+        .hof-games small { display: block; font-size: 12px; color: #a08850; margin: 2px 0 4px; }
+        .hof-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+        .hof-chips::-webkit-scrollbar { display: none; }
+        .hof-chips button { flex: none; border: 1.5px solid #f0d58a; background: #fffdf5; color: #6a5420; border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+        .hof-chips button.on { background: #ffcf4a; border-color: #e8a817; color: #4a3200; font-weight: bold; }
+        .hof-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #fff3d1; padding: 4px; border-radius: 14px; }
+        .hof-tabs button { border: none; background: none; border-radius: 10px; padding: 9px; font: inherit; font-size: 14px; color: #8a7040; cursor: pointer; }
+        .hof-tabs button.on { background: #fff; color: #4a3200; font-weight: bold; box-shadow: 0 2px 6px rgba(160,120,40,.18); }
+        .hof-champ { text-align: center; padding: 10px; border-radius: 14px; background: linear-gradient(90deg, #fff0b3, #ffe08a); font-size: 14px; box-shadow: 0 3px 10px rgba(200,150,30,.18); }
+        .hof-list { background: #fffdf7; border-radius: 18px; padding: 6px; box-shadow: 0 4px 14px rgba(160,120,40,.12); min-height: 120px; }
+        .hof-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; font-size: 15px; }
+        .hof-row + .hof-row { border-top: 1px dashed #f3e3b8; }
+        .hof-row.top1 { background: #fff4c4; } .hof-row.top2 { background: #f4f6fa; } .hof-row.top3 { background: #fbeee4; }
+        .hof-row.me { outline: 2px solid #ff8fab; background: #fff0f5; }
+        .hof-rk { width: 30px; text-align: center; font-weight: bold; color: #a08850; font-size: 15px; }
+        .hof-row.top1 .hof-rk, .hof-row.top2 .hof-rk, .hof-row.top3 .hof-rk { font-size: 22px; }
+        .hof-nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .hof-row b { color: #c9861a; }
+        .hof-empty { text-align: center; padding: 30px 10px; font-size: 14px; line-height: 1.7; color: #a08850; }
+        .hof-me { text-align: center; font-size: 14px; padding: 10px; border-radius: 14px; background: #fff; border: 1.5px dashed #ffb3c6; color: #7a4a5a; }
+        .hof-me b { color: #e2667a; }
+        .hof-nick-btn { margin-left: 6px; border: 1px solid #ffb3c6; background: #fff0f5; border-radius: 999px; padding: 3px 9px; font: inherit; font-size: 12px; color: #c0506a; cursor: pointer; }
+        .hof-tip { margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7040; text-align: center; word-break: keep-all; }
+        .hof-nick-wrap { position: fixed; inset: 0; z-index: 1800; display: grid; place-items: center; background: rgba(60,40,10,.45); padding: 20px; }
+        .hof-nick { width: min(320px, 100%); background: #fffdf7; border-radius: 22px; padding: 20px 18px 12px; display: flex; flex-direction: column; gap: 8px; text-align: center; }
+        .hof-nick b { font-size: 17px; }
+        .hof-nick p { margin: 0; font-size: 13px; line-height: 1.6; color: #8a7040; }
+        .hof-nick input { font: inherit; font-size: 17px; text-align: center; padding: 11px; border-radius: 12px; border: 2px solid #f0d58a; outline: none; }
+        .hof-nick input:focus { border-color: #ffb52e; }
+        .hof-nick-err { min-height: 18px; font-size: 13px; color: #e2556f; }
+        .hof-go { padding: 13px; border: none; border-radius: 14px; font: inherit; font-size: 16px; font-weight: bold; background: linear-gradient(#ffd86b, #ffb52e); color: #4a3200; box-shadow: 0 4px 0 #c9861a; cursor: pointer; }
+        .hof-later { border: none; background: none; color: #a08850; font: inherit; font-size: 14px; padding: 6px; cursor: pointer; }

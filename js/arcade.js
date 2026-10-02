@@ -900,7 +900,7 @@
                 <div class="ar-cabs" id="arCabs"></div>
                 <h3 class="ar-group">🧠 두뇌 게임 <small>기억력 · 집중력 · 계산력</small></h3>
                 <div class="ar-cabs" id="arCabsBrain"></div>
-                <p class="ar-foot">최고 점수는 내 드라이브에 저장돼서 PC·휴대폰 어디서나 같아요.</p>
+                <p class="ar-foot">최고 점수는 내 드라이브에 저장돼서 PC·휴대폰 어디서나 같아요.<br>게임이 끝나면 🏆 명예의 전당에 점수를 올려 순위를 겨뤄 보세요!</p>
               </div>
               <div class="ar-play" id="arPlay" hidden>
                 <div class="ar-bar">
@@ -1045,6 +1045,7 @@
         }
         function arStart() {
             if (ar.state === 'over') arNewInstance();
+            if (typeof hofStart === 'function') hofStart(ar.game.id);          // 🏆 명예의 전당 시작 표 (js/hof.js)
             ar.state = 'play';
             aq('arOverlay').classList.remove('on');
             aq('arPauseBtn').textContent = '⏸';
@@ -1070,6 +1071,7 @@
                 o.innerHTML = `<div class="ar-ov-t">PAUSE</div><div class="ar-blink">${touch ? 'TAP TO CONTINUE' : 'P 또는 클릭으로 계속'}</div>`;
             } else {
                 o.innerHTML = `<div class="ar-ov-t">GAME OVER</div><div class="ar-ov-score">${ar.score}</div>${isNew ? '<div class="ar-new">🎉 NEW RECORD!</div>' : `<p>BEST ${ar.best[g.id] || 0}</p>`}
+                  ${typeof hofOverBtn === 'function' ? hofOverBtn(g.id, ar.score) : ''}
                   <div class="ar-ov-btns"><button type="button" class="ar-btn" onclick="arStart()">🔁 다시 하기</button><button type="button" class="ar-btn ghost" onclick="arBackToLobby()">🕹️ 오락실로</button></div>`;
             }
             o.classList.add('on');
