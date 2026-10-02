@@ -1,5 +1,8 @@
 /* 말랑달콤 다이어리 - js/luck.js
    🍀 오늘의 행운 : 클로버 밭에서 네잎클로버를 찾으면 오늘의 행운이 열려요 (놀이터 → 매일 말랑 → 🍀 오늘의 행운)
+   - 기회는 하루 5번 · 세잎을 고를 때마다 기회가 줄고 응원 메시지 · 마지막 기회는 두근두근
+   - 5번 안에 못 찾으면 숨어 있던 자리를 보여 주고 '내일은 행운이 찾아올 거예요' 로 끝 (그날은 다시 못 해요)
+   - 효과음은 ✨ 연출 소리 (js/ritual.js · js/sound.js)
    - 행운 지수 · 행운의 색 · 숫자 · 물건 · 시간 · 오늘의 한마디 · 행운 미션
    - 하루 동안은 같은 결과 (날짜 + 사람마다 다른 행운 번호로 정해져요) → 다음 날 다시 열면 새 행운
      행운 번호는 처음 한 번 만들어 설정(settings.json)에 저장 · 게스트는 이 기기에 저장
@@ -8,7 +11,9 @@
 
         const LK_KEY = 'diary_luck_seed';            // 설정 저장소 키 (사람마다 다른 행운 번호)
         const LK_LOCAL = 'malang_luck_seed';         // 게스트용 (이 기기)
-        const LK_FOUND = 'malang_luck_found';        // 오늘 네잎클로버를 찾았는지 (이 기기 · 다시 열면 바로 결과)
+        const LK_TODAY = 'malang_luck_today';        // 오늘 결과 'YYYY-MM-DD|win' · '|lose' (이 기기 · 다시 열면 바로 그 화면)
+        const LK_TRIES = 5;
+        const LK_CHEER = ['', '마지막 기회예요… 두근두근 💓', '집중! 네잎은 잎이 하나 더 있어요. 2번 남았어요', '괜찮아요, 행운은 천천히 와요. 3번 남았어요', '아깝다! 세잎클로버였어요. 아직 4번 남았어요 🍀'];
         const LK_COLORS = [
             ['연분홍', '#ffc2d4'], ['하늘색', '#9fd3ff'], ['민트', '#9ee6cf'], ['라벤더', '#c9b6ff'], ['레몬', '#fff08a'], ['복숭아', '#ffcfae'],
             ['코랄', '#ff8f7a'], ['크림', '#fff4d6'], ['올리브', '#b5c46a'], ['네이비', '#3d4f8f'], ['와인', '#9e3a5a'], ['하양', '#ffffff'],
@@ -33,7 +38,17 @@
             '📔 오늘 가장 맛있었던 것 일기에 적기', '🧹 책상 위 하나만 정리하기', '🌙 오늘은 30분 일찍 자기', '🙆 어깨 쭉 펴고 스트레칭하기',
             '📔 오늘의 기분을 색깔로 일기에 남기기', '🍀 누군가에게 칭찬 한마디 건네기', '📚 책 한 쪽이라도 읽기', '🌷 화분에 물 주기 (일기 쓰고!)'];
 
-        const lk = { built: false, open: false, res: null };
+        const lk = { built: false, open: false, res: null, tries: LK_TRIES, busy: false };
+        const lkToday = () => { try { const [d, r] = (localStorage.getItem(LK_TODAY) || '').split('|'); return d === lkDay() ? r : ''; } catch (e) { return ''; } };
+        const lkSave = r => { try { localStorage.setItem(LK_TODAY, lkDay() + '|' + r); } catch (e) {} };
+        /* 🔊 연출 소리 (js/ritual.js 의 소리 도구 · 연출 소리를 끄면 조용) */
+        function lkSfx(k) {
+            if (typeof ritTone !== 'function') return;
+            if (k === 'miss') { ritTone(523, .25, .1, 'triangle'); ritTone(392, .35, .09, 'triangle', .12); }
+            if (k === 'beat') { ritTone(70, .18, .45, 'sine'); ritTone(62, .16, .35, 'sine', .22); }
+            if (k === 'win') { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => ritTone(f, 1.2, .1, 'sine', i * .08, RIT_BELL)); }
+            if (k === 'lose') { [659, 587, 523, 440].forEach((f, i) => ritTone(f, .9, .08, 'sine', i * .28, RIT_BELL)); }
+        }
         const lkq = id => document.getElementById(id);
         const lkSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
         function lkDay(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -72,7 +87,8 @@
               <div class="lk-bar"><span class="lk-sp"></span><b>🍀 오늘의 행운</b><button class="lk-x" type="button" onclick="closeLuck()" aria-label="닫기">✕</button></div>
               <div class="lk-wrap">
                 <section id="lkFind">
-                  <p class="lk-lead">클로버 밭 어딘가에 <b>네잎클로버</b>가 숨어 있어요.<br>찾아서 톡! 누르면 오늘의 행운이 열려요.</p>
+                  <p class="lk-lead">클로버 밭 어딘가에 <b>네잎클로버</b>가 숨어 있어요.<br>기회는 단 <b>5번</b>! 신중하게 골라 보세요.</p>
+                  <div class="lk-chance" id="lkChance"></div>
                   <div class="lk-field" id="lkField"></div>
                   <p class="lk-hint" id="lkHint"></p>
                 </section>
@@ -97,20 +113,61 @@
                 b.innerHTML = lkClover(i === hit, 44 + Math.floor(Math.random() * 12));
                 b.setAttribute('aria-label', i === hit ? '네잎클로버' : '세잎클로버');
                 if (i === hit) { b.classList.add('four'); b.onclick = () => lkFound(b); }
-                else b.onclick = () => {                     // 세잎클로버 : 흔들리고 흐려져요 (같은 걸 또 누르지 않게 · 언젠가는 꼭 찾아요)
-                    if (b.classList.contains('seen')) return;
-                    b.classList.add('no', 'seen');
-                    const left = f.querySelectorAll('.lk-cl:not(.seen)').length;
-                    lkq('lkHint').textContent = left <= 4 ? `🍀 거의 다 왔어요! 남은 클로버 ${left}개` : '🍀 세잎클로버예요. 꽃말은 "행복"! 네잎을 찾아봐요';
-                };
+                else b.onclick = () => lkMiss(b);
                 f.appendChild(b);
             }
+            lk.tries = LK_TRIES; lk.busy = false;
+            f.classList.remove('last', 'over');
+            lkChance();
             lkq('lkHint').textContent = '';
         }
+        function lkChance(lost) {
+            const c = lkq('lkChance');
+            c.innerHTML = Array.from({ length: LK_TRIES }, (_, i) => `<i class="${i >= lk.tries ? 'used' : ''}${i === lk.tries && lost ? ' pop' : ''}">${lkClover(false, 22)}</i>`).join('')
+                + `<b>남은 기회 <span>${lk.tries}</span> / ${LK_TRIES}</b>`;
+            c.classList.toggle('last', lk.tries === 1);
+        }
+        /* 세잎클로버 : 기회가 하나 줄어요 */
+        function lkMiss(b) {
+            if (lk.busy || b.classList.contains('seen')) return;
+            b.classList.add('no', 'seen');
+            lk.tries--;
+            lkChance(true);
+            const f = lkq('lkField'), hint = lkq('lkHint');
+            if (lk.tries > 0) {
+                lkSfx('miss');
+                hint.textContent = LK_CHEER[lk.tries];
+                hint.classList.remove('pop'); void hint.offsetWidth; hint.classList.add('pop');
+                if (lk.tries === 1) { f.classList.add('last'); setTimeout(() => lkSfx('beat'), 350); }
+                return;
+            }
+            /* 기회를 모두 썼어요 → 숨어 있던 자리 보여 주기 → 내일을 기약 */
+            lk.busy = true; lkSave('lose');
+            f.classList.remove('last'); f.classList.add('over');
+            hint.textContent = '앗… 기회를 모두 썼어요';
+            lkSfx('lose');
+            setTimeout(() => { const x = f.querySelector('.four'); if (x && lk.open) { x.classList.add('reveal'); hint.textContent = '🍀 네잎클로버는 여기 숨어 있었어요'; } }, 900);
+            setTimeout(() => { if (lk.open) lkShowLose(true); }, 3200);
+        }
+        function lkShowLose(fresh) {
+            lkq('lkFind').hidden = true;
+            const box = lkq('lkResult'); box.hidden = false;
+            box.className = fresh ? 'lk-in' : '';
+            box.innerHTML = `
+              <div class="lk-card lk-lose">
+                <div class="lk-moon">🌙</div>
+                <b>오늘은 네잎클로버가 꼭꼭 숨었네요</b>
+                <p>아쉽지만 괜찮아요.<br><b class="lk-tmr">내일은 행운이 찾아올 거예요~</b></p>
+                <div class="lk-sleep">${lkClover(true, 40)}<span>z z z</span></div>
+              </div>
+              <p class="lk-tip">💡 오늘의 기회는 끝났어요. 내일 다시 와서 네잎클로버를 찾아봐요!<br>📔 대신 오늘 하루를 일기로 남겨 보는 건 어때요?</p>`;
+        }
         function lkFound(b) {
-            b.classList.add('got');
-            try { localStorage.setItem(LK_FOUND, lkDay()); } catch (e) {}
-            setTimeout(() => { if (lk.open) lkShowResult(true); }, 700);
+            if (lk.busy) return;
+            lk.busy = true;
+            b.classList.add('got'); lkSave('win'); lkSfx('win');
+            lkq('lkHint').textContent = lk.tries === 1 ? '🎉 마지막 기회에 찾았어요!' : '🎉 찾았다! 네잎클로버!';
+            setTimeout(() => { if (lk.open) lkShowResult(true); }, 1300);
         }
         function lkShowResult(fresh) {
             const R = lk.res = lkMake(), d = new Date();
@@ -169,9 +226,9 @@
             lk.open = true;
             lkq('luckRoom').classList.add('show');
             document.body.classList.add('fc-lock');
-            let found = false;
-            try { found = localStorage.getItem(LK_FOUND) === lkDay(); } catch (e) {}
-            if (found) lkShowResult(false);
+            const today = lkToday();
+            if (today === 'win') lkShowResult(false);
+            else if (today === 'lose') lkShowLose(false);
             else { lkq('lkFind').hidden = false; lkq('lkResult').hidden = true; lkField(); }
             lkq('luckRoom').scrollTop = 0;
         }
@@ -180,6 +237,6 @@
             const r = lkq('luckRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }
-        function luckDone() { try { return localStorage.getItem(LK_FOUND) === lkDay(); } catch (e) { return true; } }   // 오늘 행운을 열어 봤나요? (이 기기)
+        function luckDone() { return !!lkToday(); }   // 오늘 행운 찾기를 했나요? (찾았든 못 찾았든 · 이 기기)
         window.openLuck = openLuck;
         window.luckDone = luckDone;
