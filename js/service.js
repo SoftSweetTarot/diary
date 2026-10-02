@@ -51,7 +51,7 @@
         function openDream() { comingSoon('🌙 꿈해몽'); }
         function openArcade() { comingSoon('🕹️ 오락실'); }
         function openComics() { comingSoon('📚 만화방'); }
-        function openMusic() { comingSoon('🎵 음악듣기'); }
+        function openMusic() { comingSoon('🎧 음악듣기'); }      // AI로 만든 음악 목록 (툴바 🎵 배경음악과는 다른 기능)
         function openRandomBox() { if (typeof openGacha === 'function') openGacha(); else comingSoon('🎁 랜덤박스'); }   // js/gacha.js
         function openShop() { showMsg('🛍️ 말랑상점은 준비 중이에요.<br>예쁜 패턴과 꾸미기 이미지를 곧 만나보세요!'); }
 
