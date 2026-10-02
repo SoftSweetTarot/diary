@@ -1769,3 +1769,43 @@
         .pb-chips button.on { background: var(--primary-accent, #ff6b81); color: #fff; border-color: var(--primary-accent, #ff6b81); }
         .pb-row input { font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 12px; border: 2px solid #f3d0dc; outline: none; }
         .pb-deco { font-size: 14px; display: flex; align-items: center; gap: 6px; }
+
+        /* ===== ✂️ 스티커 만들기 (js/stickermaker.js) ===== */
+        .smk-room { position: fixed; inset: 0; z-index: 1600; display: none; overflow-y: auto; overscroll-behavior: contain; color: #5a3d4a; background: linear-gradient(#f3fbff, #fff0f6); }
+        .smk-room.show { display: block; }
+        .smk-room [hidden] { display: none !important; }
+        .smk-bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: max(10px, env(safe-area-inset-top)) 12px 10px; background: rgba(243,251,255,.94); backdrop-filter: blur(6px); }
+        .smk-bar b { flex: 1; text-align: center; font-size: 17px; }
+        .smk-sp, .smk-x { width: 38px; height: 38px; flex: none; }
+        .smk-x { border-radius: 50%; border: 1.5px solid #cfe3f0; background: #fff; color: #5a3d4a; font-size: 16px; cursor: pointer; }
+        .smk-wrap { max-width: 460px; margin: 0 auto; padding: 4px 16px max(30px, env(safe-area-inset-bottom)); box-sizing: border-box; }
+        .smk-step { display: flex; flex-direction: column; gap: 12px; }
+        .smk-lead { margin: 4px 0 0; font-weight: bold; font-size: 15px; } .smk-lead small { font-weight: normal; color: #a08890; font-size: 12px; }
+        .smk-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .smk-pick button { border: none; background: #fff; border-radius: 18px; padding: 16px 6px; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.07); }
+        .smk-pick span { font-size: 32px; } .smk-pick b { font-size: 13.5px; color: #5a3d4a; }
+        .smk-mine { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .smk-it { position: relative; }
+        .smk-it button { width: 100%; aspect-ratio: 1; border: none; border-radius: 14px; background: repeating-conic-gradient(#f3f3f3 0 25%, #fff 0 50%) 50% / 14px 14px; cursor: pointer; padding: 6px; }
+        .smk-it img { width: 100%; height: 100%; object-fit: contain; }
+        .smk-it i { position: absolute; top: -5px; right: -5px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); font-style: normal; font-size: 11px; display: grid; place-items: center; cursor: pointer; color: #a07888; }
+        .smk-empty { grid-column: 1 / -1; text-align: center; padding: 18px 8px; font-size: 13px; line-height: 1.7; color: #a08890; background: rgba(255,255,255,.7); border-radius: 14px; }
+        .smk-note { margin: 0; font-size: 12.5px; line-height: 1.6; color: #8a7a80; text-align: center; word-break: keep-all; }
+        .smk-stage { display: flex; justify-content: center; }
+        .smk-stage canvas { width: min(300px, 82vw); height: auto; aspect-ratio: 1; border-radius: 18px; touch-action: none; cursor: grab;
+            background: repeating-conic-gradient(#eef3f7 0 25%, #fff 0 50%) 50% / 20px 20px; box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+        .smk-hint { margin: 0; text-align: center; font-size: 13px; color: #6a8aa0; min-height: 18px; }
+        .smk-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+        .smk-chips button { border: 1.5px solid #d8e6f0; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; cursor: pointer; }
+        .smk-chips button.on { background: #5aa8e0; border-color: #5aa8e0; color: #fff; }
+        .smk-zoom { display: flex; align-items: center; gap: 8px; margin-top: 8px; } .smk-zoom input { flex: 1; }
+        #smTextOpts { display: flex; flex-direction: column; gap: 8px; }
+        #smText { font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 2px solid #d8e6f0; outline: none; }
+        .smk-colors { display: flex; gap: 8px; justify-content: center; }
+        .smk-colors button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; background: var(--c); box-shadow: 0 0 0 1.5px #ccc; cursor: pointer; padding: 0; }
+        .smk-colors button.on { box-shadow: 0 0 0 3px #5aa8e0; }
+        .smk-border { font-size: 14px; display: flex; align-items: center; gap: 6px; justify-content: center; }
+        .smk-go { padding: 14px; border-radius: 14px; border: none; font: inherit; font-size: 16px; font-weight: bold; cursor: pointer; background: linear-gradient(#7cc8ff, #4aa8ef); color: #fff; box-shadow: 0 4px 0 #2f86c8; }
+        .smk-go.smk-sub { background: #fff; color: #3d8fd6; box-shadow: 0 3px 0 #cfe3f0; border: 1.5px solid #cfe3f0; }
+        .cat-btn.sm-cat:not(.active) { background: #eef7ff; border-color: #8cc8f0; }
+        .sticker-grid .smk-in-modal { grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); }
