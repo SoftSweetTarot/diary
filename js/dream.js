@@ -256,7 +256,7 @@ ${emo.slice(1).map((e, i) => `<text x="${side[i][0]}" y="${side[i][1]}" font-siz
             closeDream();
             if (typeof addImage === 'function' && addImage(dm.cardUrl)) {
                 const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '170px';
-                toast('📌 꿈 카드를 다이어리에 붙였어요');
+                toast('📌 꿈 카드를 다이어리에 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             }
         }
 

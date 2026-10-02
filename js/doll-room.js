@@ -894,7 +894,7 @@
             document.getElementById('canvasArea').appendChild(el);
             selectElement(el);
             saveData(false);
-            toast('📔 일기에 인형을 붙였어요! 두 번 누르면 표정을 바꿀 수 있어요');
+            toast('📔 일기에 인형을 붙였어요! 두 번 누르면 표정을 바꿀 수 있어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             return true;
         }
 

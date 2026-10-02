@@ -72,6 +72,7 @@
                 </div>
                 <div class="at-medals" id="atMedals"></div>
                 <button class="at-go" type="button" id="atGo" onclick="atPress()"></button>
+                <p class="at-tip">💡 7·14·21일 연속이면 메달, 한 달 내내 오면 🏆 트로피를 받아요. 하루라도 빠지면 연속 기록은 처음부터 다시 시작돼요.<br>🌷 도장을 찍은 날 일기도 쓰면 화분에 물까지 줄 수 있어요.</p>
               </div>`;
             document.body.appendChild(el);
         }
@@ -145,4 +146,6 @@
             const r = atq('attendRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }
+        function attendDone() { const T = atToday(), a = atRead()[atYm(T.y, T.m)]; return !!a && a.includes(T.d); }   // 오늘 도장 찍었나요?
         window.openAttend = openAttend;
+        window.attendDone = attendDone;

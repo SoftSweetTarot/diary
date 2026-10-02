@@ -43,6 +43,23 @@
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = true; });
             document.getElementById('svcTitle').textContent = '🎠 놀이터';
             document.getElementById('svcBack').classList.add('mt-none');      // 맨 처음 화면에서는 ← 숨김
+            svcDailyBadges();
+        }
+        /* 🌱 매일 말랑 : 오늘 아직 안 한 것에 작은 표시 (출석 도장 · 화분 물 주기) */
+        async function svcDailyBadges() {
+            const mark = (id, txt) => {
+                const b = document.getElementById(id); if (!b) return;
+                let e = b.querySelector('.svc-badge');
+                if (!txt) { if (e) e.remove(); return; }
+                if (!e) { e = document.createElement('em'); e.className = 'svc-badge'; b.appendChild(e); }
+                e.textContent = txt;
+            };
+            const stamp = typeof attendDone === 'function' && !attendDone();
+            let water = false;
+            if (typeof plantStatus === 'function') { try { const p = await plantStatus(); water = !p.watered && p.wrote; } catch (e) {} }
+            mark('svcBtnAttend', stamp ? '오늘 아직!' : '');
+            mark('svcBtnPlant', water ? '💧 물 주기' : '');
+            mark('svcCatDaily', (stamp ? 1 : 0) + (water ? 1 : 0) || '');
         }
         const SVC_CAT_NAMES = { daily: '🌱 매일 말랑', fortune: '🔮 운세·마음', make: '🎨 만들기·꾸미기', game: '🕹️ 게임', watch: '🎧 보고·듣기', together: '💌 함께하기' };
         function svcOpenCat(id) {
@@ -51,6 +68,7 @@
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = p !== panel; });
             document.getElementById('svcTitle').textContent = SVC_CAT_NAMES[id] || '🎠 놀이터';
             document.getElementById('svcBack').classList.remove('mt-none');
+            if (id === 'daily') svcDailyBadges();
         }
         function openHelpFromService() {
             closeModal('serviceModal');

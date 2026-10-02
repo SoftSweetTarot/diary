@@ -141,6 +141,7 @@
                   <div class="pl-sub" id="plSub"></div>
                 </div>
                 <div class="pl-acts" id="plActs"></div>
+                <p class="pl-tip" id="plTip"></p>
                 <div class="pl-basket" id="plBasket"></div>
               </div>`;
             document.body.appendChild(el);
@@ -172,6 +173,10 @@
             if (st === 5) acts.innerHTML = `<button class="pl-btn pl-main" type="button" onclick="plHarvest()">🧺 열매 따기</button>`;
             else if (watered) acts.innerHTML = `<button class="pl-btn" type="button" disabled>💧 오늘은 물을 줬어요 · 내일 또 만나요</button>`;
             else acts.innerHTML = `<button class="pl-btn pl-main" type="button" id="plWaterBtn" onclick="plWater()">💧 물 주기</button>`;
+            pq('plTip').textContent = st === 5 ? '💡 열매를 따면 바구니에 모이고, 이번엔 어떤 씨앗일지 새로 심어요.'
+                : watered ? (typeof attendDone === 'function' && !attendDone() ? '💡 📅 출석 도장도 찍었나요? 도장은 하루라도 빠지면 연속 기록이 처음부터예요.' : '💡 내일도 일기를 쓰면 또 물을 줄 수 있어요. 물 14번이면 열매가 열려요!')
+                : dry ? '💡 오늘 일기를 쓰고 물을 주면 다시 기운을 차려요.'
+                : '💡 일기를 쓴 날마다 물 한 번! 물 14번이면 열매가 열리고, 사흘 넘게 못 주면 시들시들해져요.';
             const b = s.basket || {}, keys = Object.keys(PL_KINDS).filter(x => b[x] > 0);
             pq('plBasket').innerHTML = keys.length ? '🧺 바구니 ' + keys.map(x => `<span>${PL_KINDS[x].icon}×${b[x]}</span>`).join('') : '';
         }
@@ -242,4 +247,15 @@
             const r = pq('plantRoom'); if (r) r.classList.remove('show', 'pl-pour');
             document.body.classList.remove('fc-lock');
         }
+        /* 🎠 놀이터 · 다른 놀이에서 쓰는 안내 */
+        async function plantStatus() {                      // { watered: 오늘 물 줌, wrote: 오늘 일기 씀 }
+            const s = plRead(), watered = s.last === plDay();
+            return { watered, wrote: watered || await plWroteToday() };
+        }
+        function plantStickHint() {                         // 오늘 페이지에 무언가 붙였을 때 알림 뒤에 붙일 말
+            try { if (plRead().last !== plDay() && isCoverOpen && plDay(currentDate) === plDay()) return ' · 🌷 이제 화분에 물을 줄 수 있어요!'; } catch (e) {}
+            return '';
+        }
         window.openPlant = openPlant;
+        window.plantStatus = plantStatus;
+        window.plantStickHint = plantStickHint;

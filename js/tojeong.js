@@ -300,7 +300,7 @@
             closeTojeong();
             if (typeof addImage === 'function' && addImage(tjSvgUrl(tjStickSvg(tj.last.g, tj.last.r)))) {
                 const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '230px';
-                toast('📌 토정비결을 다이어리에 붙였어요');
+                toast('📌 토정비결을 다이어리에 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             }
         }
 
