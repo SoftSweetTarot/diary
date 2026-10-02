@@ -11,7 +11,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261002-43">
+    <link rel="stylesheet" href="css/style.css?v=20261002-44">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -28,7 +28,6 @@
             <button id="gateGuestBtn" class="gate-guest" style="display:none" onclick="enterGuestMode()">로그인 없이 둘러보기 (저장되지 않아요)</button>
         </div>
     </div>
-    <div id="driveBadge" class="drive-badge" onclick="onBadgeClick()"></div>
 
     <!-- 상단 컨트롤 툴바 -->
     <div class="toolbar">
@@ -71,6 +70,11 @@
             </div>
 
         </div>
+    </div>
+    <!-- 아래 상태 줄 : 드라이브 저장 표시 · 배경음악 막대
+         PC 는 화면 아래 양쪽 구석에 떠 있고, 폰은 다이어리 바로 아래 한 줄에 놓여서 다이어리를 가리지 않아요 -->
+    <div class="status-dock" id="statusDock">
+        <div id="driveBadge" class="drive-badge" onclick="onBadgeClick()"></div>
     </div>
 
     <!-- 글상자 꾸미기 패널 -->
@@ -632,31 +636,31 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261002-43"></script>
-    <script src="js/app.js?v=20261002-43"></script>
-    <script src="js/page.js?v=20261002-43"></script>
-    <script src="js/elements.js?v=20261002-43"></script>
-    <script src="js/settings.js?v=20261002-43"></script>
-    <script src="js/patterns.js?v=20261002-43"></script>
+    <script src="js/drive.js?v=20261002-44"></script>
+    <script src="js/app.js?v=20261002-44"></script>
+    <script src="js/page.js?v=20261002-44"></script>
+    <script src="js/elements.js?v=20261002-44"></script>
+    <script src="js/settings.js?v=20261002-44"></script>
+    <script src="js/patterns.js?v=20261002-44"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261002-43"></script>
-    <script src="js/skins.js?v=20261002-43"></script>
-    <script src="js/pattern-maker.js?v=20261002-43"></script>
-    <script src="js/doll-render.js?v=20261002-43"></script>
-    <script src="js/doll-store.js?v=20261002-43"></script>
-    <script src="js/doll-room.js?v=20261002-43"></script>
-    <script src="js/service.js?v=20261002-43"></script>
+    <script src="js/pattern-recipe.js?v=20261002-44"></script>
+    <script src="js/skins.js?v=20261002-44"></script>
+    <script src="js/pattern-maker.js?v=20261002-44"></script>
+    <script src="js/doll-render.js?v=20261002-44"></script>
+    <script src="js/doll-store.js?v=20261002-44"></script>
+    <script src="js/doll-room.js?v=20261002-44"></script>
+    <script src="js/service.js?v=20261002-44"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261002-43"></script>
+    <script src="js/gacha.js?v=20261002-44"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261002-43"></script>
+    <script src="js/bgm.js?v=20261002-44"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261002-43"></script>
+    <script src="js/fortune.js?v=20261002-44"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261002-43"></script>
+    <script src="js/arcade.js?v=20261002-44"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

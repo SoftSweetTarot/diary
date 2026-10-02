@@ -400,7 +400,7 @@
             const mini = document.createElement('div');
             mini.className = 'bgm-mini'; mini.id = 'bgmMini'; mini.hidden = true;
             mini.innerHTML = `<button type="button" class="bgm-mini-t" onclick="openBgm()"><span class="bgm-eq on"><i></i><i></i><i></i></span><span id="bgmMiniTitle"></span></button><button type="button" class="bgm-mini-x" onclick="bgmStop()" aria-label="배경음악 멈추기">■</button>`;
-            document.body.appendChild(mini);
+            (document.getElementById('statusDock') || document.body).appendChild(mini);   // 아래 상태 줄에 (폰에서는 다이어리 아래 한 줄)
             const tabs = document.getElementById('bgmTabs');
             BGM_CATS.forEach(c => {
                 const b = document.createElement('button');

@@ -449,7 +449,9 @@
             const wrapper = document.getElementById('diaryWrapper');
             const toolbar = document.querySelector('.toolbar');
             const maxW = Math.floor(window.innerWidth * 0.92);
-            const maxH = Math.floor(window.innerHeight - toolbar.offsetHeight - 8 - 24);
+            const dock = document.getElementById('statusDock');                // 폰 : 다이어리 아래 상태 줄 높이만큼 비워 두기
+            const dockH = dock && getComputedStyle(dock).position === 'static' ? dock.offsetHeight + 6 : 0;
+            const maxH = Math.floor(window.innerHeight - toolbar.offsetHeight - 8 - 24 - dockH);
             wrapper.style.width = Math.max(240, Math.min(pageSetting.w, maxW)) + 'px';
             wrapper.style.height = Math.max(240, Math.min(pageSetting.h, maxH)) + 'px';
 
