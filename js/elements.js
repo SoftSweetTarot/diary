@@ -338,6 +338,16 @@
             scaleHandle.innerHTML = '↘';
             el.appendChild(scaleHandle);
 
+            /* 🎀 마스킹테이프 (js/tape.js) : ↔ 손잡이로 길이만 늘이고 줄이기 */
+            let stretchHandle = null, initialW = 0;
+            const tapeImg = el.querySelector('img');
+            if (tapeImg && typeof isTapeSrc === 'function' && isTapeSrc(tapeImg.dataset.src)) {
+                stretchHandle = document.createElement('div');
+                stretchHandle.className = 'handle stretch-handle';
+                stretchHandle.innerHTML = '↔';
+                el.appendChild(stretchHandle);
+            }
+
             function updateTransform() {
                 el.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
             }
@@ -372,6 +382,9 @@
                     const rect = el.getBoundingClientRect();
                     startDist = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
                     initialScale = scale;
+                } else if (stretchHandle && e.target === stretchHandle) {
+                    actionType = 'stretch';
+                    initialW = parseFloat(el.style.width) || el.offsetWidth;
                 } else {
                     actionType = 'move';
                     initialX = posX; initialY = posY;
@@ -392,6 +405,10 @@
                     const currentAngle = Math.atan2(pos.y - (rect.top + rect.height / 2), pos.x - (rect.left + rect.width / 2)) * (180 / Math.PI);
                     rotation = currentAngle - startAngle;
                     el.dataset.rotation = rotation;
+                } else if (actionType === 'stretch') {
+                    const a = rotation * Math.PI / 180;
+                    const d = ((pos.x - startX) * Math.cos(a) + (pos.y - startY) * Math.sin(a)) / (scale || 1);
+                    el.style.width = Math.round(Math.max(40, Math.min(1200, initialW + d))) + 'px';
                 } else if (actionType === 'scale') {
                     const rect = el.getBoundingClientRect();
                     const currentDist = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
