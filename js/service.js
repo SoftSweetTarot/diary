@@ -51,7 +51,6 @@
             if (typeof openFortuneCard === 'function' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) openFortuneCard();
             else window.open(FORTUNE_URL, '_blank', 'noopener');
         }
-        function openDream() { comingSoon('🌙 꿈해몽'); }
         function openComics() { comingSoon('📚 만화방'); }
         function openMusic() { comingSoon('🎧 음악듣기'); }      // AI로 만든 음악 목록 (툴바 🎵 배경음악과는 다른 기능)
         function openRandomBox() { if (typeof openGacha === 'function') openGacha(); else comingSoon('🎁 랜덤박스'); }   // js/gacha.js
