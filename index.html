@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261002-59">
+    <link rel="stylesheet" href="css/style.css?v=20261002-60">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -156,12 +156,12 @@
                 <div class="help-section-title">🎠 놀이터</div>
                 <div class="help-rows">
                     <div class="help-k">고르는 법</div><div class="help-v">먼저 카테고리를 고르고, 그 안에서 하고 싶은 놀이를 골라요</div>
-                    <div class="help-k">🌱 매일 말랑</div><div class="help-v">📅 출석 도장판 : 하루 한 번 도장 · 🌷 화분 키우기 : 일기를 쓴 날 물 한 번 · 🎁 랜덤박스 : 로그인하면 하루 한 번 캡슐 뽑기</div>
+                    <div class="help-k">🌱 매일 말랑</div><div class="help-v">📅 출석 도장판 : 하루 한 번 도장 · 모으면 움직이는 🎁 출석 스티커 · 🌷 화분 키우기 : 일기를 쓴 날 물 한 번 · 🎁 랜덤박스 : 로그인하면 하루 한 번 캡슐 뽑기</div>
                     <div class="help-k">🔮 운세·마음</div><div class="help-v">포춘카드 · 🌙 꿈해몽 · 🎍 토정비결 · 결과는 📌 다이어리에 붙일 수 있어요</div>
                     <div class="help-k">🎨 만들기·꾸미기</div><div class="help-v">👧 인형방 : 인형을 만들어 붙이기 · 두 번 누르면 표정 바꾸기</div>
                     <div class="help-k">🕹️ 게임</div><div class="help-v">오락실 게임 6가지 · 🧠 두뇌 게임 7가지 · 최고 점수는 PC·휴대폰 어디서나 같아요</div>
                     <div class="help-k">🎧 보고·듣기 · 💌 함께하기</div><div class="help-v">☕ 카페이동 · 나머지는 곧 열려요!</div>
-                    <div class="help-k">💡 이어지는 재미</div><div class="help-v">✏️ 오늘 일기를 쓰면 🌷 화분에 물 · 🔮 운세 결과나 👧 인형을 오늘 페이지에 📌 붙여도 일기를 쓴 걸로 쳐요 · 📅 매일 도장으로 연속 메달 모으기</div>
+                    <div class="help-k">💡 이어지는 재미</div><div class="help-v">✏️ 오늘 일기를 쓰면 🌷 화분에 물 · 🔮 운세 결과나 👧 인형을 오늘 페이지에 📌 붙여도 일기를 쓴 걸로 쳐요 · 📅 도장을 모으면 ✏️ 스티커 창에 🎁 출석 스티커가 열려요</div>
                     <div class="help-k">창 닫기</div><div class="help-v">창 제목 오른쪽 ✕ 로 닫고, 왼쪽 ← 로 앞 화면으로 돌아가요</div>
                 </div>
                 <div class="help-section-title">⚙ 설정</div>
@@ -220,6 +220,7 @@
             <div class="modal-title">전체 이모지 스티커 목록</div>
             
             <div class="sticker-categories" id="stickerCategories">
+                <button class="cat-btn at-cat" onclick="loadAttendStickers(this)">🎁 출석 스티커</button>
                 <button class="cat-btn active" onclick="loadEmojiCategory('faces', this)">😀 표정/감정</button>
                 <button class="cat-btn" onclick="loadEmojiCategory('animals', this)">🐱 동물/자연</button>
                 <button class="cat-btn" onclick="loadEmojiCategory('food', this)">🍔 음식/음료</button>
@@ -590,13 +591,13 @@
             <!-- 2단계 : 카테고리 안에서 놀이 고르기 -->
             <div class="svc-panel" id="svcPanel-daily" hidden>
                 <div class="service-grid">
-                    <button class="btn service-btn" id="svcBtnAttend" onclick="window.openAttend ? openAttend() : comingSoon('📅 출석 도장판')"><span class="service-icon">📅</span>출석 도장판<small>하루 한 번 도장 꾹</small></button>
+                    <button class="btn service-btn" id="svcBtnAttend" onclick="window.openAttend ? openAttend() : comingSoon('📅 출석 도장판')"><span class="service-icon">📅</span>출석 도장판<small>도장 모아 스티커 받기</small></button>
                     <button class="btn service-btn" id="svcBtnPlant" onclick="window.openPlant ? openPlant() : comingSoon('🌷 화분 키우기')"><span class="service-icon">🌷</span>화분 키우기<small>일기 쓰고 물 주기</small></button>
                     <button class="btn service-btn soon" onclick="comingSoon('💬 오늘의 질문')"><span class="service-icon">💬</span>오늘의 질문<small>(준비중)</small></button>
                     <button class="btn service-btn soon" onclick="comingSoon('🍀 오늘의 행운')"><span class="service-icon">🍀</span>오늘의 행운<small>(준비중)</small></button>
                     <button class="btn service-btn" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스<small>하루 한 번 뽑기</small></button>
                 </div>
-                <p class="svc-tip">💡 <b>오늘 일기를 쓰면</b> 🌷 화분에 물을 줄 수 있어요. 📅 출석 도장은 하루라도 빠지면 연속 기록이 처음부터예요. 🎁 랜덤박스 코인은 매일 자정에 새로 생겨요.</p>
+                <p class="svc-tip">💡 <b>오늘 일기를 쓰면</b> 🌷 화분에 물을 줄 수 있어요. 📅 출석 도장을 모으면 <b>움직이는 특별 스티커</b>를 받아요. 🎁 랜덤박스 코인은 매일 자정에 새로 생겨요.</p>
             </div>
             <div class="svc-panel" id="svcPanel-fortune" hidden>
                 <div class="service-grid">
@@ -704,38 +705,39 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261002-59"></script>
-    <script src="js/app.js?v=20261002-59"></script>
-    <script src="js/page.js?v=20261002-59"></script>
-    <script src="js/elements.js?v=20261002-59"></script>
-    <script src="js/settings.js?v=20261002-59"></script>
-    <script src="js/patterns.js?v=20261002-59"></script>
+    <script src="js/drive.js?v=20261002-60"></script>
+    <script src="js/app.js?v=20261002-60"></script>
+    <script src="js/page.js?v=20261002-60"></script>
+    <script src="js/elements.js?v=20261002-60"></script>
+    <script src="js/settings.js?v=20261002-60"></script>
+    <script src="js/patterns.js?v=20261002-60"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261002-59"></script>
-    <script src="js/skins.js?v=20261002-59"></script>
-    <script src="js/pattern-maker.js?v=20261002-59"></script>
-    <script src="js/doll-render.js?v=20261002-59"></script>
-    <script src="js/doll-store.js?v=20261002-59"></script>
-    <script src="js/doll-room.js?v=20261002-59"></script>
-    <script src="js/service.js?v=20261002-59"></script>
+    <script src="js/pattern-recipe.js?v=20261002-60"></script>
+    <script src="js/skins.js?v=20261002-60"></script>
+    <script src="js/pattern-maker.js?v=20261002-60"></script>
+    <script src="js/doll-render.js?v=20261002-60"></script>
+    <script src="js/doll-store.js?v=20261002-60"></script>
+    <script src="js/doll-room.js?v=20261002-60"></script>
+    <script src="js/service.js?v=20261002-60"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261002-59"></script>
+    <script src="js/gacha.js?v=20261002-60"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261002-59"></script>
+    <script src="js/bgm.js?v=20261002-60"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261002-59"></script>
+    <script src="js/fortune.js?v=20261002-60"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261002-59"></script>
+    <script src="js/arcade.js?v=20261002-60"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/dream.js?v=20261002-59"></script>
+    <script src="js/dream.js?v=20261002-60"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261002-59"></script>
-    <script src="js/plant.js?v=20261002-59"></script>
-    <script src="js/attend.js?v=20261002-59"></script>
-    <script src="js/install.js?v=20261002-59"></script>
+    <script src="js/tojeong.js?v=20261002-60"></script>
+    <script src="js/plant.js?v=20261002-60"></script>
+    <script src="js/attend-stickers.js?v=20261002-60"></script>
+    <script src="js/attend.js?v=20261002-60"></script>
+    <script src="js/install.js?v=20261002-60"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

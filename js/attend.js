@@ -2,7 +2,8 @@
    📅 출석 도장판 : 하루에 한 번 도장을 꾹! (놀이터 → 매일 말랑 → 📅 출석 도장판)
    - 오늘 날짜에만 찍을 수 있어요. 지나간 날은 나중에 찍을 수 없어요.
    - 날마다 도장 그림이 달라요. (날짜로 정해져서 어느 기기에서 봐도 같은 그림)
-   - 연속 7·14·21일, 한 달 개근이면 메달 도장이 생겨요.
+   - 🎁 도장을 모으면(3·7·15·30·50·100개) · 연속 7·14·21일 · 한 달 개근이면 움직이는 출석 스티커를 받아요 (그림 : js/attend-stickers.js)
+     받은 스티커는 스티커 창의 '🎁 출석 스티커'에서 다이어리에 붙여요. 받았는지는 출석 기록으로 계산해서 따로 저장하지 않아요.
    - 기록은 설정(settings.json)에 함께 저장 → 다른 기기에서도 같은 도장판. 로그인하지 않은(게스트) 때만 이 기기에 기억
    ※ 이 파일이 없어도 다이어리는 정상 동작 (출석 도장판만 '준비 중') */
 
@@ -10,8 +11,7 @@
         const AT_LOCAL = 'malang_attend';         // 게스트용 (이 기기)
         const AT_STAMPS = ['🐰', '🍓', '🌷', '⭐', '🐻', '🍑', '🌈', '🐥', '🍀', '🧁', '🐱', '🌙', '🍒', '🦊', '🌻', '🐶', '🍰', '🐳', '🎀', '🐹', '🍋', '🦄', '🌸', '🐧', '🍩', '☁️', '🐨', '🍉', '🌼', '🐼', '💖'];
         const AT_COLORS = ['#e8546e', '#f08a3c', '#e2a400', '#4caf7a', '#3d9be0', '#8a6be0', '#e06bb5'];
-        const AT_MEDALS = [[7, '🥉', '7일 연속'], [14, '🥈', '14일 연속'], [21, '🥇', '21일 연속']];
-        const atS = { built: false, y: 0, m: 0, d: null };
+        const atS = { built: false, y: 0, m: 0, d: null, pop: [] };
         const atq = id => document.getElementById(id);
 
         function atYm(y, m) { return y + '-' + String(m + 1).padStart(2, '0'); }
@@ -46,6 +46,16 @@
             return best;
         }
 
+        /* ---------- 🎁 출석 스티커 ---------- */
+        const atStk = () => typeof ATTEND_STICKERS !== 'undefined' ? ATTEND_STICKERS : [];
+        const atStkUrl = k => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(k.svg);
+        function atTotal() { return Object.values(atS.d).reduce((a, b) => a + b.length, 0); }
+        function atFullMonths() { return Object.keys(atS.d).filter(k => { const [y, m] = k.split('-').map(Number); return atS.d[k].length === new Date(y, m, 0).getDate(); }).length; }
+        function atHasStk(k, v) { return k.type === 'total' ? v.total >= k.n : k.type === 'streak' ? v.best >= k.n : v.full >= k.n; }
+        function atStkView() { return { total: atTotal(), best: atBest(), full: atFullMonths() }; }
+        function atNeedText(k) { return k.type === 'total' ? `도장 ${k.n}개` : k.type === 'streak' ? `${k.n}일 연속` : '한 달 개근'; }
+        function atEarnedIds() { const v = atStkView(); return atStk().filter(k => atHasStk(k, v)).map(k => k.id); }
+
         /* ---------- 화면 ---------- */
         function atBuild() {
             if (atS.built) return;
@@ -70,9 +80,23 @@
                   <div><small>가장 긴 연속</small><b id="atBest">0</b>일</div>
                   <div><small>모은 도장</small><b id="atTotal">0</b>개</div>
                 </div>
-                <div class="at-medals" id="atMedals"></div>
                 <button class="at-go" type="button" id="atGo" onclick="atPress()"></button>
-                <p class="at-tip">💡 7·14·21일 연속이면 메달, 한 달 내내 오면 🏆 트로피를 받아요. 하루라도 빠지면 연속 기록은 처음부터 다시 시작돼요.<br>🌷 도장을 찍은 날 일기도 쓰면 화분에 물까지 줄 수 있어요.</p>
+                <div class="at-stk" id="atStkBox">
+                  <div class="at-stk-head"><b>🎁 출석 스티커</b><span id="atStkCount"></span></div>
+                  <div class="at-stk-next" id="atStkNext"></div>
+                  <div class="at-stk-grid" id="atStkGrid"></div>
+                  <p class="at-stk-note">받은 스티커는 ✏️ 스티커 창의 <b>🎁 출석 스티커</b>에서 다이어리에 붙일 수 있어요. 붙인 뒤에도 계속 움직여요!</p>
+                </div>
+                <p class="at-tip">💡 도장은 하루라도 빠져도 모은 개수는 그대로예요. 연속 스티커는 가장 길게 이어 간 기록으로 받아요.<br>🌷 도장을 찍은 날 일기도 쓰면 화분에 물까지 줄 수 있어요.</p>
+              </div>
+              <div class="at-pop-wrap" id="atPopWrap" hidden>
+                <div class="at-pop-box">
+                  <div class="at-pop-t">🎉 새 스티커를 받았어요!</div>
+                  <img id="atPopImg" alt="">
+                  <b id="atPopName"></b>
+                  <button class="at-go" type="button" onclick="atPopStick()">📌 오늘 다이어리에 붙이기</button>
+                  <button class="at-pop-later" type="button" onclick="atPopClose()">나중에 붙일게요</button>
+                </div>
               </div>`;
             document.body.appendChild(el);
         }
@@ -98,14 +122,62 @@
             const streak = atStreak(), best = atBest();
             atq('atStreak').textContent = streak;
             atq('atBest').textContent = best;
-            atq('atTotal').textContent = Object.values(atS.d).reduce((a, b) => a + b.length, 0);
-            let md = AT_MEDALS.map(([n, ic, t]) => `<span class="${best >= n ? 'on' : ''}">${ic}<small>${t}</small></span>`).join('');
-            const fullMonths = Object.keys(atS.d).filter(k => { const [yy, mm] = k.split('-').map(Number); return atS.d[k].length === new Date(yy, mm, 0).getDate(); }).length;
-            md += `<span class="${fullMonths ? 'on' : ''}">🏆<small>한 달 개근${fullMonths > 1 ? ' ×' + fullMonths : ''}</small></span>`;
-            atq('atMedals').innerHTML = md;
+            atq('atTotal').textContent = atTotal();
+            atRenderStk();
             const done = atHas(T.y, T.m, T.d), go = atq('atGo');
             go.disabled = done;
             go.innerHTML = done ? '오늘 도장 찍었어요 · 내일 또 만나요' : `${atStamp(T.y, T.m, T.d).e} 오늘 도장 꾹!`;
+        }
+
+        function atRenderStk() {
+            const list = atStk(), box = atq('atStkBox');
+            box.hidden = !list.length;
+            if (!list.length) return;
+            const v = atStkView(), got = list.filter(k => atHasStk(k, v));
+            atq('atStkCount').textContent = `${got.length} / ${list.length}`;
+            const nt = list.filter(k => k.type === 'total' && v.total < k.n)[0], ns = list.filter(k => k.type === 'streak' && v.best < k.n)[0];
+            const cur = atStreak(), msg = [];
+            if (nt) msg.push(`도장 <b>${nt.n - v.total}개</b> 더 모으면 <b>${nt.name}</b>`);
+            if (ns) msg.push(`<b>${ns.n - cur}일</b> 더 이어 가면 <b>${ns.name}</b>`);
+            atq('atStkNext').innerHTML = msg.length ? '🎯 ' + msg.join('<br>🎯 ') : '🏆 스티커를 모두 모았어요!';
+            atq('atStkGrid').innerHTML = list.map(k => atHasStk(k, v)
+                ? `<span class="at-stk-it on"><img src="${atStkUrl(k)}" alt="${k.name}"><small>${k.name}</small></span>`
+                : `<span class="at-stk-it"><img src="${atStkUrl(k)}" alt=""><small>🔒 ${atNeedText(k)}</small></span>`).join('');
+        }
+        function atPopShow(ids) {
+            atS.pop = ids.slice();
+            const k = atStk().find(x => x.id === atS.pop[0]); if (!k) return;
+            atq('atPopImg').src = atStkUrl(k); atq('atPopName').textContent = k.name;
+            atq('atPopWrap').hidden = false;
+        }
+        function atPopClose() {
+            atS.pop.shift();
+            if (atS.pop.length) atPopShow(atS.pop); else atq('atPopWrap').hidden = true;
+        }
+        function atPopStick() {
+            const k = atStk().find(x => x.id === atS.pop[0]);
+            if (k) attendStickerAdd(k.id, true);
+            atPopClose();
+        }
+        /* 다이어리 오늘 페이지에 붙이기 (팝업 · 스티커 창 공통) */
+        function attendStickerAdd(id, fromRoom) {
+            const k = atStk().find(x => x.id === id); if (!k || typeof addImage !== 'function') return false;
+            if (!isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">받은 스티커는 ✏️ 스티커 창의 🎁 출석 스티커에 있어요.</span>'); return false; }
+            if (!addImage(atStkUrl(k))) return false;
+            const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '120px';
+            if (fromRoom) closeAttend();
+            if (typeof closeModal === 'function') closeModal('stickerModal');
+            toastAt(`🎁 ${k.name} 스티커를 붙였어요` + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
+            return true;
+        }
+        /* ✏️ 스티커 창 → 🎁 출석 스티커 칸 */
+        function loadAttendStickers(btn) {
+            if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+            atS.d = atRead();
+            const v = atStkView(), grid = atq('stickerGrid');
+            grid.innerHTML = '<div class="at-sg-note">📅 출석 도장을 모으면 움직이는 스티커가 하나씩 열려요</div>' + atStk().map(k => atHasStk(k, v)
+                ? `<button type="button" class="at-sg on" onclick="attendStickerAdd('${k.id}')"><img src="${atStkUrl(k)}" alt="${k.name}"><small>${k.name}</small></button>`
+                : `<span class="at-sg"><img src="${atStkUrl(k)}" alt=""><small>🔒 ${atNeedText(k)}</small></span>`).join('');
         }
 
         function atMove(dir) {
@@ -119,15 +191,15 @@
         function atPress() {
             const T = atToday();
             if (atHas(T.y, T.m, T.d)) return;
-            const k = atYm(T.y, T.m);
+            const k = atYm(T.y, T.m), before = atEarnedIds();
             atS.d[k] = (atS.d[k] || []).concat(T.d).sort((a, b) => a - b);
             atWrite();
             atS.y = T.y; atS.m = T.m;
             atRender(true);
-            const streak = atStreak(), medal = AT_MEDALS.find(([n]) => n === streak);
-            const last = new Date(T.y, T.m + 1, 0).getDate();
+            const fresh = atEarnedIds().filter(id => !before.includes(id));
+            if (fresh.length) { setTimeout(() => atPopShow(fresh), 600); return; }
+            const streak = atStreak(), last = new Date(T.y, T.m + 1, 0).getDate();
             if ((atS.d[k] || []).length === last) toastAt(`🏆 ${T.m + 1}월 개근! 한 달 내내 와 줘서 고마워요`);
-            else if (medal) toastAt(`${medal[1]} ${medal[2]} 출석! 메달 도장을 받았어요`);
             else if (streak > 1) toastAt(`${streak}일 연속 출석이에요!`);
             else toastAt('오늘도 와 줘서 고마워요!');
         }
@@ -144,8 +216,10 @@
         }
         function closeAttend() {
             const r = atq('attendRoom'); if (r) r.classList.remove('show');
+            const pw = atq('atPopWrap'); if (pw) pw.hidden = true;
             document.body.classList.remove('fc-lock');
         }
         function attendDone() { const T = atToday(), a = atRead()[atYm(T.y, T.m)]; return !!a && a.includes(T.d); }   // 오늘 도장 찍었나요?
         window.openAttend = openAttend;
         window.attendDone = attendDone;
+        window.loadAttendStickers = loadAttendStickers;
