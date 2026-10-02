@@ -1053,3 +1053,19 @@
         .tj-paper .tj-who { padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1.5px dashed var(--tj-line); }
         .tj-key { text-align: center; color: #8a7460; font-size: 14px !important; margin: 4px 0 0 !important; }
         .tj-key b { color: var(--tj-red); font-size: 16px; margin-left: 4px; }
+
+        /* ===== 🎠 놀이터 카테고리 (1단계 카테고리 → 2단계 놀이) ===== */
+        .svc-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .svc-cat { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 14px 8px 12px; border-radius: 18px; cursor: pointer; font-family: inherit;
+            border: 2px solid var(--border-color); background: linear-gradient(180deg, #fff 0%, var(--page-bg) 100%); color: #444; transition: transform .15s, box-shadow .15s; }
+        .svc-cat:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,.08); }
+        .svc-cat:active { transform: translateY(1px); }
+        .svc-cat-icon { font-size: 2rem; line-height: 1.1; }
+        .svc-cat b { font-size: 15px; }
+        .svc-cat small { font-size: 11px; color: #999; }
+        .svc-cat i { font-style: normal; font-size: 10.5px; color: var(--primary-accent); line-height: 1.4; margin-top: 4px; word-break: keep-all; opacity: .85; }
+        .svc-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .svc-panel-head .btn { font-size: 13px; padding: 4px 10px; flex-shrink: 0; }
+        .svc-panel-head b { font-size: 16px; color: var(--primary-accent); }
+        .svc-help { width: 100%; justify-content: center; margin-top: 10px; font-size: 13px; }
+        #serviceModal [hidden] { display: none !important; }

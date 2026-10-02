@@ -30,13 +30,25 @@
         }
 
         /* =====================================================================
-           🎠 놀이터 창 : 인형방 · 인형극 · 달콤영상 · 포춘카드 · 꿈해몽 · 토정비결 · 오락실 · 만화방 · 음악듣기 · 팟캐스트 · 오디오북 · 랜덤박스 · 말랑상점 · 카페이동 · 도움말
+           🎠 놀이터 창 : 카테고리 6개(매일 말랑 · 운세·마음 · 만들기·꾸미기 · 게임 · 보고·듣기 · 함께하기) → 그 안의 놀이
            - 아직 안 만든 기능은 버튼에 '(준비중)'이 붙어 있고, 누르면 안내 메시지만 떠요.
              기능을 만들면 index.html 버튼의 class 에서 'soon' 과 <small>(준비중)</small> 을 빼고 아래 함수 내용을 바꾸면 돼요.
            ===================================================================== */
         const CAFE_URL = 'https://cafe.naver.com/sarangloveis';   // ☕ 말랑달콤 카페
         const FORTUNE_URL = 'https://softsweettarot.github.io/Message/';   // 🔮 포춘카드
 
+        /* 🎠 놀이터 : 1단계 카테고리 → 2단계 놀이 (놀이터를 열 때마다 카테고리부터 · js/settings.js openModal) */
+        function svcShowCats() {
+            const cats = document.getElementById('svcCats'); if (!cats) return;
+            cats.hidden = false;
+            document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = true; });
+            const t = document.querySelector('#serviceModal .modal-title'); if (t) t.textContent = '🎠 놀이터';
+        }
+        function svcOpenCat(id) {
+            const panel = document.getElementById('svcPanel-' + id); if (!panel) return;
+            document.getElementById('svcCats').hidden = true;
+            document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = p !== panel; });
+        }
         function openHelpFromService() {
             closeModal('serviceModal');
             openModal('helpModal');

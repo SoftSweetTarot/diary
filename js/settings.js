@@ -460,6 +460,7 @@
                 if (id === 'serviceModal' && typeof GACHA_API_URL !== 'undefined') warmServer(GACHA_API_URL);
                 if (id === 'serviceModal' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) warmServer(FORTUNE_API_URL);
             }
+            if (id === 'serviceModal' && typeof svcShowCats === 'function') svcShowCats();       // 놀이터는 늘 카테고리부터
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
