@@ -140,7 +140,7 @@
                 c.onclick = () => fcPick(c);
                 fan.appendChild(c);
             }
-            fcLater(() => { fan.classList.add('on'); fcFanSound(); }, 500);
+            fcLater(() => fan.classList.add('on'), 500);
         }
 
         /* 3. 고른 카드 → 3 · 2 · 1 → 뒤집기 */
@@ -237,7 +237,7 @@
             });
         }
 
-        function fcAir(dur, vol, at, f1, f2) {                         // 바람 · 카드 스치는 소리
+        function fcAir(dur, vol, at, f1, f2) {                         // 바람 소리
             const ac = fcSound(); if (!ac) return;
             if (!fc.noise) { const n = ac.sampleRate, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; fc.noise = b; }
             const t = ac.currentTime + at, s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
@@ -256,11 +256,6 @@
         function fcWhisper() {
             fcAir(2.2, .05, 0, 500, 2600);
             [392, 523, 659, 784, 1047].forEach((f, i) => fcBell(f, .1 + i * .16, .06, 1.8));
-        }
-        /* 카드가 부채처럼 펼쳐질 때 : 한 장씩 '촤라락' + 반짝 */
-        function fcFanSound() {
-            for (let k = 0; k < FC_FAN; k++) { fcAir(.14, .09, k * .06, 2600, 5200); fcBell(1175 + k * 90, k * .06 + .02, .025, .3); }
-            [784, 988, 1319, 1568].forEach((f, i) => fcBell(f, FC_FAN * .06 + .15 + i * .07, .06, 1.4));
         }
 
         document.addEventListener('keydown', e => { if (e.key === 'Escape' && fc.open) closeFortuneCard(); });
