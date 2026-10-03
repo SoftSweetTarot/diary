@@ -5,6 +5,7 @@
    - 목록 : '말랑달콤 사람들' 시트의 '배경화면' 탭 (말랑달콤사람들_앱스크립트.gs · 주소?action=walls · 로그인 없이 누구나)
        그림 · 미리보기 영상은 주인의 구글 드라이브에 있어요 (깃허브에는 올리지 않아요)
        목록 카드 : 드라이브 그림(jpg) · 누르면 크게 보기 · 움직이는 모습은 네이버 카페(말랑달콤 모임방)에서 홍보해요
+   - 📖 설정 방법 : wallguide.html (사기 전에 내 기기에서 되는지 확인 · 채팅방에서 파일 보낼 때 이 주소도 함께)
    - 채팅방 주소 · QR 코드는 💗 저금통과 같아요 (an.txt · js/piggy.js 의 pigLoadChat · pigQr)
    - 휴대폰 : 버튼 하나로 '배경화면 N번' 복사 + 채팅방 열기 · PC · 태블릿 : 휴대폰으로 찍는 QR 코드
    ※ 이 파일이 없으면 배경화면 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
@@ -33,6 +34,7 @@
               <div class="wl-hero">
                 <div class="wl-hero-t">✨ 매일 보는 화면을 말랑달콤하게</div>
                 <div class="wl-hero-s">움직이는 모습은 <a href="#" class="wl-link" onclick="goCafe(); return false;">👭 말랑달콤 모임방</a>에서 볼 수 있어요</div>
+                <button type="button" class="btn wl-guide" onclick="wlGuide()">📖 내 기기에 설정하는 방법</button>
               </div>
               <div class="pg-tabs">
                 <button type="button" class="pg-tab${wl.tab === 'phone' ? ' on' : ''}" onclick="wlTab('phone')">📱 휴대폰 <small>${count('phone')}가지</small></button>
@@ -49,12 +51,16 @@
                     <div class="wl-name">${wlEsc(w.name)}</div>
                     <div class="wl-buy"><b>${wlWon(w.price)}</b><button type="button" class="btn wl-get" onclick="wlPick(${w.no})">💬 받기</button></div>
                   </div>`).join('')}</div>`}
-              <div class="wl-note">🎁 영상 파일은 말랑달콤 채팅방으로 보내 드려요 · 한 번 받으면 계속 쓸 수 있어요<br>설정하는 방법도 함께 알려 드릴게요 😊</div>
+              <div class="wl-note">🎁 영상 파일은 말랑달콤 채팅방으로 보내 드려요 · 한 번 받으면 계속 쓸 수 있어요<br>사기 전에 <a href="#" class="wl-link" onclick="wlGuide(); return false;">📖 설정 방법</a>으로 내 기기에서 되는지 확인해 주세요 😊</div>
               <div class="wl-sheet" id="wlSheet" hidden></div>
               <div class="wl-view" id="wlView" hidden onclick="if(event.target===this)wlUnview()"></div>`;
         }
 
         function wlTab(t) { wl.tab = t; wlRender(); }
+        function wlGuide() {
+            const d = typeof prDevice === 'function' ? prDevice() : 'PC', ios = /iPhone|iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+            window.open('wallguide.html#' + (d === 'PC' ? 'pc' : ios ? 'iphone' : 'galaxy'), '_blank');
+        }
 
         /* 🔍 크게 보기 */
         function wlView(no) {

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>배경화면 설정 방법 · 말랑달콤</title>
+<!-- 말랑달콤 다이어리 - wallguide.html
+     🖼️ 움직이는 배경화면 설정 방법 (다이어리 카페 → 🖼️ 말랑달콤 배경화면 → 📖 설정 방법)
+     채팅방에서 파일을 보낼 때 이 페이지 주소를 함께 보내 주면 돼요 : …/diary/wallguide.html
+     #iphone · #galaxy · #pc 를 주소 뒤에 붙이면 그 기기 설명이 먼저 열려요 (예: wallguide.html#galaxy) -->
+<style>
+    :root { --pink: #ff6b93; --deep: #c2456f; --soft: #fff0f5; --line: #ffd1df; --text: #5a4650; --sub: #8c6f7c; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #ffe6f0; color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; line-height: 1.65; word-break: keep-all; }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 18px 16px 40px; }
+    .hero { text-align: center; padding: 22px 14px 18px; border-radius: 24px; background: linear-gradient(135deg, #ffe3ec, #e9e1ff 55%, #d9f2ff); }
+    .hero .ico { font-size: 40px; line-height: 1; }
+    .hero h1 { margin: 8px 0 4px; font-size: 22px; color: var(--deep); }
+    .hero p { margin: 0; font-size: 14px; color: var(--sub); }
+    .tabs { display: flex; gap: 6px; margin: 16px 0 12px; position: sticky; top: 0; padding: 8px 0; background: #ffe6f0; z-index: 2; }
+    .tabs a { flex: 1; text-align: center; text-decoration: none; padding: 9px 4px; border-radius: 14px; border: 2px solid var(--line); background: #fff; color: var(--deep); font-weight: bold; font-size: 14px; }
+    .tabs a.on { background: linear-gradient(160deg, #ff8fb1, var(--pink)); border-color: var(--pink); color: #fff; }
+    .card { background: #fff; border-radius: 20px; padding: 16px 16px 12px; box-shadow: 0 3px 14px rgba(255, 120, 160, .14); margin-bottom: 14px; }
+    .card[hidden] { display: none; }
+    .card h2 { margin: 0 0 4px; font-size: 18px; color: var(--pink); }
+    .card .who { font-size: 13px; color: var(--sub); margin: 0 0 12px; }
+    ol.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; }
+    ol.steps > li { counter-increment: s; position: relative; padding: 0 0 12px 36px; font-size: 14.5px; }
+    ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(160deg, #ffa5c0, var(--pink)); color: #fff; font-weight: 900; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    ol.steps > li:not(:last-child)::after { content: ''; position: absolute; left: 12px; top: 28px; bottom: 2px; border-left: 2px dotted #ffc2d4; }
+    .path { display: inline-block; background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; font-size: 13.5px; color: var(--deep); font-weight: bold; }
+    .tip { background: #fff8e1; border: 1.5px dashed #ffcf4d; border-radius: 14px; padding: 9px 12px; font-size: 13.5px; margin: 4px 0 6px; }
+    .tip b { color: #a06a00; }
+    .faq dt { font-weight: bold; color: var(--deep); margin-top: 10px; font-size: 14.5px; }
+    .faq dd { margin: 2px 0 0; font-size: 14px; color: var(--text); }
+    .foot { text-align: center; color: var(--sub); font-size: 13px; margin-top: 18px; }
+    a.link { color: var(--pink); font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="hero">
+        <div class="ico">🖼️</div>
+        <h1>움직이는 배경화면 설정 방법</h1>
+        <p>사기 전에 내 기기에서 되는지 먼저 확인해 주세요 💕</p>
+    </div>
+
+    <nav class="tabs">
+        <a href="#iphone" data-k="iphone">🍎 아이폰</a>
+        <a href="#galaxy" data-k="galaxy">📱 갤럭시</a>
+        <a href="#pc" data-k="pc">💻 PC</a>
+    </nav>
+
+    <section class="card" id="iphone">
+        <h2>🍎 아이폰 · 아이패드</h2>
+        <p class="who">잠금화면에 설정해요 · 화면을 켤 때 살짝 움직여요</p>
+        <div class="tip">💡 아이폰은 영상을 바로 배경화면으로 쓸 수 없어요. 먼저 <b>라이브 포토</b>로 바꿔야 해요.</div>
+        <ol class="steps">
+            <li>받은 영상을 <span class="path">사진</span> 앱에 저장해요.</li>
+            <li>App Store에서 <b>"라이브 배경화면"</b>이나 <b>"intoLive"</b>로 검색해서, 영상을 라이브 포토로 바꿔 주는 앱을 받아요.</li>
+            <li>그 앱에서 받은 영상을 골라 <b>라이브 포토로 저장</b>해요.</li>
+            <li><span class="path">설정</span> → <span class="path">배경화면</span> → <span class="path">새로운 배경화면 추가</span> → <span class="path">사진</span>에서 방금 만든 라이브 포토를 골라요.</li>
+            <li>아래쪽 <b>라이브(▶) 버튼이 켜져 있는지</b> 확인하고 <span class="path">추가</span>를 눌러요.</li>
+        </ol>
+        <div class="tip">⚠ <b>저전력 모드</b>가 켜져 있으면 움직이지 않아요. 아이폰은 계속 반복해서 움직이지 않고, 잠금화면을 켤 때 짧게 움직여요.</div>
+    </section>
+
+    <section class="card" id="galaxy">
+        <h2>📱 갤럭시 (삼성)</h2>
+        <p class="who">잠금화면에 설정해요 · 따로 앱이 없어도 돼요</p>
+        <ol class="steps">
+            <li>받은 영상을 <span class="path">갤러리</span>에 저장해요.</li>
+            <li><span class="path">설정</span> → <span class="path">배경화면 및 스타일</span> → <span class="path">배경화면 변경</span>으로 들어가요.</li>
+            <li><span class="path">갤러리</span>에서 받은 영상을 고르고, <b>잠금화면</b>으로 설정해요.</li>
+            <li>영상이 길면 15초 안쪽으로 자르라고 나와요. 마음에 드는 부분을 골라 <span class="path">완료</span>!</li>
+        </ol>
+        <div class="tip">💡 기본 기능은 <b>잠금화면만</b> 돼요. 홈 화면에도 움직이게 하려면 삼성 <b>Good Lock</b> 앱의 <b>원더랜드</b>를 써야 해요.</div>
+    </section>
+
+    <section class="card" id="pc">
+        <h2>💻 PC (윈도우 10 · 11)</h2>
+        <p class="who">무료 앱 하나면 바탕화면이 움직여요</p>
+        <ol class="steps">
+            <li><span class="path">Microsoft Store</span>에서 <b>Lively Wallpaper</b>를 검색해서 설치해요. (무료 · 광고 없음)</li>
+            <li>받은 영상 파일을 PC에 저장해요. 카카오톡 PC 버전에서 같은 채팅방을 열면 바로 받을 수 있어요.</li>
+            <li>Lively를 열고 영상 파일을 창 안으로 <b>끌어다 놓아요</b>. (또는 <span class="path">+</span> 버튼으로 파일 고르기)</li>
+            <li>목록에 생긴 배경화면을 누르면 바탕화면이 움직여요! ✨</li>
+        </ol>
+        <div class="tip">💡 게임이나 전체 화면을 쓸 때는 Lively가 알아서 멈춰요. 노트북은 설정에서 <b>배터리 사용 시 일시정지</b>를 켜 두면 좋아요.</div>
+    </section>
+
+    <section class="card">
+        <h2>❓ 자주 묻는 질문</h2>
+        <dl class="faq">
+            <dt>배터리가 빨리 닳지 않나요?</dt>
+            <dd>조금 더 쓰긴 해요. 휴대폰은 잠금화면에서만 움직여서 크게 차이 나지 않아요.</dd>
+            <dt>맥(Mac)에서도 되나요?</dt>
+            <dd>맥은 기본 기능이 없어서 따로 앱이 필요해요. 사기 전에 채팅방에서 물어봐 주세요.</dd>
+            <dt>설정했는데 안 움직여요!</dt>
+            <dd>아이폰은 라이브(▶) 버튼과 저전력 모드를 확인해 주세요. 그래도 안 되면 말랑달콤 채팅방에 편하게 말해 주세요 💕</dd>
+        </dl>
+    </section>
+
+    <p class="foot">말랑달콤 다이어리 🌸</p>
+</div>
+<script>
+    /* 주소 뒤 #iphone · #galaxy · #pc 에 맞는 설명만 보여 줘요 (없으면 기기를 보고 골라요) */
+    (function () {
+        var ua = navigator.userAgent, guess = /iPhone|iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iphone' : /Android/.test(ua) ? 'galaxy' : 'pc';
+        function show(k) {
+            if (['iphone', 'galaxy', 'pc'].indexOf(k) < 0) k = guess;
+            ['iphone', 'galaxy', 'pc'].forEach(function (id) { document.getElementById(id).hidden = id !== k; });
+            [].forEach.call(document.querySelectorAll('.tabs a'), function (a) { a.classList.toggle('on', a.getAttribute('data-k') === k); });
+        }
+        [].forEach.call(document.querySelectorAll('.tabs a'), function (a) {
+            a.addEventListener('click', function (e) { e.preventDefault(); var k = a.getAttribute('data-k'); history.replaceState(null, '', '#' + k); show(k); });
+        });
+        window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
+        show(location.hash.slice(1));
+    })();
+</script>
+</body>
+</html>

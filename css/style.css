@@ -2159,6 +2159,7 @@
         .wl-hero { text-align: center; padding: 16px 10px; border-radius: 20px; background: linear-gradient(135deg, #ffe3ec, #e9e1ff 55%, #d9f2ff); }
         .wl-hero-t { font-size: 18px; font-weight: 900; color: #c2456f; }
         .wl-hero-s { font-size: 13px; color: #8c6f9c; margin-top: 4px; word-break: keep-all; }
+        .wl-guide { margin: 10px auto 0; padding: 6px 14px; border-radius: 14px; font-size: 13px; background: #fff; border-color: #ffb3c8; color: #c2456f; }
         .wl-link { color: #e2557f; font-weight: bold; text-decoration: underline; text-underline-offset: 2px; }
         .wl-empty { text-align: center; color: #a07888; font-size: 14px; line-height: 1.7; padding: 26px 0; margin: 0; }
         .wl-grid { display: grid; gap: 12px; }
