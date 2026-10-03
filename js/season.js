@@ -6,8 +6,11 @@
      이미 붙인 스티커는 계절이 지나도 일기에 그대로 남아요
    - 켜고 끄기는 설정(settings.json)에 저장 ('diary_season' = 1) · 다른 스킨을 고르면 계절 테마는 꺼져요
    - 움직임 줄이기(기기 설정)를 켠 사람에게는 날리는 효과를 보여 주지 않아요
-   ※ 이 파일이 없어도 다이어리는 정상 동작 (계절 테마만 안 보여요) */
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (계절 테마만 안 보여요)
+   🔒 SEASON_OPEN : 특별한 날(이벤트)에만 true 로 열어요. false 면 계절 스티커 칸 · 스킨의 계절 테마 · 설정의 계절 장식 스위치가 모두 숨고,
+      날리는 효과 · 모서리 장식도 나오지 않아요 (켜 둔 사람도 꺼진 것처럼 · 저장된 설정은 그대로라 다시 열면 돌아와요) */
 
+        const SEASON_OPEN = false;
         const SEASON_KEY = 'diary_season';
         const SEASONS = {
             sp: { name: '봄', icon: '🌸', months: '3~5월', fx: '꽃잎', skin: { bg: '#ffeef3', cover: '#ffb7cb', page: '#fffafc', border: '#ffc9d8', accent: '#f06292' } },
@@ -33,7 +36,7 @@
         const ssq = id => document.getElementById(id);
 
         function seasonNow(d) { const m = (d || new Date()).getMonth() + 1; return m >= 3 && m <= 5 ? 'sp' : m >= 6 && m <= 8 ? 'su' : m >= 9 && m <= 11 ? 'au' : 'wi'; }
-        function seasonOn() { try { return store.getItem(SEASON_KEY) === '1'; } catch (e) { return false; } }
+        function seasonOn() { if (!SEASON_OPEN) return false; try { return store.getItem(SEASON_KEY) === '1'; } catch (e) { return false; } }
 
         /* 날리는 효과 */
         function seasonFx(id) {
@@ -71,6 +74,7 @@
         }
         function seasonRestore() { if (seasonOn()) seasonApply(); else { delete document.body.dataset.season; seasonFx(null); seasonCorner(null); } }
         function seasonToggle() {
+            if (!SEASON_OPEN) return;
             const on = !seasonOn();
             store.setItem(SEASON_KEY, on ? '1' : '0');
             if (on) { seasonApply(); if (typeof toast === 'function') toast(`${SEASONS[seasonNow()].icon} ${SEASONS[seasonNow()].name} 테마를 켰어요`); }
@@ -98,6 +102,7 @@
 
         /* ✏️ 스티커 창 → 계절 스티커 칸 */
         function loadSeasonStickers(btn) {
+            if (!SEASON_OPEN) return;
             if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
             const now = seasonNow(), url = s => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.svg);
             const sec = k => {
@@ -111,7 +116,7 @@
             ssq('stickerGrid').innerHTML = order.slice(i).concat(order.slice(0, i)).map(sec).join('');
         }
         function seasonStick(k, id) {
-            if (k !== seasonNow()) return;
+            if (!SEASON_OPEN || k !== seasonNow()) return;
             const s = (SEASON_STICKERS[k] || []).find(x => x.id === id); if (!s || typeof addImage !== 'function') return;
             if (!addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.svg))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '110px';
@@ -120,7 +125,9 @@
         }
 
         (function seasonInit() {
-            const b = ssq('seasonTab');
+            const b = ssq('seasonTab'), sk = ssq('seasonSkin');
+            if (sk) sk.hidden = !SEASON_OPEN;
+            if (!SEASON_OPEN) return;
             if (b) { const S = SEASONS[seasonNow()]; b.textContent = `${S.icon} ${S.name} 스티커`; b.hidden = false; }
             seasonRenderCard();
         })();

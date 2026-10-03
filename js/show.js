@@ -9,8 +9,8 @@
         const SHOW_ITEMS = [
             ['stamp', '😊 기분 · 날씨 도장', '페이지 오른쪽 위 동그라미'],
             ['dday', '⏳ D-day', '📌 한 D-day 를 페이지 왼쪽 위에'],
-            ['corner', '🌸 계절 장식', '계절 테마를 켰을 때 페이지 모서리 그림']
-        ];
+            ['corner', '🌸 계절 장식', '계절 테마를 켰을 때 페이지 모서리 그림', 'season']
+        ].filter(x => x[3] !== 'season' || (typeof SEASON_OPEN !== 'undefined' && SEASON_OPEN));   // 계절 기능이 닫혀 있으면 스위치도 숨겨요 (js/season.js)
         const showSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
         function showRead() {
             let o = null; try { o = JSON.parse(showSync() ? store.getItem(SHOW_KEY) : localStorage.getItem(SHOW_LOCAL)); } catch (e) {}
