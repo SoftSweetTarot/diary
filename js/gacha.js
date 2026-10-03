@@ -1,7 +1,10 @@
 /* 말랑달콤 다이어리 - js/gacha.js
-   🎁 랜덤박스 : 문방구 캡슐 뽑기 기계 (구글 계정당 하루 한 번)
-   - 당첨 결정 · 하루 한 번 확인 · 상품 링크는 모두 '랜덤박스 서버'(구글 앱스크립트)가 해요.
-     다이어리 코드에는 상품 링크도 확률 계산도 없어서, 코드를 열어 봐도 상품을 미리 볼 수 없어요.
+   🎁 랜덤박스 : 문방구 캡슐 뽑기 기계
+   - 🪙 말랑 코인 1개로 한 번 뽑아요. 코인은 📅 출석 도장판의 숨은 날에 도장을 찍으면 나와요 (js/attend.js)
+   - 캡슐에서 🎁 캡슐 스티커(움직이는 스티커 10종 · js/capsule-stickers.js)가 나오면 30일 선물권이 생겨요
+     선물권이 있는 동안 ✏️ 스티커 창의 🎁 캡슐 스티커 칸에서 다이어리에 붙여요 (기간이 끝나도 이미 붙인 건 그대로)
+   - 코인 · 당첨 · 선물권은 모두 '랜덤박스 서버'(구글 앱스크립트)가 정하고 기억해요.
+     선물권 목록은 이 기기에도 기억해 둬서 스티커 창을 열자마자 보여요 (서버 답이 오면 맞춰요)
    - 서버 코드 : 랜덤박스_앱스크립트.gs (랜덤박스 시트 → 확장 프로그램 → Apps Script 에 붙여 넣기)
      배포한 웹 앱 주소를 아래 GACHA_API_URL 에 넣어요.
    - 로그인한 사용자만 돌릴 수 있어요 (구글 계정으로 하루 한 번을 확인하기 때문)
@@ -33,9 +36,9 @@
 
         /* ---------- 랜덤박스 서버와 이야기하기 ----------
            보내는 것 : 다이어리 로그인 정보(토큰) — 서버가 구글에 '누구인지'만 확인해요
-           받는 것   : status → { used, odds } · play → { kind: 'miss'|'image'|'video', url } */
+           받는 것   : status → { coins, passes, rate } · play → { kind: 'miss'|'sticker', id, until, coins, passes } · stamp → { hit, coins } */
         function gcUseDrive() { return typeof drive !== 'undefined' && drive.ready && !drive.guest; }
-        async function gcApi(action) {
+        async function gcApi(action) {                 // 📅 출석 도장판(js/attend.js)도 같이 써요 : stamp
             if (!GACHA_API_URL) return { ok: false, error: 'setup' };
             if (!gcUseDrive()) return { ok: false, error: 'login' };
             try { await ensureToken(); } catch (e) { return { ok: false, error: 'login' }; }
@@ -50,12 +53,49 @@
             auth: '☁ 로그인 정보를 확인하지 못했어요. 다이어리를 새로고침해 주세요.',
             network: '📶 랜덤박스 서버에 연결하지 못했어요. 잠시 후 다시 해 주세요.',
             server: '⚠ 랜덤박스 서버에 문제가 생겼어요. 잠시 후 다시 해 주세요.',
-            used: '오늘은 이미 돌렸어요. 내일 또 만나요!'
+            nocoin: '🪙 코인이 없어요. 📅 출석 도장판에 숨은 코인을 찾아보세요!'
         };
-        function gcDriveId(u) {
-            let m = String(u).match(/drive\.google\.com\/file\/d\/([\w-]{10,})/);
-            if (!m && /drive\.google\.com|docs\.google\.com/.test(u)) m = String(u).match(/[?&]id=([\w-]{10,})/);
-            return m ? m[1] : null;
+
+        /* ---------- 🎁 캡슐 스티커 선물권 { id: 'yyyy-MM-dd'(끝나는 날) } ---------- */
+        const CAPS_LOCAL = 'malang_caps';
+        const capsList = () => typeof CAPSULE_STICKERS !== 'undefined' ? CAPSULE_STICKERS : [];
+        const capsUrl = k => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(k.svg);
+        const capsToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+        function capsPasses() { try { return JSON.parse(localStorage.getItem(CAPS_LOCAL)) || {}; } catch (e) { return {}; } }
+        function capsSet(list) {
+            const o = {}; (list || []).forEach(p => { if (p && p.id && p.until) o[p.id] = p.until; });
+            try { localStorage.setItem(CAPS_LOCAL, JSON.stringify(o)); } catch (e) {}
+        }
+        function capsLeft(id) {                       // 남은 날 (0 = 오늘이 마지막 날) · 없으면 -1
+            const u = capsPasses()[id]; if (!u || u < capsToday()) return -1;
+            return Math.round((Date.parse(u) - Date.parse(capsToday())) / 864e5);
+        }
+        /* ✏️ 스티커 창 → 🎁 캡슐 스티커 칸 (선물권 있는 건 붙이기 · 없는 건 흐릿하게) */
+        function loadCapsStickers(btn, fresh) {
+            if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+            const grid = gq('stickerGrid'); if (!grid) return;
+            grid.innerHTML = '<div class="cs-note">🎁 랜덤박스 캡슐에서 나온 스티커는 <b>30일 동안</b> 붙일 수 있어요</div>' + capsList().map(k => {
+                const left = capsLeft(k.id);
+                return left >= 0
+                    ? `<button type="button" class="cs-it on" onclick="capsStickerAdd('${k.id}')"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small><i>${left ? 'D-' + left : 'D-day'}</i></button>`
+                    : `<span class="cs-it"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small></span>`;
+            }).join('');
+            if (!fresh && gcUseDrive()) gcApi('status').then(r => {                   // 서버의 선물권으로 맞추기
+                if (!r.ok) return; capsSet(r.passes);
+                const act = document.querySelector('.cat-btn.cs-cat.active'); if (act) loadCapsStickers(null, true);
+            });
+        }
+        /* 다이어리 오늘 페이지에 붙이기 (스티커 창 · 당첨 화면 공통) */
+        function capsStickerAdd(id, fromBox) {
+            const k = capsList().find(x => x.id === id); if (!k || typeof addImage !== 'function') return false;
+            if (capsLeft(id) < 0) { showMsg('🎁 선물권 기간이 끝났어요.<br>랜덤박스 캡슐에서 다시 만나요!'); return false; }
+            if (!isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">받은 스티커는 ✏️ 스티커 창의 🎁 캡슐 스티커에 있어요.</span>'); return false; }
+            if (!addImage(capsUrl(k))) return false;
+            const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '120px';
+            if (fromBox) closeGacha();
+            if (typeof closeModal === 'function') closeModal('stickerModal');
+            if (typeof toast === 'function') toast(`🎁 ${k.name} 스티커를 붙였어요`);
+            return true;
         }
 
         /* ---------- 화면 만들기 ---------- */
@@ -69,13 +109,13 @@
               <div class="gc-wrap">
                 <div class="gc-head">
                   <div class="gc-title">🎁 말랑 캡슐뽑기</div>
-                  <span class="gc-chip" id="gcChip"><span class="gc-coin-ico">말</span><span id="gcChipText">오늘의 코인 1개</span></span>
+                  <span class="gc-chip" id="gcChip"><span class="gc-coin-ico">말</span><span id="gcChipText">코인 확인 중…</span></span>
                   <button class="gc-x" type="button" onclick="closeGacha()" aria-label="닫기">✕</button>
                 </div>
                 <div class="gc-machine">
                   <div class="gc-dome" id="gcDome"><canvas id="gcCanvas" width="500" height="460"></canvas></div>
                   <div class="gc-body" id="gcBody">
-                    <div class="gc-label">MALANG CAPSULE<small>하루 한 번 · 무료</small></div>
+                    <div class="gc-label">MALANG CAPSULE<small>말랑 코인 1개 · 한 번</small></div>
                     <div class="gc-slot"><i></i><div class="gc-coin" id="gcCoin">말</div><span>코인 1개</span></div>
                     <button class="gc-crank" id="gcCrank" type="button" disabled aria-label="손잡이 돌리기"><span class="gc-bar" id="gcBar"></span></button>
                     <div class="gc-crank-hint" id="gcCrankHint"></div>
@@ -91,9 +131,10 @@
                 </div>
                 <div class="gc-say" id="gcSay">코인을 넣고 손잡이를 돌려 보세요!</div>
                 <button class="gc-main" id="gcInsert" type="button">🪙 말랑 코인 넣기</button>
+                <button class="gc-main gc-find" id="gcFind" type="button" onclick="gcGoAttend()" hidden>📅 출석 도장판에서 숨은 코인 찾기</button>
                 <div class="gc-result" id="gcResult" hidden></div>
                 <details class="gc-odds"><summary>🎲 확률 안내</summary><table id="gcOdds"></table>
-                  <p>하루에 한 번 돌릴 수 있어요. 밤 12시가 지나면 코인이 다시 생겨요.</p></details>
+                  <p>🪙 말랑 코인은 📅 출석 도장판에 한 달에 몇 번 숨어 있어요. 숨은 날 도장을 찍으면 찾을 수 있어요.<br>🎁 캡슐 스티커는 30일 선물권이에요. 같은 스티커가 또 나오면 30일이 더 늘어나요.</p></details>
                 <button class="gc-sound snd-fx snd-fx-text" id="gcSound" type="button" onclick="sndToggleFx()">${typeof sndOn === 'function' && !sndOn() ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
               </div>
               <canvas class="gc-burst" id="gcBurst"></canvas>`;
@@ -140,11 +181,12 @@
             crank.addEventListener('keydown', e => { if (gc.stage === 'turning' && (e.key === 'ArrowRight' || e.key === 'ArrowDown')) { e.preventDefault(); gcTurn(gc.turned + 45); } });
         }
 
-        function gcRenderOdds(odds) {
-            const v = odds ? odds.video : 2000, im = odds ? odds.image : 8000;
-            const pct = n => (n / 10000).toFixed(n && n < 10000 ? 1 : 0) + '%';
-            gq('gcOdds').innerHTML = `<tr><td>🎬 스마트폰 라이브 배경화면</td><td>${pct(v)}</td></tr><tr><td>🖼 스마트폰 배경화면 이미지</td><td>${pct(im)}</td></tr><tr><td>🍀 꽝 (오늘의 한마디)</td><td>${pct(1000000 - v - im)}</td></tr>`;
+        function gcRenderOdds(rate) {
+            const pct = n => (n / 10000).toFixed(n % 10000 ? 1 : 0) + '%';
+            gq('gcOdds').innerHTML = rate === undefined ? '<tr><td>확률을 불러오는 중…</td><td></td></tr>'
+                : `<tr><td>🎁 움직이는 캡슐 스티커 (30일 선물권)</td><td>${pct(rate)}</td></tr><tr><td>🍀 꽝 (오늘의 한마디)</td><td>${pct(1000000 - rate)}</td></tr>`;
         }
+        function gcGoAttend() { closeGacha(); if (typeof openAttend === 'function') openAttend(); }
 
         /* ---------- 열기 · 닫기 ---------- */
         async function openGacha() {
@@ -155,17 +197,16 @@
             gc.open = true;
             gcReset();
             gcLoop();
-            gcRenderOdds(null);
+            gcRenderOdds();
             gcSetCoin('checking');
             const r = await gcApi('status');
             if (!gc.open || gc.stage !== 'idle') return;
             gc.test = !!(r.ok && r.test);
-            if (r.ok) { gcRenderOdds(r.odds); gcSetCoin(r.used ? 'used' : 'ready'); }
+            if (r.ok) { capsSet(r.passes); gcRenderOdds(r.rate); gcSetCoin(r.coins); }
             else gcSetCoin('error', r.error);
         }
         function closeGacha() {
             gc.open = false;
-            clearInterval(gc.coinTick);
             cancelAnimationFrame(gc.raf);
             gc.timers.forEach(clearTimeout); gc.timers = [];
             gcStopRumble();
@@ -183,36 +224,17 @@
             gq('gcTap').hidden = true; gq('gcResult').hidden = true;
             gq('gcDome').classList.remove('mixing');
         }
-        /* 코인 상태 : checking(확인 중) · ready(오늘 1개) · used(오늘 씀) · error(로그인 필요 등) */
+        /* 코인 : 'checking'(확인 중) · 숫자(가진 코인 수) · 'error'(로그인 필요 등) */
         function gcSetCoin(state, err) {
             gc.coin = state;
-            clearInterval(gc.coinTick);
-            if (state === 'used' && !gc.test) gc.coinTick = setInterval(gcCoinTick, 1000);      // 다음 코인까지 남은 시간 (1초마다)
-            const chip = gq('gcChip'), txt = gq('gcChipText'), btn = gq('gcInsert'), say = gq('gcSay');
-            chip.classList.toggle('empty', state !== 'ready');
-            txt.textContent = gc.test && state !== 'error' && state !== 'checking' ? '🧪 테스트 모드 · 무제한'
-                : { checking: '코인 확인 중…', ready: '오늘의 코인 1개', used: '오늘 코인을 썼어요', error: '코인 없음' }[state];
-            btn.disabled = state !== 'ready';
-            say.textContent = state === 'ready' ? '코인을 넣고 손잡이를 돌려 보세요!'
-                : state === 'used' ? GC_ERR.used : state === 'checking' ? '…' : (GC_ERR[err] || GC_ERR.server);
-            if (state === 'used' && !gc.test) { txt.textContent = '⏳ 다음 코인 ' + gcLeft().txt; say.textContent = '오늘은 이미 돌렸어요.\n다음 코인까지 ' + gcLeft().txt; }
-        }
-        /* 다음 코인까지 남은 시간 : 한국 시간 밤 12시 (서버와 같은 기준) */
-        function gcLeft() {
-            const kst = Date.now() + 9 * 3600000;
-            const s = Math.max(0, Math.floor((86400000 - kst % 86400000) / 1000)), z = n => String(n).padStart(2, '0');
-            return { s, txt: `${z(Math.floor(s / 3600))}:${z(Math.floor(s % 3600 / 60))}:${z(s % 60)}` };
-        }
-        async function gcCoinTick() {
-            if (!gc.open || gc.coin !== 'used') { clearInterval(gc.coinTick); return; }
-            const l = gcLeft();
-            gq('gcChipText').textContent = '⏳ 다음 코인 ' + l.txt;
-            const say = gq('gcSay');
-            if (say.textContent.startsWith('오늘은 이미 돌렸어요')) say.textContent = '오늘은 이미 돌렸어요.\n다음 코인까지 ' + l.txt;
-            if (l.s <= 1 && gc.stage === 'idle') {                  // 밤 12시가 지나면 코인 다시 확인
-                clearInterval(gc.coinTick);
-                setTimeout(async () => { const r = await gcApi('status'); if (gc.open && gc.stage === 'idle' && r.ok) gcSetCoin(r.used ? 'used' : 'ready'); }, 2500);
-            }
+            const n = typeof state === 'number' ? state : 0, ok = typeof state === 'number';
+            const chip = gq('gcChip'), txt = gq('gcChipText'), btn = gq('gcInsert'), say = gq('gcSay'), find = gq('gcFind');
+            chip.classList.toggle('empty', !n && !gc.test);
+            txt.textContent = gc.test && ok ? '🧪 테스트 모드 · 무제한' : state === 'checking' ? '코인 확인 중…' : ok ? `말랑 코인 ${n}개` : '코인 없음';
+            btn.disabled = !(n > 0 || (gc.test && ok));
+            find.hidden = !(ok && !n && !gc.test);
+            say.textContent = state === 'checking' ? '…' : !ok ? (GC_ERR[err] || GC_ERR.server)
+                : (n || gc.test) ? '코인을 넣고 손잡이를 돌려 보세요!' : '코인이 없어요.\n📅 출석 도장판 어딘가에 말랑 코인이 숨어 있어요!';
         }
 
         /* ---------- 1. 코인 넣기 ---------- */
@@ -226,14 +248,14 @@
             if (!gc.open) return;
             if (!r.ok) {
                 gc.stage = 'idle';
-                if (r.odds) gcRenderOdds(r.odds);
-                gcSetCoin(r.error === 'used' ? 'used' : 'error', r.error);
+                gcSetCoin(r.error === 'nocoin' ? 0 : 'error', r.error);
                 return;
             }
-            gc.outcome = { kind: r.kind, url: r.url || '', odds: r.odds };
+            gc.outcome = { kind: r.kind, id: r.id || '', until: r.until || '', coins: r.coins };
+            capsSet(r.passes);
             gc.test = !!r.test;
             gc.stage = 'coin';
-            gcSetCoin('used'); gq('gcSay').textContent = '';
+            gq('gcChipText').textContent = gc.test ? '🧪 테스트 모드 · 무제한' : `말랑 코인 ${r.coins}개`; gq('gcSay').textContent = '';
             const coin = gq('gcCoin'); coin.classList.remove('drop'); void coin.offsetWidth; coin.classList.add('drop');
             gcSfx.coin(); gcBuzz(20);
             gq('gcSay').textContent = '짤랑! 코인이 들어갔어요';
@@ -313,46 +335,32 @@
         /* ---------- 5. 결과 ---------- */
         function gcShowResult() {
             gc.stage = 'done';
-            const box = gq('gcResult'), o = gc.outcome;
+            const box = gq('gcResult'), o = gc.outcome, k = capsList().find(x => x.id === o.id);
             box.hidden = false;
-            if (o.kind === 'miss') {
+            if (o.kind !== 'sticker' || !k) {
                 box.className = 'gc-result';
                 gcSfx.miss();
                 box.innerHTML = `<h3>꽝!</h3>
-                    <div class="gc-fortune">🍀 오늘의 말랑 한마디<br><b>${GACHA_FORTUNES[Math.floor(Math.random() * GACHA_FORTUNES.length)]}</b></div>
-                    <p>다음 코인까지 <span class="gc-timer" id="gcTimer"></span></p>`;
-                gq('gcSay').textContent = '아쉬워요! 내일 또 도전해요';
+                    <div class="gc-fortune">🍀 오늘의 말랑 한마디<br><b>${GACHA_FORTUNES[Math.floor(Math.random() * GACHA_FORTUNES.length)]}</b></div>`;
+                gq('gcSay').textContent = '아쉬워요! 다음 코인을 기대해요';
             } else {
                 box.className = 'gc-result win';
                 gcSfx.win(); gcBuzz([60, 40, 60, 40, 120]); gcConfetti();
-                const id = gcDriveId(o.url);
-                const dl = id ? `https://drive.google.com/uc?export=download&id=${id}` : o.url;
-                const preview = o.kind === 'image'
-                    ? `<img class="gc-prize" alt="당첨 이미지" src="${id ? 'https://lh3.googleusercontent.com/d/' + id : o.url}">`
-                    : (id ? `<iframe class="gc-prize video" src="https://drive.google.com/file/d/${id}/preview" allow="autoplay" title="당첨 영상"></iframe>`
-                          : `<video class="gc-prize video" src="${o.url}" controls playsinline></video>`);
+                const [, mm, dd] = o.until.split('-');
                 box.innerHTML = `<h3>🎉 당첨!</h3>
-                    <p><b>${o.kind === 'image' ? '🖼 스마트폰 배경화면 이미지' : '🎬 스마트폰 라이브 배경화면'}</b></p>
-                    ${preview}
-                    <a class="gc-main gc-dl" href="${dl}" target="_blank" rel="noopener">⬇ 내려받기</a>
-                    <p class="gc-small">새 창에서 파일이 열리면 내려받기를 눌러 저장하세요.</p>
-                    <p>다음 코인까지 <span class="gc-timer" id="gcTimer"></span></p>`;
+                    <img class="gc-prize gc-stk" alt="${k.name}" src="${capsUrl(k)}">
+                    <p><b>🎁 ${k.name}</b><br>캡슐 스티커 <b>30일 선물권</b>이 도착했어요 💝</p>
+                    <p class="gc-small">${+mm}월 ${+dd}일까지 ✏️ 스티커 창의 🎁 캡슐 스티커에서 붙일 수 있어요</p>
+                    <button class="gc-main" type="button" onclick="capsStickerAdd('${k.id}', true)">📌 오늘 다이어리에 붙이기</button>`;
                 gq('gcSay').textContent = '축하해요! 정말 운이 좋아요!';
             }
-            if (gc.test) {                                      // 🧪 테스트 모드 : 바로 한 번 더
+            if (o.coins > 0 || gc.test) {                          // 코인이 남았으면 바로 한 번 더
                 const again = document.createElement('button');
                 again.type = 'button'; again.className = 'gc-main gc-again';
-                again.textContent = '🔁 한 번 더 돌리기 (테스트 모드)';
-                again.onclick = () => { gcReset(); gcRenderOdds(o.odds); gcSetCoin('ready'); gq('gcCapsule').scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+                again.textContent = gc.test ? '🔁 한 번 더 돌리기 (테스트 모드)' : `🪙 코인 하나 더 넣기 (${o.coins}개 남음)`;
+                again.onclick = () => { gcReset(); gcSetCoin(gc.test ? 1 : o.coins); gq('gcCapsule').scrollIntoView({ block: 'center', behavior: 'smooth' }); };
                 box.appendChild(again);
-                const t = box.querySelector('.gc-timer'); if (t) t.parentElement.remove();
             }
-            gcTimer();
-        }
-        function gcTimer() {
-            const el = gq('gcTimer'); if (!el || !gc.open) return;
-            el.textContent = gcLeft().txt;                      // 한국 시간 밤 12시까지 (서버와 같은 기준)
-            gcLater(gcTimer, 1000);
         }
 
         /* ---------- 기계 안 공 · 전구 그리기 ---------- */

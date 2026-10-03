@@ -184,7 +184,7 @@
             else if (watered) acts.innerHTML = `<button class="pl-btn" type="button" disabled>💧 오늘은 물을 줬어요 · 내일 또 만나요</button>`;
             else acts.innerHTML = `<button class="pl-btn pl-main" type="button" id="plWaterBtn" onclick="plWater()">💧 물 주기</button>`;
             pq('plTip').textContent = st === 5 ? '💡 열매를 따면 🧺 열매 도감에 모이고, 이번엔 어떤 씨앗일지 새로 심어요.'
-                : watered ? (typeof attendDone === 'function' && !attendDone() ? '💡 📅 출석 도장도 찍었나요? 도장을 모으면 움직이는 출석 스티커를 받아요.' : '💡 내일도 일기를 쓰면 또 물을 줄 수 있어요. 물 14번이면 열매가 열려요!')
+                : watered ? (typeof attendDone === 'function' && !attendDone() ? '💡 📅 출석 도장도 찍었나요? 숨은 말랑 코인이 나올지도 몰라요.' : '💡 내일도 일기를 쓰면 또 물을 줄 수 있어요. 물 14번이면 열매가 열려요!')
                 : dry ? '💡 오늘 일기를 쓰고 물을 주면 다시 기운을 차려요.' : '';
             /* 🧺 열매 도감 : 비밀 씨앗 4가지 · 모은 건 색깔로, 아직이면 흐릿하게 */
             const b = s.basket || {}, ks = Object.keys(PL_KINDS), got = ks.filter(x => b[x] > 0).length;
