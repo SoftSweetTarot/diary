@@ -4,7 +4,7 @@
        사용자 : 채팅방에 "배경화면 3번" 을 보내고 카카오페이로 송금 → 주인 : 확인 후 채팅방으로 원본 영상 보내기
    - 목록 : '말랑달콤 사람들' 시트의 '배경화면' 탭 (말랑달콤사람들_앱스크립트.gs · 주소?action=walls · 로그인 없이 누구나)
        그림 · 미리보기 영상은 주인의 구글 드라이브에 있어요 (깃허브에는 올리지 않아요)
-       목록 카드 : 드라이브 그림(jpg) · 누르면 크게 보기 · 움직이는 모습은 네이버 카페(말랑달콤 모임방)에서 홍보해요
+       목록 카드 : 드라이브 그림(jpg)을 기기 안에 (📱 휴대폰 탭 = 휴대폰 · 💻 PC 탭 = 아이패드) · 누르면 크게 보기 · 움직이는 모습은 네이버 카페(말랑달콤 모임방)에서 홍보해요
    - ☕ 카페를 여는 순간 목록을 미리 받아 둬요 (wlPrefetch · 서버가 깨어나는 동안 기다리지 않게) · 1분 안에 다시 열면 받아 둔 목록 그대로
    - 📖 설정 방법 : wallguide.html (사기 전에 내 기기에서 되는지 확인 · 채팅방에서 파일 보낼 때 이 주소도 함께)
    - 채팅방 주소 · QR 코드는 💗 저금통과 같아요 (an.txt · js/piggy.js 의 pigLoadChat · pigQr)
@@ -62,9 +62,9 @@
                 : !items.length ? '<p class="wl-empty">🌸 곧 예쁜 배경화면이 찾아와요!<br>조금만 기다려 주세요</p>'
                 : `<div class="wl-grid ${wl.tab}">${items.map(w => `
                   <div class="wl-card">
-                    <button type="button" class="wl-pre" onclick="wlView(${w.no})" aria-label="${wlEsc(w.name)} 크게 보기">
+                    <button type="button" class="wl-pre wl-dev ${wl.tab}" onclick="wlView(${w.no})" aria-label="${wlEsc(w.name)} 크게 보기"><span class="wl-scr">
                       <img src="${wlImg(w.img, size)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, size)}'}">
-                      <span class="wl-no">${w.no}번</span>
+                      <span class="wl-no">${w.no}번</span></span>
                     </button>
                     <div class="wl-name">${wlEsc(w.name)}</div>
                     <div class="wl-buy"><b>${wlWon(w.price)}</b><button type="button" class="btn wl-get" onclick="wlPick(${w.no})">💬 받기</button></div>
@@ -86,7 +86,7 @@
             if (!w || !v) return;
             v.innerHTML = `
               <div class="wl-view-box ${w.kind}">
-                <div class="wl-view-frame"><img src="${wlImg(w.img, 1080)}" alt="" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, 1080)}'}"></div>
+                <div class="wl-view-frame wl-dev ${w.kind}"><span class="wl-scr"><img src="${wlImg(w.img, 1080)}" alt="" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, 1080)}'}"></span></div>
                 <div class="wl-view-t">${wlEsc(w.name)} <b>${wlWon(w.price)}</b></div>
                 <div class="wl-view-btns">
                   <button type="button" class="btn" onclick="wlUnview()">닫기</button>
