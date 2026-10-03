@@ -498,6 +498,7 @@
             if (typeof warmServer === 'function') {
                 if (id === 'settingsMenuModal' && typeof FEEDBACK_SCRIPT_URL !== 'undefined') warmServer(FEEDBACK_SCRIPT_URL);
                 if (id === 'serviceModal' && typeof GACHA_API_URL !== 'undefined') warmServer(GACHA_API_URL);
+                if (id === 'serviceModal' && typeof wlPrefetch === 'function') wlPrefetch();     // 📱 배경화면 목록 미리 받아 두기 (js/wall.js)
                 if (id === 'serviceModal' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) warmServer(FORTUNE_API_URL);
             }
             if (id === 'serviceModal' && typeof svcShowCats === 'function') svcShowCats();

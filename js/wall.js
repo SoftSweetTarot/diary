@@ -5,12 +5,23 @@
    - 목록 : '말랑달콤 사람들' 시트의 '배경화면' 탭 (말랑달콤사람들_앱스크립트.gs · 주소?action=walls · 로그인 없이 누구나)
        그림 · 미리보기 영상은 주인의 구글 드라이브에 있어요 (깃허브에는 올리지 않아요)
        목록 카드 : 드라이브 그림(jpg) · 누르면 크게 보기 · 움직이는 모습은 네이버 카페(말랑달콤 모임방)에서 홍보해요
+   - ☕ 카페를 여는 순간 목록을 미리 받아 둬요 (wlPrefetch · 서버가 깨어나는 동안 기다리지 않게) · 1분 안에 다시 열면 받아 둔 목록 그대로
    - 📖 설정 방법 : wallguide.html (사기 전에 내 기기에서 되는지 확인 · 채팅방에서 파일 보낼 때 이 주소도 함께)
    - 채팅방 주소 · QR 코드는 💗 저금통과 같아요 (an.txt · js/piggy.js 의 pigLoadChat · pigQr)
    - 휴대폰 : 버튼 하나로 '배경화면 N번' 복사 + 채팅방 열기 · PC · 태블릿 : 휴대폰으로 찍는 QR 코드
    ※ 이 파일이 없으면 배경화면 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
-        const wl = { items: [], tab: '', pick: null };
+        const wl = { items: [], tab: '', pick: null, at: 0, loading: null };
+        const WL_FRESH = 60000;
+        /* 불러오는 중 그림 : 카페 버튼과 같은 움직이는 폰 */
+        const WL_PHONE = `<svg class="wl-ico wl-wait-ico" viewBox="7 1 26 38" aria-hidden="true">
+            <defs><linearGradient id="wlWaitG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2d6"/><stop offset=".5" stop-color="#d9c8ff"/><stop offset="1" stop-color="#bfe6ff"/></linearGradient>
+            <clipPath id="wlWaitC"><rect x="10.5" y="5.5" width="19" height="29" rx="3.5"/></clipPath></defs>
+            <rect x="8.5" y="2.5" width="23" height="35" rx="6" fill="#fff" stroke="#ff8fb1" stroke-width="2.2"/>
+            <g clip-path="url(#wlWaitC)"><rect class="wl-ico-sky" x="0" y="0" width="60" height="60" fill="url(#wlWaitG)"/>
+            <g class="wl-ico-cloud" fill="#fff"><circle cx="15" cy="27" r="3"/><circle cx="19" cy="25.5" r="3.6"/><circle cx="23" cy="27" r="3"/><rect x="15" y="27" width="8" height="3"/></g></g>
+            <path class="wl-ico-heart" d="M20 19.5 C15.5 16.5 16 12.5 18.3 12.5 C19.3 12.5 20 13.4 20 14 C20 13.4 20.7 12.5 21.7 12.5 C24 12.5 24.5 16.5 20 19.5Z" fill="#ff6b93"/>
+            <rect x="17" y="3.6" width="6" height="1.6" rx=".8" fill="#ffc2d6"/></svg>`;
         const wlWon = n => n.toLocaleString('ko-KR') + '원';
         const wlEsc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
         const wlImg = (id, w) => `https://lh3.googleusercontent.com/d/${id}=w${w}`;
@@ -21,8 +32,15 @@
                 const res = await fetch(MEMBER_API_URL + '?action=walls', { credentials: 'omit' });
                 const j = await res.json();
                 if (!j || !j.ok || !Array.isArray(j.items)) throw 0;
-                wl.items = j.items;
-            } catch (e) { wl.items = null; }
+                wl.items = j.items; wl.at = Date.now();
+            } catch (e) { wl.items = null; wl.at = 0; }
+        }
+        /* 카페를 열 때 · 배경화면을 열 때 : 받아 둔 지 1분이 넘었으면 새로 받기 (받는 중이면 그걸 기다려요) */
+        function wlPrefetch() {
+            if (wl.loading) return wl.loading;
+            if (wl.items && wl.at && Date.now() - wl.at < WL_FRESH) return Promise.resolve();
+            wl.loading = wlLoad().finally(() => { wl.loading = null; });
+            return wl.loading;
         }
 
         function wlRender() {
@@ -123,9 +141,11 @@
             if (!wl.tab) wl.tab = (typeof prDevice === 'function' ? prDevice() : 'PC') === 'PC' ? 'pc' : 'phone';
             wl.pick = null;
             const box = document.getElementById('wlBody');
-            if (box && !(wl.items && wl.items.length)) box.innerHTML = '<p class="wl-empty">🖼️ 배경화면을 불러오는 중…</p>';
+            const ready = wl.items && wl.at && Date.now() - wl.at < WL_FRESH && !wl.loading;
+            if (box) box.innerHTML = ready ? '' : `<div class="wl-wait">${WL_PHONE}<p>배경화면을 불러오는 중…</p></div>`;
             openModal('wallModal');
-            await wlLoad();
+            if (ready) return wlRender();
+            await wlPrefetch();
             wlRender();
         }
         function closeWall() { wlUnview(); closeModal('wallModal'); }

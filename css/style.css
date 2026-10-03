@@ -2203,3 +2203,8 @@
         @keyframes wlSky { to { transform: translate(-20px, -20px); } }
         @keyframes wlCloud { to { transform: translateX(4px); } }
         @media (prefers-reduced-motion: reduce) { .wl-ico-sky, .wl-ico-cloud, .wl-ico-heart { animation: none; } }
+        .wl-wait { text-align: center; padding: 40px 0 34px; color: #a07888; font-size: 14px; }
+        .wl-wait p { margin: 12px 0 0; }
+        .wl-wait-ico { width: 2.6rem; height: 3.8rem; animation: wlBob 1.2s ease-in-out infinite; }
+        @keyframes wlBob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+        @media (prefers-reduced-motion: reduce) { .wl-wait-ico { animation: none; } }
