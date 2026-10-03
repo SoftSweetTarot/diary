@@ -196,7 +196,7 @@
 
         .sticker-grid {
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-            overflow-y: auto; max-height: 320px; padding: 4px;
+            overflow-y: auto; height: min(320px, 50vh); align-content: start; padding: 4px;   /* 스티커가 적거나 없어도 창 크기는 그대로 */
         }
         .sticker-item { font-size: 1.8rem; text-align: center; cursor: pointer; padding: 4px; border-radius: 8px; }
         .sticker-item:hover { background: #ffe6f0; transform: scale(1.15); transition: transform 0.1s; }
@@ -1204,11 +1204,11 @@
         .sticker-grid .cs-note b { color: #e2667a; }
         .sticker-grid .cs-it { position: relative; grid-column: span 2; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border: none; background: none; font-family: inherit; }
         .sticker-grid .cs-it img { width: 100%; max-width: 76px; aspect-ratio: 1; }
-        .sticker-grid .cs-it:not(.on) img { filter: grayscale(1); opacity: .35; }
         .sticker-grid .cs-it small { font-size: 10.5px; line-height: 1.3; color: #8a6a58; word-break: keep-all; }
-        .sticker-grid .cs-it:not(.on) small { color: #c0a8b2; }
+        .sticker-grid .cs-empty { grid-column: 1 / -1; text-align: center; padding: 40px 8px; font-size: 13px; line-height: 1.8; color: #a08890; }
         .sticker-grid .cs-it i { position: absolute; top: 2px; right: 2px; font-style: normal; font-size: 10.5px; font-weight: bold; color: #fff; background: #ff6b93; border-radius: 8px; padding: 0 5px; }
         .sticker-grid button.cs-it { cursor: pointer; border-radius: 12px; }
+        .sticker-grid span.cs-it img { filter: grayscale(1); opacity: .35; }   /* 🌸 계절 스티커 : 아직 철이 아닌 것
         .sticker-grid button.cs-it:hover { background: #fff0f5; }
 
         /* ===== 🍀 오늘의 행운 (js/luck.js) ===== */

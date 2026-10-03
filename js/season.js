@@ -104,7 +104,7 @@
                 const S = SEASONS[k], open = k === now;
                 return `<div class="ss-sg-head">${S.icon} ${S.name} 스티커 ${open ? '<em>지금 쓸 수 있어요!</em>' : `<small>${S.months}에 열려요</small>`}</div>`
                     + SEASON_STICKERS[k].map(s => open
-                        ? `<button type="button" class="cs-it on" onclick="seasonStick('${k}','${s.id}')"><img src="${url(s)}" alt="${s.name}"><small>${s.name}</small></button>`
+                        ? `<button type="button" class="cs-it" onclick="seasonStick('${k}','${s.id}')"><img src="${url(s)}" alt="${s.name}"><small>${s.name}</small></button>`
                         : `<span class="cs-it"><img src="${url(s)}" alt="${s.name}"><small>${S.months}</small></span>`).join('');
             };
             const order = ['sp', 'su', 'au', 'wi'], i = order.indexOf(now);

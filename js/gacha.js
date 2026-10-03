@@ -56,30 +56,31 @@
             nocoin: '🪙 코인이 없어요. 📅 출석 도장판에 숨은 코인을 찾아보세요!'
         };
 
-        /* ---------- 🎁 캡슐 스티커 선물권 { id: 'yyyy-MM-dd'(끝나는 날) } ---------- */
+        /* ---------- 🎁 캡슐 스티커 선물권 [{ id, until:'yyyy-MM-dd' }] · 당첨된 순서 (서버가 정한 순서 그대로) ---------- */
         const CAPS_LOCAL = 'malang_caps';
         const capsList = () => typeof CAPSULE_STICKERS !== 'undefined' ? CAPSULE_STICKERS : [];
         const capsUrl = k => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(k.svg);
         const capsToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
-        function capsPasses() { try { return JSON.parse(localStorage.getItem(CAPS_LOCAL)) || {}; } catch (e) { return {}; } }
+        function capsPasses() {                       // 아직 안 끝난 것만
+            let a; try { a = JSON.parse(localStorage.getItem(CAPS_LOCAL)); } catch (e) {}
+            return Array.isArray(a) ? a.filter(p => p && p.id && p.until >= capsToday()) : [];
+        }
         function capsSet(list) {
-            const o = {}; (list || []).forEach(p => { if (p && p.id && p.until) o[p.id] = p.until; });
-            try { localStorage.setItem(CAPS_LOCAL, JSON.stringify(o)); } catch (e) {}
+            const a = (list || []).filter(p => p && p.id && p.until).map(p => ({ id: p.id, until: p.until }));
+            try { localStorage.setItem(CAPS_LOCAL, JSON.stringify(a)); } catch (e) {}
         }
         function capsLeft(id) {                       // 남은 날 (0 = 오늘이 마지막 날) · 없으면 -1
-            const u = capsPasses()[id]; if (!u || u < capsToday()) return -1;
-            return Math.round((Date.parse(u) - Date.parse(capsToday())) / 864e5);
+            const p = capsPasses().find(x => x.id === id); if (!p) return -1;
+            return Math.round((Date.parse(p.until) - Date.parse(capsToday())) / 864e5);
         }
-        /* ✏️ 스티커 창 → 🎁 캡슐 스티커 칸 (선물권 있는 건 붙이기 · 없는 건 흐릿하게) */
+        /* ✏️ 스티커 창 → 🎁 캡슐 스티커 칸 : 선물권이 있는 스티커만 당첨된 순서대로 (끝난 건 빠지고 뒤의 것이 앞으로) */
         function loadCapsStickers(btn, fresh) {
             if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
             const grid = gq('stickerGrid'); if (!grid) return;
-            grid.innerHTML = '<div class="cs-note">🎁 랜덤박스 캡슐에서 나온 스티커는 <b>30일 동안</b> 붙일 수 있어요</div>' + capsList().map(k => {
-                const left = capsLeft(k.id);
-                return left >= 0
-                    ? `<button type="button" class="cs-it on" onclick="capsStickerAdd('${k.id}')"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small><i>${left ? 'D-' + left : 'D-day'}</i></button>`
-                    : `<span class="cs-it"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small></span>`;
-            }).join('');
+            const mine = capsPasses().map(p => ({ k: capsList().find(x => x.id === p.id), left: capsLeft(p.id) })).filter(x => x.k);
+            grid.innerHTML = mine.length
+                ? mine.map(({ k, left }) => `<button type="button" class="cs-it" onclick="capsStickerAdd('${k.id}')"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small><i>${left ? 'D-' + left : 'D-day'}</i></button>`).join('')
+                : '<div class="cs-empty">🎁 아직 캡슐 스티커가 없어요<br>🎁 랜덤박스 캡슐에서 움직이는 스티커를 뽑아 보세요!<br><small>나온 스티커는 30일 동안 여기에서 붙일 수 있어요</small></div>';
             if (!fresh && gcUseDrive()) gcApi('status').then(r => {                   // 서버의 선물권으로 맞추기
                 if (!r.ok) return; capsSet(r.passes);
                 const act = document.querySelector('.cat-btn.cs-cat.active'); if (act) loadCapsStickers(null, true);
