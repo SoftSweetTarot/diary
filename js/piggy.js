@@ -119,7 +119,7 @@
                 </div>
               </div>
 
-              <div class="pg-foot">마음을 넣어 주신 모든 분들, 정말 정말 고마워요 💕<br><small>궁금한 점은 ⚙ 설정 → 💌 건의함으로 편하게 물어봐 주세요</small></div>`;
+              <div class="pg-foot">마음을 넣어 주신 모든 분들, 정말 정말 고마워요 💕<br><small>궁금한 점은 <a href="#" class="pg-link" onclick="goCafe(); return false;">👭 말랑달콤 모임방</a>에 남겨 주시면 답해 드릴게요</small></div>`;
             box.querySelectorAll('.pg-pt-sw i').forEach(el => paintPatternInto(el, sweet[+el.dataset.i]));
             pig.built = true;
             pigTab(pig.tab);

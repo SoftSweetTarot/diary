@@ -2158,6 +2158,7 @@
         .pg-copy { width: calc(100% - 24px); margin: 10px 12px 12px; justify-content: center; padding: 10px; font-size: 15px; border-radius: 14px; background: linear-gradient(160deg, #ff8fb1, #ff6b93); border-color: #ff6b93; color: #fff; }
         .pg-foot { text-align: center; font-size: 14px; color: #c2456f; font-weight: bold; line-height: 1.7; padding: 4px 0 2px; word-break: keep-all; }
         .pg-foot small { font-weight: normal; color: #a07888; font-size: 12px; }
+        .pg-link { color: #e2557f; font-weight: bold; text-decoration: underline; text-underline-offset: 2px; }
         @keyframes pgDrop { 0%, 8% { transform: translateY(-34px) rotate(-20deg); opacity: 0; } 14% { opacity: 1; } 24% { transform: translateY(14px) rotate(0); opacity: 1; } 27%, 100% { transform: translateY(26px); opacity: 0; } }
         @keyframes pgBounce { 0%, 24% { transform: scale(1, 1); } 29% { transform: scale(1.06, .93); } 35% { transform: scale(.97, 1.04); } 41%, 100% { transform: scale(1, 1); } }
         @keyframes pgTwinkle { 0%, 100% { transform: scale(.5); opacity: .3; } 50% { transform: scale(1.15); opacity: 1; } }
