@@ -65,7 +65,7 @@
         <h2><span class="step">1</span>지금 등록된 패턴·스킨</h2>
         <div class="row">
             <label for="siteUrl">다이어리 사이트 주소</label>
-            <input type="text" id="siteUrl" style="flex:1; min-width:240px;" placeholder="https://아이디.github.io/저장소이름/">
+            <input type="text" id="siteUrl" style="flex:1; min-width:240px;" placeholder="https://softsweetdiary.com/">
             <button class="primary" onclick="loadFromSite()">🌐 최신 목록 불러오기</button>
         </div>
         <div class="meta" style="margin-top:6px;">🎨 패턴 <span id="curInfo"></span> : <span id="loadStatus">사이트 주소를 넣고 🌐 최신 목록 불러오기를 눌러 주세요. (주소는 이 컴퓨터에 기억돼요)</span></div>
@@ -265,7 +265,7 @@
     let keySeq = 0;
     let listReady = false;   // 지금 등록된 목록을 불러왔는지 (안 불러오고 만들면 기존 등록분이 사라지므로 막음)
     const SITE_KEY = 'malang_tool_site';
-    const DEFAULT_SITE = 'https://softsweettarot.github.io/diary/';   // 말랑달콤 다이어리 사이트 주소
+    const DEFAULT_SITE = 'https://softsweetdiary.com/';   // 말랑달콤 다이어리 사이트 주소
     const LAST_KEY = 'malang_tool_last_built';
     const LAST_SKIN_KEY = 'malang_tool_last_built_skins';
     let skinCurrent = [];     // 지금 등록된 스킨 [{no, name, by, skin, removed?}]

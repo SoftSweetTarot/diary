@@ -8,7 +8,7 @@
 <!--
   🎬 말랑달콤 다이어리 - 시연 영상 녹화 도구 (recorder.html)
   - 여백이 있는 예쁜 바탕 위에, 기기(아이폰 · 갤럭시 · 아이패드 · 노트북 · 모니터) 안에 들어간 다이어리를 보여 주고 그대로 녹화해요.
-  - 열기 : PC 크롬(또는 엣지)에서 https://softsweettarot.github.io/diary/recorder.html
+  - 열기 : PC 크롬(또는 엣지)에서 https://softsweetdiary.com/recorder.html
            (다이어리와 같은 주소에서 열어야 마우스 커서 · 클릭 효과가 영상에 함께 찍혀요)
   - F2 : 녹화 시작 / 끝 → 끝날 때마다 mp4 파일로 저장 (저장 폴더를 골라 두면 그 폴더에 바로, 아니면 '다운로드' 폴더)
   - 영상 : 1920×1080 (가로) · 1080×1920 (세로) 등 정해진 크기 · 1초 30장 · H.264 + AAC 보통 mp4 (mp4-muxer : MIT 라이선스)
@@ -151,7 +151,7 @@
 <script>
 (() => {
     const $ = id => document.getElementById(id);
-    const DIARY_URL = location.protocol.startsWith('http') ? new URL('./index.html', location.href).href : 'https://softsweettarot.github.io/diary/';
+    const DIARY_URL = location.protocol.startsWith('http') ? new URL('./index.html', location.href).href : 'https://softsweetdiary.com/';
     const SAVE_KEY = 'malang_recorder';
 
     /* ---------- 기기 (w·h = 다이어리가 보이는 화면 크기 · top = 위쪽 상태 표시줄) ---------- */
@@ -206,7 +206,7 @@
         let top = '', extra = '', after = '';
         if (d.kind === 'phone') top = `<div class="dv-top" style="height:${d.top}px;font-size:15px">${time}${icons}</div>` + (d.notch === 'island' ? '<i class="island"></i>' : '<i class="punch"></i>');
         if (d.kind === 'tablet') top = `<div class="dv-top" style="height:${d.top}px;font-size:13px">${time}${icons}</div>`;
-        if (d.kind === 'laptop' || d.kind === 'monitor') top = `<div class="browser" style="height:${d.top}px"><span class="dots"><i></i><i></i><i></i></span><span class="addr">🔒 softsweettarot.github.io/diary</span><span style="width:50px"></span></div>`;
+        if (d.kind === 'laptop' || d.kind === 'monitor') top = `<div class="browser" style="height:${d.top}px"><span class="dots"><i></i><i></i><i></i></span><span class="addr">🔒 softsweetdiary.com</span><span style="width:50px"></span></div>`;
         if (d.kind === 'phone') extra = `<i class="btn-side" style="left:-${d.edge + 3}px;top:170px;height:34px"></i><i class="btn-side" style="left:-${d.edge + 3}px;top:220px;height:60px"></i><i class="btn-side" style="left:-${d.edge + 3}px;top:290px;height:60px"></i><i class="btn-side" style="right:-${d.edge + 3}px;top:240px;height:96px"></i>`;
         if (d.kind === 'tablet') extra = d.cam === 'left' ? `<i class="cam" style="left:${d.b / 2 - 4}px;top:50%;margin-top:-4px"></i>` : `<i class="cam" style="top:${d.b / 2 - 4}px;left:50%;margin-left:-4px"></i>`;
         if (d.kind === 'laptop' || d.kind === 'monitor') extra = `<i class="cam" style="top:${d.b / 2 - 4}px;left:50%;margin-left:-4px"></i>`;
@@ -336,7 +336,7 @@
     setInterval(() => { try { const f = $('app'); if (f && f.contentDocument && !f.contentDocument.__malangRec) hookApp(); } catch (e) {} }, 1000);
     function showWarn() {
         const w = $('warn'); w.style.display = 'block';
-        w.innerHTML = '⚠️ 이 도구를 컴퓨터 파일로 직접 열어서 <b>마우스 커서 · 클릭 효과가 영상에 찍히지 않아요.</b><br>크롬 주소창에 <b>softsweettarot.github.io/diary/recorder.html</b> 을 열어 주세요.';
+        w.innerHTML = '⚠️ 이 도구를 컴퓨터 파일로 직접 열어서 <b>마우스 커서 · 클릭 효과가 영상에 찍히지 않아요.</b><br>크롬 주소창에 <b>softsweetdiary.com/recorder.html</b> 을 열어 주세요.';
     }
 
     /* ---------- 🎬 녹화 (F2) ----------
