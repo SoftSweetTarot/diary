@@ -105,10 +105,6 @@
             document.getElementById('svcBack').classList.remove('mt-none');
             if (id === 'daily') svcDailyBadges();
         }
-        function openHelpFromService() {
-            closeModal('serviceModal');
-            openModal('helpModal');
-        }
         function goCafe() {
             window.open(CAFE_URL, '_blank', 'noopener');
         }

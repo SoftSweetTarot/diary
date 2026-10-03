@@ -188,16 +188,16 @@
                 <div class="pg-qr-code">채팅에 적을 저금 코드 <b>${pig.code || '로그인하면 생겨요'}</b></div>`;
             pigQr(pig.chat);
         }
-        function pigQr(url) {
+        function pigQr(url, id = 'pigQr') {                // 🖼️ 배경화면(js/wall.js)도 같이 써요
             const draw = () => {
-                const el = document.getElementById('pigQr'); if (!el) return;
+                const el = document.getElementById(id); if (!el) return;
                 try { const q = qrcode(0, 'M'); q.addData(url); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 5, margin: 2, scalable: true }); }
                 catch (e) { el.innerHTML = '<span>QR 코드를 만들지 못했어요</span>'; }
             };
             if (typeof qrcode === 'function') return draw();
             const sc = document.createElement('script');
             sc.src = PIG_QR_LIB; sc.onload = draw;
-            sc.onerror = () => { const el = document.getElementById('pigQr'); if (el) el.innerHTML = '<span>QR 코드를 불러오지 못했어요</span>'; };
+            sc.onerror = () => { const el = document.getElementById(id); if (el) el.innerHTML = '<span>QR 코드를 불러오지 못했어요</span>'; };
             document.head.appendChild(sc);
         }
         /* 휴대폰 : 저금 코드 복사 + 채팅방 열기 (누른 순간 바로 열어야 막히지 않아요) */

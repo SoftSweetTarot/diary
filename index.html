@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261003-117">
+    <link rel="stylesheet" href="css/style.css?v=20261003-118">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -122,83 +122,6 @@
                 <button class="btn" id="customAlertCancelBtn" style="display:none; flex:1; justify-content:center;" onclick="closeMsg(false)">취소</button>
                 <button class="btn" id="customAlertConfirmBtn" style="flex:1; justify-content:center; background:var(--primary-accent); color:#fff; border-color:var(--primary-accent);" onclick="closeMsg(true)">확인</button>
             </div>
-        </div>
-    </div>
-
-    <!-- 도움말 모달 -->
-    <div class="modal" id="helpModal">
-        <div class="modal-content help-content">
-            <div class="modal-title">❓ 도움말</div>
-            <div class="help-body">
-                <div class="help-section-title">📝 꾸미기</div>
-                <div class="help-rows">
-                    <div class="help-k">🎨 스티커</div><div class="help-v">이모지를 골라 붙여요</div>
-                    <div class="help-k">✏️ 글쓰기</div><div class="help-v">글상자 추가 · 고르면 글꼴·색·크기 바꾸기</div>
-                    <div class="help-k">🖼️ 이미지</div><div class="help-v">내 기기의 사진·움직이는 GIF 넣기</div>
-                    <div class="help-k">📚 그림모음</div><div class="help-v">준비된 이미지 고르기 · <b>⚙ 배치</b>로 한 페이지 개수 조절</div>
-                    <div class="help-k">↕️ 순서</div><div class="help-v">고른 것의 겹친 순서를 맨 앞 · 한 칸 앞 · 한 칸 뒤 · 맨 뒤로</div>
-                    <div class="help-k">🗑️ 삭제</div><div class="help-v">고른 것 지우기</div>
-                </div>
-                <div class="help-section-title">🖐️ 붙인 것 다루기</div>
-                <div class="help-rows">
-                    <div class="help-k">누르기</div><div class="help-v">고르기 (빈 곳을 누르면 풀려요)</div>
-                    <div class="help-k">끌기</div><div class="help-v">옮기기</div>
-                    <div class="help-k">🌸 계절 테마</div><div class="help-v">👗 스킨 → 계절 테마 켜기 : 계절 색 + 꽃잎·물방울·낙엽·눈 · ✏️ 스티커 창에 그 계절에만 쓰는 스티커</div>
-                    <div class="help-k">📷 사진 틀</div><div class="help-v">사진을 누르고 ✥ 사진 꾸미기 → 틀 : 폴라로이드 · 필름 · 하트 … (폴라로이드는 아래에 글씨도!)</div>
-                    <div class="help-k">🖍️ 펜</div><div class="help-v">펜 · 형광펜으로 그리고 밑줄 긋기 · ✓ 완료하면 그림 하나가 돼요</div>
-                    <div class="help-k">📝 글상자 모양</div><div class="help-v">글상자를 고르고 ✥ 글 꾸미기 → 모양 : 줄노트 · 포스트잇 · 말풍선 · 편지지 · 칠판 …</div>
-                    <div class="help-k saver-only">🎀 마스킹테이프</div><div class="help-v saver-only">🎨 스티커 → 🎀 마스킹테이프 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>
-                    <div class="help-k">🔴 위 핸들</div><div class="help-v">돌리기</div>
-                    <div class="help-k">🟢 아래 핸들</div><div class="help-v">크기 바꾸기 (PC는 마우스 휠도 돼요)</div>
-                </div>
-                <div class="help-section-title">💾 저장</div>
-                <div class="help-rows">
-                    <div class="help-k">☁ 웹 저장</div><div class="help-v">구글 드라이브에 날짜별로 저장 · 쓰는 동안 자동 저장</div>
-                    <div class="help-k">🖼 PNG 저장</div><div class="help-v">지금 페이지를 사진으로 내려받기</div>
-                    <div class="help-k">☁ 표시</div><div class="help-v">왼쪽 아래에서 저장 상태 확인</div>
-                </div>
-                <div class="help-section-title">👗 스킨</div>
-                <div class="help-rows">
-                    <div class="help-k">🎨 기본스킨</div><div class="help-v">다이어리 색 고르기 · 만들기 · 카페에 공유</div>
-                    <div class="help-k">☁️ 🍬 패턴</div><div class="help-v">다이어리 뒤 배경에 무늬 깔기</div>
-                    <div class="help-k">✏️ 패턴 만들기</div><div class="help-v">무늬 · 내 이미지 · 직접 그려서 나만의 패턴</div>
-                </div>
-                <div class="help-section-title">🎵 배경음악</div>
-                <div class="help-rows">
-                    <div class="help-k">🎵 고르기</div><div class="help-v">게임 · 클래식 · 피아노 · 동요 62곡 · 클래식·피아노는 처음부터 끝까지 전곡</div>
-                    <div class="help-k">━ 막대</div><div class="help-v">끌어서 원하는 곳부터 듣기 · ⏸ 뒤 ▶ 는 멈춘 곳부터</div>
-                    <div class="help-k">🎐 🎹 👾</div><div class="help-v">오르골 · 피아노 · 8비트 소리로 바꾸기</div>
-                    <div class="help-k">🎵 막대</div><div class="help-v">창을 닫아도 계속 나와요 · 오른쪽 아래 막대로 멈추기</div>
-                </div>
-                <div class="help-section-title">☕ 카페</div>
-                <div class="help-rows">
-                    <div class="help-k">고르는 법</div><div class="help-v">먼저 카테고리를 고르고, 그 안에서 하고 싶은 놀이를 골라요</div>
-                    <div class="help-k">🌱 매일 말랑</div><div class="help-v">📅 출석 도장판 : 하루 한 번 도장 · 모으면 움직이는 🎁 출석 스티커 · 🍀 오늘의 행운 : 네잎클로버를 찾으면 하루 행운이 열려요 · 💬 오늘의 질문 : 대답을 오늘 일기에 남기고, 내년 같은 날 그때의 나와 만나요 · 🌷 화분 키우기 : 일기를 쓴 날 물 한 번 · 🎁 랜덤박스 : 로그인하면 하루 한 번 캡슐 뽑기 · 🩷 생리 달력 : 다음 예정일 · 가임기 미리 보기 (내 드라이브에만 저장)</div>
-                    <div class="help-k">🔮 운세·마음</div><div class="help-v">포춘카드 · 🌙 꿈해몽 · 🎍 토정비결 · 💕 이름 궁합 (누가 먼저 쓰느냐에 따라 결과가 달라요) · 🧠 심리테스트 (내 결과는 목록에 남아요) · 결과는 📌 다이어리에 붙일 수 있어요</div>
-                    <div class="help-k">🎨 만들기·꾸미기</div><div class="help-v">👧 인형방 : 인형을 만들어 붙이기 · 두 번 누르면 표정 바꾸기 · 📸 포토부스 : 네컷 · 2×2 · 한 컷 사진을 찍어 꾸미고 붙이기 · ✂️ 스티커 만들기 : 내 사진 · 글씨로 하얀 테두리 스티커 (스티커 창 ✂️ 내 스티커)</div>
-                    <div class="help-k">🕹️ 게임</div><div class="help-v">오락실 게임 6가지 · 🧠 두뇌 게임 7가지 · 최고 점수는 PC·휴대폰 어디서나 같아요 · 🏆 명예의 전당 : 게임별 이번 주 · 역대 순위</div>
-                    <div class="help-k">🎧 보고·듣기 · 💌 함께하기</div><div class="help-v">💌 익명 편지함 : 이름 없이 편지 주고받기 (하루 3통 보내기 · 2통 받기 · 답장 한 번) · 👭 말랑달콤 모임방 : 네이버 카페로 · 나머지는 곧 열려요!</div>
-                    <div class="help-k">🐷 저금통</div><div class="help-v">말랑달콤 저금통에 마음이 가는 만큼 넣어 주면 한 달 동안 🎀 마스킹테이프 · 🍬 달콤패턴이 열려요 (금액은 자유 · 이미 꾸민 건 그대로 남아요)</div>
-                    <div class="help-k">💡 이어지는 재미</div><div class="help-v">✏️ 오늘 일기를 쓰면 🌷 화분에 물 · 🔮 운세·🍀 행운 결과나 👧 인형을 오늘 페이지에 📌 붙여도 일기를 쓴 걸로 쳐요 · 📅 도장을 모으면 ✏️ 스티커 창에 🎁 출석 스티커가 열려요</div>
-                    <div class="help-k">창 닫기</div><div class="help-v">창 제목 오른쪽 ✕ 로 닫고, 왼쪽 ← 로 앞 화면으로 돌아가요</div>
-                </div>
-                <div class="help-section-title">⚙ 설정</div>
-                <div class="help-rows">
-                    <div class="help-k">📐 페이지 크기</div><div class="help-v">다이어리 가로·세로 크기</div>
-                    <div class="help-k">⚙️ 설정</div><div class="help-v">폰트 · 자동 저장 주기 · 백업 · 저장 용량</div>
-                    <div class="help-k">⏳ D-day</div><div class="help-v">카페 → 매일 말랑 → D-day : 다가오는 날 · 함께한 날 · 해마다 오는 날 · 📌 페이지에 보이기</div>
-                    <div class="help-k">👀 보이는 것</div><div class="help-v">⚙ 설정 → 설정 → 👀 페이지에 보이는 것 : 기분 · 날씨 도장 / D-day / 계절 장식 켜고 끄기</div>
-                    <div class="help-k">🔍 검색</div><div class="help-v">다이어리 위쪽 날짜 뒤 🔍 : 낱말로 지난 일기 찾기 · 기분 이모지를 누르면 그 기분이었던 날 모아 보기</div>
-                    <div class="help-k">😊 기분 · 날씨 도장</div><div class="help-v">페이지 오른쪽 위 동그라미를 눌러 오늘의 기분 · 날씨를 콕! (한 달 모아보기에도 보여요)</div>
-                    <div class="help-k">📅 한 달 모아보기</div><div class="help-v">다이어리 위쪽 📅 날짜를 누르면 한 달 달력 · 날짜를 누르면 그날 일기로</div>
-                    <div class="help-k">🔒 다이어리 잠금</div><div class="help-v">⚙ 설정 → 🔒 다이어리 잠금 : 4자리 비밀번호 · 잊으면 구글 계정으로 다시 로그인해서 풀기</div>
-                    <div class="help-k">📲 앱으로 설치</div><div class="help-v">⚙ 설정 → 📲 앱으로 설치하기 : 홈 화면에 아이콘이 생겨 앱처럼 열려요</div>
-                    <div class="help-k">🔊 소리</div><div class="help-v">⚙️ 설정 → 🔊 소리에서 연출 소리를 켜고 끄거나 크기를 바꿔요. 운세·게임 같은 연출 화면의 🔊 버튼을 누르면 모든 연출 소리가 한 번에 꺼져요.</div>
-                    <div class="help-k">💌 건의함</div><div class="help-v">⚙ 설정 → 💌 건의함 : 제작자에게 의견 보내기</div>
-                </div>
-                <div class="help-note">💡 작은 창은 <b>제목을 끌어 옮기고</b>, <b>👀 꾹 눌러 보기</b>로 뒤의 다이어리를 확인할 수 있어요.</div>
-            </div>
-            <button class="btn" style="width:100%; margin-top:15px; justify-content:center; flex-shrink:0;" onclick="closeModal('helpModal')">닫기</button>
         </div>
     </div>
 
@@ -635,7 +558,7 @@
                 <button class="svc-cat" type="button" onclick="svcOpenCat('watch')"><span class="svc-cat-icon">🎧</span><b>보고·듣기</b><small>음악 · 이야기 · 영상</small><i>음악듣기 · 팟캐스트 · 오디오북 · 만화방 · 달콤영상</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('together')"><span class="svc-cat-icon">💌</span><b>함께하기</b><small>말랑이들과 나누기</small><i>익명 편지함 · 말랑달콤 모임방</i></button>
                 <button class="svc-cat svc-extra svc-pig" type="button" onclick="window.openPiggy ? openPiggy() : 0"><span class="svc-cat-icon">💗</span><b>말랑달콤 저금통</b><small>작은 마음, 달콤한 선물</small></button>
-                <button class="svc-cat svc-extra" type="button" onclick="openHelpFromService()"><span class="svc-cat-icon">❓</span><b>다이어리 도움말</b><small>사용법 한눈에</small></button>
+                <button class="svc-cat svc-extra svc-wall" type="button" onclick="window.openWall ? openWall() : 0"><span class="svc-cat-icon">🖼️</span><b>말랑달콤 배경화면</b><small>움직이는 배경화면</small></button>
             </div>
             <!-- 2단계 : 카테고리 안에서 놀이 고르기 -->
             <div class="svc-panel" id="svcPanel-daily" hidden>
@@ -703,6 +626,15 @@
         </div>
     </div>
 
+    <!-- 🖼️ 말랑달콤 배경화면 (js/wall.js 가 안을 채워요 · 목록 : wallpapers/list.txt) -->
+    <div class="modal" id="wallModal">
+        <div class="modal-content pg-content">
+            <div class="modal-title">🖼️ 말랑달콤 배경화면</div>
+            <div class="pg-wrap" id="wlBody"></div>
+            <button class="btn" onclick="closeWall()">닫기</button>
+        </div>
+    </div>
+
     <!-- 💾 저장 방법 고르기 -->
     <div class="modal" id="saveChooser">
         <div class="modal-content save-chooser">
@@ -746,66 +678,67 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261003-117"></script>
-    <script src="js/sound.js?v=20261003-117"></script>
-    <script src="js/app.js?v=20261003-117"></script>
-    <script src="js/page.js?v=20261003-117"></script>
-    <script src="js/elements.js?v=20261003-117"></script>
-    <script src="js/settings.js?v=20261003-117"></script>
-    <script src="js/patterns.js?v=20261003-117"></script>
+    <script src="js/drive.js?v=20261003-118"></script>
+    <script src="js/sound.js?v=20261003-118"></script>
+    <script src="js/app.js?v=20261003-118"></script>
+    <script src="js/page.js?v=20261003-118"></script>
+    <script src="js/elements.js?v=20261003-118"></script>
+    <script src="js/settings.js?v=20261003-118"></script>
+    <script src="js/patterns.js?v=20261003-118"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261003-117"></script>
-    <script src="js/skins.js?v=20261003-117"></script>
-    <script src="js/pattern-maker.js?v=20261003-117"></script>
-    <script src="js/doll-render.js?v=20261003-117"></script>
-    <script src="js/doll-store.js?v=20261003-117"></script>
-    <script src="js/doll-room.js?v=20261003-117"></script>
-    <script src="js/service.js?v=20261003-117"></script>
+    <script src="js/pattern-recipe.js?v=20261003-118"></script>
+    <script src="js/skins.js?v=20261003-118"></script>
+    <script src="js/pattern-maker.js?v=20261003-118"></script>
+    <script src="js/doll-render.js?v=20261003-118"></script>
+    <script src="js/doll-store.js?v=20261003-118"></script>
+    <script src="js/doll-room.js?v=20261003-118"></script>
+    <script src="js/service.js?v=20261003-118"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261003-117"></script>
-    <script src="js/presence.js?v=20261003-117"></script>
+    <script src="js/gacha.js?v=20261003-118"></script>
+    <script src="js/presence.js?v=20261003-118"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261003-117"></script>
+    <script src="js/bgm.js?v=20261003-118"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261003-117"></script>
+    <script src="js/fortune.js?v=20261003-118"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261003-117"></script>
-    <script src="js/hof.js?v=20261003-117"></script>
+    <script src="js/arcade.js?v=20261003-118"></script>
+    <script src="js/hof.js?v=20261003-118"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/ritual.js?v=20261003-117"></script>
-    <script src="js/dream.js?v=20261003-117"></script>
+    <script src="js/ritual.js?v=20261003-118"></script>
+    <script src="js/dream.js?v=20261003-118"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261003-117"></script>
-    <script src="js/plant.js?v=20261003-117"></script>
-    <script src="js/attend-stickers.js?v=20261003-117"></script>
-    <script src="js/attend.js?v=20261003-117"></script>
-    <script src="js/luck.js?v=20261003-117"></script>
-    <script src="js/question-data.js?v=20261003-117"></script>
-    <script src="js/question.js?v=20261003-117"></script>
-    <script src="js/tape.js?v=20261003-117"></script>
-    <script src="js/paper.js?v=20261003-117"></script>
-    <script src="js/draw.js?v=20261003-117"></script>
-    <script src="js/frame.js?v=20261003-117"></script>
-    <script src="js/season-data.js?v=20261003-117"></script>
-    <script src="js/season.js?v=20261003-117"></script>
-    <script src="js/lock.js?v=20261003-117"></script>
-    <script src="js/cycle.js?v=20261003-117"></script>
-    <script src="js/month.js?v=20261003-117"></script>
-    <script src="js/stamp.js?v=20261003-117"></script>
-    <script src="js/search.js?v=20261003-117"></script>
-    <script src="js/dday.js?v=20261003-117"></script>
-    <script src="js/show.js?v=20261003-117"></script>
-    <script src="js/photobooth.js?v=20261003-117"></script>
-    <script src="js/stickermaker.js?v=20261003-117"></script>
-    <script src="js/namematch.js?v=20261003-117"></script>
-    <script src="js/psytest-data.js?v=20261003-117"></script>
-    <script src="js/psytest.js?v=20261003-117"></script>
-    <script src="js/letter.js?v=20261003-117"></script>
-    <script src="js/install.js?v=20261003-117"></script>
-    <script src="js/piggy.js?v=20261003-117"></script>
+    <script src="js/tojeong.js?v=20261003-118"></script>
+    <script src="js/plant.js?v=20261003-118"></script>
+    <script src="js/attend-stickers.js?v=20261003-118"></script>
+    <script src="js/attend.js?v=20261003-118"></script>
+    <script src="js/luck.js?v=20261003-118"></script>
+    <script src="js/question-data.js?v=20261003-118"></script>
+    <script src="js/question.js?v=20261003-118"></script>
+    <script src="js/tape.js?v=20261003-118"></script>
+    <script src="js/paper.js?v=20261003-118"></script>
+    <script src="js/draw.js?v=20261003-118"></script>
+    <script src="js/frame.js?v=20261003-118"></script>
+    <script src="js/season-data.js?v=20261003-118"></script>
+    <script src="js/season.js?v=20261003-118"></script>
+    <script src="js/lock.js?v=20261003-118"></script>
+    <script src="js/cycle.js?v=20261003-118"></script>
+    <script src="js/month.js?v=20261003-118"></script>
+    <script src="js/stamp.js?v=20261003-118"></script>
+    <script src="js/search.js?v=20261003-118"></script>
+    <script src="js/dday.js?v=20261003-118"></script>
+    <script src="js/show.js?v=20261003-118"></script>
+    <script src="js/photobooth.js?v=20261003-118"></script>
+    <script src="js/stickermaker.js?v=20261003-118"></script>
+    <script src="js/namematch.js?v=20261003-118"></script>
+    <script src="js/psytest-data.js?v=20261003-118"></script>
+    <script src="js/psytest.js?v=20261003-118"></script>
+    <script src="js/letter.js?v=20261003-118"></script>
+    <script src="js/install.js?v=20261003-118"></script>
+    <script src="js/piggy.js?v=20261003-118"></script>
+    <script src="js/wall.js?v=20261003-118"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
