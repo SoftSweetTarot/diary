@@ -663,7 +663,7 @@
             if (!nick) { try { nick = localStorage.getItem('malang_pattern_nick') || ''; } catch (e) {} }
             return `<p class="dr-intro">🎉 인형이 완성됐어요! 이름을 지어 주고 저장하거나 일기에 붙여 보세요.</p>
                 <div class="dr-group"><h4>인형 이름 <small class="dr-note" id="drFileName"></small></h4><input type="text" id="drName" class="btn dr-text" maxlength="12" value="${dollText(d.name, 12)}" placeholder="예) 로라"></div>
-                <div class="dr-group"><h4>만든 사람 (닉네임)</h4><input type="text" id="drBy" class="btn dr-text" maxlength="12" value="${dollText(nick, 12)}" placeholder="카페 닉네임"></div>
+                <div class="dr-group"><h4>만든 사람 (닉네임)</h4><input type="text" id="drBy" class="btn dr-text" maxlength="12" value="${dollText(nick, 12)}" placeholder="모임방 닉네임"></div>
                 <div class="dr-group"><h4>제작 기록</h4><p class="dr-record">${c.pieces ? '🔥 어려움' : '😊 쉬움'} · ⏱ ${dollTimeText(d.stats.ms)} · 🧩 조각 ${c.pieces}개 · 📍 점 ${c.pts.toLocaleString()}개</p></div>
                 <div class="dr-done-btns">
                     <button type="button" class="btn btn-primary" data-ddone="attach">${DR.attachEl ? '📔 일기의 이 인형 바꾸기' : '📔 일기에 붙이기'}</button>
@@ -673,7 +673,7 @@
                     <button type="button" class="btn" data-ddone="replay">▶ 만드는 과정 다시보기</button>
                 </div>
                 <label class="dr-check"><input type="checkbox" id="drClear"> 사진을 인형만 투명 배경으로 저장</label>
-                <div class="dr-group"><h4>자랑 카드 미리보기 (카페에 올리기 좋아요)</h4><img id="drCard" class="dr-card" alt="자랑 카드 미리보기"></div>`;
+                <div class="dr-group"><h4>자랑 카드 미리보기 (모임방에 올리기 좋아요)</h4><img id="drCard" class="dr-card" alt="자랑 카드 미리보기"></div>`;
         }
         function afterDonePanel() {
             const fileHint = () => {
@@ -741,14 +741,14 @@
             try {
                 const clear = document.getElementById('drClear') && document.getElementById('drClear').checked;
                 downloadBlob(await dollCardBlob(DR.doll, clear), `malang_doll_${dollStamp()}.png`);
-                toast('📷 사진으로 저장했어요. 카페 인형 자랑 게시판에 올려 보세요!');
+                toast('📷 사진으로 저장했어요. 모임방 인형 자랑 게시판에 올려 보세요!');
             } catch (e) { showMsg('사진을 만들지 못했어요.<br>잠시 후 다시 시도해 주세요.'); }
         }
         function dollSaveFile() {
             const d = sanitizeDoll(DR.doll);
             if (!d) { showMsg('⚠ 인형이 너무 커서 파일로 저장할 수 없어요.'); return; }
             downloadBlob(new Blob([JSON.stringify({ malang_doll: 1, name: d.name, by: d.by, doll: d })], { type: 'text/plain;charset=utf-8' }), `malang_doll_${dollStamp()}.malang.txt`);
-            toast('💾 인형 파일을 저장했어요. 카페에 첨부하면 다른 사람이 불러올 수 있어요!');
+            toast('💾 인형 파일을 저장했어요. 모임방에 첨부하면 다른 사람이 불러올 수 있어요!');
         }
         function importDollFile(e) {
             const f = e.target.files && e.target.files[0];

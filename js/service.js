@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/service.js
-   겉표지 공지 · 놀이터 창 · 후원하기 · 건의함
+   겉표지 공지 · 카페 창 · 건의함
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → service (index.html 참고) */
         /* =====================================================================
            📢 겉표지 공지 이미지
@@ -61,18 +61,18 @@
         }
 
         /* =====================================================================
-           🎠 놀이터 창 : 카테고리 6개(매일 말랑 · 운세·마음 · 만들기·꾸미기 · 게임 · 보고·듣기 · 함께하기) → 그 안의 놀이
+           ☕ 카페 창 : 카테고리 6개(매일 말랑 · 운세·마음 · 만들기·꾸미기 · 게임 · 보고·듣기 · 함께하기) → 그 안의 놀이
            - 아직 안 만든 기능은 버튼에 '(준비중)'이 붙어 있고, 누르면 안내 메시지만 떠요.
              기능을 만들면 index.html 버튼의 class 에서 'soon' 과 <small>(준비중)</small> 을 빼고 아래 함수 내용을 바꾸면 돼요.
            ===================================================================== */
-        const CAFE_URL = 'https://cafe.naver.com/sarangloveis';   // ☕ 말랑달콤 카페
+        const CAFE_URL = 'https://cafe.naver.com/sarangloveis';   // 👭 말랑달콤 모임방 (네이버 카페)
 
-        /* 🎠 놀이터 : 1단계 카테고리 → 2단계 놀이 (놀이터를 열 때마다 카테고리부터 · js/settings.js openModal) */
+        /* ☕ 카페 : 1단계 카테고리 → 2단계 놀이 (카페를 열 때마다 카테고리부터 · js/settings.js openModal) */
         function svcShowCats() {
             const cats = document.getElementById('svcCats'); if (!cats) return;
             cats.hidden = false;
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = true; });
-            document.getElementById('svcTitle').textContent = '🎠 놀이터';
+            document.getElementById('svcTitle').textContent = '☕ 카페';
             document.getElementById('svcBack').classList.add('mt-none');      // 맨 처음 화면에서는 ← 숨김
             svcDailyBadges();
         }
@@ -101,7 +101,7 @@
             const panel = document.getElementById('svcPanel-' + id); if (!panel) return;
             document.getElementById('svcCats').hidden = true;
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = p !== panel; });
-            document.getElementById('svcTitle').textContent = SVC_CAT_NAMES[id] || '🎠 놀이터';
+            document.getElementById('svcTitle').textContent = SVC_CAT_NAMES[id] || '☕ 카페';
             document.getElementById('svcBack').classList.remove('mt-none');
             if (id === 'daily') svcDailyBadges();
         }
@@ -122,23 +122,6 @@
         function openMusic() { comingSoon('🎧 음악듣기'); }      // AI로 만든 음악 목록 (툴바 🎵 배경음악과는 다른 기능)
         function openRandomBox() { if (typeof openGacha === 'function') openGacha(); else comingSoon('🎁 랜덤박스'); }   // js/gacha.js
         function openShop() { showMsg('🛍️ 말랑상점은 준비 중이에요.<br>예쁜 패턴과 꾸미기 이미지를 곧 만나보세요!'); }
-
-        /* =====================================================================
-           💝 후원하기 : 계좌번호 복사
-           ===================================================================== */
-        async function copyDonateAccount() {
-            const text = document.getElementById('donateAccount').textContent.trim();
-            try {
-                await navigator.clipboard.writeText(text);
-            } catch (e) {
-                const ta = document.createElement('textarea');
-                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-                document.body.appendChild(ta); ta.select();
-                try { document.execCommand('copy'); } catch (er) {}
-                ta.remove();
-            }
-            toast('📋 계좌번호를 복사했어요: ' + text);
-        }
 
         /* =====================================================================
            💌 건의함 : 작성한 내용을 구글 시트(Apps Script)로 전송

@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/stickermaker.js
-   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (놀이터 → 만들기·꾸미기 → ✂️ 스티커 만들기)
+   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (카페 → 만들기·꾸미기 → ✂️ 스티커 만들기)
    - 사진 스티커 : 📷 찍기 · 🖼 고르기 → 모양(동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
    - 글씨 스티커 : 글자 · 글꼴 · 색을 골라 말랑한 글씨 스티커
    - 💾 내 스티커에 저장 : ✏️ 스티커 창 → ✂️ 내 스티커 에서 언제든 다시 붙여요 (최대 40개)
@@ -232,7 +232,7 @@
         /* ---------- 내 스티커 (만들기 화면 · ✏️ 스티커 창 공용) ---------- */
         function smGrid(forModal) {
             const L = smS.list || [];
-            if (!L.length) return `<div class="smk-empty">${forModal ? '✂️ 아직 만든 스티커가 없어요.<br>놀이터 → 만들기·꾸미기 → 스티커 만들기에서 만들어 보세요!' : '아직 만든 스티커가 없어요'}</div>`;
+            if (!L.length) return `<div class="smk-empty">${forModal ? '✂️ 아직 만든 스티커가 없어요.<br>카페 → 만들기·꾸미기 → 스티커 만들기에서 만들어 보세요!' : '아직 만든 스티커가 없어요'}</div>`;
             return L.map((s, i) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button><i onclick="smDel(${i})" title="지우기">✕</i></span>`).join('');
         }
         async function smRenderMine() {

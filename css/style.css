@@ -308,18 +308,10 @@
         @media (prefers-reduced-motion: reduce) { .sending-spinner { animation-duration: 2.5s; } }
         .feedback-input:disabled { opacity: .7; }
 
-        /* 🎠 놀이터 모달 */
+        /* ☕ 카페 모달 */
         .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .service-btn { flex-direction: column; justify-content: center; gap: 4px; padding: 12px 4px; font-size: 13px; }
         .service-icon { font-size: 1.7rem; line-height: 1; }
-
-        /* 💝 후원하기 모달 */
-        #donateModal { z-index: 1100; }
-        .donate-card { background: #fff0f5; border: 2px dashed var(--border-color); border-radius: 12px; padding: 10px 14px; }
-        .donate-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 15px; color: #444; user-select: text; -webkit-user-select: text; }
-        .donate-row + .donate-row { border-top: 1px dashed var(--border-color); }
-        .donate-label { color: #888; flex-shrink: 0; }
-        .donate-temp { font-size: 12px; color: #999; text-align: center; margin: 8px 0 0; }
 
         /* 📢 겉표지 공지 이미지 (jpg · png · webp · 움직이는 gif 모두 가능) */
         .cover-notice {
@@ -569,7 +561,7 @@
         .ls-gauge-fill.full { background: linear-gradient(90deg, #ff8a80, #e53935); }
         .ls-warn { font-size: 12px; color: #c62828; background: #fff1f0; border: 1px dashed #ef9a9a; border-radius: 8px; padding: 5px 8px; margin-top: 5px; text-align: left; line-height: 1.5; }
 
-        /* 🎠 놀이터 : 준비중인 버튼은 살짝 흐리게 */
+        /* ☕ 카페 : 준비중인 버튼은 살짝 흐리게 */
         .service-btn.soon { opacity: .72; }
         .service-btn.soon small { color: #bbb; }
 
@@ -1007,7 +999,7 @@
         .tj-key { text-align: center; color: #8a7460; font-size: 14px !important; margin: 4px 0 0 !important; }
         .tj-key b { color: var(--tj-red); font-size: 16px; margin-left: 4px; }
 
-        /* ===== 🎠 놀이터 카테고리 (1단계 카테고리 → 2단계 놀이) ===== */
+        /* ===== ☕ 카페 카테고리 (1단계 카테고리 → 2단계 놀이) ===== */
         .svc-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .svc-cat { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 14px 8px 12px; border-radius: 18px; cursor: pointer; font-family: inherit;
             border: 2px solid var(--border-color); background: linear-gradient(180deg, #fff 0%, var(--page-bg) 100%); color: #444; transition: transform .15s, box-shadow .15s; }
@@ -1159,7 +1151,7 @@
         .ins-note { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: #8a6a78; text-align: left; word-break: keep-all; }
         .ins-go { width: 100%; justify-content: center; font-size: 16px; padding: 12px; background: #ff8fab; color: #fff; border-color: #ff8fab; }
 
-        /* ===== 💡 놀이터 팁 · 오늘 할 일 표시 ===== */
+        /* ===== 💡 카페 팁 · 오늘 할 일 표시 ===== */
         .svc-tip { margin: 12px 2px 0; padding: 10px 12px; border-radius: 12px; background: #fff6e8; border: 1px dashed #f3c98b; color: #7a5a3a;
             font-size: 12.5px; line-height: 1.6; text-align: left; word-break: keep-all; }
         .svc-tip b { color: #d9822b; }

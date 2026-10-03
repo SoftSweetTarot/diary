@@ -113,7 +113,7 @@
             openModal('skinBasicModal');
         }
 
-        /* ---------- 🌟 모두의 스킨 (카페에서 받아 관리자가 등록 : js/community-skins.js) ----------
+        /* ---------- 🌟 모두의 스킨 (모임방에서 받아 관리자가 등록 : js/community-skins.js) ----------
            목록 한 줄 : {"no":1,"tier":"free","name":"봄날","by":"닉네임","skin":{색 5개}}  →  id 'cs:번호'
            파일이 없거나 깨져도 다이어리는 정상 동작 (모두의 스킨만 안 보임) */
         let communitySkinItems = null;
@@ -299,7 +299,7 @@
                     const acts = document.createElement('div');
                     acts.className = 'pat-actions';
                     const send = document.createElement('button');
-                    send.type = 'button'; send.className = 'btn'; send.textContent = '💾'; send.title = '파일로 저장 (카페에 올리기용)';
+                    send.type = 'button'; send.className = 'btn'; send.textContent = '💾'; send.title = '파일로 저장 (모임방에 올리기용)';
                     send.onclick = () => downloadMyPattern(p.uid);
                     const del = document.createElement('button');
                     del.type = 'button'; del.className = 'btn'; del.textContent = '🗑'; del.title = '삭제';

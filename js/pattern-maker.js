@@ -1,11 +1,11 @@
 /* 말랑달콤 다이어리 - js/pattern-maker.js
-   ✏️ 패턴 만들기 3종 · 📂 내 패턴 · 💾 패턴 파일 저장 · 🌟 카페에서 받아 등록한 사용자 패턴
+   ✏️ 패턴 만들기 3종 · 📂 내 패턴 · 💾 패턴 파일 저장 · 🌟 모임방에서 받아 등록한 사용자 패턴
    - 🧵 무늬 메이커     : 줄무늬 · 도트 · 깅엄 체크 · 격자 · 물결 (색 · 굵기 · 간격 · 기울기)
    - 🖼 이미지 패턴     : 내 사진/그림을 바둑판 · 엇갈림으로 반복
    - 🖌 그려서 만들기   : 한 칸을 그리면 이어 붙인 모습이 바로 보임 (이어그리기로 경계가 자연스럽게 연결)
    - 내 패턴은 설정값 'diary_my_patterns' 로 저장 → 구글 드라이브 settings.json 에 함께 저장
        [{"uid":"k3x9","name":"딸기 사선","r":{레시피},"at":1759300000000}, ...]
-   - 💾 파일로 저장 : 'malang_pattern_날짜_시간.malang.txt' 파일 하나(이미지 포함, 패턴 이름·닉네임은 파일 안에)를 내려받아 → 사용자가 카페 글에 첨부
+   - 💾 파일로 저장 : 'malang_pattern_날짜_시간.malang.txt' 파일 하나(이미지 포함, 패턴 이름·닉네임은 파일 안에)를 내려받아 → 사용자가 모임방 글에 첨부
      → 관리자가 pattern-tool.html(패턴 등록 도구)에 넣어 js/community-patterns.js + patterns 폴더를 만들어 깃허브에 올림
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → pattern-recipe → skins → pattern-maker → service */
 
@@ -164,7 +164,7 @@
             downloadPatternFile(document.getElementById('makerName').value, r, 'makerBy');
         }
 
-        /* ---------- 💾 패턴 파일 : 카페에 첨부해서 올리는 파일 (이미지까지 파일 하나에 들어 있음) ---------- */
+        /* ---------- 💾 패턴 파일 : 모임방에 첨부해서 올리는 파일 (이미지까지 파일 하나에 들어 있음) ---------- */
         const PATTERN_NICK_KEY = 'malang_pattern_nick';
 
         /* 닉네임 : 만들기 창(makerBy)과 내 패턴 창(patNick) 두 곳에서 적을 수 있고, 이 기기에 기억 */
@@ -200,7 +200,7 @@
             document.body.appendChild(a);
             a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            showMsg('💾 패턴 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 패턴 목록에 나타나요 💕<br><span style="font-size:12px;color:#777;">파일이 안 받아지면 📋 코드 복사 후 카페 글에 붙여 넣어도 돼요.</span>');
+            showMsg('💾 패턴 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 모임방 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 패턴 목록에 나타나요 💕<br><span style="font-size:12px;color:#777;">파일이 안 받아지면 📋 코드 복사 후 모임방 글에 붙여 넣어도 돼요.</span>');
         }
 
         function downloadMyPattern(uid) {
@@ -208,7 +208,7 @@
             if (m) downloadPatternFile(m.name, m.r, 'patNick');
         }
 
-        /* 코드 복사 : 파일 첨부가 안 될 때 카페 글에 붙여 넣는 용도 (패턴 등록 도구에 그대로 붙여 넣기 가능) */
+        /* 코드 복사 : 파일 첨부가 안 될 때 모임방 글에 붙여 넣는 용도 (패턴 등록 도구에 그대로 붙여 넣기 가능) */
         function copyPatternCode(name, r, nickFrom) {
             const text = patternFileText(name, r, nickFrom);
             const done = () => toast('📋 패턴 코드를 복사했어요. (' + text.length.toLocaleString() + '글자)');

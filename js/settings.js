@@ -190,7 +190,7 @@
 
         /* =====================================================================
            🎨 스킨 (다이어리 색 5개 : 전체 배경 · 겉표지 · 속지 · 테두리 · 포인트)
-           - 스킨 목록 : 기본 스킨 4종 + 🌟 모두의 스킨(카페에서 받아 등록, js/community-skins.js) + 🎨 내 스킨
+           - 스킨 목록 : 기본 스킨 4종 + 🌟 모두의 스킨(모임방에서 받아 등록, js/community-skins.js) + 🎨 내 스킨
            - 내 스킨     : 'diary_custom_skins' → settings.json
            - 지금 고른 스킨 : 'diary_skin' → settings.json  (다음에 열어도 · 다른 기기에서도 그대로)
                예) {"id":"mint"} · {"id":"봄날","c":{색 5개}} · {"id":"cs:3","c":{색 5개}}
@@ -286,7 +286,7 @@
                 sel.appendChild(g);
             };
             group('기본 스킨', Object.keys(skinPresets).map(k => [k, SKIN_PRESET_NAMES[k] || k]));
-            group('🌟 모두의 스킨 (카페에서 등록)', skinCommunity().map(s =>
+            group('🌟 모두의 스킨 (모임방에서 등록)', skinCommunity().map(s =>
                 [s.id, `${s.tier === 'paid' ? '💎' : '🆓'} ${s.name}${s.by ? ' · by ' + s.by : ''}`]));
             group('🎨 내 스킨', Object.keys(customSkins).map(n => [n, '🎨 ' + n]));
             if (!Array.from(sel.options).some(o => o.value === currentSkinId) && currentSkinInline) {
@@ -334,7 +334,7 @@
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             applySkinPreset(nameInput);
             document.getElementById('customSkinName').value = '';
-            showMsg(`'${nameInput}' 스킨이 새로 추가되었습니다!<br><span style="font-size:12px;color:#777;">아래 📤 카페에 스킨 공유하기에서 파일로 저장해 카페에 올릴 수 있어요.</span>`);
+            showMsg(`'${nameInput}' 스킨이 새로 추가되었습니다!<br><span style="font-size:12px;color:#777;">아래 📤 모임방에 스킨 공유하기에서 파일로 저장해 모임방에 올릴 수 있어요.</span>`);
         }
 
         async function deleteSelectedSkin() {
@@ -365,7 +365,7 @@
             if (typeof loadBgPattern === 'function') loadBgPattern();   // 전체 배경 패턴 (js/skins.js)
         }
 
-        /* ---------- 📤 카페에 스킨 공유 · 📥 스킨 파일 불러오기 ----------
+        /* ---------- 📤 모임방에 스킨 공유 · 📥 스킨 파일 불러오기 ----------
            파일 : malang_skin_날짜_시간.malang.txt  내용 : {"malang_skin":1,"name":"봄날","by":"닉네임","skin":{색 5개}}
            → 카페에 첨부 → 관리자가 pattern-tool.html 에 넣어 js/community-skins.js 를 만들어 깃허브에 올림 */
         function updateSkinShareUI() {
@@ -399,13 +399,13 @@
             a.download = `malang_skin_${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.malang.txt`;
             document.body.appendChild(a); a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            showMsg('💾 스킨 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 스킨 목록에 나타나요 💕');
+            showMsg('💾 스킨 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 모임방 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 스킨 목록에 나타나요 💕');
         }
 
         function copySkinCode() {
             const got = skinShareText();
             if (!got) return;
-            const done = () => toast('📋 스킨 코드를 복사했어요. 카페 글에 붙여 넣어 주세요.');
+            const done = () => toast('📋 스킨 코드를 복사했어요. 모임방 글에 붙여 넣어 주세요.');
             const fallback = () => {
                 const ta = document.createElement('textarea');
                 ta.value = got.text; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -417,7 +417,7 @@
             else fallback();
         }
 
-        /* 카페에서 받은 스킨 파일(또는 코드)을 내 스킨으로 넣기 */
+        /* 모임방에서 받은 스킨 파일(또는 코드)을 내 스킨으로 넣기 */
         function parseSkinText(txt) {
             const m = String(txt || '').match(/\{[\s\S]*\}/);
             if (!m) return null;
@@ -445,7 +445,7 @@
             f.text().then(t => addReceivedSkin(parseSkinText(t)));
         }
         function pasteSkinCode() {
-            const t = prompt('카페에서 복사한 스킨 코드를 붙여 넣어 주세요.');
+            const t = prompt('모임방에서 복사한 스킨 코드를 붙여 넣어 주세요.');
             if (t) addReceivedSkin(parseSkinText(t));
         }
 
@@ -463,7 +463,7 @@
             const box = modal.querySelector('.modal-content'); if (!box) return;
             const title = [...box.children].find(c => c.classList.contains('modal-title')); if (!title) return;
             modal.dataset.mt = '1';
-            if (title.classList.contains('mt-bar')) return;                                   // 이미 직접 만든 제목 줄 (놀이터)
+            if (title.classList.contains('mt-bar')) return;                                   // 이미 직접 만든 제목 줄 (카페)
             const btns = [...box.querySelectorAll('button')];
             const closeBtn = btns.filter(b => b.textContent.trim() === '닫기').pop();
             const backBtn = btns.find(b => /^←/.test(b.textContent.trim()));
@@ -485,19 +485,19 @@
         document.querySelectorAll('.modal').forEach(mtDecorate);
         function openModal(id) {
             if (id === 'settingsModal') { saveData(false); updateStorageInfo(); refreshStorageStats(); if (typeof sndRenderSettings === 'function') sndRenderSettings(); }
-            /* ☕ 서버 미리 깨우기 (js/service.js) : 설정 메뉴를 열면 건의함 서버, 놀이터를 열면 랜덤박스 서버 */
+            /* ☕ 서버 미리 깨우기 (js/service.js) : 설정 메뉴를 열면 건의함 서버, 카페를 열면 랜덤박스 서버 */
             if (typeof warmServer === 'function') {
                 if (id === 'settingsMenuModal' && typeof FEEDBACK_SCRIPT_URL !== 'undefined') warmServer(FEEDBACK_SCRIPT_URL);
                 if (id === 'serviceModal' && typeof GACHA_API_URL !== 'undefined') warmServer(GACHA_API_URL);
                 if (id === 'serviceModal' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) warmServer(FORTUNE_API_URL);
             }
             if (id === 'serviceModal' && typeof svcShowCats === 'function') svcShowCats();
-            mtDecorate(document.getElementById(id));       // 놀이터는 늘 카테고리부터
+            mtDecorate(document.getElementById(id));       // 카페는 늘 카테고리부터
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        /* ---------- ⚙ 설정 메뉴 : 📐 페이지 크기 · ⚙️ 설정 · 💌 건의함 · 💝 후원 ---------- */
+        /* ---------- ⚙ 설정 메뉴 : 📐 페이지 크기 · ⚙️ 설정 · 💌 건의함 · 🔒 잠금 · 📲 앱 설치 ---------- */
         function openSettingsMenu() { openModal('settingsMenuModal'); }
         function openFromSettingsMenu(id) {
             closeModal('settingsMenuModal');

@@ -150,7 +150,7 @@
         async function openGacha() {
             if (typeof closeModal === 'function') closeModal('serviceModal');
             gcBuild();
-            gcUnlockAudio();                                   // 놀이터에서 누른 순간에 소리 미리 깨우기
+            gcUnlockAudio();                                   // 카페에서 누른 순간에 소리 미리 깨우기
             gq('gachaRoom').classList.add('show');
             gc.open = true;
             gcReset();

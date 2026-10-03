@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/plant.js
-   🌷 화분 키우기 : 일기를 쓴 날마다 물을 한 번 줄 수 있어요. (놀이터 → 매일 말랑 → 🌷 화분 키우기)
+   🌷 화분 키우기 : 일기를 쓴 날마다 물을 한 번 줄 수 있어요. (카페 → 매일 말랑 → 🌷 화분 키우기)
    - 물을 준 횟수만큼 자라요 : 씨앗 → 새싹 → 잎 → 꽃봉오리 → 꽃 → 열매
    - 열매를 따면 바구니에 모이고, 새 씨앗을 심어요. (어떤 씨앗인지는 꽃이 필 때까지 비밀)
    - 사흘 넘게 물을 못 주면 시들시들해지지만 죽지는 않아요. 물을 주면 다시 기운을 차려요.
@@ -232,7 +232,7 @@
             const r = pq('plantRoom'); if (r) r.classList.remove('show', 'pl-pour');
             document.body.classList.remove('fc-lock');
         }
-        /* 🎠 놀이터 · 다른 놀이에서 쓰는 안내 */
+        /* ☕ 카페 · 다른 놀이에서 쓰는 안내 */
         async function plantStatus() {                      // { watered: 오늘 물 줌, wrote: 오늘 일기 씀 }
             const s = plRead(), watered = s.last === plDay();
             return { watered, wrote: watered || await plWroteToday() };
