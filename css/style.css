@@ -209,6 +209,13 @@
         .element-box img.broken { min-width: 60px; min-height: 40px; background: #ffe3e3; border: 1px dashed var(--primary-accent); font-size: 11px; color: #a33; word-break: break-all; }
         /* 📚 이미지 라이브러리 : 페이지 넘기기 + 행·열·크기 설정 */
         .lib-content { max-width: min(95vw, var(--lib-w, 520px)); min-width: min(90vw, 320px); }
+        .lib-cats { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+        .lib-cats[hidden] { display: none; }
+        .lib-cat { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--border-color); background: #fff; color: #6a5560; font: inherit; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; transition: transform .12s, background .15s; }
+        .lib-cat small { font-size: 11px; font-weight: normal; opacity: .7; }
+        .lib-cat:hover { border-color: var(--primary-accent); }
+        .lib-cat:active { transform: scale(.94); }
+        .lib-cat.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; box-shadow: 0 2px 8px rgba(255, 120, 160, .3); }
         .lib-pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
         .lib-pager .btn { padding: 5px 12px; }
         .lib-page-info { flex: 1; text-align: center; font-weight: bold; font-size: 16px; color: var(--primary-accent); font-variant-numeric: tabular-nums; }

@@ -119,20 +119,15 @@
             }
         }
 
-        /* 📚 라이브러리 : 라이브러리 시트(나만 보기)에 붙은 앱스크립트가 이미지 링크 목록을 보내 줘요
-           서버 코드 : 라이브러리_앱스크립트.gs · 시트 맨 왼쪽 탭의 A열 = 이미지 링크 */
-        const LIB_API_URL = 'https://script.google.com/macros/s/AKfycbzpe6ZEbSpety1CASpu6whbYRNp5JE5P_PBCL9_fkCTSBXlXMfKem4vBTeRGyUtE4p5uA/exec';                        // ← 라이브러리 앱스크립트 웹 앱 주소 (…/exec)
-        let libItems = null, libLoading = false;
+        /* 📚 그림모음 : 그림모음 서버(라이브러리_앱스크립트.gs)가 드라이브 '그림모음' 폴더를 읽어 목록을 보내 줘요
+           - 목록 : [{ id, c }] · c = 바로 아래 하위 폴더 이름 = 카테고리 ('' 이면 '전체'에서만 보여요)
+           - 카테고리 칸 : 🌈 전체 + 폴더 이름 순서 ('1. 캐릭터' 처럼 앞 번호는 순서용 · 화면에는 '캐릭터') */
+        const LIB_API_URL = 'https://script.google.com/macros/s/AKfycbzpe6ZEbSpety1CASpu6whbYRNp5JE5P_PBCL9_fkCTSBXlXMfKem4vBTeRGyUtE4p5uA/exec';                        // ← 그림모음 앱스크립트 웹 앱 주소 (…/exec)
+        let libItems = null, libLoading = false, libCats = [], libCat = '';
 
         function driveImageUrl(id) { return 'https://lh3.googleusercontent.com/d/' + id; }
-
-        function normalizeImageUrl(raw) {
-            const u = String(raw || '').trim();
-            if (!/^https?:\/\//i.test(u)) return null;
-            let m = u.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/);
-            if (!m && /drive\.google\.com|docs\.google\.com/.test(u)) m = u.match(/[?&]id=([\w-]{10,})/);
-            return m ? driveImageUrl(m[1]) : u;
-        }
+        const libCatName = c => c.replace(/^\d+\s*[.)_\-]?\s*/, '') || c;
+        function libView() { return !libItems ? [] : libCat ? libItems.filter(x => x.c === libCat) : libItems; }
 
         async function fetchLibraryList() {
             if (!LIB_API_URL) throw new Error('setup');
@@ -173,7 +168,7 @@
             try { localStorage.setItem(LIB_LAYOUT_KEY, JSON.stringify(libLayout)); } catch (e) {}
         }
         function libPerPage() { return libLayout.rows * libLayout.cols; }
-        function libPageCount() { return libItems && libItems.length ? Math.ceil(libItems.length / libPerPage()) : 0; }
+        function libPageCount() { const n = libView().length; return n ? Math.ceil(n / libPerPage()) : 0; }
 
         /* 줄 수·한 줄 개수·크기 → 그리드 모양과 창 너비에 반영, 설정 칸 값도 맞춤 */
         function applyLibLayoutStyle() {
@@ -276,9 +271,11 @@
             st.textContent = '⏳ 이미지 목록을 불러오는 중...';
             grid.innerHTML = '';
             try {
-                const cells = await fetchLibraryList();
+                const list = await fetchLibraryList(), seen = new Set();
                 libItems = [];
-                cells.forEach(c => { const u = normalizeImageUrl(c); if (u && !libItems.includes(u)) libItems.push(u); });
+                list.forEach(x => { if (x && x.id && !seen.has(x.id)) { seen.add(x.id); libItems.push({ u: driveImageUrl(x.id), c: String(x.c || '') }); } });
+                libCats = [...new Set(libItems.map(x => x.c).filter(Boolean))];
+                if (!libCats.includes(libCat)) libCat = '';
                 libPage = 0;
                 renderLibrary();
             } catch (err) {
@@ -290,18 +287,37 @@
             libLoading = false;
         }
 
+        /* 🗂 카테고리 칸 (하위 폴더가 없으면 숨겨요) */
+        function renderLibCats() {
+            const box = document.getElementById('libCats'); if (!box) return;
+            box.hidden = !libCats.length;
+            if (!libCats.length) { box.innerHTML = ''; return; }
+            const btn = (c, label, n) => `<button type="button" class="lib-cat${c === libCat ? ' on' : ''}" data-c="${c.replace(/[&<>"']/g, ch => '&#' + ch.charCodeAt(0) + ';')}">${label}<small>${n}</small></button>`;
+            box.innerHTML = btn('', '🌈 전체', libItems.length)
+                + libCats.map(c => btn(c, libCatName(c).replace(/[&<>"']/g, ch => '&#' + ch.charCodeAt(0) + ';'), libItems.filter(x => x.c === c).length)).join('');
+            box.querySelectorAll('.lib-cat').forEach(b => { b.onclick = () => setLibCat(b.dataset.c); });
+            const on = box.querySelector('.lib-cat.on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+        function setLibCat(c) {
+            if (c === libCat) return;
+            libCat = c; libPage = 0;
+            renderLibrary();
+        }
+
         function renderLibrary() {
             const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');
             grid.innerHTML = '';
             applyLibLayoutStyle();
-            if (!libItems.length) { st.textContent = '시트 A열에 이미지 주소가 없어요.'; updateLibPager(); return; }
+            renderLibCats();
+            const view = libView();
+            if (!view.length) { st.textContent = '그림모음 폴더에 그림이 없어요.'; updateLibPager(); return; }
             const per = libPerPage(), pages = libPageCount();
             libPage = Math.max(0, Math.min(pages - 1, libPage));
-            st.textContent = `이미지 ${libItems.length}개 · 누르면 페이지에 들어가요`;
+            st.textContent = `그림 ${view.length}개 · 누르면 페이지에 들어가요`;
             const start = libPage * per;
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
             const frag = document.createDocumentFragment();
-            libItems.slice(start, start + per).forEach((url, j) => {
+            view.slice(start, start + per).forEach(({ u: url }, j) => {
                 const i = start + j;
                 const item = document.createElement('div');
                 item.className = 'lib-item';
@@ -315,7 +331,7 @@
                 frag.appendChild(item);
             });
             /* 마지막 페이지가 덜 차도 창 크기가 흔들리지 않도록 빈칸 채우기 */
-            for (let k = libItems.length - start; k < per && pages > 1; k++) {
+            for (let k = view.length - start; k < per && pages > 1; k++) {
                 const empty = document.createElement('div');
                 empty.className = 'lib-item empty';
                 frag.appendChild(empty);
