@@ -404,7 +404,7 @@
 
     function renderCurrent() {
         const live = current.filter(p => !p.removed);
-        document.getElementById('curInfo').textContent = listReady ? `(총 ${live.length}개 · 무료 ${live.filter(p => p.tier === 'free').length} · 유료 ${live.filter(p => p.tier === 'paid').length})` : '';
+        document.getElementById('curInfo').textContent = listReady ? `(총 ${live.length}개 · 말랑 ${live.filter(p => p.tier === 'free').length} · 달콤 ${live.filter(p => p.tier === 'paid').length})` : '';
         const grid = document.getElementById('curGrid');
         grid.innerHTML = '';
         if (!current.length) { grid.innerHTML = '<div class="empty">아직 등록된 패턴이 없어요.</div>'; return; }
@@ -415,7 +415,7 @@
             const f = document.createElement('div');
             f.className = 'fields';
             f.innerHTML = `<div><b></b> <span class="meta"></span></div>
-                <label>등급 <select><option value="free">🆓 무료</option><option value="paid">💎 유료</option></select></label>`;
+                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>`;
             f.querySelector('b').textContent = p.name;
             f.querySelector('.meta').textContent = p.by ? 'by ' + p.by : '';
             const sel = f.querySelector('select');
@@ -509,7 +509,7 @@
             f.className = 'fields';
             f.innerHTML = `<label>이름 <input type="text" maxlength="20"></label>
                 <label>만든 사람 <input type="text" maxlength="12"></label>
-                <label>등급 <select><option value="free">🆓 무료</option><option value="paid">💎 유료</option></select></label>
+                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>
                 <div class="meta">${RECIPE_KIND_NAMES[p.recipe.kind] || ''} · ${(JSON.stringify(p.recipe).length / 1000).toFixed(1)}K</div>`;
             const [nameIn, byIn] = f.querySelectorAll('input');
             const sel = f.querySelector('select');
@@ -581,7 +581,7 @@
    🌟 카페에서 받아 등록한 사용자 패턴 목록
    - 이 파일은 pattern-tool.html(패턴 등록 도구)이 자동으로 만들어요. 직접 고치지 않아도 돼요.
    - 이미지·그림 패턴의 이미지는 patterns 폴더에 따로 있어요. (예: patterns/3.webp)
-   마지막 수정: ${stamp} · 총 ${out.length}개 (무료 ${out.filter(p => p.tier === 'free').length} · 유료 ${out.filter(p => p.tier === 'paid').length}) */
+   마지막 수정: ${stamp} · 총 ${out.length}개 (말랑 ${out.filter(p => p.tier === 'free').length} · 달콤 ${out.filter(p => p.tier === 'paid').length}) */
 const COMMUNITY_PATTERNS = /*DATA-START*/[
 ${out.map(p => JSON.stringify(p)).join(',\n')}
 ]/*DATA-END*/;
@@ -595,7 +595,7 @@ ${out.map(p => JSON.stringify(p)).join(',\n')}
         const sjs = `/* 말랑달콤 다이어리 - js/community-skins.js
    🌟 카페에서 받아 등록한 모두의 스킨 목록
    - 이 파일은 pattern-tool.html(패턴·스킨 등록 도구)이 자동으로 만들어요. 직접 고치지 않아도 돼요.
-   마지막 수정: ${stamp} · 총 ${skinOut.length}개 (무료 ${skinOut.filter(p => p.tier === 'free').length} · 유료 ${skinOut.filter(p => p.tier === 'paid').length}) */
+   마지막 수정: ${stamp} · 총 ${skinOut.length}개 (말랑 ${skinOut.filter(p => p.tier === 'free').length} · 달콤 ${skinOut.filter(p => p.tier === 'paid').length}) */
 const COMMUNITY_SKINS = /*DATA-START*/[
 ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
 ]/*DATA-END*/;
@@ -617,7 +617,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
             · 🖌 스킨 : 새로 등록 ${newSkins}개 · 총 ${skinOut.length}개<br>
             ① zip 압축을 풀면 <code>js</code> 폴더${imgs ? '와 <code>patterns</code> 폴더' : ''}가 나와요.<br>
             ② 깃허브 저장소 첫 화면에서 <b>Add file → Upload files</b> 를 누르고, 그 폴더${imgs ? '들' : ''}을 통째로 끌어다 놓기 → <b>Commit changes</b><br>
-            ③ 1~2분 뒤부터 사용자 다이어리의 무료/유료 패턴 목록과 스킨 목록(🌟 모두의 스킨)에 나타나요. (늦어도 10분 안에)<br>
+            ③ 1~2분 뒤부터 사용자 다이어리의 말랑/달콤 패턴 목록과 스킨 목록(🌟 모두의 스킨)에 나타나요. (늦어도 10분 안에)<br>
             ④ 다음에 등록할 때는 이 도구를 열고 🌐 최신 목록 불러오기부터 누르면 돼요. (내 컴퓨터에 따로 덮어쓸 필요 없어요)`;
         try { localStorage.setItem(LAST_KEY, JSON.stringify({ at: stamp, list: out })); } catch (e) {}
         try { localStorage.setItem(LAST_SKIN_KEY, JSON.stringify({ at: stamp, list: skinOut })); } catch (e) {}
@@ -765,7 +765,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
 
     function renderSkinCurrent() {
         const live = skinCurrent.filter(p => !p.removed);
-        document.getElementById('skinCurInfo').textContent = skinReady ? `(총 ${live.length}개 · 무료 ${live.filter(p => p.tier === 'free').length} · 유료 ${live.filter(p => p.tier === 'paid').length})` : '';
+        document.getElementById('skinCurInfo').textContent = skinReady ? `(총 ${live.length}개 · 말랑 ${live.filter(p => p.tier === 'free').length} · 달콤 ${live.filter(p => p.tier === 'paid').length})` : '';
         const grid = document.getElementById('skinCurGrid');
         grid.innerHTML = '';
         if (!skinCurrent.length) { grid.innerHTML = '<div class="empty">아직 등록된 스킨이 없어요.</div>'; updateBuildInfo(); return; }
@@ -776,7 +776,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
             const f = document.createElement('div');
             f.className = 'fields';
             f.innerHTML = `<div><b></b> <span class="meta"></span></div>
-                <label>등급 <select><option value="free">🆓 무료</option><option value="paid">💎 유료</option></select></label>`;
+                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>`;
             f.querySelector('b').textContent = p.name;
             f.querySelector('.meta').textContent = p.by ? 'by ' + p.by : '';
             const sel = f.querySelector('select');
@@ -826,7 +826,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
             f.className = 'fields';
             f.innerHTML = `<label>이름 <input type="text" maxlength="20"></label>
                 <label>만든 사람 <input type="text" maxlength="12"></label>
-                <label>등급 <select><option value="free">🆓 무료</option><option value="paid">💎 유료</option></select></label>`;
+                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>`;
             const [nameIn, byIn] = f.querySelectorAll('input');
             const sel = f.querySelector('select');
             nameIn.value = p.name; byIn.value = p.by; sel.value = p.tier;

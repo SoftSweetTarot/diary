@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/patterns.js
-   🎨 전체 배경에 까는 패턴 목록 (무료 패턴 · 유료 패턴)
-   - tier : 'free' = 무료(심플한 줄무늬·도트) / 'paid' = 유료(그림이 들어간 패턴)
+   🎨 전체 배경에 까는 패턴 목록 (☁️ 말랑패턴 · 🍬 달콤패턴)
+   - tier : 'free' = 말랑패턴(심플한 줄무늬·도트 · 누구나) / 'paid' = 달콤패턴(그림이 들어간 패턴 · 저금해 준 사람만)
    - css  : 배경에 그대로 들어가는 CSS 값 (이미지 파일 없이 동작)
    - 새 패턴 추가 : 아래 목록에 { id, tier, name, css } 한 줄 추가. id는 저장에 쓰이므로 한 번 정하면 바꾸지 마세요.
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → skins → service (index.html 참고) */
@@ -102,7 +102,7 @@ const BG_PATTERNS = (() => {
     const plaid = (deg) => `repeating-linear-gradient(${deg}, rgba(232,86,75,.75) 0 4px, transparent 4px 18px, rgba(84,138,214,.7) 18px 21px, transparent 21px 34px, rgba(242,192,48,.8) 34px 38px, transparent 38px 52px, rgba(92,176,104,.7) 52px 55px, transparent 55px 70px, rgba(242,138,58,.7) 70px 73px, transparent 73px 84px, rgba(232,86,75,.45) 84px 86px, transparent 86px 96px)`;
 
     return [
-        /* ---------------- 🆓 무료 패턴 : 심플한 줄무늬 · 도트 · 체크 ---------------- */
+        /* ---------------- ☁️ 말랑패턴 : 심플한 줄무늬 · 도트 · 체크 ---------------- */
         { id: 'candy', tier: 'free', name: '사탕 스트라이프',
           css: { backgroundColor: '#fdf0f4',
             backgroundImage: 'repeating-linear-gradient(45deg, transparent 0 13px, rgba(255,255,255,.9) 13px 15px, transparent 15px 28px), repeating-linear-gradient(45deg, #fdf0f4 0 14px, #f7c3d1 14px 28px)' } },
@@ -137,7 +137,7 @@ const BG_PATTERNS = (() => {
         { id: 'plaid', tier: 'free', name: '무지개 체크',
           css: { backgroundColor: '#fcf6df', backgroundImage: `${plaid('90deg')}, ${plaid('0deg')}` } },
 
-        /* ---------------- 💎 유료 패턴 : 그림이 들어간 패턴 ---------------- */
+        /* ---------------- 🍬 달콤패턴 : 그림이 들어간 패턴 (저금해 준 사람만) ---------------- */
         { id: 'flower-gingham', tier: 'paid', name: '블루 플라워 깅엄',
           css: { backgroundColor: '#eef4fc',
             backgroundImage: `${gingFlowers}, repeating-linear-gradient(90deg, rgba(133,166,220,.36) 0 16px, transparent 16px 32px), repeating-linear-gradient(0deg, rgba(133,166,220,.36) 0 16px, transparent 16px 32px)`,

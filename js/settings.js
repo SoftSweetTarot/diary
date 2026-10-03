@@ -190,7 +190,7 @@
 
         /* =====================================================================
            🎨 스킨 (다이어리 색 5개 : 전체 배경 · 겉표지 · 속지 · 테두리 · 포인트)
-           - 스킨 목록 : 기본 스킨 4종 + 🌟 모두의 스킨(모임방에서 받아 등록, js/community-skins.js) + 🎨 내 스킨
+           - 스킨 목록 : 기본 스킨 4종 + 🌟 모두의 스킨(카페에서 받아 등록, js/community-skins.js) + 🎨 내 스킨
            - 내 스킨     : 'diary_custom_skins' → settings.json
            - 지금 고른 스킨 : 'diary_skin' → settings.json  (다음에 열어도 · 다른 기기에서도 그대로)
                예) {"id":"mint"} · {"id":"봄날","c":{색 5개}} · {"id":"cs:3","c":{색 5개}}
@@ -202,7 +202,17 @@
         let currentSkinId = 'pink';
         let currentSkinInline = null;      // 목록에 없는 스킨을 쓰는 중일 때 그 색 (예: 내려간 모두의 스킨)
 
-        const skinPaidOpen = () => typeof PAID_PATTERNS_OPEN === 'undefined' || PAID_PATTERNS_OPEN;
+        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴 · 🍬 달콤 스킨)
+           - 화면에서 class="saver-only" 인 것들은 저금해 준 사람에게만 보여요 (css : body.saver)
+           - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴 · 쓰던 스킨은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
+           - 저금통 서버가 붙으면 setSaver(true/false) 로 알려 줘요 */
+        let saverOn = false;
+        const isSaver = () => saverOn;
+        function setSaver(on) {
+            saverOn = !!on;
+            document.body.classList.toggle('saver', saverOn);
+            renderSkinSelect();
+        }
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
         const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
@@ -243,9 +253,9 @@
             const hit = findSkin(id, opts.inline || (id === currentSkinId ? currentSkinInline : null));
             const sel = document.getElementById('skinSelect');
             if (!hit) { if (sel) sel.value = currentSkinId; return false; }
-            if (hit.tier === 'paid' && !skinPaidOpen() && opts.save !== false) {
+            if (hit.tier === 'paid' && !isSaver() && opts.save !== false) {
                 if (sel) sel.value = currentSkinId;
-                showMsg('💎 유료 스킨은 준비 중이에요.<br>조금만 기다려 주세요!');
+                showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 스킨이에요 💕');
                 return false;
             }
             if (opts.save !== false && typeof seasonStop === 'function') seasonStop();   // 다른 스킨을 고르면 계절 테마 끄기 (js/season.js)
@@ -286,8 +296,8 @@
                 sel.appendChild(g);
             };
             group('기본 스킨', Object.keys(skinPresets).map(k => [k, SKIN_PRESET_NAMES[k] || k]));
-            group('🌟 모두의 스킨 (모임방에서 등록)', skinCommunity().map(s =>
-                [s.id, `${s.tier === 'paid' ? '💎' : '🆓'} ${s.name}${s.by ? ' · by ' + s.by : ''}`]));
+            group('🌟 모두의 스킨 (카페에서 등록)', skinCommunity().filter(s => s.tier !== 'paid' || isSaver()).map(s =>
+                [s.id, `${s.tier === 'paid' ? '🍬' : '☁️'} ${s.name}${s.by ? ' · by ' + s.by : ''}`]));
             group('🎨 내 스킨', Object.keys(customSkins).map(n => [n, '🎨 ' + n]));
             if (!Array.from(sel.options).some(o => o.value === currentSkinId) && currentSkinInline) {
                 group('지금 쓰는 스킨', [[currentSkinId, '🎨 지금 쓰는 스킨 (목록에서 내려감)']]);
@@ -334,7 +344,7 @@
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             applySkinPreset(nameInput);
             document.getElementById('customSkinName').value = '';
-            showMsg(`'${nameInput}' 스킨이 새로 추가되었습니다!<br><span style="font-size:12px;color:#777;">아래 📤 모임방에 스킨 공유하기에서 파일로 저장해 모임방에 올릴 수 있어요.</span>`);
+            showMsg(`'${nameInput}' 스킨이 새로 추가되었습니다!<br><span style="font-size:12px;color:#777;">아래 📤 카페에 스킨 공유하기에서 파일로 저장해 카페에 올릴 수 있어요.</span>`);
         }
 
         async function deleteSelectedSkin() {
@@ -365,7 +375,7 @@
             if (typeof loadBgPattern === 'function') loadBgPattern();   // 전체 배경 패턴 (js/skins.js)
         }
 
-        /* ---------- 📤 모임방에 스킨 공유 · 📥 스킨 파일 불러오기 ----------
+        /* ---------- 📤 카페에 스킨 공유 · 📥 스킨 파일 불러오기 ----------
            파일 : malang_skin_날짜_시간.malang.txt  내용 : {"malang_skin":1,"name":"봄날","by":"닉네임","skin":{색 5개}}
            → 카페에 첨부 → 관리자가 pattern-tool.html 에 넣어 js/community-skins.js 를 만들어 깃허브에 올림 */
         function updateSkinShareUI() {
@@ -399,13 +409,13 @@
             a.download = `malang_skin_${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.malang.txt`;
             document.body.appendChild(a); a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            showMsg('💾 스킨 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 모임방 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 스킨 목록에 나타나요 💕');
+            showMsg('💾 스킨 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 스킨 목록에 나타나요 💕');
         }
 
         function copySkinCode() {
             const got = skinShareText();
             if (!got) return;
-            const done = () => toast('📋 스킨 코드를 복사했어요. 모임방 글에 붙여 넣어 주세요.');
+            const done = () => toast('📋 스킨 코드를 복사했어요. 카페 글에 붙여 넣어 주세요.');
             const fallback = () => {
                 const ta = document.createElement('textarea');
                 ta.value = got.text; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -417,7 +427,7 @@
             else fallback();
         }
 
-        /* 모임방에서 받은 스킨 파일(또는 코드)을 내 스킨으로 넣기 */
+        /* 카페에서 받은 스킨 파일(또는 코드)을 내 스킨으로 넣기 */
         function parseSkinText(txt) {
             const m = String(txt || '').match(/\{[\s\S]*\}/);
             if (!m) return null;
@@ -445,7 +455,7 @@
             f.text().then(t => addReceivedSkin(parseSkinText(t)));
         }
         function pasteSkinCode() {
-            const t = prompt('모임방에서 복사한 스킨 코드를 붙여 넣어 주세요.');
+            const t = prompt('카페에서 복사한 스킨 코드를 붙여 넣어 주세요.');
             if (t) addReceivedSkin(parseSkinText(t));
         }
 

@@ -18,12 +18,12 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261003-108">
+    <link rel="stylesheet" href="css/style.css?v=20261003-109">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
-    <!-- 🎨 전체 배경 패턴 (무료·유료 패턴을 고르면 여기에 그려져요) -->
+    <!-- 🎨 전체 배경 패턴 (말랑·달콤 패턴을 고르면 여기에 그려져요) -->
     <div class="bg-pattern-layer" id="bgPatternLayer" aria-hidden="true"><div class="bg-pattern-inner" id="bgPatternInner"></div></div>
 
     <!-- ☁ 구글 드라이브 연결 화면 (데이터를 불러오기 전까지 표시) -->
@@ -147,7 +147,7 @@
                     <div class="help-k">📷 사진 틀</div><div class="help-v">사진을 누르고 ✥ 사진 꾸미기 → 틀 : 폴라로이드 · 필름 · 하트 … (폴라로이드는 아래에 글씨도!)</div>
                     <div class="help-k">🖍️ 펜</div><div class="help-v">펜 · 형광펜으로 그리고 밑줄 긋기 · ✓ 완료하면 그림 하나가 돼요</div>
                     <div class="help-k">📝 글상자 모양</div><div class="help-v">글상자를 고르고 ✥ 글 꾸미기 → 모양 : 줄노트 · 포스트잇 · 말풍선 · 편지지 · 칠판 …</div>
-                    <div class="help-k">🎀 마스킹테이프</div><div class="help-v">🎨 스티커 → 🎀 마스킹테이프 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>
+                    <div class="help-k saver-only">🎀 마스킹테이프</div><div class="help-v saver-only">🎨 스티커 → 🎀 마스킹테이프 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>
                     <div class="help-k">🔴 위 핸들</div><div class="help-v">돌리기</div>
                     <div class="help-k">🟢 아래 핸들</div><div class="help-v">크기 바꾸기 (PC는 마우스 휠도 돼요)</div>
                 </div>
@@ -159,8 +159,8 @@
                 </div>
                 <div class="help-section-title">👗 스킨</div>
                 <div class="help-rows">
-                    <div class="help-k">🎨 기본스킨</div><div class="help-v">다이어리 색 고르기 · 만들기 · 모임방에 공유</div>
-                    <div class="help-k">🆓 💎 패턴</div><div class="help-v">다이어리 뒤 배경에 무늬 깔기</div>
+                    <div class="help-k">🎨 기본스킨</div><div class="help-v">다이어리 색 고르기 · 만들기 · 카페에 공유</div>
+                    <div class="help-k">☁️ 🍬 패턴</div><div class="help-v">다이어리 뒤 배경에 무늬 깔기</div>
                     <div class="help-k">✏️ 패턴 만들기</div><div class="help-v">무늬 · 내 이미지 · 직접 그려서 나만의 패턴</div>
                 </div>
                 <div class="help-section-title">🎵 배경음악</div>
@@ -246,7 +246,7 @@
             <div class="sticker-categories" id="stickerCategories">
                 <button class="cat-btn at-cat" onclick="loadAttendStickers(this)">🎁 출석 스티커</button>
                 <button class="cat-btn sm-cat" onclick="window.loadMyStickers ? loadMyStickers(this) : 0">✂️ 내 스티커</button>
-                <button class="cat-btn tp-cat" onclick="loadTapes(this)">🎀 마스킹테이프</button>
+                <button class="cat-btn tp-cat saver-only" onclick="loadTapes(this)">🎀 마스킹테이프</button>
                 <button class="cat-btn ss-cat" id="seasonTab" onclick="loadSeasonStickers(this)" hidden>🌸 계절 스티커</button>
                 <button class="cat-btn active" onclick="loadEmojiCategory('faces', this)">😀 표정/감정</button>
                 <button class="cat-btn" onclick="loadEmojiCategory('animals', this)">🐱 동물/자연</button>
@@ -263,7 +263,7 @@
         </div>
     </div>
 
-    <!-- 👗 스킨 메뉴 모달 (기본스킨 · 무료패턴 · 유료패턴) -->
+    <!-- 👗 스킨 메뉴 모달 (기본스킨 · 말랑패턴 · 달콤패턴) -->
     <div class="modal" id="skinModal">
         <div class="modal-content">
             <div class="modal-title">👗 스킨</div>
@@ -274,8 +274,8 @@
 
             <div class="skin-section-title">🌈 배경 패턴 고르기</div>
             <div class="service-grid">
-                <button class="btn service-btn" onclick="openPatternList('free')"><span class="service-icon">🆓</span>무료패턴</button>
-                <button class="btn service-btn" onclick="openPatternList('paid')"><span class="service-icon">💎</span>유료패턴</button>
+                <button class="btn service-btn" onclick="openPatternList('free')"><span class="service-icon">☁️</span>말랑패턴</button>
+                <button class="btn service-btn saver-only" onclick="openPatternList('paid')"><span class="service-icon">🍬</span>달콤패턴</button>
                 <button class="btn service-btn" onclick="openPatternList('my')"><span class="service-icon">📂</span>내 패턴</button>
             </div>
 
@@ -324,9 +324,9 @@
             <input type="text" id="customSkinName" placeholder="스킨 이름 입력" maxlength="20" class="btn skin-name-input">
             <button class="btn skin-save-btn" onclick="saveCustomSkin()">➕ 이 스타일로 스킨 등록하기</button>
 
-            <!-- 📤 모임방에 스킨 공유 · 📥 받은 스킨 넣기 -->
+            <!-- 📤 카페에 스킨 공유 · 📥 받은 스킨 넣기 -->
             <details class="skin-share">
-                <summary>📤 모임방에 스킨 공유 · 📥 받은 스킨 넣기</summary>
+                <summary>📤 카페에 스킨 공유 · 📥 받은 스킨 넣기</summary>
                 <div class="skin-share-body">
                     <div class="skin-share-target" id="skinShareTarget"></div>
                     <label class="skin-share-nick">만든 사람 <input type="text" id="skinNick" class="btn" maxlength="12" placeholder="닉네임"></label>
@@ -334,13 +334,13 @@
                         <button class="btn" id="skinShareSaveBtn" onclick="downloadSkinFile()">💾 파일로 저장</button>
                         <button class="btn" id="skinShareCopyBtn" onclick="copySkinCode()">📋 코드 복사</button>
                     </div>
-                    <p class="skin-share-note">저장한 파일을 <b>말랑달콤 모임방</b>에 첨부해 올리면, 확인 후 모든 사용자의 스킨 목록(🌟 모두의 스킨)에 닉네임과 함께 등록될 수 있어요.</p>
+                    <p class="skin-share-note">저장한 파일을 <b>말랑달콤 카페</b>에 첨부해 올리면, 확인 후 모든 사용자의 스킨 목록(🌟 모두의 스킨)에 닉네임과 함께 등록될 수 있어요.</p>
                     <div class="skin-share-btns">
                         <button class="btn" onclick="document.getElementById('skinFileInput').click()">📥 스킨 파일 넣기</button>
                         <button class="btn" onclick="pasteSkinCode()">📋 코드로 넣기</button>
                     </div>
                     <input type="file" id="skinFileInput" accept=".txt,.json,text/plain,application/json" style="display:none" onchange="importSkinFile(event)">
-                    <p class="skin-share-note">모임방에서 받은 스킨 파일(또는 코드)을 넣으면 🎨 내 스킨에 추가돼요.</p>
+                    <p class="skin-share-note">카페에서 받은 스킨 파일(또는 코드)을 넣으면 🎨 내 스킨에 추가돼요.</p>
                 </div>
             </details>
 
@@ -351,10 +351,10 @@
         </div>
     </div>
 
-    <!-- 🆓 무료 / 💎 유료 패턴 목록 모달 (라이브러리처럼 페이지 넘기기 + 배치 설정) -->
+    <!-- ☁️ 말랑 / 🍬 달콤 패턴 목록 모달 (라이브러리처럼 페이지 넘기기 + 배치 설정) -->
     <div class="modal" id="patternModal">
         <div class="modal-content pat-content" id="patContent">
-            <div class="modal-title" id="patTitle">🆓 무료 패턴</div>
+            <div class="modal-title" id="patTitle">☁️ 말랑패턴</div>
 
             <div class="lib-pager">
                 <button class="btn" id="patPrevBtn" onclick="changePatPage(-1)" disabled>◀ 이전</button>
@@ -492,7 +492,7 @@
                     <button class="btn" onclick="makerDownload()">💾 파일로 저장</button>
                     <button class="btn" onclick="makerCopyCode()">📋 코드 복사</button>
                 </div>
-                <p class="maker-tip">💡 <b>💾 파일로 저장</b>한 파일을 <b>말랑달콤 모임방</b>에 첨부해서 올려 주세요. 등록되면 모든 사용자의 패턴 목록에 내 닉네임과 함께 나타나요!</p>
+                <p class="maker-tip">💡 <b>💾 파일로 저장</b>한 파일을 <b>말랑달콤 카페</b>에 첨부해서 올려 주세요. 등록되면 모든 사용자의 패턴 목록에 내 닉네임과 함께 나타나요!</p>
             </div>
 
             <div class="sub-modal-btns">
@@ -703,7 +703,7 @@
             </button>
             <button class="btn save-choice" onclick="chooseSave('png')">
                 <span class="save-choice-icon">🖼</span>
-                <span class="save-choice-text"><b>내 기기에 사진(PNG)으로 저장</b><small>지금 보이는 페이지를 그림 파일로 컴퓨터·폰에 내려받아요. 모임방에 올리거나 보관할 때 좋아요.</small></span>
+                <span class="save-choice-text"><b>내 기기에 사진(PNG)으로 저장</b><small>지금 보이는 페이지를 그림 파일로 컴퓨터·폰에 내려받아요. 카페에 올리거나 보관할 때 좋아요.</small></span>
             </button>
             <p class="save-chooser-note">※ 일기는 쓰는 동안 몇 초마다 웹에 자동 저장돼요.</p>
             <button class="btn" style="width:100%; justify-content:center;" onclick="closeModal('saveChooser')">닫기</button>
@@ -736,65 +736,65 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261003-108"></script>
-    <script src="js/sound.js?v=20261003-108"></script>
-    <script src="js/app.js?v=20261003-108"></script>
-    <script src="js/page.js?v=20261003-108"></script>
-    <script src="js/elements.js?v=20261003-108"></script>
-    <script src="js/settings.js?v=20261003-108"></script>
-    <script src="js/patterns.js?v=20261003-108"></script>
-    <!-- 🌟 모임방에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
+    <script src="js/drive.js?v=20261003-109"></script>
+    <script src="js/sound.js?v=20261003-109"></script>
+    <script src="js/app.js?v=20261003-109"></script>
+    <script src="js/page.js?v=20261003-109"></script>
+    <script src="js/elements.js?v=20261003-109"></script>
+    <script src="js/settings.js?v=20261003-109"></script>
+    <script src="js/patterns.js?v=20261003-109"></script>
+    <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
-    <!-- 🌟 모임방에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
+    <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261003-108"></script>
-    <script src="js/skins.js?v=20261003-108"></script>
-    <script src="js/pattern-maker.js?v=20261003-108"></script>
-    <script src="js/doll-render.js?v=20261003-108"></script>
-    <script src="js/doll-store.js?v=20261003-108"></script>
-    <script src="js/doll-room.js?v=20261003-108"></script>
-    <script src="js/service.js?v=20261003-108"></script>
+    <script src="js/pattern-recipe.js?v=20261003-109"></script>
+    <script src="js/skins.js?v=20261003-109"></script>
+    <script src="js/pattern-maker.js?v=20261003-109"></script>
+    <script src="js/doll-render.js?v=20261003-109"></script>
+    <script src="js/doll-store.js?v=20261003-109"></script>
+    <script src="js/doll-room.js?v=20261003-109"></script>
+    <script src="js/service.js?v=20261003-109"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261003-108"></script>
-    <script src="js/presence.js?v=20261003-108"></script>
+    <script src="js/gacha.js?v=20261003-109"></script>
+    <script src="js/presence.js?v=20261003-109"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261003-108"></script>
+    <script src="js/bgm.js?v=20261003-109"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261003-108"></script>
+    <script src="js/fortune.js?v=20261003-109"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261003-108"></script>
-    <script src="js/hof.js?v=20261003-108"></script>
+    <script src="js/arcade.js?v=20261003-109"></script>
+    <script src="js/hof.js?v=20261003-109"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/ritual.js?v=20261003-108"></script>
-    <script src="js/dream.js?v=20261003-108"></script>
+    <script src="js/ritual.js?v=20261003-109"></script>
+    <script src="js/dream.js?v=20261003-109"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261003-108"></script>
-    <script src="js/plant.js?v=20261003-108"></script>
-    <script src="js/attend-stickers.js?v=20261003-108"></script>
-    <script src="js/attend.js?v=20261003-108"></script>
-    <script src="js/luck.js?v=20261003-108"></script>
-    <script src="js/question-data.js?v=20261003-108"></script>
-    <script src="js/question.js?v=20261003-108"></script>
-    <script src="js/tape.js?v=20261003-108"></script>
-    <script src="js/paper.js?v=20261003-108"></script>
-    <script src="js/draw.js?v=20261003-108"></script>
-    <script src="js/frame.js?v=20261003-108"></script>
-    <script src="js/season-data.js?v=20261003-108"></script>
-    <script src="js/season.js?v=20261003-108"></script>
-    <script src="js/lock.js?v=20261003-108"></script>
-    <script src="js/cycle.js?v=20261003-108"></script>
-    <script src="js/month.js?v=20261003-108"></script>
-    <script src="js/stamp.js?v=20261003-108"></script>
-    <script src="js/search.js?v=20261003-108"></script>
-    <script src="js/dday.js?v=20261003-108"></script>
-    <script src="js/show.js?v=20261003-108"></script>
-    <script src="js/photobooth.js?v=20261003-108"></script>
-    <script src="js/stickermaker.js?v=20261003-108"></script>
-    <script src="js/namematch.js?v=20261003-108"></script>
-    <script src="js/psytest-data.js?v=20261003-108"></script>
-    <script src="js/psytest.js?v=20261003-108"></script>
-    <script src="js/letter.js?v=20261003-108"></script>
-    <script src="js/install.js?v=20261003-108"></script>
+    <script src="js/tojeong.js?v=20261003-109"></script>
+    <script src="js/plant.js?v=20261003-109"></script>
+    <script src="js/attend-stickers.js?v=20261003-109"></script>
+    <script src="js/attend.js?v=20261003-109"></script>
+    <script src="js/luck.js?v=20261003-109"></script>
+    <script src="js/question-data.js?v=20261003-109"></script>
+    <script src="js/question.js?v=20261003-109"></script>
+    <script src="js/tape.js?v=20261003-109"></script>
+    <script src="js/paper.js?v=20261003-109"></script>
+    <script src="js/draw.js?v=20261003-109"></script>
+    <script src="js/frame.js?v=20261003-109"></script>
+    <script src="js/season-data.js?v=20261003-109"></script>
+    <script src="js/season.js?v=20261003-109"></script>
+    <script src="js/lock.js?v=20261003-109"></script>
+    <script src="js/cycle.js?v=20261003-109"></script>
+    <script src="js/month.js?v=20261003-109"></script>
+    <script src="js/stamp.js?v=20261003-109"></script>
+    <script src="js/search.js?v=20261003-109"></script>
+    <script src="js/dday.js?v=20261003-109"></script>
+    <script src="js/show.js?v=20261003-109"></script>
+    <script src="js/photobooth.js?v=20261003-109"></script>
+    <script src="js/stickermaker.js?v=20261003-109"></script>
+    <script src="js/namematch.js?v=20261003-109"></script>
+    <script src="js/psytest-data.js?v=20261003-109"></script>
+    <script src="js/psytest.js?v=20261003-109"></script>
+    <script src="js/letter.js?v=20261003-109"></script>
+    <script src="js/install.js?v=20261003-109"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

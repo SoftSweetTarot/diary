@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/skins.js
-   👗 스킨 메뉴 (기본스킨 · 무료패턴 · 유료패턴) · 전체 배경 패턴 적용/저장/불러오기
+   👗 스킨 메뉴 (기본스킨 · 말랑패턴 · 달콤패턴) · 전체 배경 패턴 적용/저장/불러오기
    - 고른 패턴은 설정값 'diary_bg_pattern' 으로 저장 → 구글 드라이브 settings.json 에 함께 저장돼요
        예) "diary_bg_pattern": {"id":"tomato","scale":1}
    - 패턴 해제 시 이 값을 지워요 (settings.json 에서도 빠짐)
@@ -10,7 +10,6 @@
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → community-skins → pattern-recipe → skins → pattern-maker → service */
 
         const BG_PATTERN_KEY = 'diary_bg_pattern';
-        const PAID_PATTERNS_OPEN = true;   // 임시: 유료 패턴도 모두 사용 가능 (결제 기능을 붙이면 false로)
         const PATTERN_SCALE_MIN = 0.5, PATTERN_SCALE_MAX = 2;
 
         let bgPattern = null;              // 지금 적용된 패턴 { id, scale, r? } (없으면 null)
@@ -78,7 +77,7 @@
         function selectBgPattern(id) {
             const p = findBgPattern(id);
             if (!p) return;
-            if (p.tier === 'paid' && !PAID_PATTERNS_OPEN) { showMsg('💎 유료 패턴은 준비 중이에요.<br>조금만 기다려 주세요!'); return; }
+            if (p.tier === 'paid' && !isSaver()) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 패턴이에요 💕'); return; }
             bgPattern = { id, scale: bgPattern ? bgPattern.scale : 1 };
             if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 패턴은 레시피도 같이 저장
             renderBgPattern();
@@ -113,7 +112,7 @@
             openModal('skinBasicModal');
         }
 
-        /* ---------- 🌟 모두의 스킨 (모임방에서 받아 관리자가 등록 : js/community-skins.js) ----------
+        /* ---------- 🌟 모두의 스킨 (카페에서 받아 관리자가 등록 : js/community-skins.js) ----------
            목록 한 줄 : {"no":1,"tier":"free","name":"봄날","by":"닉네임","skin":{색 5개}}  →  id 'cs:번호'
            파일이 없거나 깨져도 다이어리는 정상 동작 (모두의 스킨만 안 보임) */
         let communitySkinItems = null;
@@ -185,7 +184,7 @@
             openModal('skinModal');
         }
 
-        /* ---------- 무료 / 유료 패턴 목록 (라이브러리처럼 페이지 넘기기 + 배치 설정) ---------- */
+        /* ---------- ☁️ 말랑 / 🍬 달콤 패턴 목록 (라이브러리처럼 페이지 넘기기 + 배치 설정) ---------- */
         const PAT_LAYOUT_KEY = 'malang_pattern_layout';
         const PAT_DEFAULT_LAYOUT = { rows: 3, cols: 3, size: 100 };
         const PAT_LAYOUT_LIMITS = { rows: [1, 8], cols: [1, 8], size: [60, 180] };
@@ -222,7 +221,7 @@
             /* 지금 쓰는 패턴이 이 목록에 있으면 그 페이지부터 보여 주기 */
             const idx = bgPattern ? patItems().findIndex(p => p.id === bgPattern.id) : -1;
             patPage = idx >= 0 ? Math.floor(idx / patPerPage()) : 0;
-            document.getElementById('patTitle').textContent = { free: '🆓 무료 패턴', paid: '💎 유료 패턴', my: '📂 내 패턴' }[patTier];
+            document.getElementById('patTitle').textContent = { free: '☁️ 말랑패턴', paid: '🍬 달콤패턴', my: '📂 내 패턴' }[patTier];
             closeModal('skinModal');
             renderPatternList();
             openModal('patternModal');
@@ -280,7 +279,7 @@
                 inner.className = 'pat-swatch-inner';
                 paintPatternInto(inner, p);
                 sw.appendChild(inner);
-                if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '💎'; sw.appendChild(b); }
+                if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '🍬'; sw.appendChild(b); }
                 if (bgPattern && bgPattern.id === p.id) { const c = document.createElement('span'); c.className = 'pat-check'; c.textContent = '✔ 사용 중'; sw.appendChild(c); }
                 const name = document.createElement('span');
                 name.className = 'pat-name';
@@ -299,7 +298,7 @@
                     const acts = document.createElement('div');
                     acts.className = 'pat-actions';
                     const send = document.createElement('button');
-                    send.type = 'button'; send.className = 'btn'; send.textContent = '💾'; send.title = '파일로 저장 (모임방에 올리기용)';
+                    send.type = 'button'; send.className = 'btn'; send.textContent = '💾'; send.title = '파일로 저장 (카페에 올리기용)';
                     send.onclick = () => downloadMyPattern(p.uid);
                     const del = document.createElement('button');
                     del.type = 'button'; del.className = 'btn'; del.textContent = '🗑'; del.title = '삭제';

@@ -325,6 +325,9 @@
         }
         .cover-notice.empty { display: none; }
 
+        /* 🐷 저금통 선물 : 저금해 준 사람에게만 보여요 (js/settings.js setSaver) */
+        body:not(.saver) .saver-only { display: none !important; }
+
         /* 🎨 전체 배경 패턴 레이어 : 패턴을 쓰면 body 배경을 비우고 이 레이어가 보여요 */
         .bg-pattern-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; display: none; }
         html.bg-pattern-on .bg-pattern-layer { display: block; }
@@ -345,7 +348,7 @@
         }
         .skin-pattern-note .btn { flex-shrink: 0; font-size: 12px; padding: 3px 8px; }
 
-        /* 🆓 / 💎 패턴 목록 */
+        /* ☁️ 말랑 / 🍬 달콤 패턴 목록 */
         .pat-content { max-width: min(95vw, var(--pat-w, 420px)); min-width: min(90vw, 340px); }
         .pat-content .btn:disabled { opacity: .4; cursor: default; }
         .pat-content .btn:disabled:hover { background: #fff; color: #444; }
