@@ -65,7 +65,7 @@
            - 아직 안 만든 기능은 버튼에 '(준비중)'이 붙어 있고, 누르면 안내 메시지만 떠요.
              기능을 만들면 index.html 버튼의 class 에서 'soon' 과 <small>(준비중)</small> 을 빼고 아래 함수 내용을 바꾸면 돼요.
            ===================================================================== */
-        const CAFE_URL = 'https://cafe.naver.com/sarangloveis';   // 👭 말랑달콤 모임방 (네이버 카페)
+        const CAFE_URL = 'https://cafe.naver.com/softsweetdiary';   // 👭 말랑달콤 모임방 (네이버 카페)
 
         /* ☕ 카페 : 1단계 카테고리 → 2단계 놀이 (카페를 열 때마다 카테고리부터 · js/settings.js openModal) */
         function svcShowCats() {
