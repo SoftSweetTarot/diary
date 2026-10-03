@@ -202,32 +202,32 @@
         let currentSkinId = 'pink';
         let currentSkinInline = null;      // 목록에 없는 스킨을 쓰는 중일 때 그 색 (예: 내려간 모두의 스킨)
 
-        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴 · 🍬 달콤 스킨)
+        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴)
+           - 사람들이 만들어 나눈 스킨 · 패턴(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
            - 화면에서 class="saver-only" 인 것들은 저금해 준 사람에게만 보여요 (css : body.saver)
-           - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴 · 쓰던 스킨은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
+           - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
            - 저금통 서버가 붙으면 setSaver(true/false) 로 알려 줘요 */
         let saverOn = false;
         const isSaver = () => saverOn;
         function setSaver(on) {
             saverOn = !!on;
             document.body.classList.toggle('saver', saverOn);
-            renderSkinSelect();
         }
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
         const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
-        /* id → { skin, kind:'preset'|'my'|'cs'|'inline', name, tier } */
+        /* id → { skin, kind:'preset'|'my'|'cs'|'inline', name } */
         function findSkin(id, inline) {
             if (typeof id !== 'string' || !id) return null;
-            if (hasOwn(skinPresets, id)) return { skin: skinPresets[id], kind: 'preset', name: SKIN_PRESET_NAMES[id] || id, tier: 'free' };
+            if (hasOwn(skinPresets, id)) return { skin: skinPresets[id], kind: 'preset', name: SKIN_PRESET_NAMES[id] || id };
             if (id.startsWith('cs:')) {
                 const hit = skinCommunity().find(s => s.id === id);
-                if (hit) return { skin: hit.skin, kind: 'cs', name: hit.name, tier: hit.tier, by: hit.by };
+                if (hit) return { skin: hit.skin, kind: 'cs', name: hit.name, by: hit.by };
             } else if (hasOwn(customSkins, id)) {
-                return { skin: customSkins[id], kind: 'my', name: id, tier: 'free' };
+                return { skin: customSkins[id], kind: 'my', name: id };
             }
             const c = inline && typeof sanitizeSkin === 'function' ? sanitizeSkin(inline) : null;
-            return c ? { skin: c, kind: 'inline', name: '지금 쓰는 스킨', tier: 'free' } : null;
+            return c ? { skin: c, kind: 'inline', name: '지금 쓰는 스킨' } : null;
         }
 
         function setSkinVars(skin) {
@@ -253,11 +253,6 @@
             const hit = findSkin(id, opts.inline || (id === currentSkinId ? currentSkinInline : null));
             const sel = document.getElementById('skinSelect');
             if (!hit) { if (sel) sel.value = currentSkinId; return false; }
-            if (hit.tier === 'paid' && !isSaver() && opts.save !== false) {
-                if (sel) sel.value = currentSkinId;
-                showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 스킨이에요 💕');
-                return false;
-            }
             if (opts.save !== false && typeof seasonStop === 'function') seasonStop();   // 다른 스킨을 고르면 계절 테마 끄기 (js/season.js)
             setSkinVars(hit.skin);
             syncSkinPickers(hit.skin);
@@ -296,8 +291,8 @@
                 sel.appendChild(g);
             };
             group('기본 스킨', Object.keys(skinPresets).map(k => [k, SKIN_PRESET_NAMES[k] || k]));
-            group('🌟 모두의 스킨 (카페에서 등록)', skinCommunity().filter(s => s.tier !== 'paid' || isSaver()).map(s =>
-                [s.id, `${s.tier === 'paid' ? '🍬' : '☁️'} ${s.name}${s.by ? ' · by ' + s.by : ''}`]));
+            group('🌟 모두의 스킨 (카페에서 등록)', skinCommunity().map(s =>
+                [s.id, `${s.name}${s.by ? ' · by ' + s.by : ''}`]));
             group('🎨 내 스킨', Object.keys(customSkins).map(n => [n, '🎨 ' + n]));
             if (!Array.from(sel.options).some(o => o.value === currentSkinId) && currentSkinInline) {
                 group('지금 쓰는 스킨', [[currentSkinId, '🎨 지금 쓰는 스킨 (목록에서 내려감)']]);

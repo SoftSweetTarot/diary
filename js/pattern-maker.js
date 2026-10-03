@@ -83,7 +83,7 @@
                 const css = r && recipeToCss(r);
                 if (!no || !css || communityItems.some(x => x.id === 'cm:' + no)) return;
                 communityItems.push({
-                    id: 'cm:' + no, tier: row.tier === 'paid' ? 'paid' : 'free',
+                    id: 'cm:' + no, tier: 'free',
                     name: recipeText(row.name, 20) || '사용자 패턴', by: recipeText(row.by, 12), css, recipe: r
                 });
             });

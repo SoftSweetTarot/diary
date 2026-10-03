@@ -82,13 +82,13 @@
             <input type="file" id="curFile" accept=".js,.txt" multiple style="display:none" onchange="loadCurrentFile(event)">
         </details>
         <details id="curDetails">
-            <summary>등록된 패턴 보기 · 등급 바꾸기 · 내리기</summary>
-            <p class="meta" style="margin:8px 0 0;">등급을 바꾸거나 🗑 내리기를 누른 뒤에도 <b>📦 등록 파일 만들기</b>를 눌러야 반영돼요.</p>
+            <summary>등록된 패턴 보기 · 내리기</summary>
+            <p class="meta" style="margin:8px 0 0;">🗑 내리기를 누른 뒤에도 <b>📦 등록 파일 만들기</b>를 눌러야 반영돼요.</p>
             <div class="grid" id="curGrid"></div>
         </details>
         <details id="skinCurDetails">
-            <summary>등록된 스킨 보기 · 등급 바꾸기 · 내리기</summary>
-            <p class="meta" style="margin:8px 0 0;">등급을 바꾸거나 🗑 내리기를 누른 뒤에도 <b>📦 등록 파일 만들기</b>를 눌러야 반영돼요.</p>
+            <summary>등록된 스킨 보기 · 내리기</summary>
+            <p class="meta" style="margin:8px 0 0;">🗑 내리기를 누른 뒤에도 <b>📦 등록 파일 만들기</b>를 눌러야 반영돼요.</p>
             <div class="grid" id="skinCurGrid"></div>
         </details>
     </div>
@@ -260,16 +260,16 @@
 </script>
 <script>
     /* ---------- 상태 ---------- */
-    let current = [];        // 지금 등록된 패턴 [{no, tier, name, by, recipe, removed?}]
-    let incoming = [];       // 새로 넣은 패턴   [{key, tier, name, by, recipe}]
+    let current = [];        // 지금 등록된 패턴 [{no, name, by, recipe, removed?}]
+    let incoming = [];       // 새로 넣은 패턴   [{key, name, by, recipe}]
     let keySeq = 0;
     let listReady = false;   // 지금 등록된 목록을 불러왔는지 (안 불러오고 만들면 기존 등록분이 사라지므로 막음)
     const SITE_KEY = 'malang_tool_site';
     const DEFAULT_SITE = 'https://softsweettarot.github.io/diary/';   // 말랑달콤 다이어리 사이트 주소
     const LAST_KEY = 'malang_tool_last_built';
     const LAST_SKIN_KEY = 'malang_tool_last_built_skins';
-    let skinCurrent = [];     // 지금 등록된 스킨 [{no, tier, name, by, skin, removed?}]
-    let skinIncoming = [];    // 새로 넣은 스킨   [{key, tier, name, by, skin}]
+    let skinCurrent = [];     // 지금 등록된 스킨 [{no, name, by, skin, removed?}]
+    let skinIncoming = [];    // 새로 넣은 스킨   [{key, name, by, skin}]
     let skinReady = false;    // 지금 등록된 스킨 목록을 불러왔는지
 
     function siteBase() {
@@ -385,7 +385,7 @@
             const no = parseInt(row && row.no, 10);
             const r = row && sanitizeRecipe(row.recipe);
             if (!no || !r || current.some(p => p.no === no)) return;
-            current.push({ no, tier: row.tier === 'paid' ? 'paid' : 'free', name: recipeText(row.name, 20) || '사용자 패턴', by: recipeText(row.by, 12), recipe: r });
+            current.push({ no, name: recipeText(row.name, 20) || '사용자 패턴', by: recipeText(row.by, 12), recipe: r });
         });
         renderCurrent();
     }
@@ -404,7 +404,7 @@
 
     function renderCurrent() {
         const live = current.filter(p => !p.removed);
-        document.getElementById('curInfo').textContent = listReady ? `(총 ${live.length}개 · 말랑 ${live.filter(p => p.tier === 'free').length} · 달콤 ${live.filter(p => p.tier === 'paid').length})` : '';
+        document.getElementById('curInfo').textContent = listReady ? `(총 ${live.length}개)` : '';
         const grid = document.getElementById('curGrid');
         grid.innerHTML = '';
         if (!current.length) { grid.innerHTML = '<div class="empty">아직 등록된 패턴이 없어요.</div>'; return; }
@@ -414,13 +414,9 @@
             card.appendChild(swatch(p.recipe, '#' + p.no));
             const f = document.createElement('div');
             f.className = 'fields';
-            f.innerHTML = `<div><b></b> <span class="meta"></span></div>
-                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>`;
+            f.innerHTML = `<div><b></b> <span class="meta"></span></div>`;
             f.querySelector('b').textContent = p.name;
             f.querySelector('.meta').textContent = p.by ? 'by ' + p.by : '';
-            const sel = f.querySelector('select');
-            sel.value = p.tier;
-            sel.onchange = () => { p.tier = sel.value; renderCurrent(); };
             card.appendChild(f);
             const acts = document.createElement('div');
             acts.className = 'acts';
@@ -474,7 +470,7 @@
         const k = recipeKey(p.recipe);
         if (incoming.some(x => recipeKey(x.recipe) === k)) { toast('ℹ 이미 넣은 패턴이에요: ' + (p.name || source)); return false; }
         if (current.some(x => recipeKey(x.recipe) === k)) { toast('ℹ 이미 등록된 패턴과 똑같아요: ' + (p.name || source)); return false; }
-        incoming.push({ key: ++keySeq, tier: 'free', name: p.name || '사용자 패턴', by: p.by || '', recipe: p.recipe });
+        incoming.push({ key: ++keySeq, name: p.name || '사용자 패턴', by: p.by || '', recipe: p.recipe });
         return true;
     }
 
@@ -509,14 +505,11 @@
             f.className = 'fields';
             f.innerHTML = `<label>이름 <input type="text" maxlength="20"></label>
                 <label>만든 사람 <input type="text" maxlength="12"></label>
-                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>
                 <div class="meta">${RECIPE_KIND_NAMES[p.recipe.kind] || ''} · ${(JSON.stringify(p.recipe).length / 1000).toFixed(1)}K</div>`;
             const [nameIn, byIn] = f.querySelectorAll('input');
-            const sel = f.querySelector('select');
-            nameIn.value = p.name; byIn.value = p.by; sel.value = p.tier;
+            nameIn.value = p.name; byIn.value = p.by;
             nameIn.oninput = () => { p.name = recipeText(nameIn.value, 20); };
             byIn.oninput = () => { p.by = recipeText(byIn.value, 12); };
-            sel.onchange = () => { p.tier = sel.value; updateBuildInfo(); };
             card.appendChild(f);
             const acts = document.createElement('div');
             acts.className = 'acts';
@@ -562,7 +555,7 @@
         const skinKeep = skinCurrent.filter(p => !p.removed);
         if (!incoming.length && !skinIncoming.length && !current.length && !skinCurrent.length) { toast('넣은 패턴·스킨이 없어요'); return; }
         const files = [];
-        const out = keep.map(p => ({ no: p.no, tier: p.tier, name: p.name, by: p.by, recipe: p.recipe }));
+        const out = keep.map(p => ({ no: p.no, name: p.name, by: p.by, recipe: p.recipe }));
         let no = maxNo();
         incoming.forEach(p => {
             no += 1;
@@ -572,7 +565,7 @@
                 r.src = `patterns/${no}.${ext}`;
                 files.push({ name: r.src, data: bytes });
             }
-            out.push({ no, tier: p.tier, name: p.name || '사용자 패턴', by: p.by, recipe: r });
+            out.push({ no, name: p.name || '사용자 패턴', by: p.by, recipe: r });
         });
         const nowD = new Date(), z = n => String(n).padStart(2, '0');
         const today = `${nowD.getFullYear()}-${z(nowD.getMonth() + 1)}-${z(nowD.getDate())}`;
@@ -581,7 +574,7 @@
    🌟 카페에서 받아 등록한 사용자 패턴 목록
    - 이 파일은 pattern-tool.html(패턴 등록 도구)이 자동으로 만들어요. 직접 고치지 않아도 돼요.
    - 이미지·그림 패턴의 이미지는 patterns 폴더에 따로 있어요. (예: patterns/3.webp)
-   마지막 수정: ${stamp} · 총 ${out.length}개 (말랑 ${out.filter(p => p.tier === 'free').length} · 달콤 ${out.filter(p => p.tier === 'paid').length}) */
+   마지막 수정: ${stamp} · 총 ${out.length}개 (사람들이 만들어 나눈 패턴이라 모두 누구나 써요) */
 const COMMUNITY_PATTERNS = /*DATA-START*/[
 ${out.map(p => JSON.stringify(p)).join(',\n')}
 ]/*DATA-END*/;
@@ -589,13 +582,13 @@ ${out.map(p => JSON.stringify(p)).join(',\n')}
         files.unshift({ name: 'js/community-patterns.js', data: new TextEncoder().encode(js) });
 
         /* 🖌 스킨 목록 : js/community-skins.js (이미지 없음, 색 5개뿐) */
-        const skinOut = skinKeep.map(p => ({ no: p.no, tier: p.tier, name: p.name, by: p.by, skin: p.skin }));
+        const skinOut = skinKeep.map(p => ({ no: p.no, name: p.name, by: p.by, skin: p.skin }));
         let sno = skinMaxNo();
-        skinIncoming.forEach(p => { sno += 1; skinOut.push({ no: sno, tier: p.tier, name: p.name || '모두의 스킨', by: p.by, skin: p.skin }); });
+        skinIncoming.forEach(p => { sno += 1; skinOut.push({ no: sno, name: p.name || '모두의 스킨', by: p.by, skin: p.skin }); });
         const sjs = `/* 말랑달콤 다이어리 - js/community-skins.js
    🌟 카페에서 받아 등록한 모두의 스킨 목록
    - 이 파일은 pattern-tool.html(패턴·스킨 등록 도구)이 자동으로 만들어요. 직접 고치지 않아도 돼요.
-   마지막 수정: ${stamp} · 총 ${skinOut.length}개 (말랑 ${skinOut.filter(p => p.tier === 'free').length} · 달콤 ${skinOut.filter(p => p.tier === 'paid').length}) */
+   마지막 수정: ${stamp} · 총 ${skinOut.length}개 (사람들이 만들어 나눈 스킨이라 모두 누구나 써요) */
 const COMMUNITY_SKINS = /*DATA-START*/[
 ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
 ]/*DATA-END*/;
@@ -617,7 +610,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
             · 🖌 스킨 : 새로 등록 ${newSkins}개 · 총 ${skinOut.length}개<br>
             ① zip 압축을 풀면 <code>js</code> 폴더${imgs ? '와 <code>patterns</code> 폴더' : ''}가 나와요.<br>
             ② 깃허브 저장소 첫 화면에서 <b>Add file → Upload files</b> 를 누르고, 그 폴더${imgs ? '들' : ''}을 통째로 끌어다 놓기 → <b>Commit changes</b><br>
-            ③ 1~2분 뒤부터 사용자 다이어리의 말랑/달콤 패턴 목록과 스킨 목록(🌟 모두의 스킨)에 나타나요. (늦어도 10분 안에)<br>
+            ③ 1~2분 뒤부터 사용자 다이어리의 ☁️ 말랑패턴 목록과 스킨 목록(🌟 모두의 스킨)에 나타나요. (늦어도 10분 안에)<br>
             ④ 다음에 등록할 때는 이 도구를 열고 🌐 최신 목록 불러오기부터 누르면 돼요. (내 컴퓨터에 따로 덮어쓸 필요 없어요)`;
         try { localStorage.setItem(LAST_KEY, JSON.stringify({ at: stamp, list: out })); } catch (e) {}
         try { localStorage.setItem(LAST_SKIN_KEY, JSON.stringify({ at: stamp, list: skinOut })); } catch (e) {}
@@ -742,7 +735,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
             const no = parseInt(row && row.no, 10);
             const skin = row && sanitizeSkin(row.skin);
             if (!no || !skin || skinCurrent.some(p => p.no === no)) return;
-            skinCurrent.push({ no, tier: row.tier === 'paid' ? 'paid' : 'free', name: recipeText(row.name, 20) || '모두의 스킨', by: recipeText(row.by, 12), skin });
+            skinCurrent.push({ no, name: recipeText(row.name, 20) || '모두의 스킨', by: recipeText(row.by, 12), skin });
         });
         renderSkinCurrent();
     }
@@ -765,7 +758,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
 
     function renderSkinCurrent() {
         const live = skinCurrent.filter(p => !p.removed);
-        document.getElementById('skinCurInfo').textContent = skinReady ? `(총 ${live.length}개 · 말랑 ${live.filter(p => p.tier === 'free').length} · 달콤 ${live.filter(p => p.tier === 'paid').length})` : '';
+        document.getElementById('skinCurInfo').textContent = skinReady ? `(총 ${live.length}개)` : '';
         const grid = document.getElementById('skinCurGrid');
         grid.innerHTML = '';
         if (!skinCurrent.length) { grid.innerHTML = '<div class="empty">아직 등록된 스킨이 없어요.</div>'; updateBuildInfo(); return; }
@@ -775,13 +768,9 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
             card.appendChild(skinSwatch(p.skin, '#' + p.no));
             const f = document.createElement('div');
             f.className = 'fields';
-            f.innerHTML = `<div><b></b> <span class="meta"></span></div>
-                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>`;
+            f.innerHTML = `<div><b></b> <span class="meta"></span></div>`;
             f.querySelector('b').textContent = p.name;
             f.querySelector('.meta').textContent = p.by ? 'by ' + p.by : '';
-            const sel = f.querySelector('select');
-            sel.value = p.tier;
-            sel.onchange = () => { p.tier = sel.value; renderSkinCurrent(); };
             card.appendChild(f);
             const acts = document.createElement('div');
             acts.className = 'acts';
@@ -809,7 +798,7 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
         const k = JSON.stringify(skin);
         if (skinIncoming.some(x => JSON.stringify(x.skin) === k)) { toast('ℹ 이미 넣은 스킨이에요: ' + (o.name || source)); return false; }
         if (skinCurrent.some(x => JSON.stringify(x.skin) === k)) { toast('ℹ 이미 등록된 스킨과 똑같아요: ' + (o.name || source)); return false; }
-        skinIncoming.push({ key: ++keySeq, tier: 'free', name: recipeText(o.name, 20) || '모두의 스킨', by: recipeText(o.by, 12), skin });
+        skinIncoming.push({ key: ++keySeq, name: recipeText(o.name, 20) || '모두의 스킨', by: recipeText(o.by, 12), skin });
         return true;
     }
 
@@ -825,14 +814,11 @@ ${skinOut.map(p => JSON.stringify(p)).join(',\n')}
             const f = document.createElement('div');
             f.className = 'fields';
             f.innerHTML = `<label>이름 <input type="text" maxlength="20"></label>
-                <label>만든 사람 <input type="text" maxlength="12"></label>
-                <label>등급 <select><option value="free">☁️ 말랑</option><option value="paid">🍬 달콤</option></select></label>`;
+                <label>만든 사람 <input type="text" maxlength="12"></label>`;
             const [nameIn, byIn] = f.querySelectorAll('input');
-            const sel = f.querySelector('select');
-            nameIn.value = p.name; byIn.value = p.by; sel.value = p.tier;
+            nameIn.value = p.name; byIn.value = p.by;
             nameIn.oninput = () => { p.name = recipeText(nameIn.value, 20); };
             byIn.oninput = () => { p.by = recipeText(byIn.value, 12); };
-            sel.onchange = () => { p.tier = sel.value; updateBuildInfo(); };
             card.appendChild(f);
             const acts = document.createElement('div');
             acts.className = 'acts';

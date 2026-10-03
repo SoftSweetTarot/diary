@@ -113,7 +113,7 @@
         }
 
         /* ---------- 🌟 모두의 스킨 (카페에서 받아 관리자가 등록 : js/community-skins.js) ----------
-           목록 한 줄 : {"no":1,"tier":"free","name":"봄날","by":"닉네임","skin":{색 5개}}  →  id 'cs:번호'
+           목록 한 줄 : {"no":1,"name":"봄날","by":"닉네임","skin":{색 5개}}  →  id 'cs:번호'
            파일이 없거나 깨져도 다이어리는 정상 동작 (모두의 스킨만 안 보임) */
         let communitySkinItems = null;
         function getCommunitySkins() {
@@ -125,7 +125,7 @@
                 const skin = row && sanitizeSkin(row.skin);
                 if (!no || !skin || communitySkinItems.some(x => x.id === 'cs:' + no)) return;
                 communitySkinItems.push({
-                    id: 'cs:' + no, no, tier: row.tier === 'paid' ? 'paid' : 'free',
+                    id: 'cs:' + no, no,
                     name: recipeText(row.name, 20) || '모두의 스킨', by: recipeText(row.by, 12), skin
                 });
             });
