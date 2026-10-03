@@ -2096,7 +2096,7 @@
 
         /* ===== 🐷 말랑달콤 저금통 (js/piggy.js) ===== */
         .svc-pig { background: linear-gradient(160deg, #fff0f5, #ffe3ec); border-color: #ffb3c8 !important; }
-        .svc-pig .svc-cat-icon { animation: pgWiggle 2.6s ease-in-out infinite; display: inline-block; }
+        .svc-pig .svc-cat-icon { animation: pgBeat 1.6s ease-in-out infinite; display: inline-block; }
         .pg-content { max-width: 440px; padding: 16px 16px 18px; background: #fffafc; }
         .pg-wrap { display: flex; flex-direction: column; gap: 14px; color: #5a4650; }
         .pg-hero { position: relative; text-align: center; padding: 6px 0 14px; border-radius: 22px;
@@ -2163,5 +2163,5 @@
         @keyframes pgBounce { 0%, 24% { transform: scale(1, 1); } 29% { transform: scale(1.06, .93); } 35% { transform: scale(.97, 1.04); } 41%, 100% { transform: scale(1, 1); } }
         @keyframes pgTwinkle { 0%, 100% { transform: scale(.5); opacity: .3; } 50% { transform: scale(1.15); opacity: 1; } }
         @keyframes pgFloat { 0%, 100% { transform: translateY(0); opacity: .7; } 50% { transform: translateY(-8px); opacity: 1; } }
-        @keyframes pgWiggle { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-10deg); } 90% { transform: rotate(8deg); } 95% { transform: rotate(-4deg); } }
+        @keyframes pgBeat { 0%, 40%, 100% { transform: scale(1); } 12% { transform: scale(1.22); } 24% { transform: scale(.96); } 32% { transform: scale(1.14); } }
         @media (prefers-reduced-motion: reduce) { .pg-hero.play .pg-coin, .pg-hero.play .pg-body, .pg-spark path, .pg-hero::before, .pg-hero::after, .svc-pig .svc-cat-icon { animation: none; } }
