@@ -9,10 +9,11 @@
    - 선물이 열렸는지는 js/settings.js 의 isSaver() 가 알려 줘요 (선물 끝나는 날은 접속 신호의 답으로 받아요 : js/presence.js)
    ※ 이 파일이 없으면 저금통 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
-        /* 💳 받는 통장 (임시) */
-        const PIG_BANK = { bank: '○○은행', num: '000-0000-0000-00', holder: '홍길동' };
+        /* 💳 받는 통장 : 다이어리 맨 위 폴더의 an.txt 에 적어요 (은행= · 계좌번호= · 받는 사람= 세 줄) */
+        const PIG_BANK_FILE = 'an.txt';
+        const PIG_BANK_KEYS = { '은행': 'bank', '계좌번호': 'num', '받는 사람': 'holder' };
         const PIG_ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        const pig = { tab: 'tape', code: '', built: false };
+        const pig = { tab: 'tape', code: '', built: false, bank: null };
 
         function pigCode(pid) {
             let h = 0x811c9dc5;
@@ -113,14 +114,14 @@
                 </ol>
                 <div class="pg-book">
                   <div class="pg-book-top">💳 말랑달콤 저금통장</div>
-                  <div class="pg-book-row"><span>은행</span><b>${PIG_BANK.bank}</b></div>
-                  <div class="pg-book-row"><span>계좌번호</span><b>${PIG_BANK.num}</b></div>
-                  <div class="pg-book-row"><span>받는 사람</span><b>${PIG_BANK.holder}</b></div>
-                  <button type="button" class="btn btn-primary pg-copy" onclick="pigCopy(PIG_BANK.num, '계좌번호')">📋 계좌번호 복사하기</button>
+                  <div class="pg-book-row"><span>은행</span><b data-k="bank">…</b></div>
+                  <div class="pg-book-row"><span>계좌번호</span><b data-k="num">…</b></div>
+                  <div class="pg-book-row"><span>받는 사람</span><b data-k="holder">…</b></div>
+                  <button type="button" class="btn btn-primary pg-copy" id="pigBankCopy" onclick="pigCopy(pig.bank && pig.bank.num, '계좌번호')" disabled>📋 계좌번호 복사하기</button>
                 </div>
               </div>
 
-              <div class="pg-foot">마음을 넣어 주신 모든 분들, 정말 정말 고마워요 💕<br><small>궁금한 점은 <a href="#" class="pg-link" onclick="goCafe(); return false;">👭 말랑달콤 모임방</a>에 남겨 주시면 답해 드릴게요</small></div>`;
+              <div class="pg-foot">마음을 넣어 주신 모든 분들, 정말 정말 고마워요 💕</div>`;
             box.querySelectorAll('.pg-pt-sw i').forEach(el => paintPatternInto(el, sweet[+el.dataset.i]));
             pig.built = true;
             pigTab(pig.tab);
@@ -158,6 +159,26 @@
             } catch (e) { show('잠시 후 다시 열어 주세요', false); }
         }
 
+        /* 💳 통장 정보 읽기 (an.txt · 고치면 바로 반영되게 매번 새로 읽어요) */
+        async function pigLoadBank() {
+            const box = document.querySelector('#pigBody .pg-book'); if (!box) return;
+            const fill = b => {
+                box.querySelectorAll('[data-k]').forEach(el => { el.textContent = b ? b[el.dataset.k] || '-' : '-'; });
+                document.getElementById('pigBankCopy').disabled = !(b && b.num);
+            };
+            try {
+                const res = await fetch(PIG_BANK_FILE + '?t=' + Date.now(), { cache: 'no-store' });
+                if (!res.ok) throw 0;
+                const b = {};
+                (await res.text()).split(/\r?\n/).forEach(line => {
+                    const m = /^\s*([^=]+?)\s*=\s*(.*?)\s*$/.exec(line);
+                    if (m && PIG_BANK_KEYS[m[1]]) b[PIG_BANK_KEYS[m[1]]] = m[2];
+                });
+                pig.bank = b.num ? b : null;
+            } catch (e) { if (!pig.bank) pig.bank = null; }
+            fill(pig.bank);
+        }
+
         async function pigCopy(text, what) {
             if (!text) return;
             try { await navigator.clipboard.writeText(text); }
@@ -182,6 +203,7 @@
             if (art) { art.classList.remove('play'); void art.offsetWidth; art.classList.add('play'); }
             setTimeout(pigCoin, 760);                       // 동전이 쏙 들어가는 순간
             pigLoadCode();
+            pigLoadBank();
         }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
