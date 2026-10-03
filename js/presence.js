@@ -7,7 +7,7 @@
    - 게스트 · 로그인이 만료된 동안은 보내지 않아요 (로그인 창을 띄우지 않아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
 
-        const MEMBER_API_URL = '';                    // ← '말랑달콤 사람들' 앱스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
+        const MEMBER_API_URL = 'https://script.google.com/macros/s/AKfycbzuhJ24tR7VbfKfX-lGI8-BRpPDx3d_J0UwR9x94RxPd2H3mvJiea-vn7EvRRCt2IgMag/exec';                    // ← '말랑달콤 사람들' 앱스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
         const PR_EVERY = 5 * 60 * 1000;
         const pr = { last: 0 };
         const prOk = () => MEMBER_API_URL && typeof drive !== 'undefined'
