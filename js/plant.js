@@ -1,7 +1,8 @@
 /* 말랑달콤 다이어리 - js/plant.js
    🌷 화분 키우기 : 일기를 쓴 날마다 물을 한 번 줄 수 있어요. (카페 → 매일 말랑 → 🌷 화분 키우기)
    - 물을 준 횟수만큼 자라요 : 씨앗 → 새싹 → 잎 → 꽃봉오리 → 꽃 → 열매
-   - 열매를 따면 바구니에 모이고, 새 씨앗을 심어요. (어떤 씨앗인지는 꽃이 필 때까지 비밀)
+   - 열매를 따면 🧺 열매 도감(4가지)에 모이고, 새 씨앗을 심어요. (어떤 씨앗인지는 꽃이 필 때까지 비밀)
+   - '이렇게 키워요' 안내 : 일기 쓰기 → 물 주기 → 물 10번 꽃 → 물 14번 열매 (처음엔 맨 위 · 물을 한 번 주면 아래로)
    - 사흘 넘게 물을 못 주면 시들시들해지지만 죽지는 않아요. 물을 주면 다시 기운을 차려요.
    - '오늘 일기를 썼는지' = 오늘 날짜 페이지에 글·스티커·그림이 하나라도 있는지
    - 화분 상태는 설정(settings.json)에 암호로 저장돼요 (🔐 js/drive.js 암호 보관) → 다른 기기에서도 같은 화분. (하루 한 번 물 줄 때만 바뀌어요)
@@ -139,7 +140,17 @@
                 </div>
                 <div class="pl-acts" id="plActs"></div>
                 <p class="pl-tip" id="plTip"></p>
-                <div class="pl-basket" id="plBasket"></div>
+                <div class="pl-how">
+                  <div class="pl-how-t">🌱 이렇게 키워요</div>
+                  <div class="pl-how-steps">
+                    <div><span>✏️</span><b>일기 쓰기</b><small>글 · 스티커 · 그림<br>하나라도 OK</small></div><i>→</i>
+                    <div><span>💧</span><b>물 주기</b><small>일기 쓴 날<br>하루 한 번</small></div><i>→</i>
+                    <div><span>🌸</span><b>물 10번</b><small>꽃이 피면<br>씨앗 정체 공개!</small></div><i>→</i>
+                    <div><span>🧺</span><b>물 14번</b><small>열매를 따서<br>도감에 모아요</small></div>
+                  </div>
+                  <p class="pl-how-n">💡 사흘 넘게 물을 못 받으면 시들시들해지지만 죽지는 않아요</p>
+                </div>
+                <div class="pl-book" id="plBasket"></div>
               </div>`;
             document.body.appendChild(el);
         }
@@ -159,6 +170,7 @@
             const dry = !watered && st > 0 && s.last && plGap(s.last, today) >= PL_THIRSTY_DAYS;
             const h = new Date().getHours();
             pq('plantRoom').dataset.time = h < 6 || h >= 19 ? 'night' : h < 17 ? 'day' : 'eve';
+            pq('plantRoom').classList.toggle('pl-new', !s.total);          // 아직 한 번도 물을 안 줬으면 '이렇게 키워요' 를 맨 위에
             pq('plPot').innerHTML = plSvg(s, { dry: dry });
             pq('plTalk').textContent = note || plTalk(s, watered, dry);
             const known = st >= 4;
@@ -170,12 +182,16 @@
             if (st === 5) acts.innerHTML = `<button class="pl-btn pl-main" type="button" onclick="plHarvest()">🧺 열매 따기</button>`;
             else if (watered) acts.innerHTML = `<button class="pl-btn" type="button" disabled>💧 오늘은 물을 줬어요 · 내일 또 만나요</button>`;
             else acts.innerHTML = `<button class="pl-btn pl-main" type="button" id="plWaterBtn" onclick="plWater()">💧 물 주기</button>`;
-            pq('plTip').textContent = st === 5 ? '💡 열매를 따면 바구니에 모이고, 이번엔 어떤 씨앗일지 새로 심어요.'
+            pq('plTip').textContent = st === 5 ? '💡 열매를 따면 🧺 열매 도감에 모이고, 이번엔 어떤 씨앗일지 새로 심어요.'
                 : watered ? (typeof attendDone === 'function' && !attendDone() ? '💡 📅 출석 도장도 찍었나요? 도장을 모으면 움직이는 출석 스티커를 받아요.' : '💡 내일도 일기를 쓰면 또 물을 줄 수 있어요. 물 14번이면 열매가 열려요!')
-                : dry ? '💡 오늘 일기를 쓰고 물을 주면 다시 기운을 차려요.'
-                : '💡 일기를 쓴 날마다 물 한 번! 물 14번이면 열매가 열리고, 사흘 넘게 못 주면 시들시들해져요.';
-            const b = s.basket || {}, keys = Object.keys(PL_KINDS).filter(x => b[x] > 0);
-            pq('plBasket').innerHTML = keys.length ? '🧺 바구니 ' + keys.map(x => `<span>${PL_KINDS[x].icon}×${b[x]}</span>`).join('') : '';
+                : dry ? '💡 오늘 일기를 쓰고 물을 주면 다시 기운을 차려요.' : '';
+            /* 🧺 열매 도감 : 비밀 씨앗 4가지 · 모은 건 색깔로, 아직이면 흐릿하게 */
+            const b = s.basket || {}, ks = Object.keys(PL_KINDS), got = ks.filter(x => b[x] > 0).length;
+            pq('plBasket').innerHTML = `<div class="pl-book-t">🧺 열매 도감 <b>${got} / ${ks.length}</b></div>
+                <div class="pl-book-row">${ks.map(x => b[x] > 0
+                    ? `<div class="pl-fr on"><span>${PL_KINDS[x].icon}</span><b>${PL_KINDS[x].name}</b><small>×${b[x]}</small></div>`
+                    : `<div class="pl-fr"><span>${PL_KINDS[x].icon}</span><b>???</b><small>아직</small></div>`).join('')}</div>
+                <p class="pl-book-n">${got === ks.length ? '🎉 모든 열매를 모았어요! 계속 키워서 더 모아 봐요' : `비밀 씨앗은 ${ks.length}가지! 어떤 씨앗이 심어질지는 꽃이 필 때까지 비밀이에요`}</p>`;
         }
 
         async function plWater() {
@@ -212,7 +228,7 @@
             const got = PL_KINDS[s.kind];
             pl.s = plNew(s);
             plWrite();
-            plRender(`${got.icon} ${got.name}를 바구니에 담았어요. 새 씨앗을 심었어요!`);
+            plRender(`${got.icon} ${got.name}를 🧺 열매 도감에 담았어요. 새 비밀 씨앗을 심었어요!`);
         }
 
         function plGoWrite() {
