@@ -2151,10 +2151,19 @@
         .pg-code.none { font-size: 12.5px; font-weight: bold; letter-spacing: 0; color: #a08a60; }
         .pg-mini { padding: 6px 10px; font-size: 13px; flex-shrink: 0; }
         .pg-mini:disabled { opacity: .45; cursor: default; }
-        .pg-book { border-radius: 18px; overflow: hidden; border: 2px solid #ffc2d4; background: #fff; }
-        .pg-book-top { background: linear-gradient(90deg, #ff8fb1, #ffb3c8); color: #fff; font-weight: 900; padding: 9px 14px; font-size: 15px; }
-        .pg-book-row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 14px; font-size: 15px; border-bottom: 1px dashed #ffd1df; user-select: text; -webkit-user-select: text; }
-        .pg-book-row span { color: #a07888; } .pg-book-row b { color: #5a4650; }
+        .pg-send { border-radius: 18px; overflow: hidden; border: 2px solid #ffc2d4; background: #fff; }
+        .pg-send-top { background: linear-gradient(90deg, #ff8fb1, #ffb3c8); color: #fff; font-weight: 900; padding: 9px 14px; font-size: 15px; }
+        .pg-send-top small { font-size: 11.5px; font-weight: bold; background: #fee500; color: #3c1e1e; border-radius: 8px; padding: 1px 7px; margin-left: 4px; vertical-align: 1px; }
+        .pg-send-body { padding: 2px 0 0; }
+        .pg-send-wait { text-align: center; font-size: 13px; color: #a07888; margin: 12px; line-height: 1.6; }
+        .pg-send-note { margin: 0 12px 12px; font-size: 11.5px; color: #a07888; text-align: center; word-break: keep-all; }
+        .pg-qr { width: 170px; height: 170px; margin: 14px auto 8px; padding: 6px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 2px #ffd1df, 0 4px 12px rgba(255, 107, 147, .15);
+            display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; color: #a07888; }
+        .pg-qr svg { width: 100%; height: 100%; display: block; }
+        .pg-qr-code { text-align: center; font-size: 13px; color: #8c6f7c; margin: 0 12px 10px; }
+        .pg-qr-code b { display: inline-block; margin-left: 4px; padding: 2px 10px; border-radius: 10px; background: #fff3c4; border: 2px dashed #ffcf4d; color: #8a5a00; font-size: 15px; letter-spacing: 1px; user-select: all; }
+        .pg-go { font-size: 16px !important; padding: 13px !important; }
+        .pg-go:disabled { opacity: .5; }
         .pg-copy { width: calc(100% - 24px); margin: 10px 12px 12px; justify-content: center; padding: 10px; font-size: 15px; border-radius: 14px; background: linear-gradient(160deg, #ff8fb1, #ff6b93); border-color: #ff6b93; color: #fff; }
         .pg-foot { text-align: center; font-size: 14px; color: #c2456f; font-weight: bold; line-height: 1.7; padding: 4px 0 2px; word-break: keep-all; }
         .pg-foot small { font-weight: normal; color: #a07888; font-size: 12px; }

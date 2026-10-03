@@ -1,19 +1,21 @@
 /* 말랑달콤 다이어리 - js/piggy.js
-   🐷 말랑달콤 저금통 (카페 → 🐷 말랑달콤 저금통)
+   💗 말랑달콤 저금통 (카페 → 💗 말랑달콤 저금통)
    - 정해진 금액 없이, 마음이 가는 만큼 넣어 주면 한 달 동안 고마움 선물(🎀 마스킹테이프 · 🍬 달콤패턴)이 열려요
    - 얼마를 넣어도 똑같이 30일 · 사람들이 만들어 나눈 스킨 · 패턴은 언제나 누구나
    - 주인은 '말랑달콤 사람들' 시트에서 저금 코드를 찾아 '저금 확인 ☑' 을 체크하면 끝 (말랑달콤사람들_앱스크립트.gs)
-   - 저금 코드 : 구글 계정 번호(permissionId)로 만든 '말랑' + 4글자 → 통장에 찍힌 코드로 누가 넣었는지 알아요
+   - 마음은 카카오페이 오픈채팅 송금으로 받아요 (서로 실명이 안 보여요) : 말랑달콤 1:1 오픈채팅방에 저금 코드를 붙여 넣고 송금
+       휴대폰 : 버튼 하나로 저금 코드 복사 + 채팅방 열기 · PC · 태블릿 : QR 코드 (카카오페이 송금은 휴대폰 카카오톡에서만 돼요)
+   - 저금 코드 : 구글 계정 번호(permissionId)로 만든 '말랑' + 4글자 → 채팅에 적힌 코드로 누가 넣었는지 알아요
        만드는 법 : FNV-1a 32비트( 'malang-piggy:' + permissionId ) → 아래 글자표(32자)에서 4번 (h % 32, h = floor(h / 32))
        → 저금통 서버를 만들 때 같은 방법으로 맞춰 보면 돼요
    - 선물이 열렸는지는 js/settings.js 의 isSaver() 가 알려 줘요 (선물 끝나는 날은 접속 신호의 답으로 받아요 : js/presence.js)
    ※ 이 파일이 없으면 저금통 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
-        /* 💳 받는 통장 : 다이어리 맨 위 폴더의 an.txt 에 적어요 (은행= · 계좌번호= · 받는 사람= 세 줄) */
-        const PIG_BANK_FILE = 'an.txt';
-        const PIG_BANK_KEYS = { '은행': 'bank', '계좌번호': 'num', '받는 사람': 'holder' };
+        /* 💬 말랑달콤 1:1 오픈채팅방 주소 : 다이어리 맨 위 폴더의 an.txt 에 적어요 (오픈채팅=https://open.kakao.com/o/…) */
+        const PIG_CHAT_FILE = 'an.txt';
+        const PIG_QR_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
         const PIG_ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        const pig = { tab: 'tape', code: '', built: false, bank: null };
+        const pig = { tab: 'tape', code: '', built: false, chat: '', phone: false };
 
         function pigCode(pid) {
             let h = 0x811c9dc5;
@@ -104,20 +106,18 @@
               </div>
 
               <div class="pg-sec">
-                <div class="pg-sec-t">🐷 마음 넣는 방법</div>
+                <div class="pg-sec-t">💗 마음 넣는 방법</div>
                 <ol class="pg-steps">
                   <li><b>내 저금 코드를 확인해요</b>
                     <div class="pg-code-row"><span class="pg-code" id="pigCode">확인하는 중…</span><button type="button" class="btn pg-mini" id="pigCodeCopy" onclick="pigCopy(pig.code, '저금 코드')" disabled>📋 복사</button></div>
                   </li>
-                  <li><b>아래 통장으로 마음을 넣어요</b><br><span>보낼 때 <b>받는 분 통장 표시</b>를 저금 코드로 바꿔 주세요. 그래야 누가 넣어 줬는지 알 수 있어요!</span></li>
+                  <li><b>말랑달콤 채팅방에서 마음을 보내요</b><br><span id="pigHow"></span></li>
                   <li><b>확인되면 선물이 열려요</b><br><span>하나하나 직접 확인하고 열어 드려요. 조금만 기다려 주세요 💕</span></li>
                 </ol>
-                <div class="pg-book">
-                  <div class="pg-book-top">💳 말랑달콤 저금통장</div>
-                  <div class="pg-book-row"><span>은행</span><b data-k="bank">…</b></div>
-                  <div class="pg-book-row"><span>계좌번호</span><b data-k="num">…</b></div>
-                  <div class="pg-book-row"><span>받는 사람</span><b data-k="holder">…</b></div>
-                  <button type="button" class="btn btn-primary pg-copy" id="pigBankCopy" onclick="pigCopy(pig.bank && pig.bank.num, '계좌번호')" disabled>📋 계좌번호 복사하기</button>
+                <div class="pg-send">
+                  <div class="pg-send-top">💬 말랑달콤 1:1 채팅방 <small>카카오페이 송금</small></div>
+                  <div class="pg-send-body" id="pigSend"></div>
+                  <p class="pg-send-note">🔒 카카오페이 오픈채팅 송금은 서로 실명이 보이지 않아요</p>
                 </div>
               </div>
 
@@ -156,27 +156,56 @@
                 if (!pid) throw 0;
                 pig.code = pigCode(pid);
                 show(pig.code, true);
+                pigSendUI();
             } catch (e) { show('잠시 후 다시 열어 주세요', false); }
         }
 
-        /* 💳 통장 정보 읽기 (an.txt · 고치면 바로 반영되게 매번 새로 읽어요) */
-        async function pigLoadBank() {
-            const box = document.querySelector('#pigBody .pg-book'); if (!box) return;
-            const fill = b => {
-                box.querySelectorAll('[data-k]').forEach(el => { el.textContent = b ? b[el.dataset.k] || '-' : '-'; });
-                document.getElementById('pigBankCopy').disabled = !(b && b.num);
-            };
+        /* 💬 채팅방 주소 읽기 (an.txt · 고치면 바로 반영되게 매번 새로 읽어요) */
+        async function pigLoadChat() {
             try {
-                const res = await fetch(PIG_BANK_FILE + '?t=' + Date.now(), { cache: 'no-store' });
+                const res = await fetch(PIG_CHAT_FILE + '?t=' + Date.now(), { cache: 'no-store' });
                 if (!res.ok) throw 0;
-                const b = {};
-                (await res.text()).split(/\r?\n/).forEach(line => {
-                    const m = /^\s*([^=]+?)\s*=\s*(.*?)\s*$/.exec(line);
-                    if (m && PIG_BANK_KEYS[m[1]]) b[PIG_BANK_KEYS[m[1]]] = m[2];
-                });
-                pig.bank = b.num ? b : null;
-            } catch (e) { if (!pig.bank) pig.bank = null; }
-            fill(pig.bank);
+                const m = /^\s*오픈채팅\s*=\s*(https:\/\/open\.kakao\.com\/\S+)\s*$/m.exec(await res.text());
+                pig.chat = m ? m[1] : '';
+            } catch (e) {}
+            pigSendUI();
+        }
+
+        /* 보내는 칸 : 휴대폰은 버튼 하나 · PC · 태블릿은 휴대폰으로 찍는 QR 코드 */
+        function pigSendUI() {
+            const box = document.getElementById('pigSend'), how = document.getElementById('pigHow');
+            if (!box) return;
+            how.innerHTML = pig.phone
+                ? '아래 버튼을 누르면 저금 코드가 복사되고 채팅방이 열려요. 채팅에 <b>저금 코드를 붙여 넣고</b> 카카오페이로 송금해 주세요. 따로 말은 안 걸어도 괜찮아요 😊'
+                : '카카오페이 송금은 <b>휴대폰 카카오톡</b>에서만 돼요. 아래 QR 코드를 휴대폰 카메라로 찍으면 채팅방이 열려요. 채팅에 <b>저금 코드를 적고</b> 송금해 주세요.';
+            if (!pig.chat) { box.innerHTML = '<p class="pg-send-wait">채팅방 주소를 불러오지 못했어요.<br>잠시 후 다시 열어 주세요</p>'; return; }
+            if (pig.phone) {
+                box.innerHTML = `<button type="button" class="btn btn-primary pg-copy pg-go" onclick="pigGo()" ${pig.code ? '' : 'disabled'}>💌 말랑달콤에게 마음 보내기</button>`
+                    + (pig.code ? '' : '<p class="pg-send-wait">구글로 로그인하면 보낼 수 있어요</p>');
+                return;
+            }
+            box.innerHTML = `<div class="pg-qr" id="pigQr"><span>QR 코드를 만드는 중…</span></div>
+                <div class="pg-qr-code">채팅에 적을 저금 코드 <b>${pig.code || '로그인하면 생겨요'}</b></div>`;
+            pigQr(pig.chat);
+        }
+        function pigQr(url) {
+            const draw = () => {
+                const el = document.getElementById('pigQr'); if (!el) return;
+                try { const q = qrcode(0, 'M'); q.addData(url); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 5, margin: 2, scalable: true }); }
+                catch (e) { el.innerHTML = '<span>QR 코드를 만들지 못했어요</span>'; }
+            };
+            if (typeof qrcode === 'function') return draw();
+            const sc = document.createElement('script');
+            sc.src = PIG_QR_LIB; sc.onload = draw;
+            sc.onerror = () => { const el = document.getElementById('pigQr'); if (el) el.innerHTML = '<span>QR 코드를 불러오지 못했어요</span>'; };
+            document.head.appendChild(sc);
+        }
+        /* 휴대폰 : 저금 코드 복사 + 채팅방 열기 (누른 순간 바로 열어야 막히지 않아요) */
+        function pigGo() {
+            if (!pig.chat || !pig.code) return;
+            try { navigator.clipboard.writeText(pig.code).catch(() => {}); } catch (e) {}
+            window.open(pig.chat, '_blank');
+            toast(`📋 저금 코드 ${pig.code} 를 복사했어요. 채팅에 붙여 넣어 주세요 💕`);
         }
 
         async function pigCopy(text, what) {
@@ -202,8 +231,9 @@
             const art = document.querySelector('#pigBody .pg-hero');
             if (art) { art.classList.remove('play'); void art.offsetWidth; art.classList.add('play'); }
             setTimeout(pigCoin, 760);                       // 동전이 쏙 들어가는 순간
+            pig.phone = (typeof prDevice === 'function' ? prDevice() : '') === '휴대폰';
             pigLoadCode();
-            pigLoadBank();
+            pigLoadChat();
         }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
