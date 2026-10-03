@@ -35,7 +35,10 @@
             pr.last = 0;
             try { navigator.sendBeacon(MEMBER_API_URL, JSON.stringify({ action: 'bye', token: drive.token })); } catch (e) {}
         }
-        const prFirst = setInterval(() => { if (prOk()) { clearInterval(prFirst); if (!pr.last) prHere(); } }, 1000);   // ① 로그인되면 곧바로
+        const prFirst = setInterval(() => {                                                 // ① 로그인되면 곧바로
+            if (typeof drive !== 'undefined' && drive.ready && drive.guest) { clearInterval(prFirst); if (typeof setSaver === 'function') setSaver(''); return; }   // 게스트는 선물 없음
+            if (prOk()) { clearInterval(prFirst); if (!pr.last) prHere(); }
+        }, 1000);
         setInterval(() => { if (Date.now() - pr.last >= PR_EVERY) prHere(); }, 15000);      // ③ 그 뒤로 3시간마다
         setInterval(() => { if (typeof setSaver === 'function' && document.body.classList.contains('saver') && !isSaver()) setSaver(''); }, 60000);   // 선물 기간이 열어 둔 중에 끝나면 닫기
         window.addEventListener('pagehide', prBye);                                         // ② 닫을 때

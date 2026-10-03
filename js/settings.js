@@ -208,6 +208,7 @@
            - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
            - 선물 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setSaver('2026-11-02') (js/presence.js)
              그 날(한국 시간)까지 열려요 · 빈 값이면 닫혀요 · 🐷 저금통 창 : js/piggy.js */
+        const SAVER_LOCAL = 'malang_saver';      // 이 기기에 마지막으로 받은 선물 끝나는 날 → 다이어리를 열자마자 바로 보여 줘요 (서버 답이 오면 고쳐요)
         let saverUntil = '';
         const saverToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
         const isSaver = () => !!saverUntil && saverUntil >= saverToday();
@@ -215,8 +216,10 @@
         function setSaver(until) {
             saverUntil = /^\d{4}-\d{2}-\d{2}$/.test(until || '') ? until : '';
             document.body.classList.toggle('saver', isSaver());
+            try { if (saverUntil) localStorage.setItem(SAVER_LOCAL, saverUntil); else localStorage.removeItem(SAVER_LOCAL); } catch (e) {}
             if (typeof pigThanks === 'function') pigThanks();
         }
+        try { setSaver(localStorage.getItem(SAVER_LOCAL)); } catch (e) {}
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
         const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 

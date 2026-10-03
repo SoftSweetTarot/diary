@@ -5,7 +5,7 @@
    - 목록 : '말랑달콤 사람들' 시트의 '배경화면' 탭 (말랑달콤사람들_앱스크립트.gs · 주소?action=walls · 로그인 없이 누구나)
        그림 · 미리보기 영상은 주인의 구글 드라이브에 있어요 (깃허브에는 올리지 않아요)
        목록 카드 : 드라이브 그림(jpg)을 기기 안에 (📱 휴대폰 탭 = 휴대폰 · 💻 PC 탭 = 아이패드) · 누르면 크게 보기 · 움직이는 모습은 네이버 카페(말랑달콤 모임방)에서 홍보해요
-   - ☕ 카페를 여는 순간 목록을 미리 받아 둬요 (wlPrefetch · 서버가 깨어나는 동안 기다리지 않게) · 1분 안에 다시 열면 받아 둔 목록 그대로
+   - 다이어리를 열고 3초 뒤 · ☕ 카페를 열 때 목록을 미리 받아 둬요 (wlPrefetch) · 지난번 목록은 이 기기에 남겨 두고 열자마자 보여 줘요
    - 📖 설정 방법 : wallguide.html (사기 전에 내 기기에서 되는지 확인 · 채팅방에서 파일 보낼 때 이 주소도 함께)
    - 채팅방 주소 · QR 코드는 💗 저금통과 같아요 (an.txt · js/piggy.js 의 pigLoadChat · pigQr)
    - 휴대폰 : 버튼 하나로 '배경화면 N번' 복사 + 채팅방 열기 · PC · 태블릿 : 휴대폰으로 찍는 QR 코드
@@ -13,6 +13,8 @@
 
         const wl = { items: [], tab: '', pick: null, at: 0, loading: null };
         const WL_FRESH = 60000;
+        const WL_LOCAL = 'malang_walls';                 // 지난번 목록 (열자마자 바로 보여 주고, 뒤에서 새 목록으로 바꿔요)
+        try { const c = JSON.parse(localStorage.getItem(WL_LOCAL)); if (Array.isArray(c)) wl.items = c; } catch (e) {}
         /* 불러오는 중 그림 : 카페 버튼과 같은 움직이는 폰 */
         const WL_PHONE = `<svg class="wl-ico wl-wait-ico" viewBox="7 1 26 38" aria-hidden="true">
             <defs><linearGradient id="wlWaitG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2d6"/><stop offset=".5" stop-color="#d9c8ff"/><stop offset="1" stop-color="#bfe6ff"/></linearGradient>
@@ -33,7 +35,8 @@
                 const j = await res.json();
                 if (!j || !j.ok || !Array.isArray(j.items)) throw 0;
                 wl.items = j.items; wl.at = Date.now();
-            } catch (e) { wl.items = null; wl.at = 0; }
+                try { localStorage.setItem(WL_LOCAL, JSON.stringify(j.items)); } catch (e) {}
+            } catch (e) { if (!(wl.items && wl.items.length)) wl.items = null; wl.at = 0; }   // 못 받으면 지난번 목록은 그대로
         }
         /* 카페를 열 때 · 배경화면을 열 때 : 받아 둔 지 1분이 넘었으면 새로 받기 (받는 중이면 그걸 기다려요) */
         function wlPrefetch() {
@@ -141,14 +144,19 @@
             if (!wl.tab) wl.tab = (typeof prDevice === 'function' ? prDevice() : 'PC') === 'PC' ? 'pc' : 'phone';
             wl.pick = null;
             const box = document.getElementById('wlBody');
-            const ready = wl.items && wl.at && Date.now() - wl.at < WL_FRESH && !wl.loading;
-            if (box) box.innerHTML = ready ? '' : `<div class="wl-wait">${WL_PHONE}<p>배경화면을 불러오는 중…</p></div>`;
+            const have = !!(wl.items && wl.items.length), fresh = have && wl.at && Date.now() - wl.at < WL_FRESH;
+            if (box) box.innerHTML = '';
+            if (have) wlRender(); else if (box) box.innerHTML = `<div class="wl-wait">${WL_PHONE}<p>배경화면을 불러오는 중…</p></div>`;
             openModal('wallModal');
-            if (ready) return wlRender();
+            if (fresh) return;
+            const before = JSON.stringify(wl.items);
             await wlPrefetch();
-            wlRender();
+            /* 새 목록이 달라졌으면 다시 그리기 (받기 · 크게 보기 중이면 방해하지 않아요) */
+            const v = document.getElementById('wlView');
+            if (!have || (JSON.stringify(wl.items) !== before && !wl.pick && (!v || v.hidden))) wlRender();
         }
         function closeWall() { wlUnview(); closeModal('wallModal'); }
+        window.addEventListener('load', () => setTimeout(wlPrefetch, 3000));     // 그림모음처럼 다이어리를 열고 잠시 뒤 미리 받아 둬요
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['wall'] = true;
