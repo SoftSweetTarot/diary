@@ -38,7 +38,7 @@
         const LK_MISSIONS = ['📔 오늘 일기에 고마웠던 사람 한 명 적기', '☁️ 하늘 사진 한 장 찍어 보기', '🎵 좋아하는 노래 한 곡 끝까지 듣기',
             '💧 물 여섯 잔 마시기', '😊 거울 보고 한 번 웃어 주기', '🚶 10분만 산책하기', '💌 오랜만인 친구에게 안부 보내기',
             '📔 오늘 가장 맛있었던 것 일기에 적기', '🧹 책상 위 하나만 정리하기', '🌙 오늘은 30분 일찍 자기', '🙆 어깨 쭉 펴고 스트레칭하기',
-            '📔 오늘의 기분을 색깔로 일기에 남기기', '🍀 누군가에게 칭찬 한마디 건네기', '📚 책 한 쪽이라도 읽기', '🌷 화분에 물 주기 (일기 쓰고!)'];
+            '📔 오늘의 기분을 색깔로 일기에 남기기', '🍀 누군가에게 칭찬 한마디 건네기', '📚 책 한 쪽이라도 읽기'];
 
         const lk = { built: false, open: false, res: null, tries: LK_TRIES, busy: false, started: false };
         const lkServer = () => typeof GACHA_API_URL !== 'undefined' && GACHA_API_URL && typeof drive !== 'undefined' && drive.ready && !drive.guest;
@@ -199,7 +199,7 @@
                 <div class="lk-mission"><small>🎯 오늘의 행운 미션</small><b>${R.mission}</b></div>
               </div>
               <button class="lk-go" type="button" onclick="lkStick()">📌 다이어리에 붙이기</button>
-              <p class="lk-tip">💡 오늘의 행운은 하루 동안 그대로예요. 내일 다시 오면 새 행운이 기다려요.<br>📌 오늘 페이지에 붙이면 일기를 쓴 걸로 쳐서 🌷 화분에 물도 줄 수 있어요.</p>`;
+              <p class="lk-tip">💡 오늘의 행운은 하루 동안 그대로예요. 내일 다시 오면 새 행운이 기다려요.<br>📌 행운 카드는 오늘 페이지에 붙일 수 있어요.</p>`;
         }
 
         /* 다이어리에 붙일 행운 카드 (그림) */

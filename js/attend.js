@@ -85,7 +85,7 @@
                   <div class="at-stk-grid" id="atStkGrid"></div>
                   <p class="at-stk-note">받은 스티커는 ✏️ 스티커 창의 <b>🎁 출석 스티커</b>에서 다이어리에 붙일 수 있어요. 붙인 뒤에도 계속 움직여요!</p>
                 </div>
-                <p class="at-tip">💡 도장은 하루라도 빠져도 모은 개수는 그대로예요. 연속 스티커는 가장 길게 이어 간 기록으로 받아요.<br>🌷 도장을 찍은 날 일기도 쓰면 화분에 물까지 줄 수 있어요.</p>
+                <p class="at-tip">💡 도장은 하루라도 빠져도 모은 개수는 그대로예요. 연속 스티커는 가장 길게 이어 간 기록으로 받아요.</p>
               </div>
               <div class="at-pop-wrap" id="atPopWrap" hidden>
                 <div class="at-pop-box">

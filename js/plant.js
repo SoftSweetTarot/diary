@@ -9,6 +9,7 @@
      로그인하지 않은(게스트) 때만 이 기기에 기억해요.
    ※ 이 파일이 없어도 다이어리는 정상 동작 (화분 키우기만 '준비 중') */
 
+        const PL_OPEN = false;                        // 🙈 지금은 숨겨 둬요 (나중에 펫 · 농장과 함께 공개) → true 로 바꾸고 카페 버튼의 hidden 을 지우면 다시 보여요
         const PL_KEY = VAULT_KEYS[1];                 // 🔐 암호 보관 (js/drive.js)
         const PL_STEPS = [0, 1, 3, 6, 10, 14];        // 이 횟수만큼 물을 주면 다음 단계
         const PL_STAGE = ['씨앗', '새싹', '잎', '꽃봉오리', '꽃', '열매'];
@@ -250,11 +251,12 @@
         }
         /* ☕ 카페 · 다른 놀이에서 쓰는 안내 */
         async function plantStatus() {                      // { watered: 오늘 물 줌, wrote: 오늘 일기 씀 }
+            if (!PL_OPEN) return { watered: true, wrote: false };
             const s = plRead(), watered = s.last === plDay();
             return { watered, wrote: watered || await plWroteToday() };
         }
         function plantStickHint() {                         // 오늘 페이지에 무언가 붙였을 때 알림 뒤에 붙일 말
-            try { if (plRead().last !== plDay() && isCoverOpen && plDay(currentDate) === plDay()) return ' · 🌷 이제 화분에 물을 줄 수 있어요!'; } catch (e) {}
+            try { if (PL_OPEN && plRead().last !== plDay() && isCoverOpen && plDay(currentDate) === plDay()) return ' · 🌷 이제 화분에 물을 줄 수 있어요!'; } catch (e) {}
             return '';
         }
         window.openPlant = openPlant;
