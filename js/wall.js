@@ -1,32 +1,26 @@
 /* 말랑달콤 다이어리 - js/wall.js
    🖼️ 말랑달콤 배경화면 (카페 → 🖼️ 말랑달콤 배경화면)
-   - 움직이는 배경화면(휴대폰 · PC)을 미리보기로 보여 주고, 말랑달콤 1:1 오픈채팅방에서 팔아요
-       사용자 : 채팅방에 "배경화면 3번" 을 보내고 카카오페이로 송금 → 주인 : 확인 후 채팅방으로 영상 파일 보내기
-   - 목록 : wallpapers/list.txt (번호 | 이름 | 가격 | 휴대폰 또는 PC | 미리보기 파일) · 고치면 창을 열 때마다 새로 읽어요
+   - 움직이는 배경화면(휴대폰 · PC)을 보여 주고, 말랑달콤 1:1 오픈채팅방에서 팔아요
+       사용자 : 채팅방에 "배경화면 3번" 을 보내고 카카오페이로 송금 → 주인 : 확인 후 채팅방으로 원본 영상 보내기
+   - 목록 : '말랑달콤 사람들' 시트의 '배경화면' 탭 (말랑달콤사람들_앱스크립트.gs · 주소?action=walls · 로그인 없이 누구나)
+       그림 · 미리보기 영상은 주인의 구글 드라이브에 있어요 (깃허브에는 올리지 않아요)
+       목록 카드 : 드라이브 그림(jpg) · 누르면 크게 보기 · 움직이는 모습은 네이버 카페(말랑달콤 모임방)에서 홍보해요
    - 채팅방 주소 · QR 코드는 💗 저금통과 같아요 (an.txt · js/piggy.js 의 pigLoadChat · pigQr)
    - 휴대폰 : 버튼 하나로 '배경화면 N번' 복사 + 채팅방 열기 · PC · 태블릿 : 휴대폰으로 찍는 QR 코드
    ※ 이 파일이 없으면 배경화면 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
-        const WL_LIST = 'wallpapers/list.txt';
-        const WL_KINDS = { '휴대폰': 'phone', 'PC': 'pc' };
-        const wl = { items: [], tab: '', pick: null, seen: null };
+        const wl = { items: [], tab: '', pick: null };
         const wlWon = n => n.toLocaleString('ko-KR') + '원';
         const wlEsc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-        const wlVideo = f => /\.(mp4|webm|mov)$/i.test(f);
+        const wlImg = (id, w) => `https://lh3.googleusercontent.com/d/${id}=w${w}`;
+        const wlImg2 = (id, w) => `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;     // 첫 주소가 안 될 때
 
         async function wlLoad() {
             try {
-                const res = await fetch(WL_LIST + '?t=' + Date.now(), { cache: 'no-store' });
-                if (!res.ok) throw 0;
-                const out = [];
-                (await res.text()).split(/\r?\n/).forEach(line => {
-                    if (/^\s*(#|$)/.test(line)) return;
-                    const [no, name, price, kind, file] = line.split('|').map(x => x.trim());
-                    const k = WL_KINDS[kind], n = parseInt(no, 10), won = parseInt(String(price).replace(/[^\d]/g, ''), 10);
-                    if (!n || !name || !k || !file || isNaN(won) || out.some(x => x.no === n)) return;
-                    out.push({ no: n, name, price: won, kind: k, file });
-                });
-                wl.items = out;
+                const res = await fetch(MEMBER_API_URL + '?action=walls', { credentials: 'omit' });
+                const j = await res.json();
+                if (!j || !j.ok || !Array.isArray(j.items)) throw 0;
+                wl.items = j.items;
             } catch (e) { wl.items = null; }
         }
 
@@ -34,10 +28,11 @@
             const box = document.getElementById('wlBody'); if (!box) return;
             const list = wl.items || [], items = list.filter(w => w.kind === wl.tab);
             const count = k => list.filter(w => w.kind === k).length;
+            const size = wl.tab === 'pc' ? 640 : 360;
             box.innerHTML = `
               <div class="wl-hero">
                 <div class="wl-hero-t">✨ 매일 보는 화면을 말랑달콤하게</div>
-                <div class="wl-hero-s">살랑살랑 움직이는 배경화면을 만나 보세요</div>
+                <div class="wl-hero-s">움직이는 모습은 <a href="#" class="wl-link" onclick="goCafe(); return false;">👭 말랑달콤 모임방</a>에서 볼 수 있어요</div>
               </div>
               <div class="pg-tabs">
                 <button type="button" class="pg-tab${wl.tab === 'phone' ? ' on' : ''}" onclick="wlTab('phone')">📱 휴대폰 <small>${count('phone')}가지</small></button>
@@ -47,33 +42,36 @@
                 : !items.length ? '<p class="wl-empty">🌸 곧 예쁜 배경화면이 찾아와요!<br>조금만 기다려 주세요</p>'
                 : `<div class="wl-grid ${wl.tab}">${items.map(w => `
                   <div class="wl-card">
-                    <div class="wl-pre">${wlVideo(w.file)
-                        ? `<video src="${wlEsc(w.file)}" muted loop playsinline preload="metadata"></video>`
-                        : `<img src="${wlEsc(w.file)}" alt="" loading="lazy">`}<span class="wl-no">${w.no}번</span></div>
+                    <button type="button" class="wl-pre" onclick="wlView(${w.no})" aria-label="${wlEsc(w.name)} 크게 보기">
+                      <img src="${wlImg(w.img, size)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, size)}'}">
+                      <span class="wl-no">${w.no}번</span>
+                    </button>
                     <div class="wl-name">${wlEsc(w.name)}</div>
                     <div class="wl-buy"><b>${wlWon(w.price)}</b><button type="button" class="btn wl-get" onclick="wlPick(${w.no})">💬 받기</button></div>
                   </div>`).join('')}</div>`}
               <div class="wl-note">🎁 영상 파일은 말랑달콤 채팅방으로 보내 드려요 · 한 번 받으면 계속 쓸 수 있어요<br>설정하는 방법도 함께 알려 드릴게요 😊</div>
-              <div class="wl-sheet" id="wlSheet" hidden></div>`;
-            wlWatch();
-        }
-
-        /* 보이는 미리보기만 재생 (영상이 많아도 가볍게) */
-        function wlWatch() {
-            if (wl.seen) wl.seen.disconnect();
-            const vids = document.querySelectorAll('#wlBody video'); if (!vids.length) return;
-            if (!('IntersectionObserver' in window)) { vids.forEach(v => v.play().catch(() => {})); return; }
-            wl.seen = new IntersectionObserver(es => es.forEach(e => {
-                if (e.isIntersecting) e.target.play().catch(() => {}); else e.target.pause();
-            }), { root: document.querySelector('#wallModal .modal-content'), threshold: .2 });
-            vids.forEach(v => wl.seen.observe(v));
-        }
-        function wlStop() {
-            if (wl.seen) { wl.seen.disconnect(); wl.seen = null; }
-            document.querySelectorAll('#wlBody video').forEach(v => v.pause());
+              <div class="wl-sheet" id="wlSheet" hidden></div>
+              <div class="wl-view" id="wlView" hidden onclick="if(event.target===this)wlUnview()"></div>`;
         }
 
         function wlTab(t) { wl.tab = t; wlRender(); }
+
+        /* 🔍 크게 보기 */
+        function wlView(no) {
+            const w = (wl.items || []).find(x => x.no === no), v = document.getElementById('wlView');
+            if (!w || !v) return;
+            v.innerHTML = `
+              <div class="wl-view-box ${w.kind}">
+                <div class="wl-view-frame"><img src="${wlImg(w.img, 1080)}" alt="" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, 1080)}'}"></div>
+                <div class="wl-view-t">${wlEsc(w.name)} <b>${wlWon(w.price)}</b></div>
+                <div class="wl-view-btns">
+                  <button type="button" class="btn" onclick="wlUnview()">닫기</button>
+                  <button type="button" class="btn btn-primary pg-copy" onclick="wlUnview(); wlPick(${w.no})">💬 받기</button>
+                </div>
+              </div>`;
+            v.hidden = false;
+        }
+        function wlUnview() { const v = document.getElementById('wlView'); if (v) { v.hidden = true; v.innerHTML = ''; } }
 
         /* 💬 받기 : 받는 방법 안내 (휴대폰은 버튼 · PC · 태블릿은 QR) */
         async function wlPick(no) {
@@ -124,7 +122,7 @@
             await wlLoad();
             wlRender();
         }
-        function closeWall() { wlStop(); closeModal('wallModal'); }
+        function closeWall() { wlUnview(); closeModal('wallModal'); }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['wall'] = true;

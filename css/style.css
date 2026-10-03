@@ -2158,15 +2158,17 @@
         /* ===== 🖼️ 말랑달콤 배경화면 (js/wall.js · 탭 · 단계 · QR 은 저금통 모양을 같이 써요) ===== */
         .wl-hero { text-align: center; padding: 16px 10px; border-radius: 20px; background: linear-gradient(135deg, #ffe3ec, #e9e1ff 55%, #d9f2ff); }
         .wl-hero-t { font-size: 18px; font-weight: 900; color: #c2456f; }
-        .wl-hero-s { font-size: 13px; color: #8c6f9c; margin-top: 4px; }
+        .wl-hero-s { font-size: 13px; color: #8c6f9c; margin-top: 4px; word-break: keep-all; }
+        .wl-link { color: #e2557f; font-weight: bold; text-decoration: underline; text-underline-offset: 2px; }
         .wl-empty { text-align: center; color: #a07888; font-size: 14px; line-height: 1.7; padding: 26px 0; margin: 0; }
         .wl-grid { display: grid; gap: 12px; }
         .wl-grid.phone { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
         .wl-grid.pc { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
         .wl-card { background: #fff; border-radius: 16px; padding: 6px 6px 8px; box-shadow: 0 3px 12px rgba(255, 120, 160, .14); display: flex; flex-direction: column; gap: 5px; }
-        .wl-pre { position: relative; border-radius: 12px; overflow: hidden; background: #f6eef2; }
+        .wl-pre { position: relative; display: block; width: 100%; padding: 0; border: none; cursor: pointer; border-radius: 12px; overflow: hidden; background: #f6eef2; }
         .wl-grid.phone .wl-pre { aspect-ratio: 9 / 16; } .wl-grid.pc .wl-pre { aspect-ratio: 16 / 9; }
-        .wl-pre video, .wl-pre img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .wl-pre img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+        .wl-pre:hover img { transform: scale(1.04); }
         .wl-no { position: absolute; left: 6px; top: 6px; font-size: 11px; font-weight: bold; color: #fff; background: rgba(0,0,0,.35); border-radius: 8px; padding: 1px 7px; }
         .wl-name { font-size: 13.5px; font-weight: bold; color: #5a4650; padding: 0 2px; word-break: keep-all; }
         .wl-buy { display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 0 2px; }
@@ -2180,4 +2182,16 @@
         .wl-pc { text-align: center; font-size: 12.5px; color: #8c6f7c; margin: 0 0 10px; line-height: 1.6; word-break: keep-all; }
         .wl-pc b { color: #e2557f; }
         .wl-close { width: 100%; justify-content: center; margin-top: 4px; font-size: 13px; }
+        .wl-view { position: fixed; inset: 0; z-index: 1300; background: rgba(60, 30, 45, .55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .wl-view[hidden] { display: none; }
+        .wl-view-box { background: #fff; border-radius: 22px; padding: 12px; width: min(92vw, 360px); box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+        .wl-view-box.pc { width: min(94vw, 720px); }
+        .wl-view-frame { border-radius: 14px; overflow: hidden; background: #f6eef2; aspect-ratio: 9 / 16; max-height: 70vh; margin: 0 auto; }
+        .wl-view-box.pc .wl-view-frame { aspect-ratio: 16 / 9; }
+        .wl-view-frame img { width: 100%; height: 100%; display: block; object-fit: contain; }
+        .wl-view-t { text-align: center; font-weight: 900; color: #c2456f; margin: 10px 0 8px; font-size: 15px; }
+        .wl-view-t b { margin-left: 4px; padding: 1px 9px; border-radius: 10px; background: #ff6b93; color: #fff; font-size: 13.5px; }
+        .wl-view-btns { display: flex; gap: 8px; }
+        .wl-view-btns .btn { flex: 1; justify-content: center; padding: 10px; }
+        .wl-view-btns .pg-copy { width: auto; margin: 0; }
         .pg-go small { font-size: 12px; font-weight: normal; opacity: .9; margin-left: 2px; }
