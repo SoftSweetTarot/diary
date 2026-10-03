@@ -93,10 +93,12 @@
                 </div>
                 <div class="pg-gift" data-t="tape">
                   <p class="pg-gift-d">사진 모서리나 글 위에 붙이는 다꾸 테이프예요. 붙인 뒤 길이도 마음대로!</p>
+                  <p class="pg-where">📍 선물이 열리면 다이어리 위쪽 <b>🎨 스티커</b> → <b>🎀 마스킹테이프</b> 칸에 생겨요</p>
                   <div class="pg-tapes">${tapes.map((t, i) => `<div class="pg-tp"><span style="background-image:url(&quot;${tapeUrl(t)}&quot;);--r:${(i % 3 - 1) * 3}deg"></span><small>${t.name}</small></div>`).join('')}</div>
                 </div>
                 <div class="pg-gift" data-t="pat">
                   <p class="pg-gift-d">다이어리 뒤 배경에 까는 그림 패턴이에요. 보기만 해도 기분이 몽글몽글해져요.</p>
+                  <p class="pg-where">📍 선물이 열리면 다이어리 위쪽 <b>👗 스킨</b> → <b>🍬 달콤패턴</b> 버튼이 생겨요</p>
                   <div class="pg-pats">${sweet.map((p, i) => `<div class="pg-pt"><div class="pg-pt-sw"><i data-i="${i}"></i></div><small>${p.name}</small></div>`).join('')}</div>
                 </div>
                 <ul class="pg-promise">

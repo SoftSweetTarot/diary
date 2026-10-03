@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/gacha.js
    🎁 랜덤박스 : 문방구 캡슐 뽑기 기계
-   - 🪙 말랑 코인 1개로 한 번 뽑아요. 코인은 📅 출석 도장판의 숨은 날에 도장을 찍으면 나와요 (js/attend.js)
+   - 🪙 코인 1개로 한 번 뽑아요. 코인은 📅 출석 도장판의 숨은 날에 도장을 찍으면 나와요 (js/attend.js)
    - 캡슐에서 🎁 캡슐 스티커(움직이는 스티커 10종 · js/capsule-stickers.js)가 나오면 30일 선물권이 생겨요
      선물권이 있는 동안 ✏️ 스티커 창의 🎁 캡슐 스티커 칸에서 다이어리에 붙여요 (기간이 끝나도 이미 붙인 건 그대로)
    - 코인 · 당첨 · 선물권은 모두 '랜덤박스 서버'(구글 앱스크립트)가 정하고 기억해요.
@@ -115,7 +115,7 @@
                 <div class="gc-machine">
                   <div class="gc-dome" id="gcDome"><canvas id="gcCanvas" width="500" height="460"></canvas></div>
                   <div class="gc-body" id="gcBody">
-                    <div class="gc-label">MALANG CAPSULE<small>말랑 코인 1개 · 한 번</small></div>
+                    <div class="gc-label">MALANG CAPSULE<small>코인 1개 · 한 번</small></div>
                     <div class="gc-slot"><i></i><div class="gc-coin" id="gcCoin">말</div><span>코인 1개</span></div>
                     <button class="gc-crank" id="gcCrank" type="button" disabled aria-label="손잡이 돌리기"><span class="gc-bar" id="gcBar"></span></button>
                     <div class="gc-crank-hint" id="gcCrankHint"></div>
@@ -130,11 +130,11 @@
                   </div>
                 </div>
                 <div class="gc-say" id="gcSay">코인을 넣고 손잡이를 돌려 보세요!</div>
-                <button class="gc-main" id="gcInsert" type="button">🪙 말랑 코인 넣기</button>
+                <button class="gc-main" id="gcInsert" type="button">🪙 코인 넣기</button>
                 <button class="gc-main gc-find" id="gcFind" type="button" onclick="gcGoAttend()" hidden>📅 출석 도장판에서 숨은 코인 찾기</button>
                 <div class="gc-result" id="gcResult" hidden></div>
                 <details class="gc-odds"><summary>🎲 확률 안내</summary><table id="gcOdds"></table>
-                  <p>🪙 말랑 코인은 📅 출석 도장판에 한 달에 몇 번 숨어 있어요. 숨은 날 도장을 찍으면 찾을 수 있어요.<br>🎁 캡슐 스티커는 30일 선물권이에요. 같은 스티커가 또 나오면 30일이 더 늘어나요.</p></details>
+                  <p>🪙 코인은 📅 출석 도장판에 한 달에 몇 번 숨어 있어요. 숨은 날 도장을 찍으면 찾을 수 있어요.<br>🎁 캡슐 스티커는 30일 선물권이에요. 같은 스티커가 또 나오면 30일이 더 늘어나요.</p></details>
                 <button class="gc-sound snd-fx snd-fx-text" id="gcSound" type="button" onclick="sndToggleFx()">${typeof sndOn === 'function' && !sndOn() ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
               </div>
               <canvas class="gc-burst" id="gcBurst"></canvas>`;
@@ -230,11 +230,11 @@
             const n = typeof state === 'number' ? state : 0, ok = typeof state === 'number';
             const chip = gq('gcChip'), txt = gq('gcChipText'), btn = gq('gcInsert'), say = gq('gcSay'), find = gq('gcFind');
             chip.classList.toggle('empty', !n && !gc.test);
-            txt.textContent = gc.test && ok ? '🧪 테스트 모드 · 무제한' : state === 'checking' ? '코인 확인 중…' : ok ? `말랑 코인 ${n}개` : '코인 없음';
+            txt.textContent = gc.test && ok ? '🧪 테스트 모드 · 무제한' : state === 'checking' ? '코인 확인 중…' : ok ? `코인 ${n}개` : '코인 없음';
             btn.disabled = !(n > 0 || (gc.test && ok));
             find.hidden = !(ok && !n && !gc.test);
             say.textContent = state === 'checking' ? '…' : !ok ? (GC_ERR[err] || GC_ERR.server)
-                : (n || gc.test) ? '코인을 넣고 손잡이를 돌려 보세요!' : '코인이 없어요.\n📅 출석 도장판 어딘가에 말랑 코인이 숨어 있어요!';
+                : (n || gc.test) ? '코인을 넣고 손잡이를 돌려 보세요!' : '코인이 없어요.\n📅 출석 도장판 어딘가에 코인이 숨어 있어요!';
         }
 
         /* ---------- 1. 코인 넣기 ---------- */
@@ -255,7 +255,7 @@
             capsSet(r.passes);
             gc.test = !!r.test;
             gc.stage = 'coin';
-            gq('gcChipText').textContent = gc.test ? '🧪 테스트 모드 · 무제한' : `말랑 코인 ${r.coins}개`; gq('gcSay').textContent = '';
+            gq('gcChipText').textContent = gc.test ? '🧪 테스트 모드 · 무제한' : `코인 ${r.coins}개`; gq('gcSay').textContent = '';
             const coin = gq('gcCoin'); coin.classList.remove('drop'); void coin.offsetWidth; coin.classList.add('drop');
             gcSfx.coin(); gcBuzz(20);
             gq('gcSay').textContent = '짤랑! 코인이 들어갔어요';

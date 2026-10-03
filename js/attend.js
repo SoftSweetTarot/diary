@@ -2,7 +2,7 @@
    📅 출석 도장판 : 하루에 한 번 도장을 꾹! (카페 → 매일 말랑 → 📅 출석 도장판)
    - 오늘 날짜에만 찍을 수 있어요. 지나간 날은 나중에 찍을 수 없어요.
    - 날마다 도장 그림이 달라요. (날짜로 정해져서 어느 기기에서 봐도 같은 그림)
-   - 🪙 숨은 코인 : 달력에 한 달에 7번 말랑 코인이 숨어 있어요. 도장을 찍으면 그날 칸이 휘리릭 뒤집히다가 앞면이 보여요.
+   - 🪙 숨은 코인 : 달력에 한 달에 7번 코인이 숨어 있어요. 도장을 찍으면 그날 칸이 휘리릭 뒤집히다가 앞면이 보여요.
      숨은 날인지는 랜덤박스 서버만 알아요 (랜덤박스_앱스크립트.gs · stamp) · 몇 개 남았는지는 보여 주지 않아요 (모르는 게 더 두근두근)
      그날 도장을 못 찍으면 그 코인은 놓쳐요 · 찾은 코인으로 🎁 랜덤박스(js/gacha.js)에서 캡슐을 뽑아요
      로그인하지 않으면(게스트) 코인을 찾을 수 없어요
@@ -85,7 +85,7 @@
                   <div><small>모은 도장</small><b id="atTotal">0</b>개</div>
                 </div>
                 <button class="at-go" type="button" id="atGo" onclick="atPress()"></button>
-                <p class="at-tip">🪙 달력 어딘가에 <b>말랑 코인</b>이 숨어 있어요. 도장을 찍으면 그날 칸이 뒤집혀요. 코인이 나오면 🎁 랜덤박스에서 캡슐을 뽑을 수 있어요!<br>숨은 날에 도장을 못 찍으면 그 코인은 사라져요.</p>
+                <p class="at-tip">🪙 달력 어딘가에 <b>코인</b>이 숨어 있어요. 도장을 찍으면 그날 칸이 뒤집혀요. 코인이 나오면 🎁 랜덤박스에서 캡슐을 뽑을 수 있어요!<br>숨은 날에 도장을 못 찍으면 그 코인은 사라져요.</p>
               </div>
               <div class="at-flip-wrap" id="atFlipWrap" hidden>
                 <div class="at-flip-stage">
@@ -169,12 +169,12 @@
             if (!atq('attendRoom').classList.contains('show')) return;
             const hit = !!(r && r.ok && r.hit);
             atq('atFront').classList.add(hit ? 'coin' : 'miss');
-            atq('atFront').innerHTML = hit ? '<span class="at-coin">말</span><b>말랑 코인!</b>' : `<em style="--c:${s.c}">${s.e}</em><b>${T.d}일 도장</b>`;
+            atq('atFront').innerHTML = hit ? '<span class="at-coin">말</span><b>코인!</b>' : `<em style="--c:${s.c}">${s.e}</em><b>${T.d}일 도장</b>`;
             card.classList.remove('spin'); card.classList.add('land');
             await atLater(1100);
             if (hit) {
                 atSfx.win(); atConfetti();
-                atq('atFlipMsg').innerHTML = '🎉 <b>숨은 말랑 코인</b>을 찾았어요!';
+                atq('atFlipMsg').innerHTML = '🎉 <b>숨은 코인</b>을 찾았어요!';
                 atq('atFlipBtns').innerHTML = `<button class="at-go" type="button" onclick="atToBox()">🎁 랜덤박스에서 캡슐 뽑기</button>
                     <button class="at-pop-later" type="button" onclick="atFlipClose()">나중에 뽑을게요</button>`;
             } else {
