@@ -206,13 +206,16 @@
            - 사람들이 만들어 나눈 스킨 · 패턴(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
            - 화면에서 class="saver-only" 인 것들은 저금해 준 사람에게만 보여요 (css : body.saver)
            - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
-           - 저금통 서버가 붙으면 setSaver(true/false, 끝나는 때 ms) 로 알려 줘요 (🐷 저금통 창 : js/piggy.js) */
-        let saverOn = false, saverUntil = 0;
-        const isSaver = () => saverOn;
-        const saverDaysLeft = () => saverOn && saverUntil ? Math.max(1, Math.ceil((saverUntil - Date.now()) / 864e5)) : 0;
-        function setSaver(on, until) {
-            saverOn = !!on; saverUntil = saverOn ? (+until || 0) : 0;
-            document.body.classList.toggle('saver', saverOn);
+           - 선물 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setSaver('2026-11-02') (js/presence.js)
+             그 날(한국 시간)까지 열려요 · 빈 값이면 닫혀요 · 🐷 저금통 창 : js/piggy.js */
+        let saverUntil = '';
+        const saverToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+        const isSaver = () => !!saverUntil && saverUntil >= saverToday();
+        const saverDaysLeft = () => isSaver() ? Math.round((Date.parse(saverUntil) - Date.parse(saverToday())) / 864e5) : -1;   // 0 = 오늘이 마지막 날
+        function setSaver(until) {
+            saverUntil = /^\d{4}-\d{2}-\d{2}$/.test(until || '') ? until : '';
+            document.body.classList.toggle('saver', isSaver());
+            if (typeof pigThanks === 'function') pigThanks();
         }
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
         const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);

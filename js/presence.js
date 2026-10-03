@@ -7,6 +7,7 @@
        ③ 열어 둔 동안 3시간마다 '아직 있어요' (3시간이 넘도록 신호가 없으면 서버가 off 로 봐요)
      다른 탭 · 앱으로 잠깐 다녀오는 건 신호를 보내지 않아요
    - 보내는 건 구글 로그인 확인용 정보와 기기 종류(PC · 휴대폰 · 태블릿)뿐 (이메일 · 일기 내용은 보내지 않아요)
+   - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물 끝나는 날을 받아요 → setSaver (js/settings.js)
    - 게스트는 보내지 않아요
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
 
@@ -23,13 +24,19 @@
             if (!prOk()) return;
             pr.last = Date.now();
             try { await ensureToken(); } catch (e) { return; }
-            fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'here', token: drive.token, dev: prDevice() }) }).catch(() => {});
+            try {
+                const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'here', token: drive.token, dev: prDevice() }) });
+                const j = await res.json();
+                if (j && j.ok && typeof setSaver === 'function') setSaver(j.until);
+            } catch (e) {}
         }
         function prBye() {
             if (!prOk() || !pr.last || !drive.token) return;
             pr.last = 0;
             try { navigator.sendBeacon(MEMBER_API_URL, JSON.stringify({ action: 'bye', token: drive.token })); } catch (e) {}
         }
-        setInterval(() => { if (Date.now() - pr.last >= PR_EVERY) prHere(); }, 15000);      // ① 로그인되면 곧바로 · ③ 그 뒤로 3시간마다
+        const prFirst = setInterval(() => { if (prOk()) { clearInterval(prFirst); if (!pr.last) prHere(); } }, 1000);   // ① 로그인되면 곧바로
+        setInterval(() => { if (Date.now() - pr.last >= PR_EVERY) prHere(); }, 15000);      // ③ 그 뒤로 3시간마다
+        setInterval(() => { if (typeof setSaver === 'function' && document.body.classList.contains('saver') && !isSaver()) setSaver(''); }, 60000);   // 선물 기간이 열어 둔 중에 끝나면 닫기
         window.addEventListener('pagehide', prBye);                                         // ② 닫을 때
         window.addEventListener('pageshow', e => { if (e.persisted) prHere(); });            // 닫았던 페이지가 그대로 되살아나면 다시 on

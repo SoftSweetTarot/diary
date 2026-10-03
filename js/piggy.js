@@ -1,11 +1,12 @@
 /* 말랑달콤 다이어리 - js/piggy.js
    🐷 말랑달콤 저금통 (카페 → 🐷 말랑달콤 저금통)
    - 정해진 금액 없이, 마음이 가는 만큼 넣어 주면 한 달 동안 고마움 선물(🎀 마스킹테이프 · 🍬 달콤패턴)이 열려요
-   - 100원을 넣어도 똑같이 한 달 · 사람들이 만들어 나눈 스킨 · 패턴은 언제나 누구나
+   - 얼마를 넣어도 똑같이 30일 · 사람들이 만들어 나눈 스킨 · 패턴은 언제나 누구나
+   - 주인은 '말랑달콤 사람들' 시트에서 저금 코드를 찾아 '저금 확인 ☑' 을 체크하면 끝 (말랑달콤사람들_앱스크립트.gs)
    - 저금 코드 : 구글 계정 번호(permissionId)로 만든 '말랑' + 4글자 → 통장에 찍힌 코드로 누가 넣었는지 알아요
        만드는 법 : FNV-1a 32비트( 'malang-piggy:' + permissionId ) → 아래 글자표(32자)에서 4번 (h % 32, h = floor(h / 32))
        → 저금통 서버를 만들 때 같은 방법으로 맞춰 보면 돼요
-   - 선물이 열렸는지는 js/settings.js 의 isSaver() · setSaver() 가 알려 줘요
+   - 선물이 열렸는지는 js/settings.js 의 isSaver() 가 알려 줘요 (선물 끝나는 날은 접속 신호의 답으로 받아요 : js/presence.js)
    ※ 이 파일이 없으면 저금통 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
         /* 💳 받는 통장 (임시) */
@@ -137,8 +138,8 @@
             const on = typeof isSaver === 'function' && isSaver();
             el.hidden = !on;
             if (!on) return;
-            const left = typeof saverDaysLeft === 'function' ? saverDaysLeft() : 0;
-            el.innerHTML = `💝 마음을 넣어 주셔서 고마워요! 선물이 활짝 열려 있어요${left ? ` <b>D-${left}</b>` : ''}`;
+            const left = saverDaysLeft();
+            el.innerHTML = `💝 마음을 넣어 주셔서 고마워요! 선물이 활짝 열려 있어요 <b>${left ? 'D-' + left : 'D-day'}</b>`;
         }
 
         /* 내 저금 코드 (구글 로그인했을 때만) */
