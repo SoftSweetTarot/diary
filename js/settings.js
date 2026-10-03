@@ -206,11 +206,12 @@
            - 사람들이 만들어 나눈 스킨 · 패턴(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
            - 화면에서 class="saver-only" 인 것들은 저금해 준 사람에게만 보여요 (css : body.saver)
            - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
-           - 저금통 서버가 붙으면 setSaver(true/false) 로 알려 줘요 */
-        let saverOn = false;
+           - 저금통 서버가 붙으면 setSaver(true/false, 끝나는 때 ms) 로 알려 줘요 (🐷 저금통 창 : js/piggy.js) */
+        let saverOn = false, saverUntil = 0;
         const isSaver = () => saverOn;
-        function setSaver(on) {
-            saverOn = !!on;
+        const saverDaysLeft = () => saverOn && saverUntil ? Math.max(1, Math.ceil((saverUntil - Date.now()) / 864e5)) : 0;
+        function setSaver(on, until) {
+            saverOn = !!on; saverUntil = saverOn ? (+until || 0) : 0;
             document.body.classList.toggle('saver', saverOn);
         }
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
