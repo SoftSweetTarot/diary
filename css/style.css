@@ -2196,3 +2196,10 @@
         .wl-view-btns .btn { flex: 1; justify-content: center; padding: 10px; }
         .wl-view-btns .pg-copy { width: auto; margin: 0; }
         .pg-go small { font-size: 12px; font-weight: normal; opacity: .9; margin-left: 2px; }
+        .wl-ico { width: 1.5rem; height: 2.2rem; display: block; margin: 0 auto; overflow: visible; filter: drop-shadow(0 2px 3px rgba(255, 107, 147, .25)); }
+        .wl-ico-sky { animation: wlSky 6s ease-in-out infinite alternate; }
+        .wl-ico-cloud { animation: wlCloud 4s ease-in-out infinite alternate; }
+        .wl-ico-heart { transform-box: fill-box; transform-origin: center; animation: pgBeat 1.6s ease-in-out infinite; }
+        @keyframes wlSky { to { transform: translate(-20px, -20px); } }
+        @keyframes wlCloud { to { transform: translateX(4px); } }
+        @media (prefers-reduced-motion: reduce) { .wl-ico-sky, .wl-ico-cloud, .wl-ico-heart { animation: none; } }
