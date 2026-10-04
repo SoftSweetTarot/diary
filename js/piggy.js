@@ -2,12 +2,11 @@
    💗 말랑달콤 저금통 (카페 → 💗 말랑달콤 저금통)
    - 정해진 금액 없이, 마음이 가는 만큼 넣어 주면 한 달 동안 고마움 선물(🎀 마스킹테이프 · 🍬 달콤패턴)이 열려요
    - 얼마를 넣어도 똑같이 30일 · 사람들이 만들어 나눈 스킨 · 패턴은 언제나 누구나
-   - 주인은 '말랑달콤 사람들' 시트에서 저금 코드를 찾아 '저금 확인 ☑' 을 체크하면 끝 (말랑달콤사람들_앱스크립트.gs)
+   - 주인은 '말랑달콤 사람들' 시트에서 저금 코드를 찾아 '저금 확인 ☑' 을 체크하면 끝 (말랑달콤사람들_앱스크립트.gs · 📱 piggy-check 앱도 돼요)
    - 마음은 카카오페이 오픈채팅 송금으로 받아요 (서로 실명이 안 보여요) : 말랑달콤 1:1 오픈채팅방에 저금 코드를 붙여 넣고 송금
        휴대폰 : 버튼 하나로 저금 코드 복사 + 채팅방 열기 · PC · 태블릿 : QR 코드 (카카오페이 송금은 휴대폰 카카오톡에서만 돼요)
-   - 저금 코드 : 구글 계정 번호(permissionId)로 만든 '말랑' + 4글자 → 채팅에 적힌 코드로 누가 넣었는지 알아요
-       만드는 법 : FNV-1a 32비트( 'malang-piggy:' + permissionId ) → 아래 글자표(32자)에서 4번 (h % 32, h = floor(h / 32))
-       → 저금통 서버를 만들 때 같은 방법으로 맞춰 보면 돼요
+   - 저금 코드 : '말랑' + 4글자 · 처음 접속할 때 서버가 겹치지 않게 정해 줘요 (접속 신호의 답 · js/presence.js 의 pr.code)
+       → 채팅에 적힌 코드로 누가 넣었는지 알아요
    - 선물이 열렸는지는 js/settings.js 의 isSaver() 가 알려 줘요 (선물 끝나는 날은 접속 신호의 답으로 받아요 : js/presence.js)
    - 🎁 선물 도착 창 (pigGiftPop) : 주인이 체크하면 다이어리를 쓰는 중에 '선물이 도착했어요' 창이 떠요 · 닫기를 눌러야 닫혀요
        신호는 js/presence.js 가 1분마다 물어봐서 받아요
@@ -16,16 +15,7 @@
         /* 💬 말랑달콤 1:1 오픈채팅방 주소 : 다이어리 맨 위 폴더의 an.txt 에 적어요 (오픈채팅=https://open.kakao.com/o/…) */
         const PIG_CHAT_FILE = 'an.txt';
         const PIG_QR_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
-        const PIG_ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         const pig = { tab: 'tape', code: '', built: false, chat: '', phone: false };
-
-        function pigCode(pid) {
-            let h = 0x811c9dc5;
-            for (const ch of 'malang-piggy:' + pid) { h ^= ch.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
-            let s = '';
-            for (let i = 0; i < 4; i++) { s += PIG_ABC[h % 32]; h = Math.floor(h / 32); }
-            return '말랑' + s;
-        }
 
         /* ---------- 🔊 동전 소리 : 짤랑~ (연출 소리를 껐으면 조용히) ---------- */
         function pigCoin() {
@@ -154,14 +144,14 @@
             const show = (txt, ok) => { el.textContent = txt; el.classList.toggle('none', !ok); btn.disabled = !ok; };
             if (pig.code) return show(pig.code, true);
             if (typeof drive === 'undefined' || !drive.ready || drive.guest) return show('구글로 로그인하면 코드가 생겨요', false);
-            try {
-                const res = await gfetch('https://www.googleapis.com/drive/v3/about?fields=user(permissionId)');
-                const pid = ((await res.json()).user || {}).permissionId;
-                if (!pid) throw 0;
-                pig.code = pigCode(pid);
-                show(pig.code, true);
-                pigSendUI();
-            } catch (e) { show('잠시 후 다시 열어 주세요', false); }
+            for (let i = 0; i < 40 && !(typeof pr !== 'undefined' && pr.code); i++) {          // 접속 신호의 답을 기다려요 (최대 20초)
+                if (i === 6 && typeof prHere === 'function') prHere();
+                await new Promise(r => setTimeout(r, 500));
+            }
+            if (typeof pr === 'undefined' || !pr.code) return show('잠시 후 다시 열어 주세요', false);
+            pig.code = pr.code;
+            show(pig.code, true);
+            pigSendUI();
         }
 
         /* 💬 채팅방 주소 읽기 (an.txt · 고치면 바로 반영되게 매번 새로 읽어요) */
