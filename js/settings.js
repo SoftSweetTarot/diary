@@ -202,31 +202,46 @@
         let currentSkinId = 'pink';
         let currentSkinInline = null;      // 목록에 없는 스킨을 쓰는 중일 때 그 색 (예: 내려간 모두의 스킨)
 
-        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴 — 서로 따로 열리고 따로 끝나요)
+        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴)
+           - 선물은 두 가지 : '전체'(저금 확인 때 · 그 종류 전부가 열려요) 와 '디자인 하나하나'(🎁 아이템 주기 · 캡슐 스티커처럼 디자인마다 따로 기간)
+             한 디자인의 끝나는 날 = 전체와 그 디자인 중 더 늦은 날
            - 사람들이 만들어 나눈 스킨 · 패턴(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
-           - 화면에서 class="tape-only" 는 🎀 이 열린 사람에게만, class="pat-only" 는 🍬 이 열린 사람에게만 보여요 (css : body.tape-on · body.pat-on)
-           - class="gift-left" data-g="tape" | "pat" 인 칸에는 그 선물의 남은 날(D-12)이 저절로 적혀요
+           - 화면에서 class="tape-only" 는 🎀 이 하나라도 열린 사람에게만, class="pat-only" 는 🍬 이 하나라도 열린 사람에게만 보여요 (css : body.tape-on · body.pat-on)
            - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
-           - 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setGift('2026-11-02', '2026-11-20') (js/presence.js)
+           - 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setGift(전체🎀, 전체🍬, {테이프id: 날}, {패턴id: 날}) (js/presence.js)
              그 날(한국 시간)까지 열려요 · 빈 값이면 닫혀요 · 🐷 저금통 창 : js/piggy.js */
-        const GIFT_LOCAL = 'malang_gift';      // 이 기기에 마지막으로 받은 🎀 · 🍬 끝나는 날 → 다이어리를 열자마자 바로 보여 줘요 (서버 답이 오면 고쳐요)
-        let giftTape = '', giftPat = '';
+        const GIFT_LOCAL = 'malang_gift';      // 이 기기에 마지막으로 받은 선물 → 다이어리를 열자마자 바로 보여 줘요 (서버 답이 오면 고쳐요)
+        let giftBox = { ta: '', pa: '', tp: {}, pp: {} };      // ta · pa : 🎀 · 🍬 전체 끝나는 날 / tp · pp : 디자인별 끝나는 날
         const giftToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
         const giftOk = d => !!d && d >= giftToday();
-        const tapeOn = () => giftOk(giftTape), patOn = () => giftOk(giftPat);
         const giftLeft = d => giftOk(d) ? Math.round((Date.parse(d) - Date.parse(giftToday())) / 864e5) : -1;   // 0 = 오늘이 마지막 날 · 닫혔으면 -1
-        const tapeLeft = () => giftLeft(giftTape), patLeft = () => giftLeft(giftPat);
         const dLabel = n => n < 0 ? '' : n ? 'D-' + n : 'D-day';
-        function setGift(tape, pat) {
-            const ok = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d : '';
-            giftTape = ok(tape); giftPat = ok(pat);
+        const giftEnd = (all, one) => [all, one].filter(giftOk).sort().pop() || '';      // 전체와 디자인 하나 중 더 늦은 날 · 없으면 ''
+        const tapeUntil = id => giftEnd(giftBox.ta, giftBox.tp[id]), patUntil = id => giftEnd(giftBox.pa, giftBox.pp[id]);
+        const tapeHas = id => !!tapeUntil(id), patHas = id => !!patUntil(id);
+        const tapeLeft = id => giftLeft(tapeUntil(id)), patLeft = id => giftLeft(patUntil(id));
+        const giftAlive = (all, map) => giftOk(all) || Object.keys(map).some(k => giftOk(map[k]));
+        const tapeOn = () => giftAlive(giftBox.ta, giftBox.tp), patOn = () => giftAlive(giftBox.pa, giftBox.pp);
+        const giftCount = map => Object.keys(map).filter(k => giftOk(map[k])).length;
+        function setGift(ta, pa, tp, pp) {
+            const day = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d : '';
+            const map = o => { const r = {}; if (o && typeof o === 'object') Object.keys(o).forEach(k => { if (/^[\w-]{1,30}$/.test(k) && day(o[k])) r[k] = o[k]; }); return r; };
+            giftBox = { ta: day(ta), pa: day(pa), tp: map(tp), pp: map(pp) };
             document.body.classList.toggle('tape-on', tapeOn());
             document.body.classList.toggle('pat-on', patOn());
-            document.querySelectorAll('.gift-left').forEach(el => { el.textContent = dLabel(giftLeft(el.dataset.g === 'pat' ? giftPat : giftTape)); });
-            try { if (giftTape || giftPat) localStorage.setItem(GIFT_LOCAL, giftTape + ',' + giftPat); else localStorage.removeItem(GIFT_LOCAL); } catch (e) {}
+            try { if (tapeOn() || patOn()) localStorage.setItem(GIFT_LOCAL, JSON.stringify(giftBox)); else localStorage.removeItem(GIFT_LOCAL); } catch (e) {}
             if (typeof pigThanks === 'function') pigThanks();
         }
-        try { const g = (localStorage.getItem(GIFT_LOCAL) || '').split(','); setGift(g[0], g[1]); } catch (e) {}
+        const giftRefresh = () => setGift(giftBox.ta, giftBox.pa, giftBox.tp, giftBox.pp);      // 기간이 끝난 건 닫기
+        /* 🎁 선물 도착 신호(g = { t: { all|이름: [끝나는 날, 늘어남] }, p: { … } })를 지금 가진 것에 합치기 */
+        function giftApply(g) {
+            const b = giftBox, ta = b.ta, pa = b.pa, tp = Object.assign({}, b.tp), pp = Object.assign({}, b.pp);
+            const put = (sig, all, one) => Object.keys(sig || {}).forEach(k => { const u = sig[k] && sig[k][0]; if (k === 'all') all.v = u; else one[k] = u; });
+            const A = { v: ta }, P = { v: pa };
+            put(g.t, A, tp); put(g.p, P, pp);
+            setGift(A.v, P.v, tp, pp);
+        }
+        try { const g = JSON.parse(localStorage.getItem(GIFT_LOCAL) || 'null') || {}; setGift(g.ta, g.pa, g.tp, g.pp); } catch (e) {}
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
         const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 

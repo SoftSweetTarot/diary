@@ -77,7 +77,7 @@
         function selectBgPattern(id) {
             const p = findBgPattern(id);
             if (!p) return;
-            if (p.tier === 'paid' && !patOn()) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 패턴이에요 💕'); return; }
+            if (p.tier === 'paid' && !patHas(id)) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 패턴이에요 💕'); return; }
             bgPattern = { id, scale: bgPattern ? bgPattern.scale : 1 };
             if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 패턴은 레시피도 같이 저장
             renderBgPattern();
@@ -211,7 +211,7 @@
         function patItems() {
             if (patTier === 'my') return typeof getMyPatternItems === 'function' ? getMyPatternItems() : [];
             const cm = typeof getCommunityItems === 'function' ? getCommunityItems() : [];
-            return BG_PATTERNS.filter(p => p.tier === patTier).concat(cm.filter(p => p.tier === patTier));
+            return BG_PATTERNS.filter(p => p.tier === patTier).concat(cm.filter(p => p.tier === patTier)).filter(p => p.tier !== 'paid' || patHas(p.id));   // 달콤패턴은 선물 받은 것만
         }
         function patPerPage() { return patLayout.rows * patLayout.cols; }
         function patPageCount() { const n = patItems().length; return n ? Math.ceil(n / patPerPage()) : 0; }
@@ -221,7 +221,7 @@
             /* 지금 쓰는 패턴이 이 목록에 있으면 그 페이지부터 보여 주기 */
             const idx = bgPattern ? patItems().findIndex(p => p.id === bgPattern.id) : -1;
             patPage = idx >= 0 ? Math.floor(idx / patPerPage()) : 0;
-            document.getElementById('patTitle').innerHTML = { free: '☁️ 말랑패턴', paid: '🍬 달콤패턴 <i class="gift-left" data-g="pat">' + dLabel(patLeft()) + '</i>', my: '📂 내 패턴' }[patTier];
+            document.getElementById('patTitle').textContent = { free: '☁️ 말랑패턴', paid: '🍬 달콤패턴', my: '📂 내 패턴' }[patTier];
             closeModal('skinModal');
             renderPatternList();
             openModal('patternModal');
@@ -265,7 +265,7 @@
             }
             document.getElementById('patStatus').textContent = items.length
                 ? `패턴 ${items.length}개 · 누르면 전체 배경에 적용돼요`
-                : (patTier === 'my' ? '아직 만든 패턴이 없어요. 스킨 메뉴의 ✏️ 만들기에서 만들어 보세요!' : '아직 준비된 패턴이 없어요.');
+                : (patTier === 'my' ? '아직 만든 패턴이 없어요. 스킨 메뉴의 ✏️ 만들기에서 만들어 보세요!' : patTier === 'paid' ? '선물 받은 달콤패턴이 아직 없어요.' : '아직 준비된 패턴이 없어요.');
             patPage = pages ? Math.max(0, Math.min(pages - 1, patPage)) : 0;
             const start = patPage * per;
             const frag = document.createDocumentFragment();
@@ -279,7 +279,7 @@
                 inner.className = 'pat-swatch-inner';
                 paintPatternInto(inner, p);
                 sw.appendChild(inner);
-                if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '🍬'; sw.appendChild(b); }
+                if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '🍬'; sw.appendChild(b); const d = document.createElement('span'); d.className = 'pat-left'; d.textContent = dLabel(patLeft(p.id)); sw.appendChild(d); }
                 if (bgPattern && bgPattern.id === p.id) { const c = document.createElement('span'); c.className = 'pat-check'; c.textContent = '✔ 사용 중'; sw.appendChild(c); }
                 const name = document.createElement('span');
                 name.className = 'pat-name';

@@ -127,14 +127,16 @@
             document.querySelectorAll('#pigBody .pg-gift').forEach(g => { g.hidden = g.dataset.t !== t; });
         }
 
-        /* 선물이 열려 있으면 고마움 띠 (🎀 · 🍬 남은 날 따로) */
+        /* 선물이 열려 있으면 고마움 띠 (🎀 · 🍬 따로 : 전체면 남은 날, 디자인별이면 몇 가지) */
         function pigThanks() {
             const el = document.getElementById('pigThanks'); if (!el) return;
             const t = typeof tapeOn === 'function' && tapeOn(), p = typeof patOn === 'function' && patOn();
             el.hidden = !(t || p);
             if (!t && !p) return;
+            const part = (all, map, tag) => giftOk(all) ? `${tag} 전체 <b>${dLabel(giftLeft(all))}</b>` : `${tag} <b>${giftCount(map)}가지</b>`;
             el.innerHTML = '💝 마음을 넣어 주셔서 고마워요! 선물이 열려 있어요<br>'
-                + [t ? `🎀 마스킹테이프 <b>${dLabel(tapeLeft())}</b>` : '', p ? `🍬 달콤패턴 <b>${dLabel(patLeft())}</b>` : ''].filter(Boolean).join(' · ');
+                + [t ? part(giftBox.ta, giftBox.tp, '🎀 마스킹테이프') : '', p ? part(giftBox.pa, giftBox.pp, '🍬 달콤패턴') : ''].filter(Boolean).join(' · ')
+                + '<br><small>디자인마다 남은 날은 🎨 스티커 · 🍬 달콤패턴 목록에서 볼 수 있어요</small>';
         }
 
         /* 내 저금 코드 (구글 로그인했을 때만) */
@@ -231,14 +233,20 @@
         }
 
         /* ---------- 🎁 선물 도착 창 : 상자가 통통 → 뚜껑이 퐁! → 하트가 둥실 (닫기를 눌러야 닫혀요) ---------- */
-        function pigGiftPop(g) {                              // g : { t: 🎀 끝나는 날, tm: 늘어남(1), p: 🍬 끝나는 날, pm } (받은 것만 들어 있어요)
+        function pigGiftPop(g) {                              // g : { t: { all | 테이프id: [끝나는 날, 늘어남(1)] }, p: { all | 패턴id: [끝나는 날, 늘어남] } } (받은 것만 들어 있어요)
             const old = document.getElementById('pigGiftPop'); if (old) old.remove();
             const day = u => { const d = new Date(u + 'T00:00:00'); return isNaN(d) ? '' : `${d.getMonth() + 1}월 ${d.getDate()}일`; };
             const items = [];
-            if (g.t) items.push({ ic: '🎀', name: '마스킹테이프', where: '다이어리 위쪽 <em>🎨 스티커</em> → <em>🎀 마스킹테이프</em> 칸', until: g.t, more: !!g.tm });
-            if (g.p) items.push({ ic: '🍬', name: '달콤패턴', where: '다이어리 위쪽 <em>👗 스킨</em> → <em>🍬 달콤패턴</em> 버튼', until: g.p, more: !!g.pm });
+            const add = (sig, ic, all, list) => Object.keys(sig && typeof sig === 'object' ? sig : {}).forEach(k => {
+                const v = sig[k]; if (!Array.isArray(v) || !/^\d{4}-\d{2}-\d{2}$/.test(v[0])) return;
+                const f = k === 'all' ? null : (list || []).find(x => x.id === k);
+                items.push({ ic, name: k === 'all' ? all : (f ? f.name : k), until: v[0], more: !!v[1], first: k === 'all' ? 0 : 1 });
+            });
+            add(g.t, '🎀', '마스킹테이프 전체', typeof TAPES !== 'undefined' ? TAPES : []);
+            add(g.p, '🍬', '달콤패턴 전체', typeof BG_PATTERNS !== 'undefined' ? BG_PATTERNS : []);
             if (!items.length) return;
             const more = items.every(x => x.more);
+            const where = [g.t ? '🎨 스티커 → 🎀 마스킹테이프 칸' : '', g.p ? '👗 스킨 → 🍬 달콤패턴 버튼' : ''].filter(Boolean).join(' · ');
             const hearts = Array.from({ length: 12 }, (_, i) => `<i style="--x:${Math.round(Math.cos(i / 12 * 6.283) * (60 + i % 3 * 18))}px;--y:${Math.round(-70 - Math.abs(Math.sin(i / 12 * 6.283)) * 60 - i % 4 * 10)}px;--d:${(i % 4) * .08}s">${['💗', '✨', '💕', '⭐'][i % 4]}</i>`).join('');
             const el = document.createElement('div');
             el.id = 'pigGiftPop'; el.className = 'gp-wrap';
@@ -258,8 +266,9 @@
                 <div class="gp-t">💝 선물이 도착했어요!</div>
                 <p class="gp-s">말랑달콤 저금통에 마음을 넣어 주셔서<br>정말 정말 고마워요</p>
                 <ul class="gp-list">
-                  ${items.map(x => `<li><span>${x.ic}</span><div><b>${x.name}${x.more ? ' 기간이 늘어났어요' : ''}</b><small>${x.where}</small><small class="gp-dd">${day(x.until)}까지 · <em>${dLabel(giftLeft(x.until))}</em></small></div></li>`).join('')}
+                  ${items.map(x => `<li><span>${x.ic}</span><div><b>${x.name}${x.more ? ' · 기간이 늘어났어요' : ''}</b><small class="gp-dd">${day(x.until)}까지 · <em>${dLabel(giftLeft(x.until))}</em></small></div></li>`).join('')}
                 </ul>
+                <div class="gp-until">📍 다이어리 위쪽 <b>${where}</b> 에서 써 보세요 💕</div>
                 <button type="button" class="btn btn-primary gp-close">닫기</button>
               </div>`;
             el.querySelector('.gp-close').onclick = () => { el.classList.add('out'); setTimeout(() => el.remove(), 260); };

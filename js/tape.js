@@ -44,6 +44,7 @@
 
         function addTape(id) {
             const t = TAPES.find(x => x.id === id); if (!t || typeof addImage !== 'function') return;
+            if (!tapeHas(id)) { showMsg('🎀 이 테이프의 선물 기간이 끝났어요 💕'); return; }
             if (!addImage(tapeUrl(t))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child');
             if (el) { el.style.width = '170px'; el.style.height = '30px'; el.dataset.rotation = -8; el.style.transform = el.style.transform.replace(/rotate\([^)]*\)/, 'rotate(-8deg)'); selectElement(el); }
@@ -51,11 +52,14 @@
             if (typeof toast === 'function') toast('🎀 ↔ 손잡이를 끌면 테이프 길이가 바뀌어요');
         }
 
-        /* ✏️ 스티커 창 → 🎀 마스킹테이프 칸 */
+        /* ✏️ 스티커 창 → 🎀 마스킹테이프 칸 : 선물 받은 테이프만 · 디자인마다 남은 날 (캡슐 스티커 칸처럼) */
         function loadTapes(btn) {
             if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
-            document.getElementById('stickerGrid').innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절 <i class="gift-left" data-g="tape">' + dLabel(tapeLeft()) + '</i></div>'
-                + TAPES.map(t => `<button type="button" class="tp-item" onclick="addTape('${t.id}')"><span style="background-image:url(&quot;${tapeUrl(t)}&quot;)"></span><small>${t.name}</small></button>`).join('');
+            const mine = TAPES.filter(t => tapeHas(t.id));
+            document.getElementById('stickerGrid').innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>'
+                + (mine.length
+                    ? mine.map(t => `<button type="button" class="tp-item" onclick="addTape('${t.id}')"><span style="background-image:url(&quot;${tapeUrl(t)}&quot;)"></span><small>${t.name}</small><i>${dLabel(tapeLeft(t.id))}</i></button>`).join('')
+                    : '<div class="cs-empty">🎀 선물 받은 마스킹테이프가 아직 없어요</div>');
         }
         window.loadTapes = loadTapes;
         window.isTapeSrc = isTapeSrc;
