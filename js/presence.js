@@ -11,6 +11,7 @@
    - 🎁 선물 도착 : 주인이 '저금 확인 ☑' 을 체크하면 서버에 신호가 한 번 남아요 → 받는 순간 '선물이 도착했어요' 창 (js/piggy.js 의 pigGiftPop)
        다이어리를 보고 있는 동안 1분마다 살짝 물어봐요 (로그인 확인 없이 회원번호로 · 서버가 시트를 열지 않아서 아주 가벼워요)
        다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간 바로 물어봐요
+   - 처음 온 사람이면(답의 first) 🎁 캡슐 스티커 첫 선물을 받아요 → capsWelcome (js/gacha.js)
    - 게스트는 보내지 않아요
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
 
@@ -34,6 +35,7 @@
                 if (j && j.ok && typeof setSaver === 'function') setSaver(j.until);
                 if (j && j.ok && j.me) pr.me = String(j.me);
                 if (j && j.ok && j.gift) prGift(j.gift);
+                if (j && j.ok && j.first && typeof capsWelcome === 'function') capsWelcome();   // 🎁 처음 온 사람 → 캡슐 스티커 첫 선물 (js/gacha.js)
             } catch (e) {}
         }
 

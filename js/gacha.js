@@ -8,7 +8,8 @@
    - 서버 코드 : 랜덤박스_앱스크립트.gs (랜덤박스 시트 → 확장 프로그램 → Apps Script 에 붙여 넣기)
      배포한 웹 앱 주소를 아래 GACHA_API_URL 에 넣어요.
    - 로그인한 사용자만 돌릴 수 있어요 (구글 계정으로 하루 한 번을 확인하기 때문)
-   - 🎁 첫 선물 : 처음 로그인한 사람에게 캡슐 스티커 하나를 30일 선물권으로 줘요 (서버 welcome · 계정마다 한 번)
+   - 🎁 첫 선물 : 처음 로그인한 사람에게 캡슐 스티커 하나를 30일 선물권으로 줘요
+     '말랑달콤 사람들' 서버가 처음 온 사람이라고 알려 주면(js/presence.js · first) → 랜덤박스 서버 welcome ('코인' 탭에 줄이 없을 때만 · 한 번)
      → '첫 선물이 도착했어요' 창으로 움직이는 스티커를 보여 주고, 얻는 방법(출석 도장 → 코인 → 랜덤박스)을 알려 줘요
    - 이 파일이 없어도 다이어리는 정상 동작 (랜덤박스만 '준비 중')
    ※ 파일 불러오는 순서: … → service → gacha */
@@ -107,21 +108,13 @@
             if (typeof openAttend === 'function') openAttend();
         }
 
-        /* 🎁 첫 선물 : 로그인하면 한 번 서버에 물어봐요 (받았거나 이미 받은 계정이면 이 기기에 기억 → 다시 안 물어봐요) */
-        const CAPS_WELCOME_LOCAL = 'malang_welcome';
-        const capsWelcomeWait = setInterval(async () => {
-            if (typeof drive === 'undefined' || !drive.ready) return;
-            clearInterval(capsWelcomeWait);
-            if (drive.guest) return;
-            let done = false; try { done = localStorage.getItem(CAPS_WELCOME_LOCAL) === '1'; } catch (e) {}
-            if (done) return;
+        /* 🎁 첫 선물 : 처음 온 사람이면 js/presence.js 가 불러요 */
+        async function capsWelcome() {
             const r = await gcApi('welcome');
-            if (!r || !r.ok) return;
-            try { localStorage.setItem(CAPS_WELCOME_LOCAL, '1'); } catch (e) {}
-            if (!r.gift) return;
+            if (!r || !r.ok || !r.gift) return;
             capsSet(r.passes || [r.gift]);
             setTimeout(() => capsWelcomePop(r.gift.id, r.gift.until), 1500);
-        }, 1000);
+        }
         function capsWelcomePop(id, until) {
             const k = capsList().find(x => x.id === id); if (!k) return;
             const old = document.getElementById('capsWelcome'); if (old) old.remove();
