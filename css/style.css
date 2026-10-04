@@ -323,7 +323,11 @@
         .cover-notice.empty { display: none; }
 
         /* 🐷 저금통 선물 : 저금해 준 사람에게만 보여요 (js/settings.js setSaver) */
-        body:not(.saver) .saver-only { display: none !important; }
+        body:not(.tape-on) .tape-only { display: none !important; }
+        body:not(.pat-on) .pat-only { display: none !important; }
+        .gift-left { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 8px; background: #ff6b93; color: #fff; font-style: normal; font-size: 10.5px; font-weight: bold; line-height: 16px; vertical-align: middle; }   /* 🎀 · 🍬 남은 날 (js/settings.js setGift) */
+        .gift-left:empty { display: none; }
+        .service-btn .gift-left { margin-left: 0; }
 
         /* 🎨 전체 배경 패턴 레이어 : 패턴을 쓰면 body 배경을 비우고 이 레이어가 보여요 */
         .bg-pattern-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; display: none; }
@@ -2224,6 +2228,7 @@
         .gp-list b { display: block; font-size: 14.5px; color: #c2456f; }
         .gp-list small { display: block; font-size: 12px; color: #8c6f7c; margin-top: 1px; }
         .gp-list em { font-style: normal; font-weight: bold; color: #5a4650; }
+        .gp-list .gp-dd { color: #7a5a1e; } .gp-list .gp-dd em { color: #c2456f; }
         .gp-until { margin: 0 0 14px; padding: 7px 10px; border-radius: 12px; background: #fff3c4; font-size: 12.5px; color: #7a5a1e; opacity: 0; animation: gpIn .4s 1.65s both; }
         .gp-until b { color: #c2456f; }
         .gp-close { width: 100%; justify-content: center; font-size: 15px; padding: 11px; border-radius: 16px; background: linear-gradient(160deg, #ff8fb1, #ff6b93) !important; border-color: #ff6b93 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(255, 107, 147, .35); opacity: 0; animation: gpIn .4s 1.8s both; }

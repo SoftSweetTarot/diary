@@ -15,8 +15,8 @@
      📱 저금 확인 앱 (주인 전용) : 휴대폰에서 저금 코드를 찾아 버튼 하나로 '저금 확인' (시트에서 ☑ 체크한 것과 똑같아요)
      - 서버 : 말랑달콤사람들_앱스크립트.gs (admin_find · admin_save) · 관리 열쇠가 맞아야만 동작 (처음 한 번 setupAdmin 실행 → 열쇠를 여기에 넣기)
      - 확실하게 : 요청마다 번호를 붙여 보내요 → 인터넷이 끊겨 다시 보내도 한 번만 처리
-                  처리된 뒤 시트를 다시 읽어서 선물 끝나는 날 · 저금 횟수가 맞는지 확인 → 맞으면 '저금 확인 완료' 창
-     - 🎁 아이템 주기 : 찾은 사람 카드의 버튼 → 🪙 코인 · 🎀🍬 마스킹테이프/달콤패턴 기간 · 🎁 캡슐 스티커(여러 개 + 기간)를 골라서 선물 (admin_give · 확인 창 → 보내기 → 결과 창)
+                  처리된 뒤 시트를 다시 읽어서 🎀 · 🍬 끝나는 날 · 저금 횟수가 맞는지 확인 → 맞으면 '저금 확인 완료' 창
+     - 🎁 아이템 주기 : 찾은 사람 카드의 버튼 → 🪙 코인 · 🎀 마스킹테이프 기간 · 🍬 달콤패턴 기간(따로따로) · 🎁 캡슐 스티커(여러 개 + 기간)를 골라서 선물 (admin_give · 확인 창 → 보내기 → 결과 창)
      - 📲 홈 화면에 설치 : 맨 위 하트 로고를 5번 톡톡 누르면 숨은 설치 칸이 열려요
      - 다이어리 어디에도 이 주소는 없어요 (softsweetdiary.com/piggy-check/) · 검색에도 안 나와요 -->
 <style>
@@ -195,7 +195,8 @@
           <div class="m">
             <div class="m-code">${esc(m.code)}</div>
             <dl class="m-rows">
-              <dt>선물</dt><dd class="${m.until ? 'on' : ''}">${m.until ? `${esc(m.until)}까지 (${dLeft(m.until)})` : '없음'}</dd>
+              <dt>🎀 테이프</dt><dd class="${m.tape ? 'on' : ''}">${m.tape ? `${esc(m.tape)}까지 (${dLeft(m.tape)})` : '없음'}</dd>
+              <dt>🍬 패턴</dt><dd class="${m.pat ? 'on' : ''}">${m.pat ? `${esc(m.pat)}까지 (${dLeft(m.pat)})` : '없음'}</dd>
               <dt>저금</dt><dd>${m.count}번</dd>
               <dt>마지막 접속</dt><dd>${esc(m.last || '-')} ${esc(m.dev || '')}</dd>
             </dl>
@@ -217,7 +218,7 @@
             if (b) b.innerHTML = '<span class="spin"></span> 시트에 잘 적혔는지 확인 중…';
             const f = await api({ action: 'admin_find', q: m.code }, 4);
             now = f.ok ? (f.list || []).find(x => x.code === m.code) : null;
-            ok = !!now && now.until === r.until && now.count === r.count;
+            ok = !!now && now.tape === r.tape && now.pat === r.pat && now.count === r.count;
         }
         st.busy = '';
         if (ok) {
@@ -232,7 +233,7 @@
         pop(`<div class="pop-ic">✓</div>
           <div class="pop-t">저금 확인 완료!</div>
           <div class="pop-s">시트에 잘 적힌 것까지 확인했어요 💕</div>
-          <div class="pop-d"><b>${esc(r.code)}</b><br>선물 <b>${md(r.until)}</b>까지 (${dLeft(r.until)})<br>${r.count}번째 저금</div>
+          <div class="pop-d"><b>${esc(r.code)}</b><br>🎀 마스킹테이프 <b>${md(r.tape)}</b>까지 (${dLeft(r.tape)})<br>🍬 달콤패턴 <b>${md(r.pat)}</b>까지 (${dLeft(r.pat)})<br>${r.count}번째 저금</div>
           <div class="pop-s" style="font-size:12.5px">다이어리를 쓰고 있으면 1분 안에 🎁 선물 도착 창이 떠요</div>
           <div class="pop-btns"><button class="btn" type="button" onclick="unpop()">닫기</button></div>`);
     }
@@ -254,11 +255,12 @@
     const STICKERS = [['s3', '튤립 속 아기 토끼'], ['s7', '벚꽃 고양이'], ['s15', '꽃바구니 곰돌이'], ['s30', '딸기모자 햄스터'], ['s50', '꽃 양'],
         ['s100', '꽃 화관 토끼 공주'], ['c7', '방긋 해바라기'], ['c14', '무지개 구름이'], ['c21', '하트 풍선 병아리'], ['cfull', '딸기 케이크']];
     const DAY_CHIPS = [7, 14, 30, 60, 90];
-    const gv = { i: -1, coins: 0, tape: 0, sdays: 30, sel: [], rid: '', busy: false };
+    const gv = { i: -1, coins: 0, tape: 0, pat: 0, sdays: 30, sel: [], rid: '', busy: false };
+    const IN = { tape: 'gTape', pat: 'gPat', sdays: 'gSd' }, CH = { tape: 'chipsTape', pat: 'chipsPat', sdays: 'chipsSd' };
     const num = (id, max) => Math.max(0, Math.min(max, Math.floor(+($(id) && $(id).value) || 0)));
     function giveOpen(i) {
         if (!st.list[i]) return;
-        Object.assign(gv, { i, coins: 0, tape: 0, sdays: 30, sel: [], rid: '', busy: false });
+        Object.assign(gv, { i, coins: 0, tape: 0, pat: 0, sdays: 30, sel: [], rid: '', busy: false });
         giveForm();
     }
     function giveForm() {
@@ -267,9 +269,12 @@
         pop(`<div class="g-who">🎁 아이템 주기<b>${esc(m.code)}</b></div>
           <div class="g-row"><h4>🪙 코인 <small>랜덤박스에서 쓰는 코인</small></h4>
             <div class="g-num"><input id="gCoins" type="number" inputmode="numeric" min="0" max="99" value="${gv.coins || ''}" placeholder="0" oninput="gRead()"><span>개</span></div></div>
-          <div class="g-row"><h4>🎀 마스킹테이프 · 🍬 달콤패턴 <small>둘이 같이 열려요</small></h4>
+          <div class="g-row"><h4>🎀 마스킹테이프 <small>안 줄 거면 비워 두세요</small></h4>
             <div class="g-num"><input id="gTape" type="number" inputmode="numeric" min="0" max="365" value="${gv.tape || ''}" placeholder="0" oninput="gRead(); gChips('tape')"><span>일 동안</span></div>
             <div class="chips" id="chipsTape">${dayChips('tape')}</div></div>
+          <div class="g-row"><h4>🍬 달콤패턴 <small>안 줄 거면 비워 두세요</small></h4>
+            <div class="g-num"><input id="gPat" type="number" inputmode="numeric" min="0" max="365" value="${gv.pat || ''}" placeholder="0" oninput="gRead(); gChips('pat')"><span>일 동안</span></div>
+            <div class="chips" id="chipsPat">${dayChips('pat')}</div></div>
           <div class="g-row"><h4>🎁 캡슐 스티커 <small>여러 개 골라도 돼요</small></h4>
             <div class="chips">${STICKERS.map(([id, nm]) => `<button type="button" class="chip st ${gv.sel.includes(id) ? 'on' : ''}" onclick="gPick('${id}')">${esc(nm)}</button>`).join('')}</div>
             <div class="g-num" style="margin-top:10px"><input id="gSd" type="number" inputmode="numeric" min="1" max="365" value="${gv.sdays || ''}" placeholder="30" oninput="gRead(); gChips('sdays')"><span>일 동안</span></div>
@@ -279,24 +284,25 @@
             <button class="btn sub" type="button" onclick="unpop()">닫기</button></div>`);
         document.querySelector('.pop-box').classList.add('wide');
     }
-    function gRead() { gv.coins = num('gCoins', 99); gv.tape = num('gTape', 365); gv.sdays = num('gSd', 365); }
-    function gSet(key, d) { gRead(); gv[key] = d; const inp = key === 'tape' ? $('gTape') : $('gSd'); inp.value = d; gChips(key); }
+    function gRead() { gv.coins = num('gCoins', 99); gv.tape = num('gTape', 365); gv.pat = num('gPat', 365); gv.sdays = num('gSd', 365); }
+    function gSet(key, d) { gRead(); gv[key] = d; $(IN[key]).value = d; gChips(key); }
     function gChips(key) {                                     // 눌린 기간 칸 표시만 다시 (입력 칸은 그대로)
         gRead();
-        const box = $(key === 'tape' ? 'chipsTape' : 'chipsSd');
+        const box = $(CH[key]);
         [...box.children].forEach((b, k) => b.classList.toggle('on', gv[key] === DAY_CHIPS[k]));
     }
     function gPick(id) { gRead(); const k = gv.sel.indexOf(id); if (k < 0) gv.sel.push(id); else gv.sel.splice(k, 1); giveForm(); }
     function giveSummary() {
         const rows = [];
         if (gv.coins) rows.push(`🪙 코인 <b>${gv.coins}개</b>`);
-        if (gv.tape) rows.push(`🎀🍬 마스킹테이프 · 달콤패턴 <b>${gv.tape}일</b>`);
+        if (gv.tape) rows.push(`🎀 마스킹테이프 <b>${gv.tape}일</b>`);
+        if (gv.pat) rows.push(`🍬 달콤패턴 <b>${gv.pat}일</b>`);
         if (gv.sel.length) rows.push(`🎁 캡슐 스티커 <b>${gv.sel.length}개</b> · 각 <b>${gv.sdays}일</b><br><small>${gv.sel.map(id => esc(STICKERS.find(x => x[0] === id)[1])).join(' · ')}</small>`);
         return rows;
     }
     function giveConfirm() {
         gRead();
-        const bad = (!gv.coins && !gv.tape && !gv.sel.length) ? '줄 아이템을 하나 이상 골라 주세요'
+        const bad = (!gv.coins && !gv.tape && !gv.pat && !gv.sel.length) ? '줄 아이템을 하나 이상 골라 주세요'
             : (gv.sel.length && gv.sdays < 1) ? '스티커 기간(일)을 적어 주세요' : '';
         if (bad) { $('gErr').textContent = bad; $('gErr').hidden = false; return; }
         const m = st.list[gv.i];
@@ -311,13 +317,13 @@
         gv.busy = true;
         const m = st.list[gv.i];
         pop(`<div class="state"><span class="spin" style="border-color:rgba(194,69,111,.25);border-top-color:var(--deep)"></span><br><br>선물을 보내는 중…</div>`);
-        const r = await api({ action: 'admin_give', code: m.code, rid: gv.rid, coins: gv.coins, tape: gv.tape, stickers: gv.sel, sdays: gv.sdays }, 4, 45000);   // 같은 rid 라 몇 번 보내도 한 번만
+        const r = await api({ action: 'admin_give', code: m.code, rid: gv.rid, coins: gv.coins, tape: gv.tape, pat: gv.pat, stickers: gv.sel, sdays: gv.sdays }, 4, 45000);   // 같은 rid 라 몇 번 보내도 한 번만
         let ok = !!r.ok;
-        if (ok && gv.tape) {                                    // 🎀🍬 은 시트를 다시 읽어서 맞는지 확인
+        if (ok && (gv.tape || gv.pat)) {                        // 🎀 · 🍬 는 시트를 다시 읽어서 맞는지 확인
             const f = await api({ action: 'admin_find', q: m.code }, 3);
             const now = f.ok ? (f.list || []).find(x => x.code === m.code) : null;
             if (now) st.list[gv.i] = Object.assign({}, st.list[gv.i], now);
-            ok = !!now && now.until === r.tape;
+            ok = !!now && (!gv.tape || now.tape === r.tape) && (!gv.pat || now.pat === r.pat);
         }
         gv.busy = false;
         ok ? giveOk(r) : giveBad(r);
@@ -326,14 +332,14 @@
     function giveOk(r) {
         pop(`<div class="pop-ic">✓</div><div class="pop-t" style="text-align:center">선물 완료!</div>
           <div class="pop-d"><b>${esc(r.code)}</b><br>${giveSummary().join('<br>')}
-            ${r.coins != null ? `<br>지금 코인 <b>${r.coins}개</b>` : ''}${gv.tape && r.tape ? `<br>선물 <b>${md(r.tape)}</b>까지` : ''}</div>
+            ${r.coins != null ? `<br>지금 코인 <b>${r.coins}개</b>` : ''}${gv.tape && r.tape ? `<br>🎀 <b>${md(r.tape)}</b>까지 (${dLeft(r.tape)})` : ''}${gv.pat && r.pat ? `<br>🍬 <b>${md(r.pat)}</b>까지 (${dLeft(r.pat)})` : ''}</div>
           <div class="pop-s" style="font-size:12.5px;text-align:center">다이어리를 쓰고 있으면 1분 안에 🎁 선물 도착 창이 떠요${gv.coins || gv.sel.length ? '<br>🪙 코인 · 🎁 스티커는 랜덤박스 · 캡슐 스티커 칸을 열면 보여요' : ''}</div>
           <div class="pop-btns"><button class="btn" type="button" onclick="unpop()">닫기</button></div>`);
     }
     function giveBad(r) {
         const why = r.error === 'key' ? '관리 열쇠가 맞지 않아요.' : r.error === 'none' ? '그 저금 코드를 시트에서 찾지 못했어요.'
             : r.error === 'setup' ? '회원 서버에 랜덤박스 연결(GACHA_API_URL · GACHA_KEY)이 아직 안 되어 있어요.'
-            : r.error === 'gacha' ? '🪙 코인 · 🎁 스티커를 랜덤박스 서버에 전하지 못했어요.' + (r.tape ? '<br>(🎀🍬 기간은 이미 들어갔어요)' : '')
+            : r.error === 'gacha' ? '🪙 코인 · 🎁 스티커를 랜덤박스 서버에 전하지 못했어요.' + (r.tape || r.pat ? '<br>(🎀 · 🍬 기간은 이미 들어갔어요)' : '')
             : r.ok ? '보냈는데 시트에서 확인하지 못했어요.' : '인터넷이 불안해서 서버에 닿지 못했어요.';
         const retry = !(r.error === 'none' || r.error === 'key' || r.error === 'setup' || r.error === 'bad');
         pop(`<div class="pop-ic bad">!</div><div class="pop-t" style="text-align:center">아직 완료되지 않았어요</div>

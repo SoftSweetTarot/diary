@@ -54,7 +54,7 @@
         /* ✏️ 스티커 창 → 🎀 마스킹테이프 칸 */
         function loadTapes(btn) {
             if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
-            document.getElementById('stickerGrid').innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>'
+            document.getElementById('stickerGrid').innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절 <i class="gift-left" data-g="tape">' + dLabel(tapeLeft()) + '</i></div>'
                 + TAPES.map(t => `<button type="button" class="tp-item" onclick="addTape('${t.id}')"><span style="background-image:url(&quot;${tapeUrl(t)}&quot;)"></span><small>${t.name}</small></button>`).join('');
         }
         window.loadTapes = loadTapes;

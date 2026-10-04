@@ -7,7 +7,7 @@
        휴대폰 : 버튼 하나로 저금 코드 복사 + 채팅방 열기 · PC · 태블릿 : QR 코드 (카카오페이 송금은 휴대폰 카카오톡에서만 돼요)
    - 저금 코드 : '말랑' + 4글자 · 처음 접속할 때 서버가 겹치지 않게 정해 줘요 (접속 신호의 답 · js/presence.js 의 pr.code)
        → 채팅에 적힌 코드로 누가 넣었는지 알아요
-   - 선물이 열렸는지는 js/settings.js 의 isSaver() 가 알려 줘요 (선물 끝나는 날은 접속 신호의 답으로 받아요 : js/presence.js)
+   - 선물이 열렸는지는 js/settings.js 의 tapeOn() · patOn() 이 알려 줘요 (🎀 · 🍬 끝나는 날은 따로 · 접속 신호의 답으로 받아요 : js/presence.js)
    - 🎁 선물 도착 창 (pigGiftPop) : 주인이 체크하면 다이어리를 쓰는 중에 '선물이 도착했어요' 창이 떠요 · 닫기를 눌러야 닫혀요
        신호는 js/presence.js 가 1분마다 물어봐서 받아요
    ※ 이 파일이 없으면 저금통 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
@@ -127,14 +127,14 @@
             document.querySelectorAll('#pigBody .pg-gift').forEach(g => { g.hidden = g.dataset.t !== t; });
         }
 
-        /* 선물이 열려 있으면 고마움 띠 */
+        /* 선물이 열려 있으면 고마움 띠 (🎀 · 🍬 남은 날 따로) */
         function pigThanks() {
             const el = document.getElementById('pigThanks'); if (!el) return;
-            const on = typeof isSaver === 'function' && isSaver();
-            el.hidden = !on;
-            if (!on) return;
-            const left = saverDaysLeft();
-            el.innerHTML = `💝 마음을 넣어 주셔서 고마워요! 선물이 활짝 열려 있어요 <b>${left ? 'D-' + left : 'D-day'}</b>`;
+            const t = typeof tapeOn === 'function' && tapeOn(), p = typeof patOn === 'function' && patOn();
+            el.hidden = !(t || p);
+            if (!t && !p) return;
+            el.innerHTML = '💝 마음을 넣어 주셔서 고마워요! 선물이 열려 있어요<br>'
+                + [t ? `🎀 마스킹테이프 <b>${dLabel(tapeLeft())}</b>` : '', p ? `🍬 달콤패턴 <b>${dLabel(patLeft())}</b>` : ''].filter(Boolean).join(' · ');
         }
 
         /* 내 저금 코드 (구글 로그인했을 때만) */
@@ -231,9 +231,14 @@
         }
 
         /* ---------- 🎁 선물 도착 창 : 상자가 통통 → 뚜껑이 퐁! → 하트가 둥실 (닫기를 눌러야 닫혀요) ---------- */
-        function pigGiftPop(until, more) {
+        function pigGiftPop(g) {                              // g : { t: 🎀 끝나는 날, tm: 늘어남(1), p: 🍬 끝나는 날, pm } (받은 것만 들어 있어요)
             const old = document.getElementById('pigGiftPop'); if (old) old.remove();
-            const d = new Date(until + 'T00:00:00'), when = isNaN(d) ? '' : `${d.getMonth() + 1}월 ${d.getDate()}일`;
+            const day = u => { const d = new Date(u + 'T00:00:00'); return isNaN(d) ? '' : `${d.getMonth() + 1}월 ${d.getDate()}일`; };
+            const items = [];
+            if (g.t) items.push({ ic: '🎀', name: '마스킹테이프', where: '다이어리 위쪽 <em>🎨 스티커</em> → <em>🎀 마스킹테이프</em> 칸', until: g.t, more: !!g.tm });
+            if (g.p) items.push({ ic: '🍬', name: '달콤패턴', where: '다이어리 위쪽 <em>👗 스킨</em> → <em>🍬 달콤패턴</em> 버튼', until: g.p, more: !!g.pm });
+            if (!items.length) return;
+            const more = items.every(x => x.more);
             const hearts = Array.from({ length: 12 }, (_, i) => `<i style="--x:${Math.round(Math.cos(i / 12 * 6.283) * (60 + i % 3 * 18))}px;--y:${Math.round(-70 - Math.abs(Math.sin(i / 12 * 6.283)) * 60 - i % 4 * 10)}px;--d:${(i % 4) * .08}s">${['💗', '✨', '💕', '⭐'][i % 4]}</i>`).join('');
             const el = document.createElement('div');
             el.id = 'pigGiftPop'; el.className = 'gp-wrap';
@@ -253,10 +258,8 @@
                 <div class="gp-t">💝 선물이 도착했어요!</div>
                 <p class="gp-s">말랑달콤 저금통에 마음을 넣어 주셔서<br>정말 정말 고마워요</p>
                 <ul class="gp-list">
-                  <li><span>🎀</span><div><b>마스킹테이프</b><small>다이어리 위쪽 <em>🎨 스티커</em> → <em>🎀 마스킹테이프</em> 칸</small></div></li>
-                  <li><span>🍬</span><div><b>달콤패턴</b><small>다이어리 위쪽 <em>👗 스킨</em> → <em>🍬 달콤패턴</em> 버튼</small></div></li>
+                  ${items.map(x => `<li><span>${x.ic}</span><div><b>${x.name}${x.more ? ' 기간이 늘어났어요' : ''}</b><small>${x.where}</small><small class="gp-dd">${day(x.until)}까지 · <em>${dLabel(giftLeft(x.until))}</em></small></div></li>`).join('')}
                 </ul>
-                ${when ? `<div class="gp-until">${more ? '선물 기간이' : '선물은'} <b>${when}</b>까지 활짝 열려 있어요 💕</div>` : ''}
                 <button type="button" class="btn btn-primary gp-close">닫기</button>
               </div>`;
             el.querySelector('.gp-close').onclick = () => { el.classList.add('out'); setTimeout(() => el.remove(), 260); };

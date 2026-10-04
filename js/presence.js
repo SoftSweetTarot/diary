@@ -7,7 +7,7 @@
        ③ 열어 둔 동안 3시간마다 '아직 있어요' (3시간이 넘도록 신호가 없으면 서버가 off 로 봐요)
      다른 탭 · 앱으로 잠깐 다녀오는 건 신호를 보내지 않아요
    - 보내는 건 구글 로그인 확인용 정보와 기기 종류(PC · 휴대폰 · 태블릿)뿐 (이메일 · 일기 내용은 보내지 않아요)
-   - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물 끝나는 날 · 내 저금 코드를 받아요 → setSaver (js/settings.js) · prCode (js/piggy.js)
+   - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물 🎀 · 🍬 끝나는 날 · 내 저금 코드를 받아요 → setGift (js/settings.js) · prCode (js/piggy.js)
    - 🎁 선물 도착 : 주인이 '저금 확인 ☑' 을 체크하면 서버에 신호가 한 번 남아요 → 받는 순간 '선물이 도착했어요' 창 (js/piggy.js 의 pigGiftPop)
        다이어리를 보고 있는 동안 1분마다 살짝 물어봐요 (로그인 확인 없이 회원번호로 · 서버가 시트를 열지 않아서 아주 가벼워요)
        다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간 바로 물어봐요
@@ -32,7 +32,7 @@
             try {
                 const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'here', token: drive.token, dev: prDevice() }) });
                 const j = await res.json();
-                if (j && j.ok && typeof setSaver === 'function') setSaver(j.until);
+                if (j && j.ok && typeof setGift === 'function') setGift(j.tape, j.pat);
                 if (j && j.ok && j.me) pr.me = String(j.me);
                 if (j && j.ok && j.code) pr.code = String(j.code);
                 if (j && j.ok && j.gift) prGift(j.gift);
@@ -40,7 +40,7 @@
             } catch (e) {}
         }
 
-        /* 🎁 선물 도착 신호 물어보기 (가벼운 GET · 답 : { gift: 'yyyy-MM-dd' | 'yyyy-MM-dd+' | '' }) */
+        /* 🎁 선물 도착 신호 물어보기 (가벼운 GET · 답 : { gift: { t, tm, p, pm } | '' }) */
         async function prGiftAsk() {
             if (!pr.me || pr.gBusy || document.hidden || !prOk()) return;
             pr.gBusy = true; pr.gLast = Date.now();
@@ -51,10 +51,10 @@
             } catch (e) {}
             pr.gBusy = false;
         }
-        function prGift(g) {
-            const until = String(g).slice(0, 10);
-            if (typeof setSaver === 'function') setSaver(until);
-            if (typeof pigGiftPop === 'function') pigGiftPop(until, /\+$/.test(g));
+        function prGift(g) {                                  // g : { t: 🎀 끝나는 날, tm: 늘어남(1), p: 🍬 끝나는 날, pm } (받은 것만 들어 있어요)
+            if (!g || typeof g !== 'object' || !(g.t || g.p)) return;
+            if (typeof setGift === 'function') setGift(g.t || giftTape, g.p || giftPat);
+            if (typeof pigGiftPop === 'function') pigGiftPop(g);
         }
         setInterval(() => { if (Date.now() - pr.gLast >= PR_GIFT_EVERY) prGiftAsk(); }, 10000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pr.gLast >= 10000) prGiftAsk(); });   // 다이어리로 돌아오면 바로
@@ -64,10 +64,10 @@
             try { navigator.sendBeacon(MEMBER_API_URL, JSON.stringify({ action: 'bye', token: drive.token })); } catch (e) {}
         }
         const prFirst = setInterval(() => {                                                 // ① 로그인되면 곧바로
-            if (typeof drive !== 'undefined' && drive.ready && drive.guest) { clearInterval(prFirst); if (typeof setSaver === 'function') setSaver(''); return; }   // 게스트는 선물 없음
+            if (typeof drive !== 'undefined' && drive.ready && drive.guest) { clearInterval(prFirst); if (typeof setGift === 'function') setGift('', ''); return; }   // 게스트는 선물 없음
             if (prOk()) { clearInterval(prFirst); if (!pr.last) prHere(); }
         }, 1000);
         setInterval(() => { if (Date.now() - pr.last >= PR_EVERY) prHere(); }, 15000);      // ③ 그 뒤로 3시간마다
-        setInterval(() => { if (typeof setSaver === 'function' && document.body.classList.contains('saver') && !isSaver()) setSaver(''); }, 60000);   // 선물 기간이 열어 둔 중에 끝나면 닫기
+        setInterval(() => { if (typeof setGift === 'function') setGift(giftTape, giftPat); }, 60000);   // 선물 기간이 열어 둔 중에 끝나면 닫기 · 남은 날 새로 적기
         window.addEventListener('pagehide', prBye);                                         // ② 닫을 때
         window.addEventListener('pageshow', e => { if (e.persisted) prHere(); });            // 닫았던 페이지가 그대로 되살아나면 다시 on

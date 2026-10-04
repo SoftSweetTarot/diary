@@ -202,24 +202,31 @@
         let currentSkinId = 'pink';
         let currentSkinInline = null;      // 목록에 없는 스킨을 쓰는 중일 때 그 색 (예: 내려간 모두의 스킨)
 
-        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴)
+        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴 — 서로 따로 열리고 따로 끝나요)
            - 사람들이 만들어 나눈 스킨 · 패턴(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
-           - 화면에서 class="saver-only" 인 것들은 저금해 준 사람에게만 보여요 (css : body.saver)
+           - 화면에서 class="tape-only" 는 🎀 이 열린 사람에게만, class="pat-only" 는 🍬 이 열린 사람에게만 보여요 (css : body.tape-on · body.pat-on)
+           - class="gift-left" data-g="tape" | "pat" 인 칸에는 그 선물의 남은 날(D-12)이 저절로 적혀요
            - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
-           - 선물 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setSaver('2026-11-02') (js/presence.js)
+           - 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setGift('2026-11-02', '2026-11-20') (js/presence.js)
              그 날(한국 시간)까지 열려요 · 빈 값이면 닫혀요 · 🐷 저금통 창 : js/piggy.js */
-        const SAVER_LOCAL = 'malang_saver';      // 이 기기에 마지막으로 받은 선물 끝나는 날 → 다이어리를 열자마자 바로 보여 줘요 (서버 답이 오면 고쳐요)
-        let saverUntil = '';
-        const saverToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
-        const isSaver = () => !!saverUntil && saverUntil >= saverToday();
-        const saverDaysLeft = () => isSaver() ? Math.round((Date.parse(saverUntil) - Date.parse(saverToday())) / 864e5) : -1;   // 0 = 오늘이 마지막 날
-        function setSaver(until) {
-            saverUntil = /^\d{4}-\d{2}-\d{2}$/.test(until || '') ? until : '';
-            document.body.classList.toggle('saver', isSaver());
-            try { if (saverUntil) localStorage.setItem(SAVER_LOCAL, saverUntil); else localStorage.removeItem(SAVER_LOCAL); } catch (e) {}
+        const GIFT_LOCAL = 'malang_gift';      // 이 기기에 마지막으로 받은 🎀 · 🍬 끝나는 날 → 다이어리를 열자마자 바로 보여 줘요 (서버 답이 오면 고쳐요)
+        let giftTape = '', giftPat = '';
+        const giftToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+        const giftOk = d => !!d && d >= giftToday();
+        const tapeOn = () => giftOk(giftTape), patOn = () => giftOk(giftPat);
+        const giftLeft = d => giftOk(d) ? Math.round((Date.parse(d) - Date.parse(giftToday())) / 864e5) : -1;   // 0 = 오늘이 마지막 날 · 닫혔으면 -1
+        const tapeLeft = () => giftLeft(giftTape), patLeft = () => giftLeft(giftPat);
+        const dLabel = n => n < 0 ? '' : n ? 'D-' + n : 'D-day';
+        function setGift(tape, pat) {
+            const ok = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d : '';
+            giftTape = ok(tape); giftPat = ok(pat);
+            document.body.classList.toggle('tape-on', tapeOn());
+            document.body.classList.toggle('pat-on', patOn());
+            document.querySelectorAll('.gift-left').forEach(el => { el.textContent = dLabel(giftLeft(el.dataset.g === 'pat' ? giftPat : giftTape)); });
+            try { if (giftTape || giftPat) localStorage.setItem(GIFT_LOCAL, giftTape + ',' + giftPat); else localStorage.removeItem(GIFT_LOCAL); } catch (e) {}
             if (typeof pigThanks === 'function') pigThanks();
         }
-        try { setSaver(localStorage.getItem(SAVER_LOCAL)); } catch (e) {}
+        try { const g = (localStorage.getItem(GIFT_LOCAL) || '').split(','); setGift(g[0], g[1]); } catch (e) {}
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
         const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 

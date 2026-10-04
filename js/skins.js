@@ -77,7 +77,7 @@
         function selectBgPattern(id) {
             const p = findBgPattern(id);
             if (!p) return;
-            if (p.tier === 'paid' && !isSaver()) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 패턴이에요 💕'); return; }
+            if (p.tier === 'paid' && !patOn()) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 패턴이에요 💕'); return; }
             bgPattern = { id, scale: bgPattern ? bgPattern.scale : 1 };
             if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 패턴은 레시피도 같이 저장
             renderBgPattern();
@@ -221,7 +221,7 @@
             /* 지금 쓰는 패턴이 이 목록에 있으면 그 페이지부터 보여 주기 */
             const idx = bgPattern ? patItems().findIndex(p => p.id === bgPattern.id) : -1;
             patPage = idx >= 0 ? Math.floor(idx / patPerPage()) : 0;
-            document.getElementById('patTitle').textContent = { free: '☁️ 말랑패턴', paid: '🍬 달콤패턴', my: '📂 내 패턴' }[patTier];
+            document.getElementById('patTitle').innerHTML = { free: '☁️ 말랑패턴', paid: '🍬 달콤패턴 <i class="gift-left" data-g="pat">' + dLabel(patLeft()) + '</i>', my: '📂 내 패턴' }[patTier];
             closeModal('skinModal');
             renderPatternList();
             openModal('patternModal');
