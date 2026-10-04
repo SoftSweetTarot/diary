@@ -344,15 +344,12 @@
             el.style.zIndex = zIndexCounter++;
             let posX = 100, posY = 100, scale = 1, rotation = 0;
 
-            const rotateHandle = document.createElement('div');
-            rotateHandle.className = 'handle rotate-handle';
-            rotateHandle.innerHTML = '🔄';
-            el.appendChild(rotateHandle);
-
-            const scaleHandle = document.createElement('div');
-            scaleHandle.className = 'handle scale-handle';
-            scaleHandle.innerHTML = '↘';
-            el.appendChild(scaleHandle);
+            /* 네 꼭짓점 : 잡고 돌리면 회전 (눈에 안 보이는 터치 칸) · 손가락 2개로 벌리면 확대/축소 + 비틀면 회전 */
+            ['tl', 'tr', 'bl', 'br'].forEach(c => {
+                const z = document.createElement('div');
+                z.className = 'rot-zone rot-' + c;
+                el.appendChild(z);
+            });
 
             /* 🎀 마스킹테이프 (js/tape.js) : ↔ 손잡이로 길이만 늘이고 줄이기 */
             let stretchHandle = null, initialW = 0;
@@ -366,6 +363,7 @@
 
             function updateTransform() {
                 el.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
+                el.style.setProperty('--inv', Math.min(5, 1 / (scale || 1)));
             }
             
             el.dataset.posX = posX; el.dataset.posY = posY;
@@ -373,7 +371,7 @@
             updateTransform();
 
             let actionType = null;
-            let startX, startY, startDist, startAngle, initialScale, initialX, initialY;
+            let startX, startY, startAngle, initialX, initialY, pinch = null;
 
             function getClientPos(e) {
                 if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -381,6 +379,8 @@
             }
 
             const onStart = (e) => {
+                /* 두 번째 손가락이 다른 것 위에 닿으면 고른 걸 바꾸지 않음 */
+                if (e.touches && e.touches.length > 1 && selectedElement && selectedElement !== el) return;
                 selectElement(el);
                 const pos = getClientPos(e);
                 startX = pos.x; startY = pos.y;
@@ -389,15 +389,13 @@
                 scale = parseFloat(el.dataset.scale) || 1;
                 rotation = parseFloat(el.dataset.rotation) || 0;
 
-                if (e.target === rotateHandle) {
+                pinch = null;
+                if (e.touches && e.touches.length > 1) {
+                    actionType = 'pinch';
+                } else if (e.target.classList && e.target.classList.contains('rot-zone')) {
                     actionType = 'rotate';
                     const rect = el.getBoundingClientRect();
                     startAngle = Math.atan2(pos.y - (rect.top + rect.height / 2), pos.x - (rect.left + rect.width / 2)) * (180 / Math.PI) - rotation;
-                } else if (e.target === scaleHandle) {
-                    actionType = 'scale';
-                    const rect = el.getBoundingClientRect();
-                    startDist = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
-                    initialScale = scale;
                 } else if (stretchHandle && e.target === stretchHandle) {
                     actionType = 'stretch';
                     initialW = parseFloat(el.style.width) || el.offsetWidth;
@@ -410,6 +408,24 @@
 
             const onMove = (e) => {
                 if (!actionType) return;
+                if (e.cancelable) e.preventDefault();
+                if (e.touches && e.touches.length > 1) {
+                    const a = e.touches[0], b = e.touches[1];
+                    const d = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+                    const ang = Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * (180 / Math.PI);
+                    if (actionType !== 'pinch' || !pinch) {
+                        actionType = 'pinch';
+                        pinch = { d0: d || 1, a0: ang, s0: parseFloat(el.dataset.scale) || 1, r0: parseFloat(el.dataset.rotation) || 0 };
+                        return;
+                    }
+                    scale = Math.max(0.2, Math.min(5, pinch.s0 * (d / pinch.d0)));
+                    rotation = pinch.r0 + (ang - pinch.a0);
+                    el.dataset.scale = scale; el.dataset.rotation = rotation;
+                    updateTransform();
+                    if (el === selectedElement) positionTextPanel();
+                    return;
+                }
+                if (actionType === 'pinch') return;
                 const pos = getClientPos(e);
 
                 if (actionType === 'move') {
@@ -425,19 +441,12 @@
                     const a = rotation * Math.PI / 180;
                     const d = ((pos.x - startX) * Math.cos(a) + (pos.y - startY) * Math.sin(a)) / (scale || 1);
                     el.style.width = Math.round(Math.max(40, Math.min(1200, initialW + d))) + 'px';
-                } else if (actionType === 'scale') {
-                    const rect = el.getBoundingClientRect();
-                    const currentDist = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
-                    if (startDist > 0) {
-                        scale = Math.max(0.2, initialScale * (currentDist / startDist));
-                        el.dataset.scale = scale;
-                    }
                 }
                 updateTransform();
                 if (el === selectedElement) positionTextPanel();
             };
 
-            const onEnd = () => { actionType = null; };
+            const onEnd = () => { actionType = null; pinch = null; };
 
             el.addEventListener('wheel', (e) => {
                 e.preventDefault();
