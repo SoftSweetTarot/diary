@@ -9,15 +9,15 @@
    - 보내는 건 구글 로그인 확인용 정보와 기기 종류(PC · 휴대폰 · 태블릿)뿐 (이메일 · 일기 내용은 보내지 않아요)
    - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물 끝나는 날을 받아요 → setSaver (js/settings.js)
    - 🎁 선물 도착 : 주인이 '저금 확인 ☑' 을 체크하면 서버에 신호가 한 번 남아요 → 받는 순간 '선물이 도착했어요' 창 (js/piggy.js 의 pigGiftPop)
-       💗 저금통을 연 사람만 24시간 동안 살짝 물어봐요 : 화면을 보고 있을 때 2분마다 · 카톡에서 다이어리로 돌아오면 바로
-       (다른 사람은 묻지 않아요 → '들어왔어요' · '아직 있어요' 의 답으로 받아요)
+       다이어리를 보고 있는 동안 1분마다 살짝 물어봐요 (로그인 확인 없이 회원번호로 · 서버가 시트를 열지 않아서 아주 가벼워요)
+       다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간 바로 물어봐요
    - 게스트는 보내지 않아요
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
 
         const MEMBER_API_URL = 'https://script.google.com/macros/s/AKfycbzuhJ24tR7VbfKfX-lGI8-BRpPDx3d_J0UwR9x94RxPd2H3mvJiea-vn7EvRRCt2IgMag/exec';   // ← '말랑달콤 사람들' 앱스크립트 웹 앱 주소
         const PR_EVERY = 3 * 60 * 60 * 1000;            // 3시간
-        const PR_GIFT_KEY = 'malang_gift_wait', PR_GIFT_FOR = 24 * 60 * 60 * 1000, PR_GIFT_EVERY = 2 * 60 * 1000;
-        const pr = { last: 0, gLast: 0 };
+        const PR_GIFT_EVERY = 60 * 1000;                // 🎁 선물 신호 물어보기 : 1분마다
+        const pr = { last: 0, me: '', gLast: 0, gBusy: false };
         const prOk = () => MEMBER_API_URL && typeof drive !== 'undefined' && drive.ready && !drive.guest;
         function prDevice() {
             const ua = navigator.userAgent;
@@ -32,35 +32,29 @@
                 const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'here', token: drive.token, dev: prDevice() }) });
                 const j = await res.json();
                 if (j && j.ok && typeof setSaver === 'function') setSaver(j.until);
+                if (j && j.ok && j.me) pr.me = String(j.me);
                 if (j && j.ok && j.gift) prGift(j.gift);
             } catch (e) {}
         }
 
-        /* 🎁 선물 도착 신호 기다리기 (💗 저금통을 열면 js/piggy.js 가 불러요) */
-        function prGiftWait() { try { localStorage.setItem(PR_GIFT_KEY, String(Date.now())); } catch (e) {} }
-        function prGiftWaiting() {
-            let t = 0; try { t = +localStorage.getItem(PR_GIFT_KEY) || 0; } catch (e) {}
-            if (t && Date.now() - t > PR_GIFT_FOR) { try { localStorage.removeItem(PR_GIFT_KEY); } catch (e) {} return false; }
-            return !!t;
-        }
+        /* 🎁 선물 도착 신호 물어보기 (가벼운 GET · 답 : { gift: 'yyyy-MM-dd' | 'yyyy-MM-dd+' | '' }) */
         async function prGiftAsk() {
-            if (!prOk() || !prGiftWaiting() || document.hidden) return;
-            pr.gLast = Date.now();
-            try { await ensureToken(); } catch (e) { return; }
+            if (!pr.me || pr.gBusy || document.hidden || !prOk()) return;
+            pr.gBusy = true; pr.gLast = Date.now();
             try {
-                const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'gift', token: drive.token }) });
+                const res = await fetch(MEMBER_API_URL + '?action=gift&u=' + encodeURIComponent(pr.me), { credentials: 'omit' });
                 const j = await res.json();
                 if (j && j.ok && j.gift) prGift(j.gift);
             } catch (e) {}
+            pr.gBusy = false;
         }
         function prGift(g) {
             const until = String(g).slice(0, 10);
-            try { localStorage.removeItem(PR_GIFT_KEY); } catch (e) {}
             if (typeof setSaver === 'function') setSaver(until);
             if (typeof pigGiftPop === 'function') pigGiftPop(until, /\+$/.test(g));
         }
-        setInterval(() => { if (Date.now() - pr.gLast >= PR_GIFT_EVERY) prGiftAsk(); }, 30000);
-        document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pr.gLast >= 20000) prGiftAsk(); });   // 카톡에서 돌아오면 바로
+        setInterval(() => { if (Date.now() - pr.gLast >= PR_GIFT_EVERY) prGiftAsk(); }, 10000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pr.gLast >= 10000) prGiftAsk(); });   // 다이어리로 돌아오면 바로
         function prBye() {
             if (!prOk() || !pr.last || !drive.token) return;
             pr.last = 0;

@@ -8,6 +8,8 @@
    - 서버 코드 : 랜덤박스_앱스크립트.gs (랜덤박스 시트 → 확장 프로그램 → Apps Script 에 붙여 넣기)
      배포한 웹 앱 주소를 아래 GACHA_API_URL 에 넣어요.
    - 로그인한 사용자만 돌릴 수 있어요 (구글 계정으로 하루 한 번을 확인하기 때문)
+   - 🎁 첫 선물 : 처음 로그인한 사람에게 캡슐 스티커 하나를 30일 선물권으로 줘요 (서버 welcome · 계정마다 한 번)
+     → '첫 선물이 도착했어요' 창으로 움직이는 스티커를 보여 주고, 얻는 방법(출석 도장 → 코인 → 랜덤박스)을 알려 줘요
    - 이 파일이 없어도 다이어리는 정상 동작 (랜덤박스만 '준비 중')
    ※ 파일 불러오는 순서: … → service → gacha */
 
@@ -78,14 +80,74 @@
             if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
             const grid = gq('stickerGrid'); if (!grid) return;
             const mine = capsPasses().map(p => ({ k: capsList().find(x => x.id === p.id), left: capsLeft(p.id) })).filter(x => x.k);
-            grid.innerHTML = mine.length
+            grid.innerHTML = (mine.length
                 ? mine.map(({ k, left }) => `<button type="button" class="cs-it" onclick="capsStickerAdd('${k.id}')"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small><i>${left ? 'D-' + left : 'D-day'}</i></button>`).join('')
-                : '<div class="cs-empty">🎁 아직 캡슐 스티커가 없어요<br>🎁 랜덤박스 캡슐에서 움직이는 스티커를 뽑아 보세요!<br><small>나온 스티커는 30일 동안 여기에서 붙일 수 있어요</small></div>';
+                : '<div class="cs-empty">🎁 아직 캡슐 스티커가 없어요</div>') + capsGuide();
             if (!fresh && gcUseDrive()) gcApi('status').then(r => {                   // 서버의 선물권으로 맞추기
                 if (!r.ok) return; capsSet(r.passes);
                 const act = document.querySelector('.cat-btn.cs-cat.active'); if (act) loadCapsStickers(null, true);
             });
         }
+        /* 🧭 캡슐 스티커 얻는 방법 (스티커 칸 아래 · 첫 선물 창 공통) : 늘 보여요 */
+        function capsGuide(inPop) {
+            return `<div class="cs-guide${inPop ? ' in-pop' : ''}">
+              <div class="cs-guide-t">✨ 움직이는 캡슐 스티커, 이렇게 모아요</div>
+              <ol>
+                <li><b>☕ 카페 → 🌱 매일 말랑 → 📅 출석 도장판</b>에서 하루 한 번 도장을 찍어요</li>
+                <li>한 달에 몇 번, 도장 밑에 숨은 <b>🪙 코인</b>이 나와요</li>
+                <li><b>☕ 카페 → 🌱 매일 말랑 → 🎁 랜덤박스</b>에 코인을 넣고 캡슐을 뽑아요</li>
+                <li>나온 스티커는 <b>30일 동안</b> 여기 <b>🎁 캡슐 스티커</b> 칸에서 붙일 수 있어요</li>
+              </ol>
+              <button type="button" class="btn cs-guide-go" onclick="capsGoAttend()">📅 출석 도장 찍으러 가기</button>
+            </div>`;
+        }
+        function capsGoAttend() {
+            const pop = document.getElementById('capsWelcome'); if (pop) pop.remove();
+            if (typeof closeModal === 'function') closeModal('stickerModal');
+            if (typeof openAttend === 'function') openAttend();
+        }
+
+        /* 🎁 첫 선물 : 로그인하면 한 번 서버에 물어봐요 (받았거나 이미 받은 계정이면 이 기기에 기억 → 다시 안 물어봐요) */
+        const CAPS_WELCOME_LOCAL = 'malang_welcome';
+        const capsWelcomeWait = setInterval(async () => {
+            if (typeof drive === 'undefined' || !drive.ready) return;
+            clearInterval(capsWelcomeWait);
+            if (drive.guest) return;
+            let done = false; try { done = localStorage.getItem(CAPS_WELCOME_LOCAL) === '1'; } catch (e) {}
+            if (done) return;
+            const r = await gcApi('welcome');
+            if (!r || !r.ok) return;
+            try { localStorage.setItem(CAPS_WELCOME_LOCAL, '1'); } catch (e) {}
+            if (!r.gift) return;
+            capsSet(r.passes || [r.gift]);
+            setTimeout(() => capsWelcomePop(r.gift.id, r.gift.until), 1500);
+        }, 1000);
+        function capsWelcomePop(id, until) {
+            const k = capsList().find(x => x.id === id); if (!k) return;
+            const old = document.getElementById('capsWelcome'); if (old) old.remove();
+            const d = new Date(until + 'T00:00:00'), when = isNaN(d) ? '' : `${d.getMonth() + 1}월 ${d.getDate()}일`;
+            const el = document.createElement('div');
+            el.id = 'capsWelcome'; el.className = 'gp-wrap';
+            el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+            el.innerHTML = `
+              <div class="gp-card">
+                <div class="gp-ribbon">WELCOME GIFT</div>
+                <div class="cw-stk"><img src="${capsUrl(k)}" alt="${k.name}"></div>
+                <div class="gp-t">🎁 첫 선물이 도착했어요!</div>
+                <p class="gp-s">말랑달콤에 온 걸 환영해요 💕<br><b>움직이는 캡슐 스티커</b> <em>'${k.name}'</em>를 선물로 드려요</p>
+                <ul class="gp-list">
+                  <li><span>✏️</span><div><b>붙이는 곳</b><small>다이어리 위쪽 <em>🎨 스티커</em> → <em>🎁 캡슐 스티커</em> 칸</small></div></li>
+                </ul>
+                ${when ? `<div class="gp-until">이 스티커는 <b>${when}</b>까지 쓸 수 있어요</div>` : ''}
+                ${capsGuide(true)}
+                <button type="button" class="btn btn-primary gp-close">닫기</button>
+              </div>`;
+            el.querySelector('.gp-close').onclick = () => { el.classList.add('out'); setTimeout(() => el.remove(), 260); };
+            document.body.appendChild(el);
+            requestAnimationFrame(() => el.classList.add('on'));
+            setTimeout(() => { if (typeof sndChime === 'function') sndChime(); }, 500);
+        }
+
         /* 다이어리 오늘 페이지에 붙이기 (스티커 창 · 당첨 화면 공통) */
         function capsStickerAdd(id, fromBox) {
             const k = capsList().find(x => x.id === id); if (!k || typeof addImage !== 'function') return false;

@@ -10,7 +10,7 @@
        → 저금통 서버를 만들 때 같은 방법으로 맞춰 보면 돼요
    - 선물이 열렸는지는 js/settings.js 의 isSaver() 가 알려 줘요 (선물 끝나는 날은 접속 신호의 답으로 받아요 : js/presence.js)
    - 🎁 선물 도착 창 (pigGiftPop) : 주인이 체크하면 다이어리를 쓰는 중에 '선물이 도착했어요' 창이 떠요 · 닫기를 눌러야 닫혀요
-       저금통을 열면 24시간 동안 신호를 기다려요 (prGiftWait · js/presence.js)
+       신호는 js/presence.js 가 1분마다 물어봐서 받아요
    ※ 이 파일이 없으면 저금통 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
         /* 💬 말랑달콤 1:1 오픈채팅방 주소 : 다이어리 맨 위 폴더의 an.txt 에 적어요 (오픈채팅=https://open.kakao.com/o/…) */
@@ -238,7 +238,6 @@
             pig.phone = (typeof prDevice === 'function' ? prDevice() : '') === '휴대폰';
             pigLoadCode();
             pigLoadChat();
-            if (typeof prGiftWait === 'function' && typeof drive !== 'undefined' && drive.ready && !drive.guest) prGiftWait();   // 🎁 선물 도착 신호 기다리기
         }
 
         /* ---------- 🎁 선물 도착 창 : 상자가 통통 → 뚜껑이 퐁! → 하트가 둥실 (닫기를 눌러야 닫혀요) ---------- */
@@ -268,7 +267,7 @@
                   <li><span>🍬</span><div><b>달콤패턴</b><small>다이어리 위쪽 <em>👗 스킨</em> → <em>🍬 달콤패턴</em> 버튼</small></div></li>
                 </ul>
                 ${when ? `<div class="gp-until">${more ? '선물 기간이' : '선물은'} <b>${when}</b>까지 활짝 열려 있어요 💕</div>` : ''}
-                <button type="button" class="btn btn-primary gp-close">고마워요, 써 볼게요!</button>
+                <button type="button" class="btn btn-primary gp-close">닫기</button>
               </div>`;
             el.querySelector('.gp-close').onclick = () => { el.classList.add('out'); setTimeout(() => el.remove(), 260); };
             document.body.appendChild(el);
