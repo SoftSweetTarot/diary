@@ -136,12 +136,12 @@
     try { st.key = localStorage.getItem(KEY_LOCAL) || ''; } catch (e) {}
 
     /* 서버에 보내기 (끊기면 몇 번 더 · 같은 내용을 다시 보내도 안전한 것만) */
-    async function api(body, tries) {
+    async function api(body, tries, ms) {
         let last = { ok: false, error: 'network' };
         for (let i = 0; i < (tries || 1); i++) {
             if (i) await new Promise(r => setTimeout(r, 1200 * i));
             try {
-                const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 20000);
+                const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms || 20000);
                 const res = await fetch(API, { method: 'POST', body: JSON.stringify(Object.assign({ key: st.key }, body)), signal: ctl.signal });
                 clearTimeout(tm);
                 last = await res.json();
@@ -311,7 +311,7 @@
         gv.busy = true;
         const m = st.list[gv.i];
         pop(`<div class="state"><span class="spin" style="border-color:rgba(194,69,111,.25);border-top-color:var(--deep)"></span><br><br>선물을 보내는 중…</div>`);
-        const r = await api({ action: 'admin_give', code: m.code, rid: gv.rid, coins: gv.coins, tape: gv.tape, stickers: gv.sel, sdays: gv.sdays }, 4);   // 같은 rid 라 몇 번 보내도 한 번만
+        const r = await api({ action: 'admin_give', code: m.code, rid: gv.rid, coins: gv.coins, tape: gv.tape, stickers: gv.sel, sdays: gv.sdays }, 4, 45000);   // 같은 rid 라 몇 번 보내도 한 번만
         let ok = !!r.ok;
         if (ok && gv.tape) {                                    // 🎀🍬 은 시트를 다시 읽어서 맞는지 확인
             const f = await api({ action: 'admin_find', q: m.code }, 3);
