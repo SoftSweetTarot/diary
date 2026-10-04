@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ff8fb1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="저금 확인">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>저금 확인 · 말랑달콤</title>
+<!-- 말랑달콤 다이어리 - piggy-check/index.html
+     📱 저금 확인 앱 (주인 전용) : 휴대폰에서 저금 코드를 찾아 버튼 하나로 '저금 확인' (시트에서 ☑ 체크한 것과 똑같아요)
+     - 서버 : 말랑달콤사람들_앱스크립트.gs (admin_find · admin_save) · 관리 열쇠가 맞아야만 동작 (처음 한 번 setupAdmin 실행 → 열쇠를 여기에 넣기)
+     - 확실하게 : 요청마다 번호를 붙여 보내요 → 인터넷이 끊겨 다시 보내도 한 번만 처리
+                  처리된 뒤 시트를 다시 읽어서 선물 끝나는 날 · 저금 횟수가 맞는지 확인 → 맞으면 '저금 확인 완료' 창
+     - 📲 홈 화면에 설치 : 맨 위 하트 로고를 5번 톡톡 누르면 숨은 설치 칸이 열려요
+     - 다이어리 어디에도 이 주소는 없어요 (softsweetdiary.com/piggy-check/) · 검색에도 안 나와요 -->
+<style>
+    :root { --pink: #ff6b93; --deep: #c2456f; --soft: #fff0f5; --line: #ffd1df; --text: #5a4650; --sub: #8c6f7c; --ok: #2fa66b; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; }
+    body { min-height: 100vh; background: linear-gradient(180deg, #ffe3ec, #fff6f9 40%); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; word-break: keep-all; }
+    .wrap { max-width: 460px; margin: 0 auto; padding: calc(14px + env(safe-area-inset-top)) 16px 40px; }
+    .top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .logo { width: 44px; height: 44px; border-radius: 14px; box-shadow: 0 3px 10px rgba(255, 107, 147, .3); user-select: none; -webkit-user-select: none; cursor: pointer; }
+    .top h1 { margin: 0; font-size: 20px; color: var(--deep); }
+    .top small { display: block; font-size: 12px; color: var(--sub); font-weight: normal; }
+    .card { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 3px 14px rgba(255, 120, 160, .14); margin-bottom: 12px; }
+    .card[hidden], [hidden] { display: none !important; }
+    label.t { display: block; font-weight: bold; color: var(--deep); margin-bottom: 8px; font-size: 14px; }
+    .search { display: flex; align-items: center; gap: 6px; border: 2.5px solid var(--line); border-radius: 16px; padding: 4px 6px 4px 12px; background: #fff; }
+    .search:focus-within { border-color: var(--pink); }
+    .search b { color: var(--sub); font-size: 18px; }
+    .search input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: 22px; font-weight: bold; letter-spacing: .06em; padding: 8px 0; color: var(--text); background: none; text-transform: uppercase; font-family: inherit; }
+    .search button { border: 0; background: var(--soft); color: var(--sub); border-radius: 10px; font-size: 16px; width: 36px; height: 36px; }
+    .hint { font-size: 12.5px; color: var(--sub); margin: 8px 2px 0; }
+    .state { text-align: center; color: var(--sub); font-size: 14px; padding: 18px 8px; }
+    .m { border: 2px solid var(--line); border-radius: 18px; padding: 14px; margin-top: 10px; background: #fffafc; }
+    .m-code { font-size: 24px; font-weight: 900; color: var(--deep); letter-spacing: .04em; }
+    .m-rows { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 10px 0 12px; font-size: 13.5px; }
+    .m-rows dt { color: var(--sub); }
+    .m-rows dd { margin: 0; font-weight: bold; }
+    .m-rows dd.on { color: var(--ok); }
+    .btn { display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 16px; padding: 15px; font-size: 18px; font-weight: 900; font-family: inherit; color: #fff; background: linear-gradient(160deg, #ff8fb1, var(--pink)); box-shadow: 0 5px 14px rgba(255, 107, 147, .35); }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .55; box-shadow: none; }
+    .btn.done { background: linear-gradient(160deg, #6fd39f, var(--ok)); box-shadow: 0 5px 14px rgba(47, 166, 107, .3); opacity: 1; }
+    .btn.sub { background: #fff; color: var(--deep); border: 2px solid var(--line); box-shadow: none; font-size: 15px; padding: 11px; }
+    .spin { width: 18px; height: 18px; border: 3px solid rgba(255, 255, 255, .5); border-top-color: #fff; border-radius: 50%; animation: sp .8s linear infinite; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    .key input { width: 100%; border: 2.5px solid var(--line); border-radius: 14px; padding: 12px; font-size: 16px; font-family: inherit; margin-bottom: 10px; }
+    .err { color: #d6336c; font-size: 13px; margin: 0 0 10px; }
+    .foot { text-align: center; margin-top: 18px; font-size: 12px; color: var(--sub); }
+    .foot button { border: 0; background: none; color: var(--sub); text-decoration: underline; font-family: inherit; font-size: 12px; }
+    .install p { font-size: 13.5px; line-height: 1.6; margin: 0 0 10px; }
+    .install ol { margin: 0 0 10px; padding-left: 20px; font-size: 13.5px; line-height: 1.7; }
+    /* 결과 창 (닫기를 눌러야 닫혀요) */
+    .pop { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(90, 40, 60, .4); }
+    .pop-box { width: min(340px, 100%); background: #fff; border-radius: 26px; padding: 26px 20px 18px; text-align: center; animation: pin .35s cubic-bezier(.3, 1.6, .5, 1); }
+    @keyframes pin { from { transform: scale(.7); opacity: 0; } }
+    .pop-ic { width: 76px; height: 76px; margin: 0 auto 10px; border-radius: 50%; display: grid; place-items: center; font-size: 40px; color: #fff; background: var(--ok); box-shadow: 0 6px 18px rgba(47, 166, 107, .35); }
+    .pop-ic.bad { background: #ff9f43; box-shadow: 0 6px 18px rgba(255, 159, 67, .35); }
+    .pop-t { font-size: 21px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+    .pop-s { font-size: 14px; color: var(--sub); line-height: 1.6; margin-bottom: 14px; }
+    .pop-d { background: var(--soft); border-radius: 14px; padding: 10px; font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+    .pop-d b { color: var(--deep); }
+    .pop-btns { display: grid; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="top">
+        <img class="logo" id="logo" src="icon-192.png" alt="">
+        <h1>저금 확인 <small>말랑달콤 저금통 · 주인 전용</small></h1>
+    </div>
+
+    <!-- 📲 홈 화면에 설치 (로고를 5번 누르면 열려요) -->
+    <div class="card install" id="install" hidden>
+        <label class="t">📲 홈 화면에 앱 아이콘 만들기</label>
+        <div id="installBody"></div>
+        <button class="btn sub" type="button" onclick="document.getElementById('install').hidden = true">접기</button>
+    </div>
+
+    <!-- 🔑 관리 열쇠 (처음 한 번) -->
+    <div class="card key" id="keyCard" hidden>
+        <label class="t">🔑 관리 열쇠</label>
+        <p class="hint" style="margin:0 0 10px">앱스크립트에서 <b>setupAdmin</b> 을 실행하면 '실행 로그'에 나와요. 한 번만 넣으면 이 휴대폰이 기억해요.</p>
+        <input id="keyIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="관리 열쇠 붙여 넣기">
+        <p class="err" id="keyErr" hidden></p>
+        <button class="btn" id="keyBtn" type="button" onclick="keySave()">열쇠 넣기</button>
+    </div>
+
+    <!-- 🔍 저금 코드 찾기 -->
+    <div class="card" id="main" hidden>
+        <label class="t" for="q">💗 저금 코드</label>
+        <div class="search">
+            <b>말랑</b>
+            <input id="q" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10" placeholder="V4Z4" oninput="onType()">
+            <button type="button" onclick="clearQ()" aria-label="지우기">✕</button>
+        </div>
+        <p class="hint">채팅에 온 저금 코드를 적으면 바로 찾아요 (말랑은 빼고 적어도 돼요)</p>
+        <div id="list"></div>
+    </div>
+
+    <div class="foot" id="foot" hidden><button type="button" onclick="keyReset()">🔑 열쇠 다시 넣기</button></div>
+</div>
+<div class="pop" id="pop" hidden></div>
+
+<script>
+    const API = 'https://script.google.com/macros/s/AKfycbzuhJ24tR7VbfKfX-lGI8-BRpPDx3d_J0UwR9x94RxPd2H3mvJiea-vn7EvRRCt2IgMag/exec';   // '말랑달콤 사람들' 서버 (다이어리 js/presence.js 의 MEMBER_API_URL 과 같아요)
+    const KEY_LOCAL = 'pc_key';
+    const $ = id => document.getElementById(id);
+    const st = { key: '', list: [], t: 0, seq: 0, busy: '' };
+    try { st.key = localStorage.getItem(KEY_LOCAL) || ''; } catch (e) {}
+
+    /* 서버에 보내기 (끊기면 몇 번 더 · 같은 내용을 다시 보내도 안전한 것만) */
+    async function api(body, tries) {
+        let last = { ok: false, error: 'network' };
+        for (let i = 0; i < (tries || 1); i++) {
+            if (i) await new Promise(r => setTimeout(r, 1200 * i));
+            try {
+                const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 20000);
+                const res = await fetch(API, { method: 'POST', body: JSON.stringify(Object.assign({ key: st.key }, body)), signal: ctl.signal });
+                clearTimeout(tm);
+                last = await res.json();
+                if (last && (last.ok || last.error !== 'server')) return last;
+            } catch (e) { last = { ok: false, error: 'network' }; }
+        }
+        return last;
+    }
+    const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const dLeft = d => { if (!d) return ''; const n = Math.round((new Date(d + 'T00:00:00') - new Date(new Date().toDateString())) / 86400000); return n > 0 ? 'D-' + n : 'D-day'; };
+    const md = d => { const x = new Date(d + 'T00:00:00'); return `${x.getFullYear()}년 ${x.getMonth() + 1}월 ${x.getDate()}일`; };
+
+    /* ---------- 🔑 열쇠 ---------- */
+    function showMain() {
+        $('keyCard').hidden = !!st.key; $('main').hidden = !st.key; $('foot').hidden = !st.key;
+        if (st.key) setTimeout(() => $('q').focus(), 50);
+    }
+    async function keySave() {
+        const k = $('keyIn').value.trim(); if (!k) return;
+        const b = $('keyBtn'); b.disabled = true; b.innerHTML = '<span class="spin"></span> 확인 중…'; $('keyErr').hidden = true;
+        const old = st.key; st.key = k;
+        const r = await api({ action: 'admin_hello' }, 3);
+        b.disabled = false; b.textContent = '열쇠 넣기';
+        if (r.ok) { try { localStorage.setItem(KEY_LOCAL, k); } catch (e) {} showMain(); return; }
+        st.key = old;
+        $('keyErr').textContent = r.error === 'key' ? '열쇠가 맞지 않아요. 다시 확인해 주세요.' : '서버에 연결하지 못했어요. 인터넷을 확인해 주세요.';
+        $('keyErr').hidden = false;
+    }
+    function keyReset() { st.key = ''; try { localStorage.removeItem(KEY_LOCAL); } catch (e) {} $('keyIn').value = ''; showMain(); }
+
+    /* ---------- 🔍 찾기 (적는 동안 0.4초 쉬면 찾아요) ---------- */
+    const norm = v => v.replace(/^말랑/, '').replace(/\s/g, '').toUpperCase();
+    function onType() {
+        clearTimeout(st.t);
+        const q = norm($('q').value);
+        if (q.length < 2) { $('list').innerHTML = q ? '<div class="state">두 글자 이상 적어 주세요</div>' : ''; return; }
+        st.t = setTimeout(() => find(q), 400);
+    }
+    function clearQ() { $('q').value = ''; $('list').innerHTML = ''; $('q').focus(); }
+    async function find(q) {
+        const my = ++st.seq;
+        $('list').innerHTML = '<div class="state">🔍 찾는 중…</div>';
+        const r = await api({ action: 'admin_find', q }, 2);
+        if (my !== st.seq) return;                                   // 그 사이 더 적었으면 버려요
+        if (!r.ok) { $('list').innerHTML = `<div class="state">${r.error === 'key' ? '🔑 열쇠가 맞지 않아요' : '📶 서버에 연결하지 못했어요. 다시 적어 보세요'}</div>`; if (r.error === 'key') keyReset(); return; }
+        st.list = r.list || [];
+        render();
+    }
+    function render() {
+        $('list').innerHTML = st.list.length ? st.list.map((m, i) => `
+          <div class="m">
+            <div class="m-code">${esc(m.code)}</div>
+            <dl class="m-rows">
+              <dt>선물</dt><dd class="${m.until ? 'on' : ''}">${m.until ? `${esc(m.until)}까지 (${dLeft(m.until)})` : '없음'}</dd>
+              <dt>저금</dt><dd>${m.count}번</dd>
+              <dt>마지막 접속</dt><dd>${esc(m.last || '-')} ${esc(m.dev || '')}</dd>
+            </dl>
+            ${m.done ? `<button class="btn done" type="button" disabled>✅ 방금 저금 확인했어요</button>`
+              : `<button class="btn" type="button" id="sv${i}" onclick="save(${i})">💗 저금 확인</button>`}
+          </div>`).join('') : '<div class="state">🙈 그런 저금 코드가 없어요</div>';
+    }
+
+    /* ---------- 💗 저금 확인 : 보내기 → 시트를 다시 읽어서 맞는지 확인 → 완료 창 ---------- */
+    async function save(i, rid) {
+        const m = st.list[i]; if (!m || st.busy) return;
+        rid = rid || (Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+        st.busy = rid;
+        const b = $('sv' + i); if (b) { b.disabled = true; b.innerHTML = '<span class="spin"></span> 저금 확인 중…'; }
+        const r = await api({ action: 'admin_save', code: m.code, rid }, 4);           // 같은 번호(rid)라 몇 번 보내도 한 번만 처리돼요
+        let ok = false, now = null;
+        if (r.ok) {
+            if (b) b.innerHTML = '<span class="spin"></span> 시트에 잘 적혔는지 확인 중…';
+            const f = await api({ action: 'admin_find', q: m.code }, 4);
+            now = f.ok ? (f.list || []).find(x => x.code === m.code) : null;
+            ok = !!now && now.until === r.until && now.count === r.count;
+        }
+        st.busy = '';
+        if (ok) {
+            st.list[i] = Object.assign({}, now, { done: true }); render();
+            popOk(r);
+        } else {
+            if (b) { b.disabled = false; b.textContent = '💗 저금 확인'; }
+            popBad(i, rid, r);
+        }
+    }
+    function popOk(r) {
+        pop(`<div class="pop-ic">✓</div>
+          <div class="pop-t">저금 확인 완료!</div>
+          <div class="pop-s">시트에 잘 적힌 것까지 확인했어요 💕</div>
+          <div class="pop-d"><b>${esc(r.code)}</b><br>선물 <b>${md(r.until)}</b>까지 (${dLeft(r.until)})<br>${r.count}번째 저금</div>
+          <div class="pop-s" style="font-size:12.5px">다이어리를 쓰고 있으면 1분 안에 🎁 선물 도착 창이 떠요</div>
+          <div class="pop-btns"><button class="btn" type="button" onclick="unpop()">닫기</button></div>`);
+    }
+    function popBad(i, rid, r) {
+        const why = !r.ok && r.error === 'key' ? '관리 열쇠가 맞지 않아요.' : !r.ok && r.error === 'none' ? '그 저금 코드를 시트에서 찾지 못했어요.'
+            : r.ok ? '저금 확인은 보냈는데, 시트에서 확인하지 못했어요.' : '인터넷이 불안해서 서버에 닿지 못했어요.';
+        st.retry = { i, rid };
+        pop(`<div class="pop-ic bad">!</div>
+          <div class="pop-t">아직 확인되지 않았어요</div>
+          <div class="pop-s">${why}<br><b>다시 시도</b>를 눌러 주세요.<br><small>같은 요청으로 다시 보내서, 여러 번 눌러도 30일이 두 번 늘지 않아요.</small></div>
+          <div class="pop-btns">${r.error === 'none' || r.error === 'key' ? '' : '<button class="btn" type="button" onclick="retry()">다시 시도</button>'}
+            <button class="btn sub" type="button" onclick="unpop()">닫기</button></div>`);
+    }
+    function retry() { const x = st.retry; unpop(); if (x) save(x.i, x.rid); }
+    function pop(html) { $('pop').innerHTML = `<div class="pop-box">${html}</div>`; $('pop').hidden = false; }
+    function unpop() { $('pop').hidden = true; $('pop').innerHTML = ''; }
+
+    /* ---------- 📲 홈 화면에 설치 (숨김 : 로고 5번) ---------- */
+    let installEv = null, taps = 0, tapT = 0;
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; });
+    $('logo').addEventListener('click', () => {
+        clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 1500);
+        if (++taps < 5) return;
+        taps = 0; showInstall();
+    });
+    function showInstall() {
+        const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+        $('installBody').innerHTML = standalone ? '<p>✅ 이미 앱으로 열려 있어요. 홈 화면에 아이콘이 있어요!</p>'
+            : installEv ? '<p>버튼을 누르고 <b>설치</b>를 누르면 홈 화면에 <b>저금 확인</b> 아이콘이 생겨요.</p><button class="btn" type="button" onclick="doInstall()" style="margin-bottom:8px">📲 홈 화면에 설치</button>'
+            : ios ? '<ol><li><b>사파리</b>로 이 페이지를 열어요</li><li>아래쪽 <b>공유 버튼(□↑)</b>을 눌러요</li><li><b>홈 화면에 추가</b> → <b>추가</b></li></ol>'
+            : '<ol><li>크롬 오른쪽 위 <b>⋮</b> 를 눌러요</li><li><b>홈 화면에 추가</b> (또는 <b>앱 설치</b>) → <b>설치</b></li></ol>';
+        $('install').hidden = false;
+    }
+    async function doInstall() {
+        if (!installEv) return showInstall();
+        installEv.prompt();
+        try { await installEv.userChoice; } catch (e) {}
+        installEv = null; $('install').hidden = true;
+    }
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});   // 앱 설치용 (다이어리와 같은 서비스 워커)
+    showMain();
+</script>
+</body>
+</html>

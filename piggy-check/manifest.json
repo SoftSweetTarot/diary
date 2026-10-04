@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "말랑달콤 저금 확인",
+  "short_name": "저금 확인",
+  "description": "말랑달콤 저금통 저금 확인 (주인 전용)",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff0f5",
+  "theme_color": "#ff8fb1",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
