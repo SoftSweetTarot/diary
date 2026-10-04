@@ -10,6 +10,7 @@
    - 로그인한 사용자만 돌릴 수 있어요 (구글 계정으로 하루 한 번을 확인하기 때문)
    - 🎁 첫 선물 : 처음 로그인한 사람에게 캡슐 스티커 하나를 30일 선물권으로 줘요
      '말랑달콤 사람들' 서버가 처음 온 사람이라고 알려 주면(js/presence.js · first) → 랜덤박스 서버 welcome ('코인' 탭에 줄이 없을 때만 · 한 번)
+     '첫 선물이 도착했어요' 창은 🎨 스티커 → 🎁 캡슐 스티커 칸을 처음 눌렀을 때 떠요 (그때까지 이 기기에 'malang_welcome_pop' 으로 기억)
      → '첫 선물이 도착했어요' 창으로 움직이는 스티커를 보여 주고, 얻는 방법(출석 도장 → 코인 → 랜덤박스)을 알려 줘요
    - 이 파일이 없어도 다이어리는 정상 동작 (랜덤박스만 '준비 중')
    ※ 파일 불러오는 순서: … → service → gacha */
@@ -80,6 +81,7 @@
         function loadCapsStickers(btn, fresh) {
             if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
             const grid = gq('stickerGrid'); if (!grid) return;
+            if (btn) capsWelcomeShow();
             const mine = capsPasses().map(p => ({ k: capsList().find(x => x.id === p.id), left: capsLeft(p.id) })).filter(x => x.k);
             grid.innerHTML = (mine.length
                 ? mine.map(({ k, left }) => `<button type="button" class="cs-it" onclick="capsStickerAdd('${k.id}')"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small><i>${left ? 'D-' + left : 'D-day'}</i></button>`).join('')
@@ -113,7 +115,12 @@
             const r = await gcApi('welcome');
             if (!r || !r.ok || !r.gift) return;
             capsSet(r.passes || [r.gift]);
-            setTimeout(() => capsWelcomePop(r.gift.id, r.gift.until), 1500);
+            try { localStorage.setItem(CAPS_WELCOME_POP, JSON.stringify(r.gift)); } catch (e) {}
+        }
+        const CAPS_WELCOME_POP = 'malang_welcome_pop';
+        function capsWelcomeShow() {                   // 🎁 캡슐 스티커 칸을 누르면 (한 번만)
+            let g = null; try { g = JSON.parse(localStorage.getItem(CAPS_WELCOME_POP)); localStorage.removeItem(CAPS_WELCOME_POP); } catch (e) {}
+            if (g && g.id) capsWelcomePop(g.id, g.until);
         }
         function capsWelcomePop(id, until) {
             const k = capsList().find(x => x.id === id); if (!k) return;
