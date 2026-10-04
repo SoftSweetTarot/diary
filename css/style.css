@@ -2187,6 +2187,36 @@
         .pg-copy { width: calc(100% - 24px); margin: 10px 12px 12px; justify-content: center; padding: 10px; font-size: 15px; border-radius: 14px; background: linear-gradient(160deg, #ff8fb1, #ff6b93); border-color: #ff6b93; color: #fff; }
         .pg-foot { text-align: center; font-size: 14px; color: #c2456f; font-weight: bold; line-height: 1.7; padding: 4px 0 2px; word-break: keep-all; }
         .pg-foot small { font-weight: normal; color: #a07888; font-size: 12px; }
+        /* 🎁 선물 도착 창 (js/piggy.js 의 pigGiftPop) : 닫기를 눌러야 닫혀요 */
+        .gp-wrap { position: fixed; inset: 0; z-index: 2500; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(90, 40, 60, .38); backdrop-filter: blur(3px); opacity: 0; transition: opacity .25s; }
+        .gp-wrap.on { opacity: 1; }
+        .gp-wrap.out { opacity: 0; }
+        .gp-card { position: relative; width: min(340px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; text-align: center; padding: 30px 20px 18px; border-radius: 28px; background: linear-gradient(170deg, #fff 0%, #fff4f8 60%, #ffe9f1 100%); border: 3px solid #ffc9d8; box-shadow: 0 14px 40px rgba(255, 105, 150, .35); transform: scale(.6) translateY(30px); transition: transform .45s cubic-bezier(.3, 1.6, .5, 1); color: #5a4650; word-break: keep-all; }
+        .gp-wrap.on .gp-card { transform: none; }
+        .gp-wrap.out .gp-card { transform: scale(.9); transition-duration: .2s; }
+        .gp-ribbon { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 3px 14px; border-radius: 999px; background: linear-gradient(90deg, #ff8fb1, #ff6b93); color: #fff; font-size: 11px; font-weight: 900; letter-spacing: .08em; white-space: nowrap; box-shadow: 0 2px 8px rgba(255, 107, 147, .35); }
+        .gp-box { position: relative; width: 120px; height: 110px; margin: 8px auto 6px; animation: gpShake .7s .35s ease-in-out both; }
+        .gp-box svg { width: 100%; height: 100%; overflow: visible; }
+        .gp-lid { transform-box: fill-box; transform-origin: 50% 100%; animation: gpLid .55s .95s cubic-bezier(.3, 1.5, .5, 1) both; }
+        .gp-burst { position: absolute; left: 50%; top: 40%; width: 0; height: 0; }
+        .gp-burst i { position: absolute; font-style: normal; font-size: 18px; opacity: 0; transform: translate(-50%, -50%) scale(.3); animation: gpPop 1.6s calc(1s + var(--d)) ease-out both; }
+        .gp-t { font-size: 21px; font-weight: 900; color: #e0457a; margin: 4px 0 4px; }
+        .gp-s { margin: 0 0 12px; font-size: 13.5px; color: #8c6f7c; line-height: 1.55; }
+        .gp-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; text-align: left; }
+        .gp-list li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 16px; background: #fff; border: 2px dashed #ffc2d4; opacity: 0; animation: gpIn .4s both; }
+        .gp-list li:nth-child(1) { animation-delay: 1.35s; } .gp-list li:nth-child(2) { animation-delay: 1.5s; }
+        .gp-list li > span { font-size: 26px; line-height: 1; }
+        .gp-list b { display: block; font-size: 14.5px; color: #c2456f; }
+        .gp-list small { display: block; font-size: 12px; color: #8c6f7c; margin-top: 1px; }
+        .gp-list em { font-style: normal; font-weight: bold; color: #5a4650; }
+        .gp-until { margin: 0 0 14px; padding: 7px 10px; border-radius: 12px; background: #fff3c4; font-size: 12.5px; color: #7a5a1e; opacity: 0; animation: gpIn .4s 1.65s both; }
+        .gp-until b { color: #c2456f; }
+        .gp-close { width: 100%; justify-content: center; font-size: 15px; padding: 11px; border-radius: 16px; background: linear-gradient(160deg, #ff8fb1, #ff6b93) !important; border-color: #ff6b93 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(255, 107, 147, .35); opacity: 0; animation: gpIn .4s 1.8s both; }
+        @keyframes gpShake { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-7deg) scale(1.04); } 40% { transform: rotate(6deg); } 60% { transform: rotate(-4deg) scale(1.03); } 80% { transform: rotate(3deg); } }
+        @keyframes gpLid { 0% { transform: none; } 55% { transform: translateY(-26px) rotate(-14deg); } 100% { transform: translateY(-18px) rotate(-10deg); } }
+        @keyframes gpPop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); } 20% { opacity: 1; } 70% { opacity: 1; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.1); } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y) - 14px)) scale(.9); } }
+        @keyframes gpIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .gp-box, .gp-lid, .gp-burst i, .gp-list li, .gp-until, .gp-close { animation-duration: .01s !important; animation-delay: 0s !important; } }
         @keyframes pgDrop { 0%, 8% { transform: translateY(-34px) rotate(-20deg); opacity: 0; } 14% { opacity: 1; } 24% { transform: translateY(14px) rotate(0); opacity: 1; } 27%, 100% { transform: translateY(26px); opacity: 0; } }
         @keyframes pgBounce { 0%, 24% { transform: scale(1, 1); } 29% { transform: scale(1.06, .93); } 35% { transform: scale(.97, 1.04); } 41%, 100% { transform: scale(1, 1); } }
         @keyframes pgTwinkle { 0%, 100% { transform: scale(.5); opacity: .3; } 50% { transform: scale(1.15); opacity: 1; } }
