@@ -2269,7 +2269,6 @@
         .wl-dev.phone::before { content: ''; position: absolute; right: -2px; top: 26%; width: 2.5px; height: 14%; border-radius: 2px; background: #2a2a2f; }
         .wl-scr img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
         .wl-pre:hover .wl-scr img { transform: scale(1.04); }
-        .wl-no { position: absolute; left: 6px; bottom: 6px; z-index: 1; font-size: 11px; font-weight: bold; color: #fff; background: rgba(0,0,0,.35); border-radius: 8px; padding: 1px 7px; }
         .wl-name { font-size: 13.5px; font-weight: bold; color: #5a4650; padding: 0 2px; word-break: keep-all; }
         .wl-buy { display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 0 2px; }
         .wl-buy b { color: #e2557f; font-size: 14px; }
@@ -2292,6 +2291,7 @@
         .wl-view-frame.pc { padding: 12px; border-radius: 22px; }
         .wl-view-frame.pc::after { top: 4.5px; width: 4px; height: 4px; margin-left: -2px; }
         .wl-view-t { text-align: center; font-weight: 900; color: #c2456f; margin: 10px 0 8px; font-size: 15px; }
+        .wl-view-s { text-align: center; font-size: 12.5px; color: #8c6f9c; margin: 0 0 10px; word-break: keep-all; }
         .wl-view-t b { margin-left: 4px; padding: 1px 9px; border-radius: 10px; background: #ff6b93; color: #fff; font-size: 13.5px; }
         .wl-view-btns { display: flex; gap: 8px; }
         .wl-view-btns .btn { flex: 1; justify-content: center; padding: 10px; }

@@ -66,8 +66,7 @@
                 : `<div class="wl-grid ${wl.tab}">${items.map(w => `
                   <div class="wl-card">
                     <button type="button" class="wl-pre wl-dev ${wl.tab}" onclick="wlView(${w.no})" aria-label="${wlEsc(w.name)} 크게 보기"><span class="wl-scr">
-                      <img src="${wlImg(w.img, size)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, size)}'}">
-                      <span class="wl-no">${w.no}번</span></span>
+                      <img src="${wlImg(w.img, size)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, size)}'}"></span>
                     </button>
                     <div class="wl-name">${wlEsc(w.name)}</div>
                     <div class="wl-buy"><b>${wlWon(w.price)}</b><button type="button" class="btn wl-get" onclick="wlPick(${w.no})">💬 받기</button></div>
@@ -91,6 +90,7 @@
               <div class="wl-view-box ${w.kind}">
                 <div class="wl-view-frame wl-dev ${w.kind}"><span class="wl-scr"><img src="${wlImg(w.img, 1080)}" alt="" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, 1080)}'}"></span></div>
                 <div class="wl-view-t">${wlEsc(w.name)} <b>${wlWon(w.price)}</b></div>
+                <div class="wl-view-s">움직이는 모습은 <a href="#" class="wl-link" onclick="goCafe(); return false;">👭 말랑달콤 모임방</a>에서 볼 수 있어요</div>
                 <div class="wl-view-btns">
                   <button type="button" class="btn" onclick="wlUnview()">닫기</button>
                   <button type="button" class="btn btn-primary pg-copy" onclick="wlUnview(); wlPick(${w.no})">💬 받기</button>

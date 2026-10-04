@@ -96,9 +96,9 @@
             return `<div class="cs-guide${inPop ? ' in-pop' : ''}">
               <div class="cs-guide-t">✨ 움직이는 캡슐 스티커, 이렇게 모아요</div>
               <ol>
-                <li><b>☕ 카페 → 🌱 매일 말랑 → 📅 출석 도장판</b>에서 하루 한 번 도장을 찍어요</li>
+                <li><b>☕ 카페 → 🌱 매일 → 📅 출석 도장판</b>에서 하루 한 번 도장을 찍어요</li>
                 <li>한 달에 몇 번, 도장 밑에 숨은 <b>🪙 코인</b>이 나와요</li>
-                <li><b>☕ 카페 → 🌱 매일 말랑 → 🎁 랜덤박스</b>에 코인을 넣고 캡슐을 뽑아요</li>
+                <li><b>☕ 카페 → 🌱 매일 → 🎁 랜덤박스</b>에 코인을 넣고 캡슐을 뽑아요</li>
                 <li>나온 스티커는 <b>30일 동안</b> 여기 <b>🎁 캡슐 스티커</b> 칸에서 붙일 수 있어요</li>
               </ol>
               <button type="button" class="btn cs-guide-go" onclick="capsGoAttend()">📅 출석 도장 찍으러 가기</button>

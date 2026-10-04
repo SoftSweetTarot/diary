@@ -59,6 +59,7 @@
         function getSelectedPhoto() {
             const img = selectedElement && !selectedElement.querySelector('textarea') ? selectedElement.querySelector('img') : null;
             if (!img || typeof setFrame !== 'function') return null;
+            if (typeof showRead === 'function' && showRead().photo === 0) return null;      // ⚙ 설정 → 👀 페이지에 보이는 것 → 📷 사진 꾸미기 창 (js/show.js)
             return /^data:image\/svg/i.test(img.dataset.src || '') ? null : img;
         }
 

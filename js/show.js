@@ -1,14 +1,15 @@
 /* 말랑달콤 다이어리 - js/show.js
    👀 페이지에 보이는 것 : 다이어리 페이지에 붙는 기능을 켜고 끄는 스위치 (⚙ 설정 → 설정 → 👀 페이지에 보이는 것)
-   - 😊 기분 · 날씨 도장 · ⏳ D-day · 🌸 계절 장식
+   - 😊 기분 · 날씨 도장 · ⏳ D-day · 📷 사진 꾸미기 창 · 🌸 계절 장식
    - 끈 것만 설정(settings.json)에 저장 ('diary_show' = { stamp: 0, … }) · 게스트는 이 기기에만
-   - 꺼도 이미 찍은 도장 · 만든 D-day 는 지워지지 않아요 (다시 켜면 그대로 보여요)
+   - 꺼도 이미 찍은 도장 · 만든 D-day · 이미 씌운 사진 틀은 지워지지 않아요 (다시 켜면 그대로 보여요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (모두 보임) */
 
         const SHOW_KEY = 'diary_show', SHOW_LOCAL = 'malang_show';
         const SHOW_ITEMS = [
             ['stamp', '😊 기분 · 날씨 도장', '페이지 오른쪽 위 동그라미'],
             ['dday', '⏳ D-day', '📌 한 D-day 를 페이지 왼쪽 위에'],
+            ['photo', '📷 사진 꾸미기 창', '사진을 누르면 뜨는 틀 · 글씨 창'],
             ['corner', '🌸 계절 장식', '계절 테마를 켰을 때 페이지 모서리 그림', 'season']
         ].filter(x => x[3] !== 'season' || (typeof SEASON_OPEN !== 'undefined' && SEASON_OPEN));   // 계절 기능이 닫혀 있으면 스위치도 숨겨요 (js/season.js)
         const showSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
@@ -20,6 +21,7 @@
             const o = showRead(), root = document.documentElement;
             SHOW_ITEMS.forEach(([k]) => root.classList.toggle('hide-' + k, o[k] === 0));
             showRenderSwitches();
+            if (typeof updateTextPanel === 'function') updateTextPanel();      // 사진 꾸미기 창을 켜고 끈 걸 바로 보여 줘요
         }
         function showSet(k, on) {
             const o = showRead();
