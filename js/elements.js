@@ -6,6 +6,7 @@
             el.className = 'element-box';
             el.innerHTML = `<span style="font-size:45px; display:inline-block;">${emoji}</span>`;
             makeTransformable(el);
+            if (window.tmPlace) tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
             closeModal('stickerModal');
         }
@@ -20,6 +21,7 @@
             styleTextarea(ta, DEFAULT_TEXT_FONT, DEFAULT_TEXT_COLOR, DEFAULT_TEXT_SIZE);
             el.appendChild(ta);
             makeTransformable(el);
+            if (window.tmPlace) tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
             selectElement(el);
         }
@@ -54,6 +56,7 @@
             bindImage(img, src, fallback);
             el.appendChild(img);
             makeTransformable(el);
+            if (window.tmPlace) tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
             return true;
         }
@@ -479,9 +482,13 @@
 
         document.getElementById('canvasArea').addEventListener('click', (e) => {
             if (e.target.id === 'canvasArea') {
-                if (selectedElement) selectedElement.classList.remove('selected');
-                selectedElement = null;
-                updateTextPanel();
+                /* 고른 게 있으면 선택 해제가 먼저 · 해제된 상태에서 누르면 추가 메뉴 (js/tapmenu.js) */
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected');
+                    selectedElement = null;
+                    updateTextPanel();
+                    if (window.tmClose) tmClose();
+                } else if (window.tmOpen) tmOpen(e);
             }
         });
 
