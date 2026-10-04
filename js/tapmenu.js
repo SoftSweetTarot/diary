@@ -10,9 +10,10 @@
             { icon: '📚', label: '그림모음', run: () => openLibrary() }
         ];
         const TM_ANCHOR_MS = 120000;
-        let tmEl = null, tmAnchor = null;
+        const TM_AUTO_CLOSE_MS = 3000;   // 메뉴가 나온 뒤 저절로 닫히는 시간
+        let tmEl = null, tmAnchor = null, tmTimer = 0;
 
-        function tmClose() { if (tmEl) { tmEl.remove(); tmEl = null; } }
+        function tmClose() { clearTimeout(tmTimer); if (tmEl) { tmEl.remove(); tmEl = null; } }
 
         function tmOpen(e) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) return;
@@ -40,6 +41,7 @@
             m.style.top = y + 'px';
             m.style.transformOrigin = (e.clientX - x) + 'px ' + (e.clientY - y) + 'px';
             tmEl = m;
+            tmTimer = setTimeout(tmClose, TM_AUTO_CLOSE_MS);
         }
 
         /* 메뉴에서 고른 걸 눌렀던 자리에 놓기 (스티커 · 글 · 이미지를 넣는 함수가 불러요) */
