@@ -403,6 +403,14 @@
             if (beginCurl(true, 1)) animateCurlTo(turn.W, true);
         }
 
+        /* 📖 페이지 넘기기 : 다이어리를 연 뒤에는 페이지 양쪽 끝(가장자리)을 잡고 밀 때만 넘어가요
+           - 오른쪽 끝 → 왼쪽으로 밀면 다음 날 · 왼쪽 끝 → 오른쪽으로 밀면 전날 (가운데에서 그림 · 글을 만질 때는 안 넘어가요)
+           - 겉표지는 어디를 잡아도 열려요 */
+        const CURL_EDGE = { ratio: 0.15, min: 36, max: 80 };      // 끝 영역 너비 : 페이지 너비의 15% (36~80px)
+        function curlEdgeAt(x, book) {
+            const r = book.getBoundingClientRect(), z = clampNum(r.width * CURL_EDGE.ratio, CURL_EDGE.min, CURL_EDGE.max);
+            return x >= r.right - z ? 1 : x <= r.left + z ? -1 : 0;
+        }
         function setupCurlDrag() {
             const wrapper = document.getElementById('diaryWrapper');
             const book = document.getElementById('diaryBook');
@@ -411,7 +419,9 @@
                 if (turn) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
                 if (e.target.closest('.element-box, button, textarea, input, select')) return;
-                drag = { id: e.pointerId, x: e.clientX, y: e.clientY, started: false, dir: 0 };
+                const edge = isCoverOpen ? curlEdgeAt(e.clientX, book) : 0;
+                if (isCoverOpen && !edge) return;
+                drag = { id: e.pointerId, x: e.clientX, y: e.clientY, started: false, dir: 0, edge };
             });
 
             window.addEventListener('pointermove', (e) => {
@@ -423,6 +433,7 @@
                     if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
                     const dir = dx < 0 ? 1 : -1;
                     if (!isCoverOpen && dir === -1) { drag = null; return; }
+                    if (drag.edge && dir !== drag.edge) { drag = null; return; }     // 오른쪽 끝은 다음 날만 · 왼쪽 끝은 전날만
                     if (!beginCurl(!isCoverOpen, dir)) { drag = null; return; }
                     drag.started = true;
                     drag.dir = dir;
