@@ -128,9 +128,6 @@
                 <div class="cw-stk"><img src="${capsUrl(k)}" alt="${k.name}"></div>
                 <div class="gp-t">🎁 첫 선물이 도착했어요!</div>
                 <p class="gp-s">말랑달콤에 온 걸 환영해요 💕<br><b>움직이는 캡슐 스티커</b> <em>'${k.name}'</em>를 선물로 드려요</p>
-                <ul class="gp-list">
-                  <li><span>✏️</span><div><b>붙이는 곳</b><small>다이어리 위쪽 <em>🎨 스티커</em> → <em>🎁 캡슐 스티커</em> 칸</small></div></li>
-                </ul>
                 ${when ? `<div class="gp-until">이 스티커는 <b>${when}</b>까지 쓸 수 있어요</div>` : ''}
                 ${capsGuide(true)}
                 <button type="button" class="btn btn-primary gp-close">닫기</button>

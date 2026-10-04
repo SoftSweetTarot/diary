@@ -2215,7 +2215,7 @@
         .gp-s { margin: 0 0 12px; font-size: 13.5px; color: #8c6f7c; line-height: 1.55; }
         .gp-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; text-align: left; }
         .gp-list li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 16px; background: #fff; border: 2px dashed #ffc2d4; opacity: 0; animation: gpIn .4s both; }
-        .gp-list li:nth-child(1) { animation-delay: 1.35s; } #capsWelcome .gp-list li, #capsWelcome .gp-until, #capsWelcome .gp-close { animation-delay: .7s; } .gp-list li:nth-child(2) { animation-delay: 1.5s; }
+        .gp-list li:nth-child(1) { animation-delay: 1.35s; } #capsWelcome .gp-until, #capsWelcome .gp-close { animation-delay: .7s; } .gp-list li:nth-child(2) { animation-delay: 1.5s; }
         .gp-list li > span { font-size: 26px; line-height: 1; }
         .gp-list b { display: block; font-size: 14.5px; color: #c2456f; }
         .gp-list small { display: block; font-size: 12px; color: #8c6f7c; margin-top: 1px; }
