@@ -33,11 +33,12 @@
             });
             document.body.appendChild(m);
             const w = m.offsetWidth, h = m.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
-            let x = e.clientX + 6, y = e.clientY + 6;
-            if (x + w > vw - 6) x = e.clientX - w - 6;
-            if (y + h > vh - 6) y = e.clientY - h - 6;
-            m.style.left = Math.max(6, x) + 'px';
-            m.style.top = Math.max(6, y) + 'px';
+            /* 누른 곳이 메뉴의 한가운데(피봇) · 화면 밖으로 나가면 안쪽으로 밀기 */
+            const x = Math.min(Math.max(6, e.clientX - w / 2), vw - w - 6);
+            const y = Math.min(Math.max(6, e.clientY - h / 2), vh - h - 6);
+            m.style.left = x + 'px';
+            m.style.top = y + 'px';
+            m.style.transformOrigin = (e.clientX - x) + 'px ' + (e.clientY - y) + 'px';
             tmEl = m;
         }
 
