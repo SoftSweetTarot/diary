@@ -169,7 +169,7 @@
             if (!atq('attendRoom').classList.contains('show')) return;
             const hit = !!(r && r.ok && r.hit);
             atq('atFront').classList.add(hit ? 'coin' : 'miss');
-            atq('atFront').innerHTML = hit ? '<span class="at-coin">말</span><b>코인!</b>' : `<em style="--c:${s.c}">${s.e}</em><b>${T.d}일 도장</b>`;
+            atq('atFront').innerHTML = hit ? '<span class="at-coin">C</span><b>코인!</b>' : `<em style="--c:${s.c}">${s.e}</em><b>${T.d}일 도장</b>`;
             card.classList.remove('spin'); card.classList.add('land');
             await atLater(1100);
             if (hit) {
