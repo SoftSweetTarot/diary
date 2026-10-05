@@ -218,7 +218,7 @@
             try {
                 const res = await fetch(FEEDBACK_SCRIPT_URL, {
                     method: 'POST', credentials: 'omit', signal: ctl.signal,
-                    body: new URLSearchParams({ comment: text, id: msgId })   // comment=내용 & id=확인 번호
+                    body: new URLSearchParams({ comment: text, id: msgId, me: (typeof pr !== 'undefined' && pr.me) || '' })   // comment=내용 & id=확인 번호 & me=회원번호 (로그인했을 때만)
                 });
                 const data = await res.json().catch(() => null);
                 ok = !!(data && data.ok);
