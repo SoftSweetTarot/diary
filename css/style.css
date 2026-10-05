@@ -2329,3 +2329,17 @@
         }
         .tap-menu-btn:hover, .tap-menu-btn:active { background: var(--primary-accent); color: #fff; }
         @keyframes tmPop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+
+        /* 🖼️ 배경화면 링크 창 (js/wall.js wlLinkPop) · 🎁 선물 창(gp-)을 그대로 써요 */
+        .wl-lp .gp-list { max-height: 30vh; }
+        .wl-lp .gp-list li { align-items: flex-start; }
+        .wl-lp .gp-list li > div { min-width: 0; flex: 1; }
+        .wl-lp .gp-s b { color: #c2456f; }
+        .wl-lp-url { display: block; margin: 3px 0 7px; padding: 5px 8px; border-radius: 10px; background: #f6f0ff; color: #6b4fc9; font-size: 11.5px; word-break: break-all; text-decoration: underline; }
+        .wl-lp-btns { display: flex; gap: 6px; }
+        .wl-lp-btns .btn { flex: 1; justify-content: center; padding: 8px 6px; font-size: 13px; border-radius: 12px; }
+        .wl-lp-open { background: linear-gradient(160deg, #b79bff, #8f6bf0) !important; border-color: #8f6bf0 !important; color: #fff !important; }
+        .wl-lp-ic { font-size: 54px; line-height: 1; margin: 12px 0 4px; }
+        .wl-lp.calm .gp-list li, .wl-lp.calm .gp-until, .wl-lp.calm .gp-close { animation-delay: .1s !important; }
+        .wl-buy.own b { color: #2fa66b; font-size: 13px; }
+        .wl-get.own { background: linear-gradient(160deg, #b79bff, #8f6bf0); border-color: #8f6bf0; color: #fff; }

@@ -8,6 +8,7 @@
      다른 탭 · 앱으로 잠깐 다녀오는 건 신호를 보내지 않아요
    - 보내는 건 구글 로그인 확인용 정보와 기기 종류(PC · 휴대폰 · 태블릿)뿐 (이메일 · 일기 내용은 보내지 않아요)
    - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물(🎀 · 🍬 전체 + 디자인별 끝나는 날) · 내 저금 코드를 받아요 → setGift (js/settings.js) · prCode (js/piggy.js)
+   - 🖼️ 배경화면 : 로그인 신호의 답 walls 로 '내가 받은 배경화면'을 맞추고(wlSetMine) · 도착 신호 w 는 링크 창(wlGift)으로 보여 줘요 (js/wall.js)
    - 🎁 선물 도착 : 주인이 '저금 확인 ☑' 을 체크하면 서버에 신호가 한 번 남아요 → 받는 순간 '선물이 도착했어요' 창 (js/piggy.js 의 pigGiftPop)
        다이어리를 보고 있는 동안 1분마다 살짝 물어봐요 (로그인 확인 없이 회원번호로 · 서버가 시트를 열지 않아서 아주 가벼워요)
        다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간 바로 물어봐요
@@ -33,6 +34,7 @@
                 const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'here', token: drive.token, dev: prDevice() }) });
                 const j = await res.json();
                 if (j && j.ok && typeof setGift === 'function') setGift(j.tape, j.pat, j.tp, j.pp);
+                if (j && j.ok && typeof wlSetMine === 'function') wlSetMine(j.walls);          // 🖼️ 내가 받은 배경화면 (js/wall.js)
                 if (j && j.ok && j.me) pr.me = String(j.me);
                 if (j && j.ok && j.code) pr.code = String(j.code);
                 if (j && j.ok && j.gift) prGift(j.gift);
@@ -51,10 +53,11 @@
             } catch (e) {}
             pr.gBusy = false;
         }
-        function prGift(g) {                                  // g : { t: { all | 테이프id: [끝나는 날, 늘어남] }, p: { all | 패턴id: [끝나는 날, 늘어남] } } (받은 것만 들어 있어요)
-            if (!g || typeof g !== 'object' || !(g.t && typeof g.t === 'object' || g.p && typeof g.p === 'object')) return;
+        function prGift(g) {                                  // g : { t: { all | 테이프id: [끝나는 날, 늘어남] }, p: { all | 패턴id: [끝나는 날, 늘어남] }, w: { 배경화면 번호: [이름, 드라이브 링크] } } (받은 것만 들어 있어요)
+            if (!g || typeof g !== 'object' || !(g.t && typeof g.t === 'object' || g.p && typeof g.p === 'object' || g.w && typeof g.w === 'object')) return;
             if (typeof giftApply === 'function') giftApply(g);
             if (typeof pigGiftPop === 'function') pigGiftPop(g);
+            if (g.w && typeof wlGift === 'function') wlGift(g.w);                  // 🖼️ 배경화면 도착 창 (js/wall.js)
         }
         setInterval(() => { if (Date.now() - pr.gLast >= PR_GIFT_EVERY) prGiftAsk(); }, 10000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pr.gLast >= 10000) prGiftAsk(); });   // 다이어리로 돌아오면 바로
@@ -64,7 +67,7 @@
             try { navigator.sendBeacon(MEMBER_API_URL, JSON.stringify({ action: 'bye', token: drive.token })); } catch (e) {}
         }
         const prFirst = setInterval(() => {                                                 // ① 로그인되면 곧바로
-            if (typeof drive !== 'undefined' && drive.ready && drive.guest) { clearInterval(prFirst); if (typeof setGift === 'function') setGift('', '', {}, {}); return; }   // 게스트는 선물 없음
+            if (typeof drive !== 'undefined' && drive.ready && drive.guest) { clearInterval(prFirst); if (typeof setGift === 'function') setGift('', '', {}, {}); if (typeof wlSetMine === 'function') wlSetMine([]); return; }   // 게스트는 선물 없음
             if (prOk()) { clearInterval(prFirst); if (!pr.last) prHere(); }
         }, 1000);
         setInterval(() => { if (Date.now() - pr.last >= PR_EVERY) prHere(); }, 15000);      // ③ 그 뒤로 3시간마다
