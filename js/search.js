@@ -22,9 +22,9 @@
                 if (it.t === 't' && it.c) out.push(String(it.c));
                 else if (it.t === 's' && it.c) out.push(String(it.c));
                 else if (it.t === 'd' && it.c && it.c.name) out.push(String(it.c.name));
-                else if (it.t === 'i' && /^data:image\/svg/i.test(it.c || '') && !/malang-(tape|draw)/.test(it.c)) {
+                else if (it.t === 'i' && /^data:image\/svg/i.test(slimDec(it.c) || '') && !/malang-(tape|draw)/.test(slimDec(it.c))) {
                     try {                                                        // 운세 · 꿈해몽 · 행운 카드에 적힌 글
-                        const svg = decodeURIComponent(String(it.c).replace(/^data:image\/svg\+xml(;charset=utf-8)?,/i, ''));
+                        const svg = decodeURIComponent(String(slimDec(it.c)).replace(/^data:image\/svg\+xml(;charset=utf-8)?,/i, ''));
                         const t = (svg.match(/<text[^>]*>[^<]*<\/text>/g) || []).map(x => x.replace(/<[^>]+>/g, '')).join(' ');
                         if (t) out.push(t.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
                     } catch (e) {}

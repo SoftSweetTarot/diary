@@ -12,7 +12,7 @@
         const ROOT_FOLDER_NAME = '다이어리';                  // 다이어리 루트 폴더 (말랑달콤 폴더 안)
         const ROOT_PATH = [TOP_FOLDER_NAME, ROOT_FOLDER_NAME]; // 드라이브 경로 : 말랑달콤 / 다이어리
         const ROOT_PATH_TEXT = ROOT_PATH.join(' / ');
-        const SETTINGS_FILE_NAME = 'settings.json';           // 스킨·글꼴 등 설정 (루트 폴더 안에 1개)
+        const SETTINGS_FILE_NAME = 'settings.json';           // 스킨·글꼴 등 설정 (말랑달콤 폴더 바로 아래에 1개 : 말랑달콤 / settings.json)
         const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤 / 다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
         const DRIVE_SCOPE = USE_APP_DATA_FOLDER
             ? 'https://www.googleapis.com/auth/drive.appdata'
@@ -27,7 +27,7 @@
 
         /* 메모리 저장소: 화면이 쓰는 값은 여기(문자열)에 두고, 변경된 것만 드라이브에 올립니다.
            - 날짜 데이터  : diary_2026_09_10  → 말랑달콤/다이어리/2026년/9월/10일.json
-           - 설정 데이터  : diary_ui_font 등  → 말랑달콤/다이어리/settings.json */
+           - 설정 데이터  : diary_ui_font 등  → 말랑달콤/settings.json */
         const store = {
             _m: new Map(),
             _silent: false,
@@ -269,7 +269,7 @@
         /* ---------- 읽기 : 설정 / 하루치 ---------- */
         async function fetchSettings() {
             drive.settingsFile = null;
-            const rootId = await getFolder(ROOT_PATH, false);
+            const rootId = await getFolder([TOP_FOLDER_NAME], false);
             if (!rootId) return null;
             const files = await driveList(`name='${SETTINGS_FILE_NAME}' and '${rootId}' in parents and trashed=false`, 'id,name,modifiedTime');
             if (!files[0]) return null;
@@ -399,7 +399,7 @@
                     const saved = await driveUpsert(idx.folderId, name, f && f.id, val);   // 있으면 덮어쓰기, 없으면 새 파일
                     idx.files.set(name, { id: saved.id, name, modifiedTime: saved.modifiedTime });
                 } else {
-                    const rootId = await getFolder(ROOT_PATH, true);                        // '말랑달콤 / 다이어리' 폴더 (없으면 생성)
+                    const rootId = await getFolder([TOP_FOLDER_NAME], true);                // '말랑달콤' 폴더 (없으면 생성)
                     const saved = await driveUpsert(rootId, SETTINGS_FILE_NAME, drive.settingsFile && drive.settingsFile.id, settingsBody());
                     drive.settingsFile = { id: saved.id, name: SETTINGS_FILE_NAME, modifiedTime: saved.modifiedTime };
                 }

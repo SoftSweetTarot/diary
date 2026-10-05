@@ -578,7 +578,7 @@
                 if (el.dataset.doll) { try { dollData = JSON.parse(el.dataset.doll); } catch (e) { dollData = null; } }
                 const item = {
                     t: dollData ? 'd' : (textarea ? 't' : (img ? 'i' : 's')),
-                    c: dollData ? dollData : (textarea ? textarea.value : (img ? (img.dataset.src || img.getAttribute('src')) : span.innerText)),
+                    c: dollData ? dollData : (textarea ? textarea.value : (img ? slimEnc(img.dataset.src || img.getAttribute('src')) : span.innerText)),
                     x: r1(el.dataset.posX), y: r1(el.dataset.posY)
                 };
                 const sc = Math.round((parseFloat(el.dataset.scale) || 1) * 1000) / 1000;

@@ -216,9 +216,49 @@
         let turn = null;
         let drag = null;
 
+        /* =====================================================================
+           🗜 그림 짧게 저장 : 코드로 그린 그림(테이프 · 캡슐 · 계절 스티커 · 운세 카드 · 손그림 등)은
+           일기에 긴 data 주소 대신 짧은 이름표로 담아요 (불러올 때 똑같은 그림으로 되돌림)
+             tp:id · cs:id · ss:계절:id  = 코드에 들어 있는 그림 → 이름표만 (수십 바이트)
+             sv:<SVG 글자>              = 그 밖의 SVG → %XX 로 부풀린 글자를 원래 글자로 (약 30~50% 작아짐)
+           ✔ 저장할 때 '되돌린 결과가 원래 주소와 똑같은지' 확인해서 똑같을 때만 줄여요 → 그림이 깨질 일 없음
+           ✔ 사진(png · jpg · webp · gif)과 주소(https)는 그대로 */
+        const SLIM_PFX = 'data:image/svg+xml;charset=utf-8,';
+        let slimMap = null;
+        function slimKnown() {
+            if (slimMap) return slimMap;
+            slimMap = new Map();
+            const put = (svg, ref) => slimMap.set(SLIM_PFX + encodeURIComponent(svg), ref);
+            try { if (typeof TAPES !== 'undefined') TAPES.forEach(t => slimMap.set(tapeUrl(t), 'tp:' + t.id)); } catch (e) {}
+            try { if (typeof CAPSULE_STICKERS !== 'undefined') CAPSULE_STICKERS.forEach(k => put(k.svg, 'cs:' + k.id)); } catch (e) {}
+            try { if (typeof SEASON_STICKERS !== 'undefined') Object.keys(SEASON_STICKERS).forEach(q => SEASON_STICKERS[q].forEach(s => put(s.svg, 'ss:' + q + ':' + s.id))); } catch (e) {}
+            return slimMap;
+        }
+        function slimDec(c) {                                         // 이름표 → 원래 그림 주소 (이름표가 아니면 그대로)
+            if (typeof c !== 'string') return c;
+            const m = /^(tp|cs|ss|sv):/.exec(c); if (!m) return c;
+            const body = c.slice(3);
+            try {
+                if (m[1] === 'sv') return SLIM_PFX + encodeURIComponent(body);
+                if (m[1] === 'tp') { const t = TAPES.find(x => x.id === body); return t ? tapeUrl(t) : c; }
+                if (m[1] === 'cs') { const k = CAPSULE_STICKERS.find(x => x.id === body); return k ? SLIM_PFX + encodeURIComponent(k.svg) : c; }
+                const p = body.split(':'), s = (SEASON_STICKERS[p[0]] || []).find(x => x.id === p[1]);
+                return s ? SLIM_PFX + encodeURIComponent(s.svg) : c;
+            } catch (e) { return c; }
+        }
+        function slimEnc(src) {                                       // 그림 주소 → 짧은 이름표 (줄일 수 없으면 그대로)
+            if (typeof src !== 'string' || src.length < 60) return src;
+            const known = slimKnown().get(src);
+            if (known && slimDec(known) === src) return known;
+            if (src.startsWith(SLIM_PFX)) {
+                try { const ref = 'sv:' + decodeURIComponent(src.slice(SLIM_PFX.length)); if (slimDec(ref) === src) return ref; } catch (e) {}
+            }
+            return src;
+        }
+
         function normalizeItem(d) {
             const f = fontList.find(x => x.id === d.f);
-            return { type: ({ i: 'image', t: 'text', s: 'sticker', d: 'doll' })[d.t] || 'sticker', content: d.c,
+            return { type: ({ i: 'image', t: 'text', s: 'sticker', d: 'doll' })[d.t] || 'sticker', content: d.t === 'i' ? slimDec(d.c) : d.c,
                 posX: d.x || 0, posY: d.y || 0, scale: d.s || 1, rotation: d.r || 0,
                 width: d.w ? d.w + 'px' : '', height: d.h ? d.h + 'px' : '', zIndex: d.z || 1,
                 boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp, frame: d.fr, caption: d.cp };
