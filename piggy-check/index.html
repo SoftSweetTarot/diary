@@ -16,7 +16,12 @@
      - 서버 : 말랑달콤사람들_앱스크립트.gs (admin_find · admin_save) · 관리 열쇠가 맞아야만 동작 (처음 한 번 setupAdmin 실행 → 열쇠를 여기에 넣기)
      - 확실하게 : 요청마다 번호를 붙여 보내요 → 인터넷이 끊겨 다시 보내도 한 번만 처리
                   처리된 뒤 시트를 다시 읽어서 🎀 · 🍬 전체 끝나는 날 · 저금 횟수가 맞는지 확인 → 맞으면 '저금 확인 완료' 창
-     - 🎁 아이템 주기 : 찾은 사람 카드의 버튼 → 🪙 코인 · 🎀 마스킹테이프 · 🍬 달콤패턴(전체 또는 디자인 하나하나 + 기간) · 🎁 캡슐 스티커(여러 개 + 기간) · 🖼️ 배경화면(번호로 골라서 · 드라이브 폴더 링크가 자동으로 전해져요)를 골라서 선물 (admin_give · 확인 창 → 보내기 → 결과 창)
+     - 맨 위 탭 3개 : 💗 저금 확인 · 🎁 아이템 주기 · 🖼️ 배경화면 주기 (같은 저금 코드 검색을 쓰고, 탭마다 그 일만 보여요)
+     - 🎁 아이템 주기 : 🪙 코인 · 🎀 마스킹테이프 · 🍬 달콤패턴(전체 또는 디자인 하나하나 + 기간) · 🎁 캡슐 스티커(여러 개 + 기간) (admin_give · 확인 창 → 보내기 → 결과 창)
+     - 🖼️ 배경화면 주기 : 번호로 골라서 · 드라이브 폴더 링크가 자동으로 전해져요 (admin_give · walls)
+     - 기간은 '원래 남은 기간 + 새 기간'으로 더해져요 · 결과 창에 '원래 D-15 + 30일 = D-45' 로 보여 줘요
+     - 놓치지 않게 : 보내기 전에 이 휴대폰에 '보내는 중'을 적어 두고 · 결과 창이 뜰 때까지 지우지 않아요 (앱이 닫혀도 다시 열면 '이어서 확인하기' 창이 떠요 · 같은 요청 번호라 두 번 들어가지 않아요)
+                  카드의 '📬 알림 대기'는 받는 분이 아직 도착 창을 안 본 상태예요 (다이어리를 열면 떠요)
      - 📲 홈 화면에 설치 : 맨 위 하트 로고를 5번 톡톡 누르면 숨은 설치 칸이 열려요
      - 다이어리 어디에도 이 주소는 없어요 (softsweetdiary.com/piggy-check/) · 검색에도 안 나와요 -->
 <style>
@@ -88,6 +93,13 @@
     .pop-d { background: var(--soft); border-radius: 14px; padding: 10px; font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
     .pop-d b { color: var(--deep); }
     .pop-btns { display: grid; gap: 8px; }
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .tab { border: 2px solid var(--line); background: #fff; color: var(--sub); border-radius: 14px; padding: 10px 2px; font-size: 13px; font-weight: bold; font-family: inherit; line-height: 1.3; }
+    .tab.on { border-color: var(--pink); background: var(--soft); color: var(--deep); box-shadow: 0 3px 10px rgba(255, 107, 147, .2); }
+    .m-rows dd.wait { color: #d98a00; }
+    .add { display: block; font-size: 12.5px; color: var(--sub); font-weight: normal; }
+    .add b { color: var(--deep); }
+    .btn.wall { background: linear-gradient(160deg, #7ec8ff, #4aa3ee); box-shadow: 0 5px 14px rgba(74, 163, 238, .3); }
 </style>
 </head>
 <body>
@@ -113,15 +125,22 @@
         <button class="btn" id="keyBtn" type="button" onclick="keySave()">열쇠 넣기</button>
     </div>
 
+    <!-- 💗 저금 확인 · 🎁 아이템 주기 · 🖼️ 배경화면 주기 -->
+    <div class="tabs" id="tabs" hidden>
+        <button type="button" class="tab" data-t="save" onclick="tabSet('save')">💗<br>저금 확인</button>
+        <button type="button" class="tab" data-t="give" onclick="tabSet('give')">🎁<br>아이템 주기</button>
+        <button type="button" class="tab" data-t="wall" onclick="tabSet('wall')">🖼️<br>배경화면 주기</button>
+    </div>
+
     <!-- 🔍 저금 코드 찾기 -->
     <div class="card" id="main" hidden>
-        <label class="t" for="q">💗 저금 코드</label>
+        <label class="t" for="q" id="tabTitle">💗 저금 코드</label>
         <div class="search">
             <b>말랑</b>
             <input id="q" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10" oninput="onType()">
             <button type="button" onclick="clearQ()" aria-label="지우기">✕</button>
         </div>
-        <p class="hint">채팅에 온 저금 코드를 적으면 바로 찾아요 (말랑은 빼고 적어도 돼요)</p>
+        <p class="hint" id="tabHint">채팅에 온 저금 코드를 적으면 바로 찾아요 (말랑은 빼고 적어도 돼요)</p>
         <div id="list"></div>
     </div>
 
@@ -133,8 +152,9 @@
     const API = 'https://script.google.com/macros/s/AKfycbzuhJ24tR7VbfKfX-lGI8-BRpPDx3d_J0UwR9x94RxPd2H3mvJiea-vn7EvRRCt2IgMag/exec';   // '말랑달콤 사람들' 서버 (다이어리 js/presence.js 의 MEMBER_API_URL 과 같아요)
     const KEY_LOCAL = 'pc_key';
     const $ = id => document.getElementById(id);
-    const st = { key: '', list: [], t: 0, seq: 0, busy: '' };
-    try { st.key = localStorage.getItem(KEY_LOCAL) || ''; } catch (e) {}
+    const st = { key: '', list: [], t: 0, seq: 0, busy: '', tab: 'save' };
+    const TAB_LOCAL = 'pc_tab', PEND = 'pc_pending';
+    try { st.key = localStorage.getItem(KEY_LOCAL) || ''; st.tab = ['save', 'give', 'wall'].includes(localStorage.getItem(TAB_LOCAL)) ? localStorage.getItem(TAB_LOCAL) : 'save'; } catch (e) {}
 
     /* 서버에 보내기 (끊기면 몇 번 더 · 같은 내용을 다시 보내도 안전한 것만) */
     async function api(body, tries, ms) {
@@ -158,10 +178,30 @@
         .concat(Object.keys(one || {}).map(id => `${esc(nameOf(list, id))} ${esc(one[id])}까지 (${dLeft(one[id])})`)).filter(Boolean).join('<br>');
     const md = d => { const x = new Date(d + 'T00:00:00'); return `${x.getFullYear()}년 ${x.getMonth() + 1}월 ${x.getDate()}일`; };
 
+    const TAB_INFO = {
+        save: ['💗 저금 코드', '채팅에 온 저금 코드를 적으면 바로 찾아요 (말랑은 빼고 적어도 돼요)'],
+        give: ['🎁 아이템 받을 사람의 저금 코드', '🪙 코인 · 🎀 · 🍬 · 🎁 스티커를 줄 사람의 저금 코드를 적어 주세요'],
+        wall: ['🖼️ 배경화면 받을 사람의 저금 코드', '채팅에 온 \'배경화면 N번 말랑XXXX\' 의 저금 코드를 적어 주세요']
+    };
+    function tabSet(t) {
+        st.tab = t; try { localStorage.setItem(TAB_LOCAL, t); } catch (e) {}
+        tabUi();
+        if (st.list.length) render();
+    }
+    function tabUi() {
+        document.querySelectorAll('#tabs .tab').forEach(b => b.classList.toggle('on', b.dataset.t === st.tab));
+        $('tabTitle').textContent = TAB_INFO[st.tab][0]; $('tabHint').textContent = TAB_INFO[st.tab][1];
+    }
+    /* 🛟 보내는 중 기록 (결과 창이 뜰 때까지 지우지 않아요 → 앱이 닫혀도 이어서 확인) */
+    const pendSet = x => { try { localStorage.setItem(PEND, JSON.stringify(Object.assign({ at: Date.now() }, x))); } catch (e) {} };
+    const pendClear = () => { try { localStorage.removeItem(PEND); } catch (e) {} };
+    const pendGet = () => { try { const x = JSON.parse(localStorage.getItem(PEND)); return x && x.code && Date.now() - x.at < 6 * 3600000 ? x : null; } catch (e) { return null; } };   // 서버가 같은 요청을 기억하는 6시간 안에서만
+
     /* ---------- 🔑 열쇠 ---------- */
     function showMain() {
-        $('keyCard').hidden = !!st.key; $('main').hidden = !st.key; $('foot').hidden = !st.key;
-        if (st.key) setTimeout(() => $('q').focus(), 50);
+        $('keyCard').hidden = !!st.key; $('main').hidden = !st.key; $('foot').hidden = !st.key; $('tabs').hidden = !st.key;
+        tabUi();
+        if (st.key) { setTimeout(() => $('q').focus(), 50); resumeCheck(); }
     }
     async function keySave() {
         const k = $('keyIn').value.trim(); if (!k) return;
@@ -195,74 +235,98 @@
         render();
     }
     function render() {
+        const wait = m => m.pending ? '<dt>📬 알림</dt><dd class="wait">받는 분이 아직 안 봤어요 · 다이어리를 열면 떠요</dd>' : '';
+        const rows = (m, tab) => tab === 'wall' ? `
+              <dt>🖼️ 배경화면</dt><dd class="${(m.walls || []).length ? 'on' : ''}">${(m.walls || []).length ? m.walls.map(n => esc(wallLabel(n))).join('<br>') : '없음'}</dd>${wait(m)}
+              <dt>마지막 접속</dt><dd>${esc(m.last || '-')} ${esc(m.dev || '')}</dd>` : `
+              <dt>🎀 테이프</dt><dd class="${passRows(m.tape, m.tp, TAPES) ? 'on' : ''}">${passRows(m.tape, m.tp, TAPES) || '없음'}</dd>
+              <dt>🍬 패턴</dt><dd class="${passRows(m.pat, m.pp, PATS) ? 'on' : ''}">${passRows(m.pat, m.pp, PATS) || '없음'}</dd>${wait(m)}
+              ${tab === 'save' ? `<dt>저금</dt><dd>${m.count}번</dd>` : ''}
+              <dt>마지막 접속</dt><dd>${esc(m.last || '-')} ${esc(m.dev || '')}</dd>`;
+        const btns = (m, i) => st.tab === 'save' ? (m.done ? `<button class="btn done" type="button" disabled>✅ 방금 저금 확인했어요</button>` : `<button class="btn" type="button" id="sv${i}" onclick="save(${i})">💗 저금 확인</button>`)
+            : st.tab === 'give' ? `<button class="btn gift" type="button" onclick="giveOpen(${i}, 'item')">🎁 아이템 주기</button>`
+            : `<button class="btn wall" type="button" onclick="giveOpen(${i}, 'wall')">🖼️ 배경화면 주기</button>`;
         $('list').innerHTML = st.list.length ? st.list.map((m, i) => `
           <div class="m">
             <div class="m-code">${esc(m.code)}</div>
-            <dl class="m-rows">
-              <dt>🎀 테이프</dt><dd class="${passRows(m.tape, m.tp, TAPES) ? 'on' : ''}">${passRows(m.tape, m.tp, TAPES) || '없음'}</dd>
-              <dt>🍬 패턴</dt><dd class="${passRows(m.pat, m.pp, PATS) ? 'on' : ''}">${passRows(m.pat, m.pp, PATS) || '없음'}</dd>
-              <dt>🖼️ 배경화면</dt><dd class="${(m.walls || []).length ? 'on' : ''}">${(m.walls || []).length ? m.walls.map(n => esc(wallLabel(n))).join('<br>') : '없음'}</dd>
-              <dt>저금</dt><dd>${m.count}번</dd>
-              <dt>마지막 접속</dt><dd>${esc(m.last || '-')} ${esc(m.dev || '')}</dd>
-            </dl>
-            ${m.done ? `<button class="btn done" type="button" disabled>✅ 방금 저금 확인했어요</button>`
-              : `<button class="btn" type="button" id="sv${i}" onclick="save(${i})">💗 저금 확인</button>`}
-            <button class="btn gift" type="button" onclick="giveOpen(${i})">🎁 아이템 주기</button>
+            <dl class="m-rows">${rows(m, st.tab)}</dl>
+            ${btns(m, i)}
           </div>`).join('') : '<div class="state">🙈 그런 저금 코드가 없어요</div>';
     }
+    /* '원래 D-15 + 30일 = D-45' (없던 거면 '30일 새로 열렸어요') */
+    const addLine = (from, add, until) => !add ? '' : from ? `<span class="add">원래 <b>${dLeft(from)}</b> + <b>${add}일</b> = <b>${dLeft(until)}</b></span>` : `<span class="add"><b>${add}일</b> 새로 열렸어요</span>`;
+    const SENT = '📬 받는 분이 다이어리를 열면 알림 창이 떠요 (안 쓰고 있어도 서버에 안전하게 남아 있다가 접속하면 떠요)';
 
     /* ---------- 💗 저금 확인 : 보내기 → 시트를 다시 읽어서 맞는지 확인 → 완료 창 ---------- */
-    async function save(i, rid) {
-        const m = st.list[i]; if (!m || st.busy) return;
+    function save(i, rid) { const m = st.list[i]; if (m) saveCode(m.code, rid); }
+    async function saveCode(code, rid) {
+        if (!code || st.busy) return;
         rid = rid || (Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
         st.busy = rid;
-        const b = $('sv' + i); if (b) { b.disabled = true; b.innerHTML = '<span class="spin"></span> 저금 확인 중…'; }
-        const r = await api({ action: 'admin_save', code: m.code, rid }, 4);           // 같은 번호(rid)라 몇 번 보내도 한 번만 처리돼요
-        let ok = false, now = null;
-        if (r.ok) {
-            if (b) b.innerHTML = '<span class="spin"></span> 시트에 잘 적혔는지 확인 중…';
-            const f = await api({ action: 'admin_find', q: m.code }, 4);
-            now = f.ok ? (f.list || []).find(x => x.code === m.code) : null;
-            ok = !!now && now.tape === r.tape && now.pat === r.pat && now.count === r.count;
-        }
+        const i = st.list.findIndex(x => x.code === code), b = $('sv' + i);
+        if (b) { b.disabled = true; b.innerHTML = '<span class="spin"></span> 저금 확인 중…'; }
+        pendSet({ kind: 'save', code, rid });                                          // 결과 창이 뜰 때까지 지우지 않아요
+        let ok = false, now = null, r = { ok: false, error: 'network' };
+        try {
+            r = await api({ action: 'admin_save', code, rid }, 4);                       // 같은 번호(rid)라 몇 번 보내도 한 번만 처리돼요
+            if (r.ok) {
+                if (b) b.innerHTML = '<span class="spin"></span> 시트에 잘 적혔는지 확인 중…';
+                const f = await api({ action: 'admin_find', q: code }, 4);
+                now = f.ok ? (f.list || []).find(x => x.code === code) : null;
+                ok = !!now && now.tape === r.tape && now.pat === r.pat && now.count === r.count;
+            }
+        } catch (e) { ok = false; }
         st.busy = '';
-        if (ok) {
-            st.list[i] = Object.assign({}, now, { done: true }); render();
-            popOk(r);
-        } else {
-            if (b) { b.disabled = false; b.textContent = '💗 저금 확인'; }
-            popBad(i, rid, r);
-        }
+        if (ok || r.error === 'none' || r.error === 'key') pendClear();                 // 처리됐거나 처리될 수 없는 건 기록을 지워요 · 불안한 건 남겨 둬요 (다시 시도 · 이어서 확인)
+        try {
+            if (ok) { const k = st.list.findIndex(x => x.code === code); if (k >= 0) st.list[k] = Object.assign({}, now, { done: true }); render(); popOk(r); }
+            else { if (b) { b.disabled = false; b.textContent = '💗 저금 확인'; } popBad(code, rid, r); }
+        } catch (e) { pop('<div class="pop-ic bad">!</div><div class="pop-t">결과를 보여 주지 못했어요</div><div class="pop-s">앱을 다시 열면 \'이어서 확인하기\' 창이 떠요.</div><div class="pop-btns"><button class="btn sub" type="button" onclick="unpop()">닫기</button></div>'); }
     }
     function popOk(r) {
         pop(`<div class="pop-ic">✓</div>
           <div class="pop-t">저금 확인 완료!</div>
           <div class="pop-s">시트에 잘 적힌 것까지 확인했어요 💕</div>
-          <div class="pop-d"><b>${esc(r.code)}</b><br>🎀 마스킹테이프 전체 <b>${md(r.tape)}</b>까지 (${dLeft(r.tape)})<br>🍬 달콤패턴 전체 <b>${md(r.pat)}</b>까지 (${dLeft(r.pat)})<br>${r.count}번째 저금</div>
-          <div class="pop-s" style="font-size:12.5px">다이어리를 쓰고 있으면 1분 안에 🎁 선물 도착 창이 떠요</div>
+          <div class="pop-d"><b>${esc(r.code)}</b><br>🎀 마스킹테이프 전체 <b>${md(r.tape)}</b>까지 (${dLeft(r.tape)})${addLine(r.tfrom, r.add, r.tape)}<br>🍬 달콤패턴 전체 <b>${md(r.pat)}</b>까지 (${dLeft(r.pat)})${addLine(r.pfrom, r.add, r.pat)}<br>${r.count}번째 저금</div>
+          <div class="pop-s" style="font-size:12.5px">${SENT}</div>
           <div class="pop-btns"><button class="btn" type="button" onclick="unpop()">닫기</button></div>`);
     }
-    function popBad(i, rid, r) {
+    function popBad(code, rid, r) {
         const why = !r.ok && r.error === 'key' ? '관리 열쇠가 맞지 않아요.' : !r.ok && r.error === 'none' ? '그 저금 코드를 시트에서 찾지 못했어요.'
             : r.ok ? '저금 확인은 보냈는데, 시트에서 확인하지 못했어요.' : '인터넷이 불안해서 서버에 닿지 못했어요.';
-        st.retry = { i, rid };
+        st.retry = { code, rid };
         pop(`<div class="pop-ic bad">!</div>
           <div class="pop-t">아직 확인되지 않았어요</div>
           <div class="pop-s">${why}<br><b>다시 시도</b>를 눌러 주세요.<br><small>같은 요청으로 다시 보내서, 여러 번 눌러도 30일이 두 번 늘지 않아요.</small></div>
           <div class="pop-btns">${r.error === 'none' || r.error === 'key' ? '' : '<button class="btn" type="button" onclick="retry()">다시 시도</button>'}
             <button class="btn sub" type="button" onclick="unpop()">닫기</button></div>`);
     }
-    function retry() { const x = st.retry; unpop(); if (x) save(x.i, x.rid); }
+    function retry() { const x = st.retry; unpop(); if (x) saveCode(x.code, x.rid); }
     function pop(html) { $('pop').innerHTML = `<div class="pop-box">${html}</div>`; $('pop').hidden = false; }
     function unpop() { $('pop').hidden = true; $('pop').innerHTML = ''; }
 
-    /* ---------- 🎁 아이템 주기 : 고르기 → 확인 → 보내기 → 결과 ---------- */
+    /* ---------- 🛟 앱이 닫혔다 열렸을 때 : 끝나지 않은 보내기가 있으면 이어서 확인 ---------- */
+    function resumeCheck() {
+        const p = pendGet(); if (!p || !st.key || !$('pop').hidden) return;
+        pop(`<div class="pop-ic bad">!</div><div class="pop-t">끝나지 않은 ${p.kind === 'save' ? '저금 확인' : '선물'}이 있어요</div>
+          <div class="pop-s"><b>${esc(p.code)}</b> 에게 보내던 중에 앱이 닫혔어요.<br>다시 확인하면 이미 들어간 건 두 번 들어가지 않아요.</div>
+          <div class="pop-btns"><button class="btn" type="button" onclick="resumeGo()">이어서 확인하기</button>
+            <button class="btn sub" type="button" onclick="resumeDrop()">지우기 (보내지 않았어요)</button></div>`);
+    }
+    function resumeGo() {
+        const p = pendGet(); unpop(); if (!p) return;
+        if (p.kind === 'save') return saveCode(p.code, p.rid);
+        if (p.gv) { Object.assign(gv, p.gv, { busy: false }); giveSend(); }
+    }
+    function resumeDrop() { pendClear(); unpop(); }
+
+    /* ---------- 🎁 아이템 주기 · 🖼️ 배경화면 주기 : 고르기 → 확인 → 보내기 → 결과 ---------- */
     const STICKERS = [['s3', '튤립 속 아기 토끼'], ['s7', '벚꽃 고양이'], ['s15', '꽃바구니 곰돌이'], ['s30', '딸기모자 햄스터'], ['s50', '꽃 양'],
         ['s100', '꽃 화관 토끼 공주'], ['c7', '방긋 해바라기'], ['c14', '무지개 구름이'], ['c21', '하트 풍선 병아리'], ['cfull', '딸기 케이크']];
     const TAPES = [['dot', '딸기우유 도트'], ['mint', '민트 사선'], ['gingham', '라벤더 깅엄'], ['heart', '레몬 하트'], ['cloud', '하늘 구름'], ['flower', '복숭아 꽃'], ['star', '밤하늘 별'], ['cherry', '체리 체리'], ['wave', '바다 물결'], ['rainbow', '무지개 줄무늬'], ['stripe', '캔디 줄무늬'], ['kraft', '크라프트 바느질'], ['grid', '모눈 투명'], ['lace', '화이트 레이스'], ['love', '러블리 글씨'], ['coral', '코랄 단색']];      // js/tape.js 의 TAPES (id · 이름)
     const PATS = [['flower-gingham', '블루 플라워 깅엄'], ['tomato', '토마토 피크닉'], ['tea-quilt', '찻잔 퀼트'], ['meadow', '물망초 들판']];      // js/patterns.js 의 달콤패턴(tier 'paid') (id · 이름)
     const DAY_CHIPS = [7, 14, 30, 60, 90];
-    const gv = { i: -1, coins: 0, tsel: [], tdays: 30, psel: [], pdays: 30, sdays: 30, sel: [], wsel: [], rid: '', busy: false };
+    const gv = { i: -1, code: '', mode: 'item', coins: 0, tsel: [], tdays: 30, psel: [], pdays: 30, sdays: 30, sel: [], wsel: [], rid: '', busy: false };
     let WALLS = null;                                          // 🖼️ 배경화면 목록 [{ no, name, kind }] (다이어리에 보이는 것 · 서버 ?action=walls)
     const wallLabel = n => { const w = (WALLS || []).find(x => x.no === n), pc = n >= 1000, num = pc ? n - 1000 : n; return `${pc ? '💻' : '📱'} ${num}번${w ? ' ' + w.name : ''}`; };
     async function wallsLoad() {
@@ -272,19 +336,19 @@
     }
     const IN = { tdays: 'gTd', pdays: 'gPd', sdays: 'gSd' }, CH = { tdays: 'chipsT', pdays: 'chipsP', sdays: 'chipsSd' };
     const num = (id, max) => Math.max(0, Math.min(max, Math.floor(+($(id) && $(id).value) || 0)));
-    async function giveOpen(i) {
+    async function giveOpen(i, mode) {
         if (!st.list[i]) return;
-        Object.assign(gv, { i, coins: 0, tsel: [], tdays: 30, psel: [], pdays: 30, sdays: 30, sel: [], wsel: [], rid: '', busy: false });
-        if (!WALLS) { pop('<div class="state"><span class="spin" style="border-color:rgba(194,69,111,.25);border-top-color:var(--deep)"></span><br><br>배경화면 목록을 불러오는 중…</div>'); await wallsLoad(); }
+        Object.assign(gv, { i, code: st.list[i].code, mode: mode || 'item', coins: 0, tsel: [], tdays: 30, psel: [], pdays: 30, sdays: 30, sel: [], wsel: [], rid: '', busy: false });
+        if (gv.mode === 'wall' && !WALLS) { pop('<div class="state"><span class="spin" style="border-color:rgba(194,69,111,.25);border-top-color:var(--deep)"></span><br><br>배경화면 목록을 불러오는 중…</div>'); await wallsLoad(); }
         giveForm();
     }
     function giveForm() {
-        const m = st.list[gv.i];
+        const m = st.list[gv.i] || { code: gv.code }, wall = gv.mode === 'wall';
         const dayChips = (key) => DAY_CHIPS.map(d => `<button type="button" class="chip ${gv[key] === d ? 'on' : ''}" onclick="gSet('${key}', ${d})">${d}일</button>`).join('');
         const pick = (kind, list) => ['all'].concat(list.map(x => x[0])).map(id => `<button type="button" class="chip st ${gv[kind].includes(id) ? 'on' : ''}" onclick="gPick('${kind}', '${id}')">${id === 'all' ? '🌈 전체' : esc(nameOf(list, id))}</button>`).join('');
         const days = (key, inId, chipId) => `<div class="g-num" style="margin-top:10px"><input id="${inId}" type="number" inputmode="numeric" min="1" max="365" value="${gv[key] || ''}" placeholder="30" oninput="gRead(); gChips('${key}')"><span>일 동안</span></div>
             <div class="chips" id="${chipId}">${dayChips(key)}</div>`;
-        pop(`<div class="g-who">🎁 아이템 주기<b>${esc(m.code)}</b></div>
+        const items = `
           <div class="g-row"><h4>🪙 코인 <small>랜덤박스에서 쓰는 코인</small></h4>
             <div class="g-num"><input id="gCoins" type="number" inputmode="numeric" min="0" max="99" value="${gv.coins || ''}" placeholder="0" oninput="gRead()"><span>개</span></div></div>
           <div class="g-row"><h4>🎀 마스킹테이프 <small>전체 또는 골라서 · 안 줄 거면 비워 두세요</small></h4>
@@ -294,23 +358,27 @@
           <div class="g-row"><h4>🎁 캡슐 스티커 <small>여러 개 골라도 돼요</small></h4>
             <div class="chips">${STICKERS.map(([id, nm]) => `<button type="button" class="chip st ${gv.sel.includes(id) ? 'on' : ''}" onclick="gPick('sel', '${id}')">${esc(nm)}</button>`).join('')}</div>
             ${days('sdays', 'gSd', 'chipsSd')}</div>
+          <p class="hint" style="margin:0 2px 10px">⏱ 기간은 <b>원래 남은 기간 뒤에 더해져요</b> (이미 가진 건 늘어나요)</p>`;
+        const walls = `
           <div class="g-row"><h4>🖼️ 배경화면 <small>골라서 주면 드라이브 링크가 자동으로 가요</small></h4>
             ${WALLS === null ? '<p class="hint" style="margin:0">목록을 못 불러왔어요 (인터넷 확인 후 닫고 다시 열어 주세요)</p>'
               : !WALLS.length ? '<p class="hint" style="margin:0">다이어리에 보이는 배경화면이 아직 없어요</p>'
               : `<div class="chips" style="margin-top:0">${WALLS.map(w => `<button type="button" class="chip st ${gv.wsel.includes(w.no) ? 'on' : ''} ${(m.walls || []).includes(w.no) ? 'own' : ''}" onclick="gWall(${w.no})">${w.kind === 'pc' ? '💻' : '📱'} ${w.n || w.no}. ${esc(w.name)}${(m.walls || []).includes(w.no) ? ' ✓' : ''}</button>`).join('')}</div>
-                 <p class="hint" style="margin:8px 0 0">✓ = 이미 준 배경화면 (다시 주면 링크 창이 한 번 더 떠요)</p>`}</div>
+                 <p class="hint" style="margin:8px 0 0">✓ = 이미 준 배경화면 (다시 주면 링크가 도착 창에 한 번 더 떠요)</p>`}</div>`;
+        pop(`<div class="g-who">${wall ? '🖼️ 배경화면 주기' : '🎁 아이템 주기'}<b>${esc(m.code)}</b></div>
+          ${wall ? walls : items}
           <p class="err" id="gErr" hidden></p>
-          <div class="pop-btns"><button class="btn gift" type="button" onclick="giveConfirm()">다음 · 확인하기</button>
+          <div class="pop-btns"><button class="btn ${wall ? 'wall' : 'gift'}" type="button" onclick="giveConfirm()">다음 · 확인하기</button>
             <button class="btn sub" type="button" onclick="unpop()">닫기</button></div>`);
         document.querySelector('.pop-box').classList.add('wide');
     }
-    function gRead() { gv.coins = num('gCoins', 99); gv.tdays = num('gTd', 365); gv.pdays = num('gPd', 365); gv.sdays = num('gSd', 365); }
+    function gRead() { if (gv.mode === 'wall') return; gv.coins = num('gCoins', 99); gv.tdays = num('gTd', 365); gv.pdays = num('gPd', 365); gv.sdays = num('gSd', 365); }
     function gSet(key, d) { gRead(); gv[key] = d; $(IN[key]).value = d; gChips(key); }
     function gChips(key) {                                     // 눌린 기간 칸 표시만 다시 (입력 칸은 그대로)
         gRead();
         [...$(CH[key]).children].forEach((b, k) => b.classList.toggle('on', gv[key] === DAY_CHIPS[k]));
     }
-    function gWall(no) { gRead(); const a = gv.wsel, k = a.indexOf(no); if (k >= 0) a.splice(k, 1); else a.push(no); giveForm(); }
+    function gWall(no) { const a = gv.wsel, k = a.indexOf(no); if (k >= 0) a.splice(k, 1); else a.push(no); giveForm(); }
     function gPick(kind, id) {                                 // 🌈 전체를 고르면 개별은 풀리고, 개별을 고르면 전체가 풀려요
         gRead();
         const a = gv[kind], k = a.indexOf(id);
@@ -322,61 +390,73 @@
     const gNames = (ids, list) => ids.map(id => id === 'all' ? '전체' : esc(nameOf(list, id))).join(' · ');
     function giveSummary() {
         const rows = [];
+        if (gv.mode === 'wall') {
+            if (gv.wsel.length) rows.push(`🖼️ 배경화면 <b>${gv.wsel.length}개</b><br><small>${gv.wsel.slice().sort((a, b) => a - b).map(n => esc(wallLabel(n))).join(' · ')}</small>`);
+            return rows;
+        }
         if (gv.coins) rows.push(`🪙 코인 <b>${gv.coins}개</b>`);
         if (gv.tsel.length) rows.push(`🎀 마스킹테이프 <b>${gv.tsel[0] === 'all' ? '전체' : gv.tsel.length + '개'}</b> · <b>${gv.tdays}일</b>${gv.tsel[0] === 'all' ? '' : `<br><small>${gNames(gv.tsel, TAPES)}</small>`}`);
         if (gv.psel.length) rows.push(`🍬 달콤패턴 <b>${gv.psel[0] === 'all' ? '전체' : gv.psel.length + '개'}</b> · <b>${gv.pdays}일</b>${gv.psel[0] === 'all' ? '' : `<br><small>${gNames(gv.psel, PATS)}</small>`}`);
         if (gv.sel.length) rows.push(`🎁 캡슐 스티커 <b>${gv.sel.length}개</b> · 각 <b>${gv.sdays}일</b><br><small>${gv.sel.map(id => esc(STICKERS.find(x => x[0] === id)[1])).join(' · ')}</small>`);
-        if (gv.wsel.length) rows.push(`🖼️ 배경화면 <b>${gv.wsel.length}개</b><br><small>${gv.wsel.slice().sort((a, b) => a - b).map(n => esc(wallLabel(n))).join(' · ')}</small>`);
         return rows;
     }
     function giveConfirm() {
         gRead();
-        const bad = (!gv.coins && !gv.tsel.length && !gv.psel.length && !gv.sel.length && !gv.wsel.length) ? '줄 아이템을 하나 이상 골라 주세요'
+        const wall = gv.mode === 'wall';
+        const bad = wall ? (!gv.wsel.length ? '줄 배경화면을 하나 이상 골라 주세요' : '')
+            : (!gv.coins && !gv.tsel.length && !gv.psel.length && !gv.sel.length) ? '줄 아이템을 하나 이상 골라 주세요'
             : (gv.tsel.length && gv.tdays < 1) ? '마스킹테이프 기간(일)을 적어 주세요'
             : (gv.psel.length && gv.pdays < 1) ? '달콤패턴 기간(일)을 적어 주세요'
             : (gv.sel.length && gv.sdays < 1) ? '스티커 기간(일)을 적어 주세요' : '';
         if (bad) { $('gErr').textContent = bad; $('gErr').hidden = false; return; }
-        const m = st.list[gv.i];
         gv.rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);       // 이 선물의 요청 번호 (다시 보내도 한 번만)
         pop(`<div class="pop-t" style="text-align:center">이렇게 줄까요?</div>
-          <div class="g-sum"><b>${esc(m.code)}</b> 에게<br>${giveSummary().join('<br>')}</div>
-          <div class="pop-btns"><button class="btn gift" type="button" onclick="giveSend()">🎁 보내기</button>
+          <div class="g-sum"><b>${esc(gv.code)}</b> 에게<br>${giveSummary().join('<br>')}</div>
+          <div class="pop-btns"><button class="btn ${wall ? 'wall' : 'gift'}" type="button" onclick="giveSend()">${wall ? '🖼️' : '🎁'} 보내기</button>
             <button class="btn sub" type="button" onclick="giveForm()">← 고치기</button></div>`);
     }
     async function giveSend() {
         if (gv.busy) return;
         gv.busy = true;
-        const m = st.list[gv.i];
+        const code = gv.code, wall = gv.mode === 'wall';
+        pendSet({ kind: 'give', code, gv: Object.assign({}, gv, { busy: false }) });       // 결과 창이 뜰 때까지 지우지 않아요 (앱이 닫혀도 이어서 확인)
         pop(`<div class="state"><span class="spin" style="border-color:rgba(194,69,111,.25);border-top-color:var(--deep)"></span><br><br>선물을 보내는 중…</div>`);
-        const r = await api({ action: 'admin_give', code: m.code, rid: gv.rid, coins: gv.coins, tapes: gv.tsel, tdays: gv.tdays, pats: gv.psel, pdays: gv.pdays, stickers: gv.sel, sdays: gv.sdays, walls: gv.wsel }, 4, 45000);   // 같은 rid 라 몇 번 보내도 한 번만
-        let ok = !!r.ok;
-        if (ok && (gv.tsel.length || gv.psel.length)) {   // 🎀 · 🍬 는 시트를 다시 읽어서 맞는지 확인
-            const f = await api({ action: 'admin_find', q: m.code }, 3);
-            const now = f.ok ? (f.list || []).find(x => x.code === m.code) : null;
-            if (now) st.list[gv.i] = Object.assign({}, st.list[gv.i], now);
-            const same = (all, one, res) => !res || ((!res.all || all === res.all) && Object.keys(res.ids || {}).every(id => (one || {})[id] === res.ids[id]));
-            ok = !!now && same(now && now.tape, now && now.tp, r.tape) && same(now && now.pat, now && now.pp, r.pat);
-        }
-        if (ok && gv.wsel.length) {                       // 🖼️ 배경화면도 시트(배경화면 지급 탭)를 다시 읽어서 맞는지 확인
-            const f = await api({ action: 'admin_find', q: m.code }, 3);
-            const now = f.ok ? (f.list || []).find(x => x.code === m.code) : null;
-            if (now) st.list[gv.i] = Object.assign({}, st.list[gv.i], now);
-            ok = !!now && gv.wsel.every(n => (now.walls || []).includes(n));
-        }
+        const body = wall ? { walls: gv.wsel } : { coins: gv.coins, tapes: gv.tsel, tdays: gv.tdays, pats: gv.psel, pdays: gv.pdays, stickers: gv.sel, sdays: gv.sdays };
+        let r = { ok: false, error: 'network' }, ok = false;
+        try {
+            r = await api(Object.assign({ action: 'admin_give', code, rid: gv.rid }, body), 4, 45000);   // 같은 rid 라 몇 번 보내도 한 번만
+            ok = !!r.ok;
+            const reread = async () => { const f = await api({ action: 'admin_find', q: code }, 3); const now = f.ok ? (f.list || []).find(x => x.code === code) : null; const k = st.list.findIndex(x => x.code === code); if (now && k >= 0) st.list[k] = Object.assign({}, st.list[k], now); return now; };
+            if (ok && !wall && (gv.tsel.length || gv.psel.length)) {   // 🎀 · 🍬 는 시트를 다시 읽어서 맞는지 확인
+                const now = await reread();
+                const same = (all, one, res) => !res || ((!res.all || all === res.all) && Object.keys(res.ids || {}).every(id => (one || {})[id] === res.ids[id]));
+                ok = !!now && same(now.tape, now.tp, r.tape) && same(now.pat, now.pp, r.pat);
+            }
+            if (ok && wall) {                                          // 🖼️ 배경화면도 시트(배경화면 지급 탭)를 다시 읽어서 맞는지 확인
+                const now = await reread();
+                ok = !!now && gv.wsel.every(n => (now.walls || []).includes(n));
+            }
+        } catch (e) { ok = false; }
         gv.busy = false;
-        ok ? giveOk(r) : giveBad(r);
-        render();
+        if (ok || ['none', 'key', 'setup', 'bad', 'nofolder'].includes(r.error)) pendClear();   // 처리됐거나 처음부터 안 되는 건 기록을 지워요 · 불안한 건 남겨 둬요
+        try { ok ? giveOk(r) : giveBad(r); render(); }
+        catch (e) { pop('<div class="pop-ic bad">!</div><div class="pop-t">결과를 보여 주지 못했어요</div><div class="pop-s">앱을 다시 열면 \'이어서 확인하기\' 창이 떠요.</div><div class="pop-btns"><button class="btn sub" type="button" onclick="unpop()">닫기</button></div>'); }
     }
-    function passDone(ic, res, list) {                          // 받은 디자인마다 끝나는 날
+    function passDone(ic, res, list, days) {                    // 받은 디자인마다 끝나는 날 + '원래 + 새 기간'
         if (!res) return '';
-        return (res.all ? [`<br>${ic} 🌈 전체 <b>${md(res.all)}</b>까지 (${dLeft(res.all)})`] : [])
-            .concat(Object.keys(res.ids || {}).map(id => `<br>${ic} ${esc(nameOf(list, id))} <b>${md(res.ids[id])}</b>까지 (${dLeft(res.ids[id])})`)).join('');
+        return (res.all ? [`<br>${ic} 🌈 전체 <b>${md(res.all)}</b>까지 (${dLeft(res.all)})${addLine(res.allFrom, days, res.all)}`] : [])
+            .concat(Object.keys(res.ids || {}).map(id => `<br>${ic} ${esc(nameOf(list, id))} <b>${md(res.ids[id])}</b>까지 (${dLeft(res.ids[id])})${addLine((res.from || {})[id], days, res.ids[id])}`)).join('');
+    }
+    function stickDone(r) {                                     // 🎁 스티커마다 끝나는 날 · 🪙 코인 (더한 개수 → 지금 개수)
+        const got = r.got || {};
+        return Object.keys(got).map(id => `<br>🎁 ${esc((STICKERS.find(x => x[0] === id) || [id, id])[1])} <b>${md(got[id].until)}</b>까지 (${dLeft(got[id].until)})${addLine(got[id].from, r.sdays, got[id].until)}`).join('');
     }
     function giveOk(r) {
+        const wall = gv.mode === 'wall';
         pop(`<div class="pop-ic">✓</div><div class="pop-t" style="text-align:center">선물 완료!</div>
           <div class="pop-d"><b>${esc(r.code)}</b><br>${giveSummary().join('<br>')}
-            ${r.coins != null ? `<br>지금 코인 <b>${r.coins}개</b>` : ''}${passDone('🎀', r.tape, TAPES)}${passDone('🍬', r.pat, PATS)}</div>
-          <div class="pop-s" style="font-size:12.5px;text-align:center">다이어리를 쓰고 있으면 1분 안에 🎁 선물 도착 창이 떠요${gv.wsel.length ? '<br>🖼️ 배경화면은 창에 링크가 붙어 있고 · 📱 배경화면 → 받기 에서도 볼 수 있어요' : ''}${gv.coins || gv.sel.length ? '<br>🪙 코인 · 🎁 스티커는 랜덤박스 · 캡슐 스티커 칸을 열면 보여요' : ''}</div>
+            ${!wall && r.coins != null ? `<br>🪙 코인 <b>+${r.added || gv.coins}개</b> → 지금 <b>${r.coins}개</b>` : ''}${wall ? '' : passDone('🎀', r.tape, TAPES, gv.tdays) + passDone('🍬', r.pat, PATS, gv.pdays) + stickDone(r)}</div>
+          <div class="pop-s" style="font-size:12.5px;text-align:center">${SENT}${wall ? '<br>🖼️ 배경화면은 알림 창에 링크가 붙어 있고 · 📱 배경화면 → 받기 에서도 볼 수 있어요' : ''}</div>
           <div class="pop-btns"><button class="btn" type="button" onclick="unpop()">닫기</button></div>`);
     }
     function giveBad(r) {

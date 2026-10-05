@@ -84,7 +84,7 @@
             if (btn) capsWelcomeShow();
             const mine = capsPasses().map(p => ({ k: capsList().find(x => x.id === p.id), left: capsLeft(p.id) })).filter(x => x.k);
             grid.innerHTML = (mine.length
-                ? mine.map(({ k, left }) => `<button type="button" class="cs-it" onclick="capsStickerAdd('${k.id}')"><img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small><i>${left ? 'D-' + left : 'D-day'}</i></button>`).join('')
+                ? mine.map(({ k, left }) => `<button type="button" class="cs-it" onclick="capsStickerAdd('${k.id}')">${typeof nwChip === 'function' ? nwChip('caps', k.id) : ''}<img src="${capsUrl(k)}" alt="${k.name}"><small>${k.name}</small><i>${left ? 'D-' + left : 'D-day'}</i></button>`).join('')
                 : '<div class="cs-empty">🎁 아직 캡슐 스티커가 없어요</div>') + capsGuide();
             if (!fresh && gcUseDrive()) gcApi('status').then(r => {                   // 서버의 선물권으로 맞추기
                 if (!r.ok) return; capsSet(r.passes);

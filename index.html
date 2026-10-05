@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261005-159">
+    <link rel="stylesheet" href="css/style.css?v=20261005-160">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -38,7 +38,7 @@
 
     <!-- 상단 컨트롤 툴바 -->
     <div class="toolbar">
-        <button class="btn" onclick="openModal('stickerModal')">🎨 스티커</button>
+        <button class="btn" data-nw-any="tape,caps" onclick="openModal('stickerModal')">🎨 스티커</button>
         <button class="btn" onclick="addText()">✏ 글쓰기</button>
         <button class="btn" onclick="window.openDraw ? openDraw() : comingSoon('🖍️ 펜')">🖍️ 펜</button>
         <button class="btn" onclick="triggerImageUpload()">🖼 이미지</button>
@@ -47,9 +47,9 @@
         <button class="btn" onclick="openLayerMenu(this)">↕️ 순서</button>
         <button class="btn" onclick="deleteSelected()">🗑️ 삭제</button>
         <button class="btn" onclick="openSaveChooser()">💾 저장</button>
-        <button class="btn" onclick="openModal('skinModal')">👗 스킨</button>
+        <button class="btn" data-nw-any="pat" onclick="openModal('skinModal')">👗 스킨</button>
         <button class="btn" onclick="window.openBgm && openBgm()">🎵 배경음악</button>
-        <button class="btn" onclick="openModal('serviceModal')">☕ 카페</button>
+        <button class="btn" data-nw-any="coin,wall" onclick="openModal('serviceModal')">☕ 카페</button>
         <button class="btn" onclick="openSettingsMenu()">⚙ 설정</button>
     </div>
 
@@ -171,9 +171,9 @@
             <div class="modal-title">전체 이모지 스티커 목록</div>
             
             <div class="sticker-categories" id="stickerCategories">
-                <button class="cat-btn cs-cat" onclick="window.loadCapsStickers ? loadCapsStickers(this) : 0">🎁 캡슐 스티커</button>
+                <button class="cat-btn cs-cat" data-nw="caps" onclick="window.loadCapsStickers ? loadCapsStickers(this) : 0">🎁 캡슐 스티커</button>
                 <button class="cat-btn sm-cat" onclick="window.loadMyStickers ? loadMyStickers(this) : 0">✂️ 내 스티커</button>
-                <button class="cat-btn tp-cat tape-only" onclick="loadTapes(this)">🎀 마스킹테이프</button>
+                <button class="cat-btn tp-cat tape-only" data-nw="tape" onclick="loadTapes(this)">🎀 마스킹테이프</button>
                 <button class="cat-btn ss-cat" id="seasonTab" onclick="loadSeasonStickers(this)" hidden>🌸 계절 스티커</button>
                 <button class="cat-btn active" onclick="loadEmojiCategory('faces', this)">😀 표정/감정</button>
                 <button class="cat-btn" onclick="loadEmojiCategory('animals', this)">🐱 동물/자연</button>
@@ -204,7 +204,7 @@
             <div class="skin-section-title">🌈 배경 패턴 고르기</div>
             <div class="service-grid">
                 <button class="btn service-btn" onclick="openPatternList('free')"><span class="service-icon">☁️</span>말랑패턴</button>
-                <button class="btn service-btn pat-only" onclick="openPatternList('paid')"><span class="service-icon">🍬</span>달콤패턴</button>
+                <button class="btn service-btn pat-only" data-nw="pat" onclick="openPatternList('paid')"><span class="service-icon">🍬</span>달콤패턴</button>
                 <button class="btn service-btn" onclick="openPatternList('my')"><span class="service-icon">📂</span>내 패턴</button>
             </div>
 
@@ -556,14 +556,14 @@
             <div class="modal-title mt-bar"><button class="mt-btn mt-back mt-none" type="button" id="svcBack" onclick="svcShowCats()" aria-label="카페로">←</button><span class="mt-text" id="svcTitle">☕ 카페</span><button class="mt-btn mt-x" type="button" onclick="closeModal('serviceModal')" aria-label="닫기">✕</button></div>
             <!-- 1단계 : 카테고리 고르기 -->
             <div class="svc-cats" id="svcCats">
-                <button class="svc-cat" type="button" id="svcCatDaily" onclick="svcOpenCat('daily')"><span class="svc-cat-icon">🌱</span><b>매일</b><small>매일 들르면 좋은 것</small><i>출석 도장판 · 오늘의 질문 · 오늘의 행운 · 랜덤박스 · 생리 달력 · D-day</i></button>
+                <button class="svc-cat" type="button" id="svcCatDaily" data-nw-any="coin" onclick="svcOpenCat('daily')"><span class="svc-cat-icon">🌱</span><b>매일</b><small>매일 들르면 좋은 것</small><i>출석 도장판 · 오늘의 질문 · 오늘의 행운 · 랜덤박스 · 생리 달력 · D-day</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('fortune')"><span class="svc-cat-icon">🔮</span><b>운세·마음</b><small>재미로 보는 운세</small><i>포춘카드 · 꿈해몽 · 토정비결 · 이름 궁합 · 심리테스트</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('make')"><span class="svc-cat-icon">🎨</span><b>만들기·꾸미기</b><small>다이어리에 붙이는 작품</small><i>인형방 · 포토부스 · 스티커 만들기 · 인형극</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('game')"><span class="svc-cat-icon">🕹️</span><b>게임</b><small>오락실 · 두뇌 게임</small><i>오락실 · 명예의 전당</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('watch')"><span class="svc-cat-icon">🎧</span><b>보고·듣기</b><small>음악 · 이야기 · 영상</small><i>음악듣기 · 팟캐스트 · 오디오북 · 만화방 · 달콤영상</i></button>
                 <button class="svc-cat" type="button" onclick="svcOpenCat('together')"><span class="svc-cat-icon">💌</span><b>함께하기</b><small>말랑이들과 나누기</small><i>익명 편지함 · 말랑달콤 모임방</i></button>
                 <button class="svc-cat svc-extra svc-pig" type="button" onclick="window.openPiggy ? openPiggy() : 0"><span class="svc-cat-icon">💗</span><b>말랑달콤 저금통</b><small>작은 마음, 달콤한 선물</small></button>
-                <button class="svc-cat svc-extra svc-wall" type="button" onclick="window.openWall ? openWall() : 0"><span class="svc-cat-icon"><svg class="wl-ico" viewBox="7 1 26 38" aria-hidden="true"><defs><linearGradient id="wlIcoG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2d6"/><stop offset=".5" stop-color="#d9c8ff"/><stop offset="1" stop-color="#bfe6ff"/></linearGradient><clipPath id="wlIcoC"><rect x="10.5" y="5.5" width="19" height="29" rx="3.5"/></clipPath></defs><rect x="8.5" y="2.5" width="23" height="35" rx="6" fill="#fff" stroke="#ff8fb1" stroke-width="2.2"/><g clip-path="url(#wlIcoC)"><rect class="wl-ico-sky" x="0" y="0" width="60" height="60" fill="url(#wlIcoG)"/><g class="wl-ico-cloud" fill="#fff"><circle cx="15" cy="27" r="3"/><circle cx="19" cy="25.5" r="3.6"/><circle cx="23" cy="27" r="3"/><rect x="15" y="27" width="8" height="3"/></g></g><path class="wl-ico-heart" d="M20 19.5 C15.5 16.5 16 12.5 18.3 12.5 C19.3 12.5 20 13.4 20 14 C20 13.4 20.7 12.5 21.7 12.5 C24 12.5 24.5 16.5 20 19.5Z" fill="#ff6b93"/><rect x="17" y="3.6" width="6" height="1.6" rx=".8" fill="#ffc2d6"/></svg></span><b>말랑달콤 배경화면</b><small>움직이는 배경화면</small></button>
+                <button class="svc-cat svc-extra svc-wall" type="button" data-nw="wall" onclick="window.openWall ? openWall() : 0"><span class="svc-cat-icon"><svg class="wl-ico" viewBox="7 1 26 38" aria-hidden="true"><defs><linearGradient id="wlIcoG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2d6"/><stop offset=".5" stop-color="#d9c8ff"/><stop offset="1" stop-color="#bfe6ff"/></linearGradient><clipPath id="wlIcoC"><rect x="10.5" y="5.5" width="19" height="29" rx="3.5"/></clipPath></defs><rect x="8.5" y="2.5" width="23" height="35" rx="6" fill="#fff" stroke="#ff8fb1" stroke-width="2.2"/><g clip-path="url(#wlIcoC)"><rect class="wl-ico-sky" x="0" y="0" width="60" height="60" fill="url(#wlIcoG)"/><g class="wl-ico-cloud" fill="#fff"><circle cx="15" cy="27" r="3"/><circle cx="19" cy="25.5" r="3.6"/><circle cx="23" cy="27" r="3"/><rect x="15" y="27" width="8" height="3"/></g></g><path class="wl-ico-heart" d="M20 19.5 C15.5 16.5 16 12.5 18.3 12.5 C19.3 12.5 20 13.4 20 14 C20 13.4 20.7 12.5 21.7 12.5 C24 12.5 24.5 16.5 20 19.5Z" fill="#ff6b93"/><rect x="17" y="3.6" width="6" height="1.6" rx=".8" fill="#ffc2d6"/></svg></span><b>말랑달콤 배경화면</b><small>움직이는 배경화면</small></button>
             </div>
             <!-- 2단계 : 카테고리 안에서 놀이 고르기 -->
             <div class="svc-panel" id="svcPanel-daily" hidden>
@@ -572,7 +572,7 @@
                     <button class="btn service-btn" id="svcBtnPlant" hidden onclick="window.openPlant ? openPlant() : comingSoon('🌷 화분 키우기')"><span class="service-icon">🌷</span>화분 키우기<small>일기 쓰고 물 주기</small></button>
                     <button class="btn service-btn" id="svcBtnQuestion" onclick="window.openQuestion ? openQuestion() : comingSoon('💬 오늘의 질문')"><span class="service-icon">💬</span>오늘의 질문<small>대답하고 일기에 남기기</small></button>
                     <button class="btn service-btn" id="svcBtnLuck" onclick="window.openLuck ? openLuck() : comingSoon('🍀 오늘의 행운')"><span class="service-icon">🍀</span>오늘의 행운<small>네잎클로버 찾기</small></button>
-                    <button class="btn service-btn" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스<small>코인으로 스티커 뽑기</small></button>
+                    <button class="btn service-btn" data-nw="coin" onclick="openRandomBox()"><span class="service-icon">🎁</span>랜덤박스<small>코인으로 스티커 뽑기</small></button>
                     <button class="btn service-btn" onclick="window.openCycle ? openCycle() : comingSoon('🩷 생리 달력')"><span class="service-icon">🩷</span>생리 달력<small>예정일 · 가임기</small></button>
                     <button class="btn service-btn" onclick="window.openDday ? openDday() : comingSoon('⏳ D-day')"><span class="service-icon">⏳</span>D-day<small>기다리는 날 세기</small></button>
                 </div>
@@ -683,68 +683,69 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261005-159"></script>
-    <script src="js/sound.js?v=20261005-159"></script>
-    <script src="js/app.js?v=20261005-159"></script>
-    <script src="js/page.js?v=20261005-159"></script>
-    <script src="js/elements.js?v=20261005-159"></script>
-    <script src="js/tapmenu.js?v=20261005-159"></script>
-    <script src="js/settings.js?v=20261005-159"></script>
-    <script src="js/patterns.js?v=20261005-159"></script>
+    <script src="js/drive.js?v=20261005-160"></script>
+    <script src="js/sound.js?v=20261005-160"></script>
+    <script src="js/app.js?v=20261005-160"></script>
+    <script src="js/page.js?v=20261005-160"></script>
+    <script src="js/elements.js?v=20261005-160"></script>
+    <script src="js/tapmenu.js?v=20261005-160"></script>
+    <script src="js/settings.js?v=20261005-160"></script>
+    <script src="js/patterns.js?v=20261005-160"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261005-159"></script>
-    <script src="js/skins.js?v=20261005-159"></script>
-    <script src="js/pattern-maker.js?v=20261005-159"></script>
-    <script src="js/doll-render.js?v=20261005-159"></script>
-    <script src="js/doll-store.js?v=20261005-159"></script>
-    <script src="js/doll-room.js?v=20261005-159"></script>
-    <script src="js/service.js?v=20261005-159"></script>
+    <script src="js/pattern-recipe.js?v=20261005-160"></script>
+    <script src="js/skins.js?v=20261005-160"></script>
+    <script src="js/pattern-maker.js?v=20261005-160"></script>
+    <script src="js/doll-render.js?v=20261005-160"></script>
+    <script src="js/doll-store.js?v=20261005-160"></script>
+    <script src="js/doll-room.js?v=20261005-160"></script>
+    <script src="js/service.js?v=20261005-160"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261005-159"></script>
-    <script src="js/presence.js?v=20261005-159"></script>
+    <script src="js/gacha.js?v=20261005-160"></script>
+    <script src="js/presence.js?v=20261005-160"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261005-159"></script>
+    <script src="js/bgm.js?v=20261005-160"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261005-159"></script>
+    <script src="js/fortune.js?v=20261005-160"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261005-159"></script>
-    <script src="js/hof.js?v=20261005-159"></script>
+    <script src="js/arcade.js?v=20261005-160"></script>
+    <script src="js/hof.js?v=20261005-160"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/ritual.js?v=20261005-159"></script>
-    <script src="js/dream.js?v=20261005-159"></script>
+    <script src="js/ritual.js?v=20261005-160"></script>
+    <script src="js/dream.js?v=20261005-160"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261005-159"></script>
-    <script src="js/plant.js?v=20261005-159"></script>
-    <script src="js/capsule-stickers.js?v=20261005-159"></script>
-    <script src="js/attend.js?v=20261005-159"></script>
-    <script src="js/luck.js?v=20261005-159"></script>
-    <script src="js/question-data.js?v=20261005-159"></script>
-    <script src="js/question.js?v=20261005-159"></script>
-    <script src="js/tape.js?v=20261005-159"></script>
-    <script src="js/paper.js?v=20261005-159"></script>
-    <script src="js/draw.js?v=20261005-159"></script>
-    <script src="js/frame.js?v=20261005-159"></script>
-    <script src="js/season-data.js?v=20261005-159"></script>
-    <script src="js/season.js?v=20261005-159"></script>
-    <script src="js/lock.js?v=20261005-159"></script>
-    <script src="js/cycle.js?v=20261005-159"></script>
-    <script src="js/month.js?v=20261005-159"></script>
-    <script src="js/stamp.js?v=20261005-159"></script>
-    <script src="js/search.js?v=20261005-159"></script>
-    <script src="js/dday.js?v=20261005-159"></script>
-    <script src="js/show.js?v=20261005-159"></script>
-    <script src="js/photobooth.js?v=20261005-159"></script>
-    <script src="js/stickermaker.js?v=20261005-159"></script>
-    <script src="js/namematch.js?v=20261005-159"></script>
-    <script src="js/psytest-data.js?v=20261005-159"></script>
-    <script src="js/psytest.js?v=20261005-159"></script>
-    <script src="js/letter.js?v=20261005-159"></script>
-    <script src="js/install.js?v=20261005-159"></script>
-    <script src="js/piggy.js?v=20261005-159"></script>
-    <script src="js/wall.js?v=20261005-159"></script>
+    <script src="js/tojeong.js?v=20261005-160"></script>
+    <script src="js/plant.js?v=20261005-160"></script>
+    <script src="js/capsule-stickers.js?v=20261005-160"></script>
+    <script src="js/attend.js?v=20261005-160"></script>
+    <script src="js/luck.js?v=20261005-160"></script>
+    <script src="js/question-data.js?v=20261005-160"></script>
+    <script src="js/question.js?v=20261005-160"></script>
+    <script src="js/tape.js?v=20261005-160"></script>
+    <script src="js/paper.js?v=20261005-160"></script>
+    <script src="js/draw.js?v=20261005-160"></script>
+    <script src="js/frame.js?v=20261005-160"></script>
+    <script src="js/season-data.js?v=20261005-160"></script>
+    <script src="js/season.js?v=20261005-160"></script>
+    <script src="js/lock.js?v=20261005-160"></script>
+    <script src="js/cycle.js?v=20261005-160"></script>
+    <script src="js/month.js?v=20261005-160"></script>
+    <script src="js/stamp.js?v=20261005-160"></script>
+    <script src="js/search.js?v=20261005-160"></script>
+    <script src="js/dday.js?v=20261005-160"></script>
+    <script src="js/show.js?v=20261005-160"></script>
+    <script src="js/photobooth.js?v=20261005-160"></script>
+    <script src="js/stickermaker.js?v=20261005-160"></script>
+    <script src="js/namematch.js?v=20261005-160"></script>
+    <script src="js/psytest-data.js?v=20261005-160"></script>
+    <script src="js/psytest.js?v=20261005-160"></script>
+    <script src="js/letter.js?v=20261005-160"></script>
+    <script src="js/install.js?v=20261005-160"></script>
+    <script src="js/piggy.js?v=20261005-160"></script>
+    <script src="js/wall.js?v=20261005-160"></script>
+    <script src="js/arrival.js?v=20261005-160"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

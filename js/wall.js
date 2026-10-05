@@ -3,7 +3,7 @@
    - 움직이는 배경화면(휴대폰 · PC)을 보여 주고, 말랑달콤 1:1 오픈채팅방에서 팔아요
        사용자 : 채팅방에 "배경화면 휴대폰 3번 말랑XXXX"(종류 + 번호 + 내 저금 코드)를 보내고 카카오페이로 송금
        주인   : 📱 저금 확인 앱 → 코드로 찾기 → 🎁 아이템 주기 → 🖼️ 배경화면 번호 선택 → 보내기 (자동)
-       → 서버가 드라이브 '배경화면N' 폴더 링크를 전해요 → 다이어리에 '배경화면이 도착했어요' 창(링크 포함) + 이 창의 '받기' 버튼에도 링크 (wlGift · wlLinkPop)
+       → 서버가 드라이브 '배경화면N' 폴더 링크를 전해요 → 다이어리의 '선물이 도착했어요' 창(js/arrival.js · 링크 포함) + 이 창의 '받기' 버튼에도 링크 (wlGift · wlLinkPop)
        받은 배경화면은 이 기기에 `malang_mywalls` 로 남겨 두고, 로그인할 때마다 서버 답(walls)으로 새로 맞춰요 (wlSetMine)
    - 목록 : '말랑달콤 사람들' 시트의 '배경화면' 탭 (말랑달콤사람들_앱스크립트.gs · 주소?action=walls · 로그인 없이 누구나)
        그림 · 미리보기 영상은 주인의 구글 드라이브에 있어요 (깃허브에는 올리지 않아요)
@@ -74,7 +74,7 @@
               ${wl.items === null ? '<p class="wl-empty">목록을 불러오지 못했어요.<br>잠시 후 다시 열어 주세요</p>'
                 : !items.length ? '<p class="wl-empty">🌸 곧 예쁜 배경화면이 찾아와요!<br>조금만 기다려 주세요</p>'
                 : `<div class="wl-grid ${wl.tab}">${items.map(w => `
-                  <div class="wl-card">
+                  <div class="wl-card">${wlMine[w.no] && typeof nwChip === 'function' ? nwChip('wall', w.no) : ''}
                     <button type="button" class="wl-pre wl-dev ${wl.tab}" onclick="wlView(${w.no})" aria-label="${wlEsc(w.name)} 크게 보기"><span class="wl-scr">
                       <img src="${wlImg(w.img, size)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, size)}'}"></span>
                     </button>
@@ -176,42 +176,33 @@
             if (JSON.stringify(m) === JSON.stringify(wlMine)) return;
             wlMine = m; wlMineSave(); wlRefresh();
         }
-        function wlGift(g) {                                  // 🎁 도착 신호 g.w = { 번호: [이름, 링크] } → 목록에 더하고 · 도착 창
+        function wlGift(g) {                                  // 🎁 도착 신호 g.w = { 번호: [이름, 링크] } → 받은 목록에 더하기 (알림 창은 js/arrival.js 가 한 창으로 보여 줘요)
             if (!g || typeof g !== 'object') return;
-            const got = [];
-            Object.keys(g).forEach(k => { const v = g[k], no = parseInt(k, 10); if (no > 0 && Array.isArray(v) && wlLinkOk(v[1])) { wlMine[no] = { n: String(v[0] || '').slice(0, 30), u: v[1] }; got.push(no); } });
-            if (!got.length) return;
-            wlMineSave(); wlRefresh();
-            wlLinkPop(got, true);
+            let got = 0;
+            Object.keys(g).forEach(k => { const v = g[k], no = parseInt(k, 10); if (no > 0 && Array.isArray(v) && wlLinkOk(v[1])) { wlMine[no] = { n: String(v[0] || '').slice(0, 30), u: v[1] }; got++; } });
+            if (got) { wlMineSave(); wlRefresh(); }
         }
-        function wlLinkPop(nos, arrived) {                    // 이쁜 링크 창 (arrived : 선물이 막 도착했을 때 · 아니면 '받기' 버튼에서)
+        function wlLinkPop(nos) {                             // 이쁜 링크 창 ('받기' 버튼에서 · 언제든 다시 볼 수 있어요)
             nos = (Array.isArray(nos) ? nos : [nos]).filter(n => wlMine[n]);
             if (!nos.length) return;
             const old = document.getElementById('wlLinkPop'); if (old) old.remove();
-            const hearts = Array.from({ length: 12 }, (_, i) => `<i style=\"--x:${Math.round(Math.cos(i / 12 * 6.283) * (60 + i % 3 * 18))}px;--y:${Math.round(-70 - Math.abs(Math.sin(i / 12 * 6.283)) * 60 - i % 4 * 10)}px;--d:${(i % 4) * .08}s\">${['💗', '✨', '💕', '⭐'][i % 4]}</i>`).join('');
             const short = u => u.replace(/^https:\/\//, '').replace(/\?.*$/, '');
             const el = document.createElement('div');
-            el.id = 'wlLinkPop'; el.className = 'gp-wrap wl-lp' + (arrived ? '' : ' calm');
+            el.id = 'wlLinkPop'; el.className = 'gp-wrap wl-lp calm';
             el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
             el.innerHTML = `
-              <div class=\"gp-card\">
-                <div class=\"gp-ribbon\">${arrived ? 'SPECIAL GIFT' : 'MY WALLPAPER'}</div>
-                ${arrived ? `<div class=\"gp-box\"><div class=\"gp-burst\">${hearts}</div>
-                  <svg viewBox=\"0 0 120 110\" aria-hidden=\"true\">
-                    <rect x=\"16\" y=\"50\" width=\"88\" height=\"56\" rx=\"8\" fill=\"#ff9fbb\"/><rect x=\"16\" y=\"50\" width=\"88\" height=\"12\" fill=\"#ff86a8\"/>
-                    <rect x=\"52\" y=\"50\" width=\"16\" height=\"56\" fill=\"#ffe08a\"/>
-                    <g class=\"gp-lid\"><rect x=\"8\" y=\"34\" width=\"104\" height=\"20\" rx=\"7\" fill=\"#ffb3c8\"/><rect x=\"52\" y=\"34\" width=\"16\" height=\"20\" fill=\"#ffe08a\"/>
-                      <path d=\"M60 34 C44 14 30 22 40 32 C46 37 56 35 60 34Z M60 34 C76 14 90 22 80 32 C74 37 64 35 60 34Z\" fill=\"#ffd54f\" stroke=\"#f2b400\" stroke-width=\"2\"/><circle cx=\"60\" cy=\"33\" r=\"5\" fill=\"#f2b400\"/></g>
-                  </svg></div>` : '<div class=\"wl-lp-ic\">📱</div>'}
-                <div class=\"gp-t\">${arrived ? '🖼️ 배경화면이 도착했어요!' : '🖼️ 내 배경화면 링크'}</div>
-                <p class=\"gp-s\">${arrived ? '구입해 주셔서 정말 정말 고마워요' : '아래 링크를 눌러 파일을 받아 주세요'}<br>링크를 누르면 <b>구글 드라이브</b>가 열려요</p>
-                <ul class=\"gp-list\">
+              <div class="gp-card">
+                <div class="gp-ribbon">MY WALLPAPER</div>
+                <div class="wl-lp-ic">📱</div>
+                <div class="gp-t">🖼️ 내 배경화면 링크</div>
+                <p class="gp-s">아래 링크를 눌러 파일을 받아 주세요<br>링크를 누르면 <b>구글 드라이브</b>가 열려요</p>
+                <ul class="gp-list">
                   ${nos.map(n => { const m = wlMine[n]; return `<li><span>${wlIsPc(n) ? '💻' : '📱'}</span><div><b>${wlEsc(m.n || '배경화면 ' + wlTag(n) + '번')}</b>
-                    <a class=\"wl-lp-url\" href=\"${wlEsc(m.u)}\" target=\"_blank\" rel=\"noopener\">${wlEsc(short(m.u))}</a>
-                    <div class=\"wl-lp-btns\"><button type=\"button\" class=\"btn wl-lp-open\" data-n=\"${n}\">🔗 링크 열기</button><button type=\"button\" class=\"btn wl-lp-copy\" data-n=\"${n}\">📋 복사</button></div></div></li>`; }).join('')}
+                    <a class="wl-lp-url" href="${wlEsc(m.u)}" target="_blank" rel="noopener">${wlEsc(short(m.u))}</a>
+                    <div class="wl-lp-btns"><button type="button" class="btn wl-lp-open" data-n="${n}">🔗 링크 열기</button><button type="button" class="btn wl-lp-copy" data-n="${n}">📋 복사</button></div></div></li>`; }).join('')}
                 </ul>
-                <div class=\"gp-until\">💡 이 링크는 <b>📱 말랑달콤 배경화면</b> 창에서 구입한 배경화면의 <b>받기</b> 버튼을 눌러도 언제든 다시 볼 수 있어요</div>
-                <button type=\"button\" class=\"btn btn-primary gp-close\">닫기</button>
+                <div class="gp-until">💡 이 링크는 <b>📱 말랑달콤 배경화면</b> 창에서 구입한 배경화면의 <b>받기</b> 버튼을 눌러도 언제든 다시 볼 수 있어요</div>
+                <button type="button" class="btn btn-primary gp-close">닫기</button>
               </div>`;
             const shut = () => { el.classList.add('out'); setTimeout(() => el.remove(), 260); };
             el.querySelector('.gp-close').onclick = shut;
@@ -223,7 +214,6 @@
             }; });
             document.body.appendChild(el);
             requestAnimationFrame(() => el.classList.add('on'));
-            if (arrived) { setTimeout(() => { if (typeof sndChime === 'function') sndChime(); }, 900); setTimeout(() => { if (typeof pigCoin === 'function') pigCoin(); }, 1100); }
         }
 
         async function openWall() {

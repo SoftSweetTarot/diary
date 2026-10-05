@@ -8,8 +8,7 @@
    - 저금 코드 : '말랑' + 4글자 · 처음 접속할 때 서버가 겹치지 않게 정해 줘요 (접속 신호의 답 · js/presence.js 의 pr.code)
        → 채팅에 적힌 코드로 누가 넣었는지 알아요
    - 선물이 열렸는지는 js/settings.js 의 tapeOn() · patOn() 이 알려 줘요 (🎀 · 🍬 끝나는 날은 따로 · 접속 신호의 답으로 받아요 : js/presence.js)
-   - 🎁 선물 도착 창 (pigGiftPop) : 주인이 체크하면 다이어리를 쓰는 중에 '선물이 도착했어요' 창이 떠요 · 닫기를 눌러야 닫혀요
-       신호는 js/presence.js 가 1분마다 물어봐서 받아요
+   - 🎁 선물 도착 창 : 🪙 · 🎀 · 🍬 · 🎁 · 🖼️ 를 한 창으로 보여 줘요 (js/arrival.js · 닫기를 눌러야 닫혀요) · 신호는 js/presence.js 가 받아 와요
    ※ 이 파일이 없으면 저금통 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
         /* 💬 말랑달콤 1:1 오픈채팅방 주소 : 다이어리 맨 위 폴더의 an.txt 에 적어요 (오픈채팅=https://open.kakao.com/o/…) */
@@ -230,52 +229,6 @@
             pig.phone = (typeof prDevice === 'function' ? prDevice() : '') === '휴대폰';
             pigLoadCode();
             pigLoadChat();
-        }
-
-        /* ---------- 🎁 선물 도착 창 : 상자가 통통 → 뚜껑이 퐁! → 하트가 둥실 (닫기를 눌러야 닫혀요) ---------- */
-        function pigGiftPop(g) {                              // g : { t: { all | 테이프id: [끝나는 날, 늘어남(1)] }, p: { all | 패턴id: [끝나는 날, 늘어남] } } (받은 것만 들어 있어요)
-            const old = document.getElementById('pigGiftPop'); if (old) old.remove();
-            const day = u => { const d = new Date(u + 'T00:00:00'); return isNaN(d) ? '' : `${d.getMonth() + 1}월 ${d.getDate()}일`; };
-            const items = [];
-            const add = (sig, ic, all, list) => Object.keys(sig && typeof sig === 'object' ? sig : {}).forEach(k => {
-                const v = sig[k]; if (!Array.isArray(v) || !/^\d{4}-\d{2}-\d{2}$/.test(v[0])) return;
-                const f = k === 'all' ? null : (list || []).find(x => x.id === k);
-                items.push({ ic, name: k === 'all' ? all : (f ? f.name : k), until: v[0], more: !!v[1], first: k === 'all' ? 0 : 1 });
-            });
-            add(g.t, '🎀', '마스킹테이프 전체', typeof TAPES !== 'undefined' ? TAPES : []);
-            add(g.p, '🍬', '달콤패턴 전체', typeof BG_PATTERNS !== 'undefined' ? BG_PATTERNS : []);
-            if (!items.length) return;
-            const more = items.every(x => x.more);
-            const where = [g.t ? '🎨 스티커 → 🎀 마스킹테이프 칸' : '', g.p ? '👗 스킨 → 🍬 달콤패턴 버튼' : ''].filter(Boolean).join(' · ');
-            const hearts = Array.from({ length: 12 }, (_, i) => `<i style="--x:${Math.round(Math.cos(i / 12 * 6.283) * (60 + i % 3 * 18))}px;--y:${Math.round(-70 - Math.abs(Math.sin(i / 12 * 6.283)) * 60 - i % 4 * 10)}px;--d:${(i % 4) * .08}s">${['💗', '✨', '💕', '⭐'][i % 4]}</i>`).join('');
-            const el = document.createElement('div');
-            el.id = 'pigGiftPop'; el.className = 'gp-wrap';
-            el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
-            el.innerHTML = `
-              <div class="gp-card">
-                <div class="gp-ribbon">${more ? '선물 기간이 늘어났어요' : 'SPECIAL GIFT'}</div>
-                <div class="gp-box">
-                  <div class="gp-burst">${hearts}</div>
-                  <svg viewBox="0 0 120 110" aria-hidden="true">
-                    <rect x="16" y="50" width="88" height="56" rx="8" fill="#ff9fbb"/><rect x="16" y="50" width="88" height="12" fill="#ff86a8"/>
-                    <rect x="52" y="50" width="16" height="56" fill="#ffe08a"/>
-                    <g class="gp-lid"><rect x="8" y="34" width="104" height="20" rx="7" fill="#ffb3c8"/><rect x="52" y="34" width="16" height="20" fill="#ffe08a"/>
-                      <path d="M60 34 C44 14 30 22 40 32 C46 37 56 35 60 34Z M60 34 C76 14 90 22 80 32 C74 37 64 35 60 34Z" fill="#ffd54f" stroke="#f2b400" stroke-width="2"/><circle cx="60" cy="33" r="5" fill="#f2b400"/></g>
-                  </svg>
-                </div>
-                <div class="gp-t">💝 선물이 도착했어요!</div>
-                <p class="gp-s">말랑달콤 저금통에 마음을 넣어 주셔서<br>정말 정말 고마워요</p>
-                <ul class="gp-list">
-                  ${items.map(x => `<li><span>${x.ic}</span><div><b>${x.name}${x.more ? ' · 기간이 늘어났어요' : ''}</b><small class="gp-dd">${day(x.until)}까지 · <em>${dLabel(giftLeft(x.until))}</em></small></div></li>`).join('')}
-                </ul>
-                <div class="gp-until">📍 다이어리 위쪽 <b>${where}</b> 에서 써 보세요 💕</div>
-                <button type="button" class="btn btn-primary gp-close">닫기</button>
-              </div>`;
-            el.querySelector('.gp-close').onclick = () => { el.classList.add('out'); setTimeout(() => el.remove(), 260); };
-            document.body.appendChild(el);
-            requestAnimationFrame(() => el.classList.add('on'));
-            setTimeout(() => { if (typeof sndChime === 'function') sndChime(); }, 900);   // 뚜껑이 열리는 순간
-            setTimeout(pigCoin, 1100);
         }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */

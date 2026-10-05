@@ -58,7 +58,7 @@
             const mine = TAPES.filter(t => tapeHas(t.id));
             document.getElementById('stickerGrid').innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>'
                 + (mine.length
-                    ? mine.map(t => `<button type="button" class="tp-item" onclick="addTape('${t.id}')"><span style="background-image:url(&quot;${tapeUrl(t)}&quot;)"></span><small>${t.name}</small><i>${dLabel(tapeLeft(t.id))}</i></button>`).join('')
+                    ? mine.map(t => `<button type="button" class="tp-item" onclick="addTape('${t.id}')">${typeof nwChip === 'function' ? nwChip('tape', t.id) : ''}<span style="background-image:url(&quot;${tapeUrl(t)}&quot;)"></span><small>${t.name}</small><i>${dLabel(tapeLeft(t.id))}</i></button>`).join('')
                     : '<div class="cs-empty">🎀 선물 받은 마스킹테이프가 아직 없어요</div>');
         }
         window.loadTapes = loadTapes;

@@ -279,7 +279,7 @@
                 inner.className = 'pat-swatch-inner';
                 paintPatternInto(inner, p);
                 sw.appendChild(inner);
-                if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '🍬'; sw.appendChild(b); const d = document.createElement('span'); d.className = 'pat-left'; d.textContent = dLabel(patLeft(p.id)); sw.appendChild(d); }
+                if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '🍬'; sw.appendChild(b); const d = document.createElement('span'); d.className = 'pat-left'; d.textContent = dLabel(patLeft(p.id)); sw.appendChild(d); if (typeof nwHas === 'function' && nwHas('pat', p.id)) { const nw = document.createElement('em'); nw.className = 'nw-chip'; nw.textContent = 'NEW'; sw.appendChild(nw); } }
                 if (bgPattern && bgPattern.id === p.id) { const c = document.createElement('span'); c.className = 'pat-check'; c.textContent = '✔ 사용 중'; sw.appendChild(c); }
                 const name = document.createElement('span');
                 name.className = 'pat-name';

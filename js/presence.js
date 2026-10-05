@@ -9,9 +9,10 @@
    - 보내는 건 구글 로그인 확인용 정보와 기기 종류(PC · 휴대폰 · 태블릿)뿐 (이메일 · 일기 내용은 보내지 않아요)
    - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물(🎀 · 🍬 전체 + 디자인별 끝나는 날) · 내 저금 코드를 받아요 → setGift (js/settings.js) · prCode (js/piggy.js)
    - 🖼️ 배경화면 : 로그인 신호의 답 walls 로 '내가 받은 배경화면'을 맞추고(wlSetMine) · 도착 신호 w 는 링크 창(wlGift)으로 보여 줘요 (js/wall.js)
-   - 🎁 선물 도착 : 주인이 '저금 확인 ☑' 을 체크하면 서버에 신호가 한 번 남아요 → 받는 순간 '선물이 도착했어요' 창 (js/piggy.js 의 pigGiftPop)
+   - 🎁 선물 도착 : 주인이 저금 확인 · 아이템 주기를 하면 서버에 도착 신호가 남아요 → 🪙 · 🎀 · 🍬 · 🎁 · 🖼️ 를 알림 창 하나로 보여 줘요 (js/arrival.js 의 arPush)
+       신호는 다이어리가 '받아서 저장했어요' 하고 알릴 때까지 서버에 남아 있어요 → 다이어리를 안 쓰는 동안 받은 선물도, 접속하면 바로 떠요
        다이어리를 보고 있는 동안 1분마다 살짝 물어봐요 (로그인 확인 없이 회원번호로 · 서버가 시트를 열지 않아서 아주 가벼워요)
-       다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간 바로 물어봐요
+       다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간(창을 다시 누르거나 인터넷이 다시 연결될 때도) 바로 물어봐요
    - 처음 온 사람이면(답의 first) 🎁 캡슐 스티커 첫 선물을 받아요 → capsWelcome (js/gacha.js)
    - 게스트는 보내지 않아요
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
@@ -29,17 +30,18 @@
         async function prHere() {
             if (!prOk()) return;
             pr.last = Date.now();
-            try { await ensureToken(); } catch (e) { return; }
+            try { await ensureToken(); } catch (e) { pr.last = Date.now() - PR_EVERY + 30000; return; }          // 못 닿으면 30초 뒤 다시 (3시간을 기다리면 선물을 늦게 받아요)
             try {
                 const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'here', token: drive.token, dev: prDevice() }) });
                 const j = await res.json();
+                if (!(j && j.ok)) pr.last = Date.now() - PR_EVERY + 30000;
                 if (j && j.ok && typeof setGift === 'function') setGift(j.tape, j.pat, j.tp, j.pp);
                 if (j && j.ok && typeof wlSetMine === 'function') wlSetMine(j.walls);          // 🖼️ 내가 받은 배경화면 (js/wall.js)
                 if (j && j.ok && j.me) pr.me = String(j.me);
                 if (j && j.ok && j.code) pr.code = String(j.code);
                 if (j && j.ok && j.gift) prGift(j.gift);
                 if (j && j.ok && j.first && typeof capsWelcome === 'function') capsWelcome();   // 🎁 처음 온 사람 → 캡슐 스티커 첫 선물 (js/gacha.js)
-            } catch (e) {}
+            } catch (e) { pr.last = Date.now() - PR_EVERY + 30000; }
         }
 
         /* 🎁 선물 도착 신호 물어보기 (가벼운 GET · 답 : { gift: { t: {…}, p: {…} } | '' }) */
@@ -47,20 +49,21 @@
             if (!pr.me || pr.gBusy || document.hidden || !prOk()) return;
             pr.gBusy = true; pr.gLast = Date.now();
             try {
-                const res = await fetch(MEMBER_API_URL + '?action=gift&u=' + encodeURIComponent(pr.me), { credentials: 'omit' });
+                const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);         // 응답이 안 오면 포기하고 다음에 다시 (영원히 기다리지 않아요)
+                const res = await fetch(MEMBER_API_URL + '?action=gift&u=' + encodeURIComponent(pr.me), { credentials: 'omit', signal: ctl.signal });
+                clearTimeout(tm);
                 const j = await res.json();
                 if (j && j.ok && j.gift) prGift(j.gift);
             } catch (e) {}
             pr.gBusy = false;
         }
-        function prGift(g) {                                  // g : { t: { all | 테이프id: [끝나는 날, 늘어남] }, p: { all | 패턴id: [끝나는 날, 늘어남] }, w: { 배경화면 번호: [이름, 드라이브 링크] } } (받은 것만 들어 있어요)
-            if (!g || typeof g !== 'object' || !(g.t && typeof g.t === 'object' || g.p && typeof g.p === 'object' || g.w && typeof g.w === 'object')) return;
-            if (typeof giftApply === 'function') giftApply(g);
-            if (typeof pigGiftPop === 'function') pigGiftPop(g);
-            if (g.w && typeof wlGift === 'function') wlGift(g.w);                  // 🖼️ 배경화면 도착 창 (js/wall.js)
+        function prGift(g) {                                  // g : { t · p · s : { all | 이름: [끝나는 날, 늘어남, 더한 일수] }, c: [더한 코인, 지금 코인], w: { 배경화면 번호: [이름, 링크] }, n: 신호 번호 } (받은 것만 들어 있어요)
+            if (typeof arPush === 'function') arPush(g);                           // 저장 → 서버에 '받았어요' → 도착 창 하나 (js/arrival.js)
         }
         setInterval(() => { if (Date.now() - pr.gLast >= PR_GIFT_EVERY) prGiftAsk(); }, 10000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pr.gLast >= 10000) prGiftAsk(); });   // 다이어리로 돌아오면 바로
+        window.addEventListener('focus', () => { if (Date.now() - pr.gLast >= 10000) prGiftAsk(); });
+        window.addEventListener('online', () => { if (!pr.me) prHere(); else prGiftAsk(); });                                       // 인터넷이 다시 연결되면 바로
         function prBye() {
             if (!prOk() || !pr.last || !drive.token) return;
             pr.last = 0;

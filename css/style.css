@@ -2345,3 +2345,20 @@
         .wl-lp.calm .gp-list li, .wl-lp.calm .gp-until, .wl-lp.calm .gp-close { animation-delay: .1s !important; }
         .wl-buy.own b { color: #2fa66b; font-size: 13px; }
         .wl-get.own { background: linear-gradient(160deg, #b79bff, #8f6bf0); border-color: #8f6bf0; color: #fff; }
+
+/* 🎁 선물 도착 창 하나 (js/arrival.js) · 🔔 NEW 표시 : 메뉴 버튼 → 안쪽 버튼 → 목록 안 디자인까지 이어져요 */
+.ar-pop .gp-list { max-height: 38vh; }
+.ar-pop .gp-list li { align-items: flex-start; }
+.ar-pop .gp-list li > div { min-width: 0; flex: 1; }
+.ar-pop .gp-s b { color: #c2456f; }
+.ar-pop .gp-dd { line-height: 1.55; margin-top: 2px; }
+.ar-pop .gp-dd b { display: inline; font-size: inherit; color: #c2456f; }
+.ar-pop .gp-dd + b { margin-top: 8px; }
+.ar-pop small.ar-where { margin-top: 6px; color: #8c6f7c; font-size: 11px; }
+.ar-go { margin-top: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12.5px; background: #fff0f5; border-color: #ffb3c8; color: #c2456f; }
+[data-nw].nw-on, [data-nw-any].nw-on { position: relative; }
+[data-nw].nw-on::after, [data-nw-any].nw-on::after { content: 'NEW'; position: absolute; top: -7px; right: -5px; z-index: 3; padding: 3px 6px; border-radius: 999px; background: #ff5c7c; color: #fff; font-size: 9.5px; font-weight: 900; line-height: 1; letter-spacing: .02em; box-shadow: 0 2px 6px rgba(255, 92, 124, .45); pointer-events: none; animation: svcBadge 1.6s ease-in-out infinite; }
+.svc-cat.nw-on::after { top: 6px; right: auto; left: 8px; }
+.tp-item, .cs-it, .pat-swatch, .wl-card { position: relative; }
+.nw-chip { position: absolute; top: 3px; right: 3px; z-index: 3; padding: 2px 5px; border-radius: 999px; background: #ff5c7c; color: #fff; font-style: normal; font-size: 9px; font-weight: 900; line-height: 1; box-shadow: 0 2px 5px rgba(255, 92, 124, .4); pointer-events: none; animation: svcBadge 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { [data-nw].nw-on::after, [data-nw-any].nw-on::after, .nw-chip { animation: none; } }
