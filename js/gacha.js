@@ -34,7 +34,7 @@
             turned: 0, ticks: 0, lastAng: null, dragged: false, taps: 0,
             balls: [], mixing: false, frozen: false, swirl: 1, swirlFlip: 0,
             bulbs: [], led: 'idle', ledPos: 0, ledLast: 0, mixStart: 0,
-            raf: 0, rumble: null, timers: []
+            raf: 0, rumble: null, timers: [], lastT: 0, acc: 0, noise: null, toneAt: 0, steps: 0
         };
         const gq = id => document.getElementById(id);
 
@@ -168,15 +168,15 @@
             el.innerHTML = `
               <div class="gc-wrap">
                 <div class="gc-head">
-                  <div class="gc-title">🎁 말랑 캡슐뽑기</div>
-                  <span class="gc-chip" id="gcChip"><span class="gc-coin-ico">말</span><span id="gcChipText">코인 확인 중…</span></span>
+                  <div class="gc-title">🎁 캡슐뽑기</div>
+                  <span class="gc-chip" id="gcChip"><span class="gc-coin-ico">C</span><span id="gcChipText">코인 확인 중…</span></span>
                   <button class="gc-x" type="button" onclick="closeGacha()" aria-label="닫기">✕</button>
                 </div>
                 <div class="gc-machine">
                   <div class="gc-dome" id="gcDome"><canvas id="gcCanvas" width="500" height="460"></canvas></div>
                   <div class="gc-body" id="gcBody">
                     <div class="gc-label">MALANG CAPSULE<small>코인 1개 · 한 번</small></div>
-                    <div class="gc-slot"><i></i><div class="gc-coin" id="gcCoin">말</div><span>코인 1개</span></div>
+                    <div class="gc-slot"><i></i><div class="gc-coin" id="gcCoin">C</div><span>코인 1개</span></div>
                     <button class="gc-crank" id="gcCrank" type="button" disabled aria-label="손잡이 돌리기"><span class="gc-bar" id="gcBar"></span></button>
                     <div class="gc-crank-hint" id="gcCrankHint"></div>
                     <div class="gc-chute"></div>
@@ -206,6 +206,7 @@
                 x: 70 + Math.random() * (W - 140), y: 120 + Math.random() * (H - 200),
                 vx: 0, vy: 0, r: 34 + Math.random() * 6, c: GC_CAPS[i % GC_CAPS.length], a: Math.random() * 6
             }));
+            gc.balls.forEach(b => { b.img = gcSprite(b.r, b.c); });      // 공 그림은 한 번만 그려 두고 · 매 프레임엔 돌려서 붙이기만 해요 (가벼워요)
             for (let i = 0; i < 400; i++) gcStep();          // 처음부터 바닥에 가만히 쌓인 모습
 
             /* LED 전구 : 몸통 테두리를 따라 시계 방향 (캡슐 구멍 자리는 비움) */
@@ -256,6 +257,7 @@
             gq('gachaRoom').classList.add('show');
             gc.open = true;
             gcReset();
+            gc.lastT = 0; gc.acc = 0;
             gcLoop();
             gcRenderOdds();
             gcSetCoin('checking');
@@ -298,12 +300,19 @@
         }
 
         /* ---------- 1. 코인 넣기 ---------- */
+        /* 코인이 떨어지는 모습 · 소리는 누르는 순간 바로 나와요 (서버 답을 기다리지 않아요 · 결과는 서버가 정하니까 연출만 먼저) */
+        function gcDropCoin() {
+            const coin = gq('gcCoin'); coin.classList.remove('drop'); void coin.offsetWidth; coin.classList.add('drop');
+            gcSfx.coin(); gcBuzz(20);
+        }
         async function gcInsertCoin() {
             if (gc.stage !== 'idle') return;
             gcUnlockAudio();
             gc.stage = 'asking';
             gq('gcInsert').disabled = true;
-            gq('gcSay').textContent = '코인을 확인하고 있어요…';
+            gq('gcSay').textContent = '코인을 넣는 중…';
+            const t0 = performance.now();
+            gcDropCoin();
             const r = await gcApi('play');                  // 결과는 서버가 정해요 (연출은 그대로)
             if (!gc.open) return;
             if (!r.ok) {
@@ -315,9 +324,7 @@
             capsSet(r.passes);
             gc.test = !!r.test;
             gc.stage = 'coin';
-            gq('gcChipText').textContent = gc.test ? '🧪 테스트 모드 · 무제한' : `코인 ${r.coins}개`; gq('gcSay').textContent = '';
-            const coin = gq('gcCoin'); coin.classList.remove('drop'); void coin.offsetWidth; coin.classList.add('drop');
-            gcSfx.coin(); gcBuzz(20);
+            gq('gcChipText').textContent = gc.test ? '🧪 테스트 모드 · 무제한' : `코인 ${r.coins}개`;
             gq('gcSay').textContent = '짤랑! 코인이 들어갔어요';
             gcLater(() => {
                 gc.stage = 'turning'; gc.turned = 0; gc.ticks = 0;
@@ -325,7 +332,7 @@
                 gq('gcCrankHint').textContent = '손잡이를 한 바퀴 돌려요 ↻';
                 gq('gcSay').textContent = '손잡이를 끝까지 돌려 주세요!';
                 c.focus({ preventScroll: true });
-            }, 800);
+            }, Math.max(350, 800 - (performance.now() - t0)));    // 코인이 다 떨어진 뒤에 손잡이 (서버가 늦게 답해도 바로 이어져요)
         }
 
         /* ---------- 2. 손잡이 ---------- */
@@ -462,35 +469,50 @@
                 }
             }
         }
+        function gcSprite(r, color) {                          // 공 하나의 그림 (위쪽 색 · 아래쪽 투명 · 테두리 · 반짝) 을 미리 그려 둬요
+            const pad = 4, sz = Math.ceil((r + pad) * 2), cv = document.createElement('canvas');
+            cv.width = cv.height = sz;
+            const g = cv.getContext('2d'); g.translate(sz / 2, sz / 2);
+            g.beginPath(); g.arc(0, 0, r, Math.PI, 0); g.closePath(); g.fillStyle = color; g.fill();
+            g.beginPath(); g.arc(0, 0, r, 0, Math.PI); g.closePath(); g.fillStyle = 'rgba(235,245,255,.85)'; g.fill();
+            g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.12)'; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.stroke();
+            g.beginPath(); g.moveTo(-r, 0); g.lineTo(r, 0); g.stroke();
+            g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(-r * .35, -r * .5, r * .22, r * .12, -.5, 0, Math.PI * 2); g.fill();
+            return cv;
+        }
         function gcDraw() {
             const cv = gq('gcCanvas'), g = cv.getContext('2d');
             g.clearRect(0, 0, cv.width, cv.height);
             for (const b of gc.balls) {
+                if (!b.img) b.img = gcSprite(b.r, b.c);
                 g.save(); g.translate(b.x, b.y); g.rotate(b.a);
-                g.beginPath(); g.arc(0, 0, b.r, Math.PI, 0); g.closePath(); g.fillStyle = b.c; g.fill();
-                g.beginPath(); g.arc(0, 0, b.r, 0, Math.PI); g.closePath(); g.fillStyle = 'rgba(235,245,255,.85)'; g.fill();
-                g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.12)'; g.beginPath(); g.arc(0, 0, b.r, 0, Math.PI * 2); g.stroke();
-                g.beginPath(); g.moveTo(-b.r, 0); g.lineTo(b.r, 0); g.stroke();
-                g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(-b.r * .35, -b.r * .5, b.r * .22, b.r * .12, -.5, 0, Math.PI * 2); g.fill();
+                g.drawImage(b.img, -b.img.width / 2, -b.img.height / 2);
                 g.restore();
             }
         }
-        function gcRenderBulbs() {
+                function gcRenderBulbs() {
             const N = gc.bulbs.length;
             gc.bulbs.forEach((el, i) => {
                 const on = gc.led === 'all' ? true : gc.led === 'spin' ? ((i - gc.ledPos) % N + N) % N < 5 : (i + gc.ledPos) % 3 === 0;
                 el.classList.toggle('on', on);
             });
         }
+        /* 프레임 속도와 상관없이 1초에 60걸음 (120Hz 아이패드도 · 잠깐 끊겨도 같은 속도) */
+        const GC_STEP_MS = 1000 / 60;
         function gcLoop(t) {
             if (!gc.open) return;
-            gcStep(); gcDraw();
             t = t || performance.now();
+            const dt = gc.lastT ? Math.min(100, t - gc.lastT) : GC_STEP_MS;
+            gc.lastT = t; gc.acc += dt;
+            if (!gc.frozen) while (gc.acc >= GC_STEP_MS && (gc.acc -= GC_STEP_MS, ++gc.steps) <= 4) gcStep();
+            gc.steps = 0;
+            if (gc.acc > GC_STEP_MS * 4) gc.acc = 0;                     // 오래 멈췄다 돌아와도 한꺼번에 몰아서 계산하지 않아요
+            gcDraw();
             let gap = 420;
             if (gc.led === 'spin') { const k = Math.min(1, (t - gc.mixStart) / (gc.mixMs || GACHA_MIX_MS)); gap = 110 - 85 * k; }   // 점점 빨라짐
             if (gc.led !== 'all' && t - gc.ledLast > gap) {
                 gc.ledLast = t; gc.ledPos = (gc.ledPos + 1) % gc.bulbs.length; gcRenderBulbs();
-                if (gc.led === 'spin') gcTone(900 + (gc.ledPos % 5) * 90, .03, 'square', .025);
+                if (gc.led === 'spin' && t - gc.toneAt > 70) { gc.toneAt = t; gcTone(900 + (gc.ledPos % 5) * 90, .03, 'square', .025); }   // 삑삑 소리는 너무 촘촘하지 않게
             }
             gc.raf = requestAnimationFrame(gcLoop);
         }
@@ -500,6 +522,7 @@
         const gcUnlockAudio = () => { if (typeof sndUnlock === 'function') sndUnlock(); };     // 화면을 누를 때 소리 깨우기 (js/sound.js)
         function gcTone(freq, dur, type = 'sine', vol = .15, when = 0, slideTo) {
             const a = gcAudio(); if (!a) return;
+            if (a.state !== 'running') { try { a.resume().catch(() => {}); } catch (e) {} }          // 잠들어 있으면 깨우기 (깨어나면 이어서 들려요)
             const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
             o.type = type; o.frequency.setValueAtTime(freq, t);
             if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
@@ -518,9 +541,13 @@
         };
         function gcStartRumble(ms) {
             const a = gcAudio(); if (!a) return;
-            const t = a.currentTime, len = a.sampleRate * 2, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
-            for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-            const n = a.createBufferSource(); n.buffer = buf; n.loop = true;
+            const t = a.currentTime;
+            if (!gc.noise || gc.noise.ctx !== a) {                       // 지글지글 잡음은 한 번만 만들어 두고 계속 써요 (섞을 때마다 새로 만들면 버벅여요)
+                const len = a.sampleRate * 2, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+                for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+                gc.noise = { ctx: a, buf: buf };
+            }
+            const n = a.createBufferSource(); n.buffer = gc.noise.buf; n.loop = true;
             const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(300, t); lp.frequency.linearRampToValueAtTime(1400, t + ms / 1000);
             const o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(260, t + ms / 1000);
             const og = a.createGain(); og.gain.value = .035;
