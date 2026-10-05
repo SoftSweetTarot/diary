@@ -16,6 +16,7 @@
 
         const wl = { items: [], tab: '', pick: null, at: 0, loading: null };
         const WL_FRESH = 60000;
+        const WL_PX = { phone: 216, pc: 384 };        // 그림 가로 크기 = 원본(휴대폰 1080 · PC 1920 기준)의 20% · 목록 · 크게 보기 모두 같음 (원본 화질은 안 보여 줘요)
         const WL_MINE = 'malang_mywalls';                 // 내가 받은 배경화면 { 번호: { n: 이름, u: 드라이브 폴더 링크 } }
         const wlIsPc = no => no >= 1000;                        // 안에서 쓰는 번호 : 휴대폰 = 탭의 번호 · PC = 1000 + 탭의 번호 (서버 WALL_PC)
         const wlTag = no => (wlIsPc(no) ? 'PC ' + (no - 1000) : '휴대폰 ' + no);   // 사람이 보는 이름표 : '휴대폰 3' · 'PC 3'
@@ -60,7 +61,7 @@
             const box = document.getElementById('wlBody'); if (!box) return;
             const list = wl.items || [], items = list.filter(w => w.kind === wl.tab);
             const count = k => list.filter(w => w.kind === k).length;
-            const size = wl.tab === 'pc' ? 640 : 360;
+            const size = WL_PX[wl.tab === 'pc' ? 'pc' : 'phone'];
             box.innerHTML = `
               <div class="wl-hero">
                 <div class="wl-hero-t">✨ 매일 보는 화면을 말랑달콤하게</div>
@@ -76,7 +77,7 @@
                 : `<div class="wl-grid ${wl.tab}">${items.map(w => `
                   <div class="wl-card">${wlMine[w.no] && typeof nwChip === 'function' ? nwChip('wall', w.no) : ''}
                     <button type="button" class="wl-pre wl-dev ${wl.tab}" onclick="wlView(${w.no})" aria-label="${wlEsc(w.name)} 크게 보기"><span class="wl-scr">
-                      <img src="${wlImg(w.img, size)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, size)}'}"></span>
+                      <img src="${wlImg(w.img, size)}" alt="" loading="lazy" draggable="false" oncontextmenu="return false" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, size)}'}"></span>
                     </button>
                     <div class="wl-name">${wlEsc(w.name)}</div>
                     ${wlMine[w.no] ? `<div class="wl-buy own"><b>✅ 내 배경화면</b><button type="button" class="btn wl-get own" onclick="wlLinkPop(${w.no})">🎁 받기</button></div>`
@@ -99,7 +100,7 @@
             if (!w || !v) return;
             v.innerHTML = `
               <div class="wl-view-box ${w.kind}">
-                <div class="wl-view-frame wl-dev ${w.kind}"><span class="wl-scr"><img src="${wlImg(w.img, 1080)}" alt="" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, 1080)}'}"></span></div>
+                <div class="wl-view-frame wl-dev ${w.kind}"><span class="wl-scr"><img src="${wlImg(w.img, WL_PX[w.kind === 'pc' ? 'pc' : 'phone'])}" alt="" draggable="false" oncontextmenu="return false" referrerpolicy="no-referrer" onerror="if(!this.dataset.b){this.dataset.b=1;this.src='${wlImg2(w.img, WL_PX[w.kind === 'pc' ? 'pc' : 'phone'])}'}"></span></div>
                 <div class="wl-view-t">${wlEsc(w.name)} <b>${wlMine[w.no] ? '✅ 내 배경화면' : wlWon(w.price)}</b></div>
                 <div class="wl-view-s">움직이는 모습은 <a href="#" class="wl-link" onclick="goCafe(); return false;">👭 말랑달콤 모임방</a>에서 볼 수 있어요</div>
                 <div class="wl-view-btns">
@@ -233,6 +234,8 @@
             if (!have || (JSON.stringify(wl.items) !== before && !wl.pick && (!v || v.hidden))) wlRender();
         }
         function closeWall() { wlUnview(); closeModal('wallModal'); }
+        /* 🔒 그림 저장 막기 : 오른쪽 클릭 · 끌어서 저장 · 길게 눌러 저장 메뉴 (css .wl-scr 도 같이) */
+        ['contextmenu', 'dragstart'].forEach(ev => document.addEventListener(ev, e => { if (e.target && e.target.closest && e.target.closest('.wl-scr, .wl-view-frame')) e.preventDefault(); }, true));
         window.addEventListener('load', () => setTimeout(wlPrefetch, 3000));     // 그림모음처럼 다이어리를 열고 잠시 뒤 미리 받아 둬요
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
