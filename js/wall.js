@@ -1,7 +1,7 @@
 /* 말랑달콤 다이어리 - js/wall.js
    🖼️ 말랑달콤 배경화면 (카페 → 🖼️ 말랑달콤 배경화면)
    - 움직이는 배경화면(휴대폰 · PC)을 보여 주고, 말랑달콤 1:1 오픈채팅방에서 팔아요
-       사용자 : 채팅방에 "배경화면 3번 말랑XXXX"(번호 + 내 저금 코드)를 보내고 카카오페이로 송금
+       사용자 : 채팅방에 "배경화면 휴대폰 3번 말랑XXXX"(종류 + 번호 + 내 저금 코드)를 보내고 카카오페이로 송금
        주인   : 📱 저금 확인 앱 → 코드로 찾기 → 🎁 아이템 주기 → 🖼️ 배경화면 번호 선택 → 보내기 (자동)
        → 서버가 드라이브 '배경화면N' 폴더 링크를 전해요 → 다이어리에 '배경화면이 도착했어요' 창(링크 포함) + 이 창의 '받기' 버튼에도 링크 (wlGift · wlLinkPop)
        받은 배경화면은 이 기기에 `malang_mywalls` 로 남겨 두고, 로그인할 때마다 서버 답(walls)으로 새로 맞춰요 (wlSetMine)
@@ -17,6 +17,8 @@
         const wl = { items: [], tab: '', pick: null, at: 0, loading: null };
         const WL_FRESH = 60000;
         const WL_MINE = 'malang_mywalls';                 // 내가 받은 배경화면 { 번호: { n: 이름, u: 드라이브 폴더 링크 } }
+        const wlIsPc = no => no >= 1000;                        // 안에서 쓰는 번호 : 휴대폰 = 탭의 번호 · PC = 1000 + 탭의 번호 (서버 WALL_PC)
+        const wlTag = no => (wlIsPc(no) ? 'PC ' + (no - 1000) : '휴대폰 ' + no);   // 사람이 보는 이름표 : '휴대폰 3' · 'PC 3'
         const wlLinkOk = u => typeof u === 'string' && /^https:\/\/drive\.google\.com\/[\w\-\/?=&.%]+$/.test(u);
         let wlMine = {};
         try { const m = JSON.parse(localStorage.getItem(WL_MINE)); if (m && typeof m === 'object') Object.keys(m).forEach(k => { if (+k > 0 && m[k] && wlLinkOk(m[k].u)) wlMine[k] = { n: String(m[k].n || '').slice(0, 30), u: m[k].u }; }); } catch (e) {}
@@ -132,7 +134,7 @@
             const code = await wlCode();
             if (wl.pick !== w) return;
             if (!code) { sh.innerHTML = `<div class=\"wl-sheet-box\">${head}<p class=\"pg-send-wait\">🔑 구글로 로그인하면 배경화면 링크를 <b>자동으로</b> 받을 수 있어요.<br>로그인한 뒤에 다시 눌러 주세요 😊</p>${close}</div>`; return; }
-            w.msg = `배경화면 ${w.no}번 ${code}`;
+            w.msg = `배경화면 ${wlTag(w.no)}번 ${code}`;
             sh.innerHTML = `
               <div class=\"wl-sheet-box\">${head}
                 <ol class=\"pg-steps\">
@@ -156,7 +158,7 @@
         function wlGo() {
             const w = wl.pick, chat = typeof pig !== 'undefined' ? pig.chat : '';
             if (!w || !chat) return;
-            const msg = w.msg || `배경화면 ${w.no}번`;
+            const msg = w.msg || `배경화면 ${wlTag(w.no)}번`;
             try { navigator.clipboard.writeText(msg).catch(() => {}); } catch (e) {}
             window.open(chat, '_blank');
             toast(`📋 "${msg}"을 복사했어요. 채팅에 붙여 넣어 주세요 💕`);
@@ -204,7 +206,7 @@
                 <div class=\"gp-t\">${arrived ? '🖼️ 배경화면이 도착했어요!' : '🖼️ 내 배경화면 링크'}</div>
                 <p class=\"gp-s\">${arrived ? '구입해 주셔서 정말 정말 고마워요' : '아래 링크를 눌러 파일을 받아 주세요'}<br>링크를 누르면 <b>구글 드라이브</b>가 열려요</p>
                 <ul class=\"gp-list\">
-                  ${nos.map(n => { const m = wlMine[n]; return `<li><span>🖼️</span><div><b>${wlEsc(m.n || '배경화면 ' + n + '번')}</b>
+                  ${nos.map(n => { const m = wlMine[n]; return `<li><span>${wlIsPc(n) ? '💻' : '📱'}</span><div><b>${wlEsc(m.n || '배경화면 ' + wlTag(n) + '번')}</b>
                     <a class=\"wl-lp-url\" href=\"${wlEsc(m.u)}\" target=\"_blank\" rel=\"noopener\">${wlEsc(short(m.u))}</a>
                     <div class=\"wl-lp-btns\"><button type=\"button\" class=\"btn wl-lp-open\" data-n=\"${n}\">🔗 링크 열기</button><button type=\"button\" class=\"btn wl-lp-copy\" data-n=\"${n}\">📋 복사</button></div></div></li>`; }).join('')}
                 </ul>

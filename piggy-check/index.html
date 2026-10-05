@@ -264,10 +264,10 @@
     const DAY_CHIPS = [7, 14, 30, 60, 90];
     const gv = { i: -1, coins: 0, tsel: [], tdays: 30, psel: [], pdays: 30, sdays: 30, sel: [], wsel: [], rid: '', busy: false };
     let WALLS = null;                                          // 🖼️ 배경화면 목록 [{ no, name, kind }] (다이어리에 보이는 것 · 서버 ?action=walls)
-    const wallLabel = n => { const w = (WALLS || []).find(x => x.no === n); return w ? `${n}번 ${w.name}` : `${n}번`; };
+    const wallLabel = n => { const w = (WALLS || []).find(x => x.no === n), pc = n >= 1000, num = pc ? n - 1000 : n; return `${pc ? '💻' : '📱'} ${num}번${w ? ' ' + w.name : ''}`; };
     async function wallsLoad() {
         for (let i = 0; i < 3 && !WALLS; i++) {
-            try { const r = await (await fetch(API + '?action=walls')).json(); if (r && r.ok && Array.isArray(r.items)) WALLS = r.items.map(x => ({ no: x.no, name: x.name, kind: x.kind })).sort((a, b) => a.no - b.no); } catch (e) {}
+            try { const r = await (await fetch(API + '?action=walls')).json(); if (r && r.ok && Array.isArray(r.items)) WALLS = r.items.map(x => ({ no: x.no, n: x.n, name: x.name, kind: x.kind })).sort((a, b) => a.no - b.no); } catch (e) {}
         }
     }
     const IN = { tdays: 'gTd', pdays: 'gPd', sdays: 'gSd' }, CH = { tdays: 'chipsT', pdays: 'chipsP', sdays: 'chipsSd' };
@@ -297,7 +297,7 @@
           <div class="g-row"><h4>🖼️ 배경화면 <small>골라서 주면 드라이브 링크가 자동으로 가요</small></h4>
             ${WALLS === null ? '<p class="hint" style="margin:0">목록을 못 불러왔어요 (인터넷 확인 후 닫고 다시 열어 주세요)</p>'
               : !WALLS.length ? '<p class="hint" style="margin:0">다이어리에 보이는 배경화면이 아직 없어요</p>'
-              : `<div class="chips" style="margin-top:0">${WALLS.map(w => `<button type="button" class="chip st ${gv.wsel.includes(w.no) ? 'on' : ''} ${(m.walls || []).includes(w.no) ? 'own' : ''}" onclick="gWall(${w.no})">${w.kind === 'pc' ? '💻' : '📱'} ${w.no}. ${esc(w.name)}${(m.walls || []).includes(w.no) ? ' ✓' : ''}</button>`).join('')}</div>
+              : `<div class="chips" style="margin-top:0">${WALLS.map(w => `<button type="button" class="chip st ${gv.wsel.includes(w.no) ? 'on' : ''} ${(m.walls || []).includes(w.no) ? 'own' : ''}" onclick="gWall(${w.no})">${w.kind === 'pc' ? '💻' : '📱'} ${w.n || w.no}. ${esc(w.name)}${(m.walls || []).includes(w.no) ? ' ✓' : ''}</button>`).join('')}</div>
                  <p class="hint" style="margin:8px 0 0">✓ = 이미 준 배경화면 (다시 주면 링크 창이 한 번 더 떠요)</p>`}</div>
           <p class="err" id="gErr" hidden></p>
           <div class="pop-btns"><button class="btn gift" type="button" onclick="giveConfirm()">다음 · 확인하기</button>
@@ -381,7 +381,7 @@
     }
     function giveBad(r) {
         const why = r.error === 'key' ? '관리 열쇠가 맞지 않아요.' : r.error === 'none' ? '그 저금 코드를 시트에서 찾지 못했어요.'
-            : r.error === 'nofolder' ? `드라이브에서 <b>배경화면${r.no}</b> 폴더를 찾지 못했어요.<br>내 드라이브 → <b>배경화면</b> 폴더 안에 <b>배경화면${r.no}</b> 폴더가 있는지 확인해 주세요. (아무것도 보내지 않았어요)`
+            : r.error === 'nofolder' ? `드라이브에서 <b>${esc(r.path || '배경화면 폴더')}</b> 폴더를 찾지 못했어요.<br>내 드라이브에 이 경로의 폴더가 있는지 확인해 주세요. (아무것도 보내지 않았어요)`
             : r.error === 'setup' ? '회원 서버에 랜덤박스 연결(GACHA_API_URL · GACHA_KEY)이 아직 안 되어 있어요.'
             : r.error === 'gacha' ? '🪙 코인 · 🎁 스티커를 랜덤박스 서버에 전하지 못했어요.' + (r.tape || r.pat ? '<br>(🎀 · 🍬 는 이미 들어갔어요)' : '')
             : r.ok ? '보냈는데 시트에서 확인하지 못했어요.' : '인터넷이 불안해서 서버에 닿지 못했어요.';
