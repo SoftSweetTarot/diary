@@ -76,8 +76,20 @@
             document.getElementById('svcBack').classList.add('mt-none');      // 맨 처음 화면에서는 ← 숨김
             svcDailyBadges();
         }
-        /* 🌱 매일 : 오늘 아직 안 한 것에 작은 표시 (출석 도장 · 화분 물 주기 · 오늘의 행운 · 오늘의 질문) */
-        async function svcDailyBadges() {
+        /* 🌱 매일 : 오늘 새로 생긴 것을 알려 주는 작은 표시 (출석 도장 · 화분 물 주기 · 오늘의 행운 · 오늘의 질문)
+           - 길잡이일 뿐이에요 : 🌱 매일 칸을 한 번 열어서 보여 주면 그날은 다시 안 붙어요 (안 해도 · 구경만 해도 사라짐)
+           - 다음 날이 되면 새것이니까 다시 알려 줘요 · 이미 한 것은 처음부터 안 붙어요 */
+        const SVC_SEEN = 'malang_daily_seen';                      // 오늘 이미 알려 준 것 { d: '2026-10-06', ids: [버튼 id…] }
+        const svcDay = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+        function svcSeenGet() {
+            try { const o = JSON.parse(localStorage.getItem(SVC_SEEN)); if (o && o.d === svcDay() && Array.isArray(o.ids)) return o.ids; } catch (e) {}
+            return [];
+        }
+        function svcSeenAdd(ids) {
+            const a = svcSeenGet(); ids.forEach(i => { if (!a.includes(i)) a.push(i); });
+            try { localStorage.setItem(SVC_SEEN, JSON.stringify({ d: svcDay(), ids: a })); } catch (e) {}
+        }
+        async function svcDailyBadges(shown) {                     // shown = true : 🌱 매일 칸이 지금 보이는 중 → 보여 준 것은 '알려 줌' 처리
             const mark = (id, txt) => {
                 const b = document.getElementById(id); if (!b) return;
                 let e = b.querySelector('.svc-badge');
@@ -85,16 +97,18 @@
                 if (!e) { e = document.createElement('em'); e.className = 'svc-badge'; b.appendChild(e); }
                 e.textContent = txt;
             };
-            const stamp = typeof attendDone === 'function' && !attendDone();
-            const luck = typeof luckDone === 'function' && !luckDone();
-            const ques = typeof questionDone === 'function' && !questionDone();
+            const seen = svcSeenGet(), fresh = id => !seen.includes(id);
+            const stamp = typeof attendDone === 'function' && !attendDone() && fresh('svcBtnAttend');
+            const luck = typeof luckDone === 'function' && !luckDone() && fresh('svcBtnLuck');
+            const ques = typeof questionDone === 'function' && !questionDone() && fresh('svcBtnQuestion');
             let water = false;
-            if (typeof plantStatus === 'function') { try { const p = await plantStatus(); water = !p.watered && p.wrote; } catch (e) {} }
+            if (typeof plantStatus === 'function' && fresh('svcBtnPlant')) { try { const p = await plantStatus(); water = !p.watered && p.wrote; } catch (e) {} }
             mark('svcBtnAttend', stamp ? '오늘 아직!' : '');
             mark('svcBtnLuck', luck ? '🍀 NEW' : '');
             mark('svcBtnQuestion', ques ? '💬 NEW' : '');
             mark('svcBtnPlant', water ? '💧 물 주기' : '');
             mark('svcCatDaily', (stamp ? 1 : 0) + (water ? 1 : 0) + (luck ? 1 : 0) + (ques ? 1 : 0) || '');
+            if (shown) svcSeenAdd([stamp && 'svcBtnAttend', luck && 'svcBtnLuck', ques && 'svcBtnQuestion', water && 'svcBtnPlant'].filter(Boolean));
         }
         const SVC_CAT_NAMES = { daily: '🌱 매일', fortune: '🔮 운세·마음', make: '🎨 만들기·꾸미기', game: '🕹️ 게임', watch: '🎧 보고·듣기', together: '💌 함께하기' };
         function svcOpenCat(id) {
@@ -103,7 +117,7 @@
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = p !== panel; });
             document.getElementById('svcTitle').textContent = SVC_CAT_NAMES[id] || '☕ 카페';
             document.getElementById('svcBack').classList.remove('mt-none');
-            if (id === 'daily') svcDailyBadges();
+            if (id === 'daily') svcDailyBadges(true);
         }
         function goCafe() {
             window.open(CAFE_URL, '_blank', 'noopener');
