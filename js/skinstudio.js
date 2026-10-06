@@ -1,8 +1,9 @@
 /* 말랑달콤 다이어리 - js/skinstudio.js
-   🎀 스킨 만들기(스튜디오) + 🎁 테마 보관함
+   🎀 스킨꾸미기(스튜디오) + 🎁 테마 보관함
    - 스킨에는 색 외에 두 가지가 더 담겨요
        deco  : 놓아 둔 꾸밈 [{ a:놓는 곳, i:그림, x:가로%, y:세로%, s:크기(px), r:회전(도), f:뒤집기(1), b:뒤로(1) }]
        icons : 바꾼 아이콘 { 자리: 그림 }   (자리 = STU_SLOTS 의 k)
+       lay   : 크기·간격 { is:하단 아이콘 크기(px) · gap:하단 버튼 간격(px) · dw:날짜칸 길이(%) · dx:날짜칸 좌우(px) }  (기본값과 같으면 안 담김)
        imgs  : 내 이미지 { 이름: 'data:image/…' }   (그림 'u:이름' 이 가리킴)
    - 그림(i) 모양 : 's:이름' = 기본 제공 SVG(STU_SVG) · 'e:🌸' = 이모지 · 'u:이름' = 내 이미지
    - 놓는 곳(a) : pill 날짜 줄 · paper 종이 · pop 팝업메뉴 · bar 하단메뉴 전체 · b1~b4 하단 버튼 각각
@@ -61,7 +62,13 @@
         const STU_EMOJI = '🌸 🌷 🌼 🌹 🌺 🌻 💐 🌿 🍀 🍃 🌳 🌲 🌵 🍄 🐰 🐻 🐱 🐶 🐥 🦊 🐼 🐨 🐹 🦄 🐝 🦋 🐞 🐟 🐧 🍓 🍒 🍑 🍋 🍰 🧁 🍭 🍩 ☕ ⭐ 🌟 ✨ 🌙 ☀️ ☁️ 🌈 ❄️ 💗 💖 💜 💙 🎀 👑 💎 🎈 🎁 🔔 🎵 📚 ✏️ 🧸 🪄 🫧 🔮 🌊 🍁 🎃'.split(' ');
 
         /* ---------- 현재 적용 중인 꾸밈 (스킨을 고르면 stuApply 가 채워요) ---------- */
-        let stuCur = { deco: [], icons: {}, imgs: {} };
+        const STU_LAY = [   // [키, 이름, 최소, 최대, 기본, 단위, css 변수, 값→css]
+            ['is', '하단 아이콘 크기', 16, 40, 26, 'px', '--tb-ico', v => v + 'px'],
+            ['gap', '하단 버튼 간격', 0, 30, 10, 'px', '--tb-gap', v => v + 'px'],
+            ['dw', '날짜칸 길이', 50, 110, 100, '%', '--pill-w', v => v / 100],
+            ['dx', '날짜칸 좌우', -60, 60, 0, 'px', '--pill-x', v => v + 'px']
+        ];
+        let stuCur = { deco: [], icons: {}, imgs: {}, lay: {} };
         let stuSel = -1;                  // 스튜디오에서 고른 꾸밈 번호
         let stuTarget = 'paper';          // 새 꾸밈을 놓을 곳
         let stuOpenSlot = '';             // 아이콘 고르는 중인 자리
@@ -96,6 +103,9 @@
             });
             const icons = {};
             if (src && src.icons && typeof src.icons === 'object') Object.keys(src.icons).forEach(k => { if (STU_SLOT_OK[k] && okImg(src.icons[k])) icons[k] = src.icons[k]; });
+            const lay = {};
+            if (src && src.lay && typeof src.lay === 'object') STU_LAY.forEach(([k, , mn, mx, df]) => { if (src.lay[k] != null) { const v = Math.round(stuNum(src.lay[k], mn, mx, df)); if (v !== df) lay[k] = v; } });
+            if (Object.keys(lay).length) out.lay = lay;
             if (deco.length) out.deco = deco;
             if (Object.keys(icons).length) out.icons = icons;
             const used = {};
@@ -176,12 +186,17 @@
             const fp = document.getElementById('stuFakePop');
             if (fp) stuFillFakePop(fp);
         }
+        /* 📐 하단 아이콘 크기 · 버튼 간격 · 날짜칸 길이 · 좌우 */
+        function stuRenderLay() {
+            const root = document.documentElement;
+            STU_LAY.forEach(([k, , mn, mx, df, , v, css]) => { const n = stuCur.lay[k]; if (n != null && n !== df) root.style.setProperty(v, css(n)); else root.style.removeProperty(v); });
+        }
         /* settings.js setSkinVars 가 스킨을 고를 때마다 불러요 */
         function stuApply(skin) {
             const s = skin && typeof skin === 'object' ? skin : {};
-            stuCur = { deco: stuCopy(Array.isArray(s.deco) ? s.deco : []), icons: Object.assign({}, s.icons || {}), imgs: Object.assign({}, s.imgs || {}) };
+            stuCur = { deco: stuCopy(Array.isArray(s.deco) ? s.deco : []), icons: Object.assign({}, s.icons || {}), imgs: Object.assign({}, s.imgs || {}), lay: Object.assign({}, s.lay || {}) };
             stuSel = -1;
-            stuRenderDeco(); stuRenderIcons();
+            stuRenderDeco(); stuRenderIcons(); stuRenderLay();
             if (stuIsOpen()) stuRefreshWin();
         }
         /* 저장할 때 쓰는, 지금 적용된 꾸밈 (settings.js saveCustomSkin) */
@@ -235,12 +250,12 @@
             });
         }
 
-        /* ---------- 🎀 스킨 만들기 창 ---------- */
+        /* ---------- 🎀 스킨꾸미기 창 ---------- */
         const stuIsOpen = () => { const m = document.getElementById('stuModal'); return !!m && m.style.display === 'flex'; };
         let stuTab = 'deco', stuCat = 0;
 
         function openStudio() {
-            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('다이어리 표지를 열어 둔 상태에서<br>스킨 만들기를 할 수 있어요.'); return; }
+            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('다이어리 표지를 열어 둔 상태에서<br>스킨꾸미기를 할 수 있어요.'); return; }
             closeModal('skinModal');
             document.body.classList.add('stu-edit');
             stuShowFakePop();
@@ -276,7 +291,7 @@
             if (!w) return;
             document.querySelectorAll('#stuModal .stu-tab').forEach(b => b.classList.toggle('on', b.dataset.t === stuTab));
             w.innerHTML = '';
-            if (stuTab === 'deco') stuBuildDeco(w); else if (stuTab === 'icon') stuBuildIcons(w); else stuBuildSave(w);
+            if (stuTab === 'deco') stuBuildDeco(w); else if (stuTab === 'icon') stuBuildIcons(w); else if (stuTab === 'lay') stuBuildLay(w); else stuBuildSave(w);
         }
         function stuSetTab(t) { stuTab = t; stuOpenSlot = ''; stuRefreshWin(); }
         const stuEl = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -406,6 +421,20 @@
                 box.appendChild(rst);
                 w.appendChild(box);
             }
+        }
+
+        function stuBuildLay(w) {
+            w.appendChild(stuEl('div', 'stu-hint', '하단메뉴 버튼과 맨 위 날짜칸의 크기 · 위치를 조절해요. 바로 다이어리에 보여요.'));
+            STU_LAY.forEach(([k, t, mn, mx, df, u]) => {
+                const cur = stuCur.lay[k] != null ? stuCur.lay[k] : df;
+                const row = stuEl('div', 'stu-lay-row', `<span>${t}</span><input type="range" min="${mn}" max="${mx}" value="${cur}"><b>${cur}${u}</b>`);
+                const inp = row.querySelector('input'), val = row.querySelector('b');
+                inp.oninput = () => { stuCur.lay[k] = +inp.value; val.textContent = inp.value + u; stuRenderLay(); };
+                w.appendChild(row);
+            });
+            const r = stuEl('button', 'btn stu-clear', '↺ 기본 크기 · 간격으로'); r.type = 'button';
+            r.onclick = () => { stuCur.lay = {}; stuRenderLay(); stuRefreshWin(); };
+            w.appendChild(r);
         }
 
         function stuBuildSave(w) {

@@ -23,7 +23,7 @@
         textarea { user-select: text; -webkit-user-select: text; }
 
         .toolbar {
-            position: relative; display: flex; gap: 10px; flex-wrap: nowrap; justify-content: center;
+            position: relative; display: flex; gap: var(--tb-gap, 10px); flex-wrap: nowrap; justify-content: center;
             padding: 0; margin-top: 10px; z-index: 100; max-width: 95vw;
         }
         /* 🔘 하단 메뉴 버튼 : 말랑한 버블 4개 (스킨 · 배경음악 · 카페 · 설정) */
@@ -34,7 +34,8 @@
             box-shadow: 0 3px 8px rgba(0,0,0,.10); transition: transform .15s ease; -webkit-tap-highlight-color: transparent;
         }
         .tb-btn::before { content: ''; position: absolute; top: 4px; left: 10px; width: 22px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.55); pointer-events: none; }
-        .tb-btn svg { position: relative; width: 26px; height: 26px; display: block; }
+        .tb-btn svg { position: relative; width: var(--tb-ico, 26px); height: var(--tb-ico, 26px); display: block; }
+        .tb-btn .stu-ico { width: var(--tb-ico, 26px); height: var(--tb-ico, 26px); } .tb-btn .stu-ico > b { font-size: calc(var(--tb-ico, 26px) * .8); }
         .tb-btn span { position: relative; }
         .tb-btn:hover { transform: translateY(-2px); }
         .tb-btn:active { transform: scale(.93); }
@@ -88,9 +89,9 @@
         /* 🎨 스킨의 '테두리 색'(--border-color) : 종이 카드 · 날짜 알약의 바깥 테두리 */
         .inner-page.png-mode { background-color: var(--page-bg); border-color: var(--border-color); border-width: 2px; padding: 2px; overflow: hidden; }
         .inner-page.png-mode .canvas-area { border-radius: 0; box-shadow: none; }
-        .inner-page.png-mode .page-header { height: 48px; margin: 0; border: 0; border-bottom: 2px dashed var(--border-color); border-radius: 0; background: none; box-shadow: none; padding: 0 15px; }
+        .inner-page.png-mode .page-header { align-self: stretch; width: auto; transform: none; height: 48px; margin: 0; border: 0; border-bottom: 2px dashed var(--border-color); border-radius: 0; background: none; box-shadow: none; padding: 0 15px; }
         .page-header {
-            position: relative; height: 38px; margin: 0 -4px 10px; border: 2px solid var(--border-color); border-radius: 19px;
+            position: relative; align-self: center; width: calc((100% + 8px) * var(--pill-w, 1)); transform: translateX(var(--pill-x, 0px)); height: 38px; margin: 0 0 10px; border: 2px solid var(--border-color); border-radius: 19px;
             background: var(--page-bg); box-shadow: 0 4px 12px rgba(0,0,0,.08);
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 2px; font-size: 1.2rem; color: var(--primary-accent); font-weight: bold;
@@ -2470,3 +2471,7 @@
         .th-info b { font-size: 14px; color: #5a3d4a; }
         .th-info small { font-size: 11.5px; color: #8a7a82; line-height: 1.4; }
         .th-btn { flex: none; padding: 6px 12px; font-size: 12px; }
+
+        .stu-tab { font-size: 11.5px; padding: 6px 1px; }
+        .stu-lay-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 7px; color: #6a4f5a; }
+        .stu-lay-row span { flex: none; width: 92px; } .stu-lay-row input { flex: 1; } .stu-lay-row b { flex: none; width: 46px; text-align: right; font-weight: normal; color: #999; }
