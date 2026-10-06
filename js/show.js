@@ -31,6 +31,7 @@
             showApply();
         }
         function showRenderSwitches() {
+            if (window.clearSecRender) clearSecRender();
             const box = document.getElementById('showSwitches'); if (!box) return;
             const o = showRead();
             box.innerHTML = SHOW_ITEMS.map(([k, name, sub]) => `<label class="show-row"><span><b>${name}</b><small>${sub}</small></span>`

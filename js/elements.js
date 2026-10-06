@@ -476,7 +476,7 @@
         /* 👆 사진 · 스티커 같은 그림을 골라 놓고 3초 동안 이동 · 회전 · 크기 조절(손가락 · 마우스 · 창 누르기)을 안 하면 선택 풀기
            - 누르고 있는 동안은 기다리고, 뗀 뒤부터 다시 3초 · 사진 꾸미기 창의 글 입력 중이거나 순서 메뉴가 열려 있으면 끝날 때까지 기다려요
            - 글상자는 그대로 (쓰는 중에 풀리면 안 되니까요) */
-        const IDLE_MS = 3000;
+        const idleMs = () => (window.clearSec ? clearSec() : 3) * 1000;   // 설정 '자동으로 사라지는 시간'(팝업메뉴와 같은 값)
         let idleTimer = 0, idleDown = false;
         function idleArm() {
             clearTimeout(idleTimer); idleTimer = 0;
@@ -490,7 +490,7 @@
                 el.classList.remove('selected');
                 selectedElement = null;
                 updateTextPanel();
-            }, IDLE_MS);
+            }, idleMs());
         }
         const idleTouch = e => {
             idleDown = e.type === 'mousedown' || e.type === 'touchstart' ? true : !!(e.touches && e.touches.length);

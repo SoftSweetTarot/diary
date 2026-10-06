@@ -24,8 +24,28 @@
             { key: 'p_save', icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } }
         ];
         const TM_ANCHOR_MS = 120000;
-        const TM_AUTO_CLOSE_MS = 3000;   // 메뉴가 나온 뒤 저절로 닫히는 시간
-        const TM_ELEM_CLOSE_MS = 6000;   // 순서 · 삭제 메뉴는 조금 더 오래
+        /* ⏲ 자동으로 사라지는 시간 (설정에서 정해요) : 팝업메뉴가 닫히는 시간 = 그림 선택이 풀리는 시간 (한 값으로 통일)
+           저장: 'diary_clear_sec'(settings.json) · 게스트는 이 기기 'malang_clear_sec' */
+        const CLR_KEY = 'diary_clear_sec', CLR_LOCAL = 'malang_clear_sec', CLR_DEF = 3, CLR_MIN = 1, CLR_MAX = 15;
+        function clearSec() {
+            let v = null;
+            try { v = (typeof drive !== 'undefined' && drive.ready && !drive.guest) ? store.getItem(CLR_KEY) : localStorage.getItem(CLR_LOCAL); } catch (e) {}
+            let n = NaN; try { n = Number(JSON.parse(v)); } catch (e) {}
+            return isFinite(n) && n >= CLR_MIN ? Math.min(CLR_MAX, n) : CLR_DEF;
+        }
+        function clearSecSet(n) {
+            n = Math.max(CLR_MIN, Math.min(CLR_MAX, Math.round(Number(n)) || CLR_DEF));
+            const t = JSON.stringify(n);
+            try { if (typeof drive !== 'undefined' && drive.ready && !drive.guest) store.setItem(CLR_KEY, t); } catch (e) {}
+            try { localStorage.setItem(CLR_LOCAL, t); } catch (e) {}
+            const b = document.getElementById('clearSecVal'); if (b) b.textContent = n + '초';
+        }
+        function clearSecRender() {
+            const r = document.getElementById('clearSecRange'); if (!r) return;
+            const n = clearSec(); r.min = CLR_MIN; r.max = CLR_MAX; r.value = n;
+            const b = document.getElementById('clearSecVal'); if (b) b.textContent = n + '초';
+        }
+        window.clearSec = clearSec; window.clearSecSet = clearSecSet; window.clearSecRender = clearSecRender;
         const TM_HOLD_MS = 500;          // 꾹 누르기 시간
         const TM_HOLD_MOVE = 10;         // 이만큼(px) 움직이면 꾹 누르기 취소 (끌어서 옮기는 중이니까요)
         let tmEl = null, tmAnchor = null, tmTimer = 0, tmAt = 0;
@@ -66,7 +86,7 @@
             m.style.top = y + 'px';
             m.style.transformOrigin = (pos.x - x) + 'px ' + (pos.y - y) + 'px';
             tmEl = m; tmAt = Date.now();
-            tmTimer = setTimeout(tmClose, closeMs || TM_AUTO_CLOSE_MS);
+            tmTimer = setTimeout(tmClose, clearSec() * 1000);
         }
 
         function tmOpen(e) {
@@ -88,7 +108,7 @@
             tmShow([
                 { key: 'p_order', icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } },
                 { key: 'p_trash', icon: TM_ICONS.trash, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }
-            ], { x, y, above: !!byTouch }, TM_ELEM_CLOSE_MS, 'elem');
+            ], { x, y, above: !!byTouch }, 0, 'elem');
         }
 
         /* 메뉴에서 고른 걸 눌렀던 자리에 놓기 (스티커 · 글 · 이미지를 넣는 함수가 불러요) */
