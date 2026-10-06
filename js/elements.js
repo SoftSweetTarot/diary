@@ -521,8 +521,13 @@
             if (!selectedElement) { showMsg('순서를 바꿀 스티커 · 글 · 사진을<br>먼저 눌러서 골라 주세요.'); return; }
             m = document.createElement('div');
             m.id = 'layerMenu'; m.className = 'layer-menu';
-            m.innerHTML = [['top', '⏫ 맨 앞'], ['up', '🔼 한 칸 앞'], ['down', '🔽 한 칸 뒤'], ['bottom', '⏬ 맨 뒤']]
-                .map(([k, t]) => `<button type="button" data-k="${k}" onclick="layerMove('${k}')">${t}</button>`).join('');
+            const A = (c, d, st) => `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.2" fill="${c}"/><path d="${d}" fill="none" stroke="${st}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+            const ICS = {
+                top: A('#dbe8fc', 'M7 12l5-5 5 5M7 18l5-5 5 5', '#4a7fd6'), up: A('#d6f2cc', 'M12 18V7M7 11.5l5-5 5 5', '#3f9455'),
+                down: A('#d6f2cc', 'M12 6v11M7 12.5l5 5 5-5', '#3f9455'), bottom: A('#dbe8fc', 'M7 6l5 5 5-5M7 12l5 5 5-5', '#4a7fd6')
+            };
+            m.innerHTML = [['top', '맨 앞'], ['up', '한 칸 앞'], ['down', '한 칸 뒤'], ['bottom', '맨 뒤']]
+                .map(([k, t]) => `<button type="button" class="tap-menu-btn" data-k="${k}" onclick="layerMove('${k}')"><i class="tm-ic">${ICS[k]}</i><span>${t}</span></button>`).join('');
             document.body.appendChild(m);
             const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : anchor, w = m.offsetWidth, h = m.offsetHeight;
             m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
