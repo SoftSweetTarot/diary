@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/page.js
-   글꼴 적용 · 글 꾸미기 패널 · 이모지 목록 · 날짜/페이지 넘기기 · 페이지 크기
+   글꼴 적용 · 메모지 패널 · 이모지 목록 · 날짜/페이지 넘기기 · 페이지 크기
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → service (index.html 참고) */
         function fillFontSelect(select) {
             if (!select) return;
@@ -76,7 +76,7 @@
             }
             if (!ta) { panel.style.display = 'none'; return; }
             panel.dataset.mode = 'text';
-            document.getElementById('textPanelTitle').textContent = '✥ 글 꾸미기';
+            document.getElementById('textPanelTitle').textContent = '✥ 메모지';
 
             const fontSel = document.getElementById('textFontSelect');
             const font = ta.dataset.font || DEFAULT_TEXT_FONT;

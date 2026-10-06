@@ -2480,3 +2480,15 @@
 #themeBoxBtn[hidden] { display: none; }
 .sm-grid { grid-template-columns: repeat(2, 1fr); }
 .svc-cat[hidden] { display: none; }
+.sm-grid .tpm-open { grid-column: 1 / -1; }
+.cat-btn.mtp-cat:not(.active) { background: #fff7e6; border-color: #ffc46b; }
+/* ===== 🎀 마스킹테이프 만들기 (js/tapemaker.js · 화면 모양은 .smk-* 를 같이 써요) ===== */
+.tpm-stage { display: flex; align-items: center; justify-content: center; height: 96px; overflow: hidden; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,.1);
+    background: repeating-conic-gradient(#eef3f7 0 25%, #fff 0 50%) 50% / 20px 20px; }
+.tpm-tape { flex: none; width: 170px; height: 30px; transform: scale(1.6) rotate(-4deg); background-size: 100% 100%; background-repeat: no-repeat; filter: drop-shadow(0 1px 1px rgba(0,0,0,.15)); }
+.tpm-lead { margin: 4px 0 0; font-weight: bold; font-size: 14px; }
+.tpm-colors { flex-wrap: wrap; align-items: center; }
+.tpm-colors input[type="color"] { width: 28px; height: 28px; padding: 0; border: 2px solid #fff; border-radius: 50%; background: none; box-shadow: 0 0 0 1.5px #ccc; cursor: pointer; }
+.sticker-grid .tpm-it { grid-column: span 3; position: relative; }
+.sticker-grid .tpm-it .tp-item { width: 100%; }
+.sticker-grid .tpm-it i { position: absolute; top: 2px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); font-style: normal; font-size: 11px; display: grid; place-items: center; cursor: pointer; color: #888; }

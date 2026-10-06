@@ -45,10 +45,15 @@
         function addTape(id) {
             const t = TAPES.find(x => x.id === id); if (!t || typeof addImage !== 'function') return;
             if (!tapeHas(id)) { showMsg('🎀 이 테이프의 선물 기간이 끝났어요 💕'); return; }
-            if (!addImage(tapeUrl(t))) return;
+            placeTape(tapeUrl(t));
+        }
+        /* 테이프 그림 하나를 다이어리에 붙이기 (🎀 마스킹테이프 · 🎀 내 마스킹테이프 공용) */
+        function placeTape(url) {
+            if (!addImage(url)) return false;
             const el = document.querySelector('#canvasArea .element-box:last-child');
             if (el) { el.style.width = '170px'; el.style.height = '30px'; el.dataset.rotation = -8; el.style.transform = el.style.transform.replace(/rotate\([^)]*\)/, 'rotate(-8deg)'); selectElement(el); }
             if (typeof closeModal === 'function') closeModal('stickerModal');
+            return true;
         }
 
         /* ✏️ 스티커 창 → 🎀 마스킹테이프 칸 : 선물 받은 테이프만 · 디자인마다 남은 날 (캡슐 스티커 칸처럼) */
@@ -62,3 +67,4 @@
         }
         window.loadTapes = loadTapes;
         window.isTapeSrc = isTapeSrc;
+        window.placeTape = placeTape;

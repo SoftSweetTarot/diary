@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/tapmenu.js
-   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🎨 스티커 · ✏ 메모지 · 🖍️ 필통 · 🖼 이미지 · 📚 그림모음 · 💾 저장)가 한 줄로 나와요.
+   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🎨 스티커 · ✏ 메모 · 🖍️ 필통 · 🖼 이미지 · 📚 그림모음 · 💾 저장)가 한 줄로 나와요.
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
    📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
@@ -17,7 +17,7 @@
         };
         const TM_ITEMS = [
             { key: 'p_sticker', icon: TM_ICONS.sticker, label: '스티커', nw: 'tape,caps', run: () => openModal('stickerModal') },
-            { key: 'p_write', icon: TM_ICONS.write, label: '메모지', run: () => addText() },
+            { key: 'p_write', icon: TM_ICONS.write, label: '메모', run: () => addText() },
             { key: 'p_pen', icon: TM_ICONS.pen, label: '필통', run: () => { tmAnchor = null; window.openDraw ? openDraw() : comingSoon('🖍️ 필통'); } },
             { key: 'p_image', icon: TM_ICONS.image, label: '이미지', run: () => triggerImageUpload() },
             { key: 'p_lib', icon: TM_ICONS.lib, label: '그림모음', run: () => openLibrary() },
