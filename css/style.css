@@ -202,8 +202,10 @@
             background: var(--win-fill, var(--page-bg)); color: var(--win-ink, inherit); padding: 20px; border-radius: 20px; width: 90%; max-width: 420px;
             border: 2px solid var(--win-border, var(--border-color));
             box-shadow: 0 12px 32px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12); max-height: 80vh; display: flex; flex-direction: column;
-            overflow-y: auto;
+            overflow-y: auto; overscroll-behavior: contain;
         }
+        /* 📱 슬라이더를 끌 때 창이 같이 밀리지 않게 */
+        input[type="range"] { touch-action: none; }
         .modal-title { font-size: 1.4rem; color: var(--primary-accent); margin-bottom: 12px; text-align: center; }
 
         /* 다이어리 중앙 전용 알림 모달 */

@@ -37,6 +37,15 @@
             box.innerHTML = SHOW_ITEMS.map(([k, name, sub]) => `<label class="show-row"><span><b>${name}</b><small>${sub}</small></span>`
                 + `<input type="checkbox" class="show-sw" ${o[k] === 0 ? '' : 'checked'} onchange="showSet('${k}', this.checked)"></label>`).join('');
         }
+        /* 📱 아이패드: 창 안을 끌 때 (스크롤할 게 없으면) 창 전체가 딸려 움직이지 않게 막기 */
+        document.addEventListener('touchmove', e => {
+            const t = e.target; if (!t || !t.closest) return;
+            const mc = t.closest('.modal-content'); if (!mc) return;
+            for (let n = t; n && n !== mc.parentNode; n = n.parentNode) {
+                if (n.nodeType === 1 && n.scrollHeight > n.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(n).overflowY)) return;
+            }
+            e.preventDefault();
+        }, { passive: false });
         showApply();
         window.showApply = showApply;
         window.showSet = showSet;
