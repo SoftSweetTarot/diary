@@ -50,7 +50,7 @@
             const el = document.createElement('div');
             el.id = 'smRoom'; el.className = 'smk-room';
             el.innerHTML = `
-              <div class="smk-bar"><button class="smk-x" type="button" id="smBack" onclick="smStep(1)" aria-label="앞으로" hidden>←</button><span class="smk-sp" id="smSp"></span><b>✂️ 스티커 만들기</b><button class="smk-x" type="button" onclick="closeStickerMaker()" aria-label="닫기">✕</button></div>
+              <div class="smk-bar"><button class="smk-x" type="button" id="smBack" onclick="smStep(1)" aria-label="앞으로" hidden>&lt;</button><span class="smk-sp" id="smSp"></span><b>✂️ 스티커 만들기</b><button class="smk-x" type="button" onclick="closeStickerMaker()" aria-label="닫기">✕</button></div>
               <div class="smk-wrap">
                 <section id="smStep1" class="smk-step">
                   <p class="smk-lead">무엇으로 스티커를 만들까요?</p>

@@ -505,7 +505,7 @@
             const span = document.createElement('span'); span.className = 'mt-text';
             while (title.firstChild) span.appendChild(title.firstChild);
             if (title.id) { span.id = title.id; title.removeAttribute('id'); }
-            const back = mk('←', backBtn ? backBtn.textContent.replace('←', '').trim() || '뒤로' : '뒤로', 'mt-back' + (backBtn ? '' : ' mt-none'), () => backBtn && backBtn.click());
+            const back = mk('<', backBtn ? backBtn.textContent.replace('←', '').trim() || '뒤로' : '뒤로', 'mt-back' + (backBtn ? '' : ' mt-none'), () => backBtn && backBtn.click());
             const x = mk('✕', '닫기', 'mt-x', () => closeBtn ? closeBtn.click() : closeModal(modal.id));
             title.classList.add('mt-bar');
             title.append(back, span, x);

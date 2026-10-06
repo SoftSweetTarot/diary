@@ -891,7 +891,7 @@
                 <div class="ar-head">
                   <div class="ar-sign"><span class="ar-neon">MALANG ARCADE</span><b>🕹️ 말랑 오락실</b></div>
                   ${typeof sndFxBtn === 'function' ? sndFxBtn('ar-ibtn') : ''}
-                  <button class="ar-ibtn" type="button" onclick="closeArcade()" aria-label="닫기">✕</button>
+                  <button class="ar-ibtn ar-plain" type="button" onclick="closeArcade()" aria-label="닫기">✕</button>
                 </div>
                 <p class="ar-coin">INSERT COIN <i>·</i> 게임을 골라 주세요</p>
                 <h3 class="ar-group">🕹️ 오락실 게임</h3>
@@ -902,7 +902,7 @@
               </div>
               <div class="ar-play" id="arPlay" hidden>
                 <div class="ar-bar">
-                  <button class="ar-ibtn" type="button" onclick="arBackToLobby()" aria-label="오락실로">←</button>
+                  <button class="ar-ibtn ar-plain" type="button" onclick="arBackToLobby()" aria-label="오락실로">&lt;</button>
                   <div class="ar-bar-t" id="arTitle"></div>
                   <div class="ar-stat"><small>SCORE</small><b id="arScore">0</b></div>
                   <div class="ar-stat"><small>BEST</small><b id="arBest">0</b></div>

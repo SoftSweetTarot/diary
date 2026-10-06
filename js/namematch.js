@@ -112,7 +112,7 @@
             el.id = 'nmRoom'; el.className = 'nm-room';
             el.innerHTML = `
               <i class="nm-float f1">💗</i><i class="nm-float f2">💕</i><i class="nm-float f3">✨</i><i class="nm-float f4">💞</i>
-              <div class="nm-bar"><button class="nm-x" type="button" id="nmBack" onclick="nmShow(1)" aria-label="뒤로" hidden>←</button><span id="nmSp">${typeof sndFxBtn === 'function' ? sndFxBtn('nm-x') : '<span class="nm-sp"></span>'}</span><b>💕 이름 궁합</b><button class="nm-x" type="button" onclick="closeNameMatch()" aria-label="닫기">✕</button></div>
+              <div class="nm-bar"><button class="nm-x" type="button" id="nmBack" onclick="nmShow(1)" aria-label="뒤로" hidden>&lt;</button><span id="nmSp">${typeof sndFxBtn === 'function' ? sndFxBtn('nm-x') : '<span class="nm-sp"></span>'}</span><b>💕 이름 궁합</b><button class="nm-x" type="button" onclick="closeNameMatch()" aria-label="닫기">✕</button></div>
               <div class="nm-wrap">
                 <section id="nmStep1" class="nm-step">
                   <div class="nm-hero"><span>💌</span></div>
