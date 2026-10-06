@@ -2479,3 +2479,4 @@
 #settingsModal input[type="range"] { touch-action: none; }
 #themeBoxBtn[hidden] { display: none; }
 .sm-grid { grid-template-columns: repeat(2, 1fr); }
+.svc-cat[hidden] { display: none; }

@@ -77,7 +77,7 @@
             svcDailyBadges();
         }
         /* 🌱 매일 : 오늘 새로 생긴 것을 알려 주는 작은 표시 (출석 도장 · 화분 물 주기 · 오늘의 행운 · 오늘의 질문)
-           - 길잡이일 뿐이에요 : 🌱 매일 칸을 한 번 열어서 보여 주면 그날은 다시 안 붙어요 (안 해도 · 구경만 해도 사라짐)
+           - 길잡이일 뿐이에요 : 그 버튼을 눌렀을 때 **그 버튼의 표시만** 사라져요 (아직 안 누른 버튼의 표시는 그대로 · 안 해도 눌렀으면 그날은 다시 안 붙음)
            - 다음 날이 되면 새것이니까 다시 알려 줘요 · 이미 한 것은 처음부터 안 붙어요 */
         const SVC_SEEN = 'malang_daily_seen';                      // 오늘 이미 알려 준 것 { d: '2026-10-06', ids: [버튼 id…] }
         const svcDay = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
@@ -89,7 +89,7 @@
             const a = svcSeenGet(); ids.forEach(i => { if (!a.includes(i)) a.push(i); });
             try { localStorage.setItem(SVC_SEEN, JSON.stringify({ d: svcDay(), ids: a })); } catch (e) {}
         }
-        async function svcDailyBadges(shown) {                     // shown = true : 🌱 매일 칸이 지금 보이는 중 → 보여 준 것은 '알려 줌' 처리
+        async function svcDailyBadges() {
             const mark = (id, txt) => {
                 const b = document.getElementById(id); if (!b) return;
                 let e = b.querySelector('.svc-badge');
@@ -108,8 +108,14 @@
             mark('svcBtnQuestion', ques ? '💬 NEW' : '');
             mark('svcBtnPlant', water ? '💧 물 주기' : '');
             mark('svcCatDaily', (stamp ? 1 : 0) + (water ? 1 : 0) + (luck ? 1 : 0) + (ques ? 1 : 0) || '');
-            if (shown) svcSeenAdd([stamp && 'svcBtnAttend', luck && 'svcBtnLuck', ques && 'svcBtnQuestion', water && 'svcBtnPlant'].filter(Boolean));
         }
+        /* 🌱 매일 칸의 버튼을 누르면 그 버튼만 '알려 줌' 처리 (다른 버튼의 표시는 건드리지 않아요) */
+        document.addEventListener('click', e => {
+            const b = e.target.closest && e.target.closest('#svcPanel-daily .service-btn[id]');
+            if (!b || !b.querySelector('.svc-badge')) return;
+            svcSeenAdd([b.id]);
+            setTimeout(svcDailyBadges, 0);
+        }, true);
         const SVC_CAT_NAMES = { daily: '🌱 매일', fortune: '🔮 운세·마음', make: '🎨 만들기·꾸미기', game: '🕹️ 게임', watch: '🎧 보고·듣기', together: '💌 함께하기' };
         function svcOpenCat(id) {
             const panel = document.getElementById('svcPanel-' + id); if (!panel) return;
@@ -117,12 +123,12 @@
             document.querySelectorAll('#serviceModal .svc-panel').forEach(p => { p.hidden = p !== panel; });
             document.getElementById('svcTitle').textContent = SVC_CAT_NAMES[id] || '☕ 카페';
             document.getElementById('svcBack').classList.remove('mt-none');
-            if (id === 'daily') svcDailyBadges(true);
         }
         function goCafe() {
             window.open(CAFE_URL, '_blank', 'noopener');
         }
         function comingSoon(name) { showMsg(name + ' 기능은 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function openPet() { comingSoon('🐾 펫 키우기'); }
         function openPuppetShow() { comingSoon('🎭 인형극'); }
         function openSweetVideo() { comingSoon('🎬 달콤영상'); }
         function openFortune() { if (typeof openFortuneCard === 'function') openFortuneCard(); else comingSoon('🔮 포춘카드'); }   // js/fortune.js
