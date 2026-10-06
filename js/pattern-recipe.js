@@ -126,6 +126,8 @@
                 if (!c) return null;
                 out[k] = c;
             }
+            const mn = s.menu != null ? recipeColor(s.menu, null) : null;     // 🔘 하단 메뉴 테두리 색 (있을 때만)
+            if (mn) out.menu = mn;
             return out;
         }
 
