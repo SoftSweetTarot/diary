@@ -27,7 +27,6 @@
         window.addEventListener('appinstalled', () => {
             ins.prompt = null; insShowBtn();
             if (typeof closeModal === 'function') closeModal('installModal');
-            if (typeof toast === 'function') toast('📲 설치했어요! 이제 홈 화면의 말랑달콤 아이콘으로 열어 보세요');
         });
         function insShowBtn() { const b = insQ('installBtn'); if (b) b.hidden = insStandalone(); }
         insShowBtn();

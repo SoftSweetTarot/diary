@@ -83,7 +83,7 @@
 
         async function qaSave() {
             const a = qaq('qaInput').value.trim();
-            if (!a) { qaq('qaInput').focus(); if (typeof toast === 'function') toast('💬 대답을 한 줄이라도 적어 주세요'); return; }
+            if (!a) { qaq('qaInput').focus(); return; }
             const q = qa.q;
             closeQuestion();
             goToToday(() => {
@@ -104,7 +104,6 @@
                 }
                 if (selectedElement) { selectedElement.classList.remove('selected'); selectedElement = null; updateTextPanel(); }
                 saveData(false);
-                if (typeof toast === 'function') toast((fresh ? '💬 오늘의 질문을 일기에 남겼어요' : '💬 일기의 대답을 고쳤어요') + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             });
         }
 

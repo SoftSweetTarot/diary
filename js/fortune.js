@@ -213,10 +213,10 @@
 
         /* 4. 뽑은 카드를 다이어리에 붙이기 */
         function fcStick() {
-            if (!fc.card || fc.card.bad) { toast('붙일 카드 그림이 없어요'); return; }
+            if (!fc.card || fc.card.bad) { return; }
             if (typeof addImage !== 'function') return;
             closeFortuneCard();
-            if (addImage(fc.card.src)) toast('📌 카드를 다이어리에 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
+            addImage(fc.card.src);
         }
 
         /* ---------- 소리 : 맑은 종소리 (파일 없이 만들어요 · 아이폰 무음 모드에서도 들리게) ---------- */

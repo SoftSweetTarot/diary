@@ -77,7 +77,6 @@
             if (on && sndPref().vol <= 0) sndSet('vol', 50);
             sndSet('fx', on);
             if (on) sndChime();
-            if (typeof toast === 'function') toast(on ? '🔊 연출 소리를 켰어요' : '🔇 연출 소리를 껐어요 (설정에서 다시 켤 수 있어요)');
         }
         const sndFxBtn = cls => `<button type="button" class="snd-fx ${cls || ''}" onclick="sndToggleFx()" aria-label="연출 소리 켜고 끄기">${sndOn() ? '🔊' : '🔇'}</button>`;
         function sndMark() {

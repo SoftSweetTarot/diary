@@ -83,7 +83,6 @@
             renderBgPattern();
             saveBgPattern();
             renderPatternList();
-            toast('🎨 배경을 \'' + p.name + '\' 패턴으로 바꿨어요.');
         }
 
         function clearBgPattern() {
@@ -92,7 +91,6 @@
             renderBgPattern();
             saveBgPattern();
             renderPatternList();
-            toast('배경 패턴을 해제했어요. 기본스킨의 전체 배경색이 보여요.');
         }
 
         /* 패턴 크기 : 움직이는 동안은 미리보기만, 손을 떼면 저장 */

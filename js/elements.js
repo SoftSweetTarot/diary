@@ -28,12 +28,6 @@
 
         function triggerImageUpload() { document.getElementById('imgInput').click(); }
 
-        function toast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg; t.style.display = 'block';
-            clearTimeout(t._t); t._t = setTimeout(() => { t.style.display = 'none'; }, 4000);
-        }
-
         function resolveSrc(p) {
             return /^(https?:|data:|blob:)/i.test(p) ? p : p.split('/').map(encodeURIComponent).join('/');
         }
@@ -41,7 +35,7 @@
         function bindImage(img, src, fallback) {
             img.dataset.src = src;
             img.onerror = () => {
-                if (fallback && img.src !== fallback) { img.src = fallback; toast('⚠ ' + src + ' 을(를) 못 찾았어요. images 폴더에 넣어 주세요.'); }
+                if (fallback && img.src !== fallback) { img.src = fallback; }
                 else { img.classList.add('broken'); img.alt = '⚠ ' + src; }
             };
             img.src = resolveSrc(src);
@@ -110,10 +104,8 @@
             if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return; }
             if (file.type && !file.type.startsWith('image/')) { showMsg('이미지 파일만 가져올 수 있어요.'); return; }
             try {
-                toast('🖼 이미지를 불러오는 중…');
                 const src = await fileToDiaryImage(file);
                 if (addImage(src)) {
-                    toast('🖼 이미지를 넣었어요.');
                     saveData(false);
                 }
             } catch (err) {
@@ -523,7 +515,7 @@
             return [...document.querySelectorAll('#canvasArea > .element-box')].map((el, i) => [el, parseInt(el.style.zIndex) || 1, i])
                 .sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(a => a[0]);
         }
-        function openLayerMenu(anchor) {   // anchor = 버튼 · 또는 { left, width, bottom } 자리
+        function openLayerMenu(anchor) {  // anchor = 버튼 · 또는 { left, width, bottom } 자리
             let m = document.getElementById('layerMenu');
             if (m) { m.remove(); return; }
             if (!selectedElement) { showMsg('순서를 바꿀 스티커 · 글 · 사진을<br>먼저 눌러서 골라 주세요.'); return; }

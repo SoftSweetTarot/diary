@@ -49,7 +49,6 @@
             const el = document.querySelector('#canvasArea .element-box:last-child');
             if (el) { el.style.width = '170px'; el.style.height = '30px'; el.dataset.rotation = -8; el.style.transform = el.style.transform.replace(/rotate\([^)]*\)/, 'rotate(-8deg)'); selectElement(el); }
             if (typeof closeModal === 'function') closeModal('stickerModal');
-            if (typeof toast === 'function') toast('🎀 ↔ 손잡이를 끌면 테이프 길이가 바뀌어요');
         }
 
         /* ✏️ 스티커 창 → 🎀 마스킹테이프 칸 : 선물 받은 테이프만 · 디자인마다 남은 날 (캡슐 스티커 칸처럼) */

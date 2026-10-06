@@ -145,7 +145,6 @@ ${dots}
             if (!addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(psyCardSvg()))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '160px';
             closePsyTest();
-            toast('🧠 테스트 결과를 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
 
         function openPsyTest() {

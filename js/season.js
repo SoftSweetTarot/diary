@@ -77,7 +77,7 @@
             if (!SEASON_OPEN) return;
             const on = !seasonOn();
             store.setItem(SEASON_KEY, on ? '1' : '0');
-            if (on) { seasonApply(); if (typeof toast === 'function') toast(`${SEASONS[seasonNow()].icon} ${SEASONS[seasonNow()].name} 테마를 켰어요`); }
+            if (on) { seasonApply(); }
             else { delete document.body.dataset.season; seasonFx(null); seasonCorner(null); if (typeof restoreSkin === 'function') restoreSkin(); }
             seasonRenderCard();
         }
@@ -121,7 +121,6 @@
             if (!addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.svg))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '110px';
             if (typeof closeModal === 'function') closeModal('stickerModal');
-            if (typeof toast === 'function') toast(`${SEASONS[k].icon} ${s.name} 스티커를 붙였어요` + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
 
         (function seasonInit() {

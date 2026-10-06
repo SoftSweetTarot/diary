@@ -129,7 +129,6 @@
             const cs = (await Promise.all(list.slice(0, L.n).map(load))).filter(Boolean);
             if (!cs.length) return;
             pb.shots = []; for (let i = 0; i < L.n; i++) pb.shots.push(cs[i % cs.length]);
-            if (cs.length < L.n && typeof toast === 'function') toast(`사진 ${L.n}장이 필요해서 고른 사진을 되풀이해 넣었어요`);
             pbToEdit();
         }
         function pbToEdit() { pbStep(3); pbq('pbText').value = pb.text; pbq('pbDeco').checked = pb.deco; pbSetFilter(pb.filter); }
@@ -195,7 +194,6 @@
             const el = document.querySelector('#canvasArea .element-box:last-child');
             if (el) el.style.width = pb.layout === 'strip' ? '110px' : '170px';
             closeBooth();
-            if (typeof toast === 'function') toast('📸 포토부스 사진을 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
         function pbSave() {
             const a = document.createElement('a'), n = new Date();

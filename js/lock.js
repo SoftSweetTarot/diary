@@ -110,7 +110,6 @@
                 const old = lockRead();
                 const rec = { h: await lockHash(pin, s), s, u: (old && old.u) || await lockOwner(), a: old ? old.a : 0 };
                 lockWrite(rec); lockClose(); lockRenderSettings();
-                if (typeof toast === 'function') toast('🔒 다이어리 잠금을 켰어요. 비밀번호를 꼭 기억해 주세요!');
             }
         }
 
@@ -171,7 +170,7 @@
         function lockChange() { closeModal('lockModal'); lk2.after = () => lockShow('new1', '새 비밀번호', '바꿀 비밀번호 4자리를 눌러 주세요'); lockShow('check', '지금 비밀번호', '지금 비밀번호 4자리를 눌러 주세요'); }
         function lockOff() {
             closeModal('lockModal');
-            lk2.after = () => { lockWrite(null); lockRenderSettings(); if (typeof toast === 'function') toast('🔓 다이어리 잠금을 껐어요'); };
+            lk2.after = () => { lockWrite(null); lockRenderSettings(); };
             lockShow('check', '잠금 끄기', '지금 비밀번호 4자리를 눌러 주세요');
         }
         function lockSetAuto(v) { const r = lockRead(); if (!r) return; r.a = +v || 0; lockWrite(r); }

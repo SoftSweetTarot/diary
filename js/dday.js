@@ -125,14 +125,14 @@
             if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { showMsg('날짜를 골라 주세요.'); return; }
             let pin = ddq('ddPin').checked;
             const others = dd.list.filter((q, j) => q.pin && j !== dd.edit.i).length;
-            if (pin && others >= DD_PIN_MAX) { pin = false; if (typeof toast === 'function') toast(`📌 페이지에는 ${DD_PIN_MAX}개까지 보여요`); }
+            if (pin && others >= DD_PIN_MAX) { pin = false; }
             const x = { n, d, k: dd.edit.k, e: dd.edit.e, pin };
             if (dd.edit.i === undefined) dd.list.push(x); else dd.list[dd.edit.i] = x;
             ddWrite(); ddFormClose(); ddRenderList();
         }
         function ddPinToggle(i) {
             const x = dd.list[i];
-            if (!x.pin && dd.list.filter(q => q.pin).length >= DD_PIN_MAX) { if (typeof toast === 'function') toast(`📌 페이지에는 ${DD_PIN_MAX}개까지 보여요`); return; }
+            if (!x.pin && dd.list.filter(q => q.pin).length >= DD_PIN_MAX) { return; }
             x.pin = !x.pin; ddWrite(); ddRenderList();
         }
         async function ddDel(i) {
@@ -150,7 +150,6 @@
             if (!addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '170px';
             closeDday();
-            if (typeof toast === 'function') toast('📔 D-day 카드를 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
 
         function openDday() {

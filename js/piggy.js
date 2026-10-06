@@ -200,7 +200,6 @@
             if (!pig.chat || !pig.code) return;
             try { navigator.clipboard.writeText(pig.code).catch(() => {}); } catch (e) {}
             window.open(pig.chat, '_blank');
-            toast(`📋 저금 코드 ${pig.code} 를 복사했어요. 채팅에 붙여 넣어 주세요 💕`);
         }
 
         async function pigCopy(text, what) {
@@ -214,7 +213,6 @@
                 ta.remove();
             }
             if (typeof sndChime === 'function') sndChime();
-            toast(`📋 ${what}를 복사했어요: ${text}`);
         }
 
         function openPiggy() {

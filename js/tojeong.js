@@ -253,7 +253,7 @@
 
         async function tjShowResult() {
             const b = { y: +tq('tjY').value, m: +tq('tjM').value, d: +tq('tjD').value, solar: tj.cal !== 'lunar', leap: tj.cal === 'lunar' && tq('tjLeap').checked };
-            try { await tjLoad(); } catch (e) { toast('🎍 운세 계산 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
+            try { await tjLoad(); } catch (e) { return; }
             let g;
             try { g = tjCalc(b, tj.year); }
             catch (e) {
@@ -303,7 +303,6 @@
             closeTojeong();
             if (typeof addImage === 'function' && addImage(tjSvgUrl(tjStickSvg(tj.last.g, tj.last.r)))) {
                 const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '230px';
-                toast('📌 토정비결을 다이어리에 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             }
         }
 

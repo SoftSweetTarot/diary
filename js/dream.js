@@ -147,8 +147,8 @@
         /* 해몽 보기 */
         async function dmInterpret() {
             const text = dq('drText').value.trim();
-            if (text.length < 2) { toast('🌙 꿈 내용을 조금만 적어 주세요'); dq('drText').focus(); return; }
-            try { await dmLoad(); } catch (e) { toast('🌙 꿈 사전을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
+            if (text.length < 2) { dq('drText').focus(); return; }
+            try { await dmLoad(); } catch (e) { return; }
             const hits = dmFind(text);
             dm.last = { text, hits, mood: dm.mood };
             dm.from = 'write';
@@ -259,13 +259,12 @@ ${emo.slice(1).map((e, i) => `<text x="${side[i][0]}" y="${side[i][1]}" font-siz
             closeDream();
             if (typeof addImage === 'function' && addImage(dm.cardUrl)) {
                 const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '170px';
-                toast('📌 꿈 카드를 다이어리에 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             }
         }
 
         /* ---------- 📖 상징 사전 ---------- */
         async function dmShowDict() {
-            try { await dmLoad(); } catch (e) { toast('🌙 꿈 사전을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
+            try { await dmLoad(); } catch (e) { return; }
             const cats = dq('drCats');
             if (!cats.childElementCount) {
                 ['전체'].concat(DREAM_CATS).forEach(c => {

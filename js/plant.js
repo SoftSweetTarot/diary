@@ -255,10 +255,5 @@
             const s = plRead(), watered = s.last === plDay();
             return { watered, wrote: watered || await plWroteToday() };
         }
-        function plantStickHint() {                         // 오늘 페이지에 무언가 붙였을 때 알림 뒤에 붙일 말
-            try { if (PL_OPEN && plRead().last !== plDay() && isCoverOpen && plDay(currentDate) === plDay()) return ' · 🌷 이제 화분에 물을 줄 수 있어요!'; } catch (e) {}
-            return '';
-        }
         window.openPlant = openPlant;
         window.plantStatus = plantStatus;
-        window.plantStickHint = plantStickHint;

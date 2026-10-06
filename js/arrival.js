@@ -198,7 +198,7 @@
             el.querySelectorAll('.wl-lp-open').forEach(b => { b.onclick = () => window.open(wlMine[b.dataset.n].u, '_blank', 'noopener'); });
             el.querySelectorAll('.wl-lp-copy').forEach(b => { b.onclick = async () => {
                 const u = wlMine[b.dataset.n].u;
-                if (typeof pigCopy === 'function') await pigCopy(u, '링크'); else { try { await navigator.clipboard.writeText(u); } catch (e) {} if (typeof toast === 'function') toast('📋 링크를 복사했어요'); }
+                if (typeof pigCopy === 'function') await pigCopy(u, '링크'); else { try { await navigator.clipboard.writeText(u); } catch (e) {} }
                 b.textContent = '✅ 복사했어요'; setTimeout(() => { b.textContent = '📋 복사'; }, 1800);
             }; });
             document.body.appendChild(el);

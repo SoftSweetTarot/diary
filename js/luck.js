@@ -227,7 +227,6 @@
             if (addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(lkCardSvg(lk.res)))) {
                 const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '220px';
                 closeLuck();
-                if (typeof toast === 'function') toast('📌 행운 카드를 다이어리에 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             }
         }
 

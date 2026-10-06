@@ -316,7 +316,6 @@
             }).catch(() => {
                 if (seq !== bgm.loadSeq) return;
                 bgm.loading = false; bgm.playing = false; bgmRender();
-                toast('🎵 곡을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
             });
         }
         function bgmTick() {
@@ -469,8 +468,8 @@
             if (bgm.out) bgm.out.gain.setTargetAtTime(bgm.pref.vol * 0.6, bgm.ac.currentTime, 0.05);
         }
         function bgmSetVoice(v) { bgm.pref.voice = v; bgmSavePref(); if (bgm.song) bgm.voice = bgmVoiceOf(bgm.song); }
-        function bgmSetShuffle() { bgm.pref.shuffle = !bgm.pref.shuffle; bgmSavePref(); bgmRender(); toast(bgm.pref.shuffle ? '🔀 섞어 듣기' : '🔀 순서대로 듣기'); }
-        function bgmSetMode() { bgm.pref.mode = bgm.pref.mode === 'one' ? 'all' : 'one'; bgmSavePref(); bgmRender(); toast(bgm.pref.mode === 'one' ? '🔂 한 곡 반복' : '🔁 목록 반복'); }
+        function bgmSetShuffle() { bgm.pref.shuffle = !bgm.pref.shuffle; bgmSavePref(); bgmRender(); }
+        function bgmSetMode() { bgm.pref.mode = bgm.pref.mode === 'one' ? 'all' : 'one'; bgmSavePref(); bgmRender(); }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['bgm'] = true;

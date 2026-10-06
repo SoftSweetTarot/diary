@@ -175,7 +175,6 @@
             if (selectedElement) selectedElement.classList.remove('selected');
             selectedElement = null; if (typeof updateTextPanel === 'function') updateTextPanel();
             saveData(false);
-            if (typeof toast === 'function') toast('🖍️ 그림이 됐어요! 눌러서 옮기거나 크기를 바꿀 수 있어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
         function penCancel() {
             if (dw.strokes.length) {

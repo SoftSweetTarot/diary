@@ -228,7 +228,6 @@
                 DR.doll.name = r.doll.name;                                  // 같은 이름이 있어서 '로라 (2)'로 바뀌었을 수 있음
                 const nameIn = document.getElementById('drName'); if (nameIn) nameIn.value = r.doll.name;
                 DR.dirty = false; clearDraft();
-                if (showToast) toast(dollUseDrive() ? `💾 '${r.doll.name}' 저장했어요 · ${dollFolderText()} / ${dollFileName(r.doll.name)}` : `💾 '${r.doll.name}' 이 기기에 저장했어요`);
                 return true;
             } catch (e) {
                 console.error('인형 저장 오류:', e);
@@ -741,14 +740,12 @@
             try {
                 const clear = document.getElementById('drClear') && document.getElementById('drClear').checked;
                 downloadBlob(await dollCardBlob(DR.doll, clear), `malang_doll_${dollStamp()}.png`);
-                toast('📷 사진으로 저장했어요. 카페 인형 자랑 게시판에 올려 보세요!');
             } catch (e) { showMsg('사진을 만들지 못했어요.<br>잠시 후 다시 시도해 주세요.'); }
         }
         function dollSaveFile() {
             const d = sanitizeDoll(DR.doll);
             if (!d) { showMsg('⚠ 인형이 너무 커서 파일로 저장할 수 없어요.'); return; }
             downloadBlob(new Blob([JSON.stringify({ malang_doll: 1, name: d.name, by: d.by, doll: d })], { type: 'text/plain;charset=utf-8' }), `malang_doll_${dollStamp()}.malang.txt`);
-            toast('💾 인형 파일을 저장했어요. 카페에 첨부하면 다른 사람이 불러올 수 있어요!');
         }
         function importDollFile(e) {
             const f = e.target.files && e.target.files[0];
@@ -763,7 +760,7 @@
                 if (!d.name) d.name = '불러온 인형';
                 try {
                     const r = await saveDoll(d, null);
-                    if (r) { renderDollPicker(); toast(`📂 '${r.doll.name}' 인형을 불러왔어요`); }
+                    if (r) { renderDollPicker(); }
                 } catch (err) { showMsg('⚠ 인형을 저장하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
             });
         }
@@ -845,7 +842,7 @@
         async function dollAttachFromRoom() {
             if (!(await dollSaveToList(false))) return;
             const d = sanitizeDoll(DR.doll);
-            if (DR.attachEl && document.body.contains(DR.attachEl)) { setPlacedDoll(DR.attachEl, d); toast('📔 일기의 인형을 바꿨어요'); }
+            if (DR.attachEl && document.body.contains(DR.attachEl)) { setPlacedDoll(DR.attachEl, d); }
             else if (!attachDollToPage(d)) return;
             document.getElementById('dollRoom').style.display = 'none';
             DR.attachEl = null;
@@ -894,7 +891,6 @@
             document.getElementById('canvasArea').appendChild(el);
             selectElement(el);
             saveData(false);
-            toast('📔 일기에 인형을 붙였어요! 두 번 누르면 표정을 바꿀 수 있어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
             return true;
         }
 

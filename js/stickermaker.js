@@ -218,7 +218,7 @@
                 else { smS.list.unshift({ id: Date.now().toString(36), src, t: smS.mode === 'text' ? smS.text : '' }); await smSave(); }
             } catch (e) { if (!stick) { showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
             if (stick) { smStick(src); return; }
-            if (typeof toast === 'function') toast('💾 내 스티커에 저장했어요'); smStep(1);
+             smStep(1);
         }
         function smStick(src) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">스티커는 ✂️ 내 스티커에 저장돼 있어요.</span>'); return; }
@@ -226,7 +226,6 @@
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '110px';
             closeStickerMaker();
             if (typeof closeModal === 'function') closeModal('stickerModal');
-            if (typeof toast === 'function') toast('✂️ 스티커를 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
 
         /* ---------- 내 스티커 (만들기 화면 · ✏️ 스티커 창 공용) ---------- */

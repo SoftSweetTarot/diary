@@ -149,7 +149,6 @@
             const uid = addMyPattern(document.getElementById('makerName').value, r);
             if (!uid) return;
             if (apply) selectBgPattern('my:' + uid);
-            else toast('📂 내 패턴에 저장했어요. (스킨 → 📂 내 패턴)');
         }
 
         function makerCopyCode() {
@@ -211,7 +210,7 @@
         /* 코드 복사 : 파일 첨부가 안 될 때 카페 글에 붙여 넣는 용도 (패턴 등록 도구에 그대로 붙여 넣기 가능) */
         function copyPatternCode(name, r, nickFrom) {
             const text = patternFileText(name, r, nickFrom);
-            const done = () => toast('📋 패턴 코드를 복사했어요. (' + text.length.toLocaleString() + '글자)');
+            const done = () => {};
             const fallback = () => {
                 const ta = document.createElement('textarea');
                 ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';

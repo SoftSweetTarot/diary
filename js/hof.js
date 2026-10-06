@@ -55,7 +55,7 @@
         async function hofSubmit(nickJustSet) {
             const p = hof.pending; if (!p || hof.busy) return;
             const btn = document.querySelector('#arOverlay .ar-btn.hof');
-            if (!p.ticket) { hofMsg(HOF_ERR.ticket); return; }
+            if (!p.ticket) return;
             hof.busy = true; if (btn) { btn.disabled = true; btn.textContent = '🏆 올리는 중…'; }
             const r = await hofCall('submit', { game: p.game, score: p.score, ticket: p.ticket });
             hof.busy = false;
@@ -69,9 +69,7 @@
             }
             if (btn) { btn.disabled = false; btn.textContent = '🏆 명예의 전당에 올리기'; }
             if (r.error === 'nick' && !nickJustSet) { hofAskNick(() => hofSubmit(true)); return; }
-            hofMsg(HOF_ERR[r.error] || HOF_ERR.server);
         }
-        function hofMsg(t) { if (typeof toast === 'function') toast(t); }
 
         /* ---------- 닉네임 ---------- */
         function hofAskNick(after) {
@@ -91,7 +89,6 @@
             if (!r.ok) { hq('hofNickErr').textContent = HOF_ERR[r.error] || HOF_ERR.server; return; }
             hof.nick = r.nick; hof.cache = {};
             hq('hofNickWrap').hidden = true;
-            hofMsg(`🏆 닉네임을 '${r.nick}'(으)로 정했어요`);
             if (hof.afterNick) { const f = hof.afterNick; hof.afterNick = null; f(); }
             if (hof.open) hofLoad();
         }

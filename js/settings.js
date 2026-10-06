@@ -439,7 +439,7 @@
         function copySkinCode() {
             const got = skinShareText();
             if (!got) return;
-            const done = () => toast('📋 스킨 코드를 복사했어요. 카페 글에 붙여 넣어 주세요.');
+            const done = () => {};
             const fallback = () => {
                 const ta = document.createElement('textarea');
                 ta.value = got.text; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -464,7 +464,7 @@
         function addReceivedSkin(p) {
             if (!p) { showMsg('⚠ 스킨 파일이 아니거나 깨진 파일이에요.'); return; }
             const same = Object.keys(customSkins).find(n => JSON.stringify(sanitizeSkin(customSkins[n])) === JSON.stringify(p.skin));
-            if (same) { applySkinPreset(same); toast(`🎨 이미 있는 스킨이에요 : '${same}'`); return; }
+            if (same) { applySkinPreset(same); return; }
             const name = freeSkinName(p.name);
             customSkins[name] = p.skin;
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));

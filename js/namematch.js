@@ -146,8 +146,8 @@
         function nmStart() {
             const clean = v => v.replace(/\s/g, '');
             const a = clean(nmq('nmA').value), b = clean(nmq('nmB').value);
-            if (!a || !b) { toast('💕 두 사람 이름을 모두 적어 주세요'); (a ? nmq('nmB') : nmq('nmA')).focus(); return; }
-            if (!/^[가-힣]+$/.test(a + b)) { toast('💕 이름은 한글로만 적어 주세요 (예: 김말랑)'); return; }
+            if (!a || !b) { (a ? nmq('nmB') : nmq('nmA')).focus(); return; }
+            if (!/^[가-힣]+$/.test(a + b)) { return; }
             const r1 = nmCalc(a, b), r2 = nmCalc(b, a);
             const tier = NM_TIERS.find(t => r1.pct >= t.min), ti = NM_TIERS.indexOf(tier);
             const seed = nmSeed(a + '|' + b + '|' + nm.rel);
@@ -273,7 +273,6 @@ ${hearts}
             if (!addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(nmCardSvg()))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '160px';
             closeNameMatch();
-            toast('💕 궁합 카드를 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
 
         function openNameMatch() {

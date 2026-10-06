@@ -178,7 +178,6 @@
             const r = await lbCall('report', { id });
             if (!r || !r.ok) { showMsg('⚠️ ' + (LB_ERR[r && r.error] || LB_ERR.server)); return; }
             lb.data.inbox = lb.data.inbox.filter(l => l.id !== id);
-            toast('🚨 신고했어요. 알려 줘서 고마워요');
             lbTab('in');
         }
 
@@ -193,7 +192,7 @@
         async function lbSend() {
             if (lb.busy) return;
             const text = lbq('lbText').value.trim();
-            if (text.length < LB_MIN) { toast('✉️ ' + LB_ERR.short); return; }
+            if (text.length < LB_MIN) { return; }
             lb.busy = true; const btn = lbq('lbSendBtn'), label = btn.textContent; btn.disabled = true; btn.textContent = '🕊️ 보내는 중…';
             const r = await lbCall('send', { text, paper: lb.paper, sticker: lb.sticker, replyTo: lb.replyTo || '' });
             lb.busy = false; btn.disabled = false; btn.textContent = label;
@@ -201,7 +200,6 @@
             const wasReply = lb.replyTo;
             await lbFly();
             lbq('lbText').value = ''; lbq('lbLen').textContent = '0';
-            toast(wasReply ? '💌 답장을 보냈어요!' : '🕊️ 편지가 어딘가의 말랑이에게 날아가요!');
             lb.replyTo = null;
             await lbLoad();
             lbTab(wasReply ? 'in' : 'sent');
@@ -245,7 +243,6 @@ ${lines.map((l, i) => `<text x="26" y="${top + i * gap}" font-size="15" fill="#5
             if (!addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(lbCardSvg(x)))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '170px';
             closeLetterBox();
-            toast('💌 편지를 다이어리에 붙였어요' + (typeof plantStickHint === 'function' ? plantStickHint() : ''));
         }
 
         function openLetterBox() {
