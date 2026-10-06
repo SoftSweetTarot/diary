@@ -38,10 +38,10 @@
         .tb-btn span { position: relative; }
         .tb-btn:hover { transform: translateY(-2px); }
         .tb-btn:active { transform: scale(.93); }
-        .tb-skin { background: var(--menu-fill, #fbd3dd); color: var(--menu-ink, #a23a57); }
-        .tb-bgm { background: var(--menu-fill, #fde9a8); color: var(--menu-ink, #9a6414); }
-        .tb-cafe { background: var(--menu-fill, #cdebc3); color: var(--menu-ink, #2f6b3a); }
-        .tb-set { background: var(--menu-fill, #dccdf5); color: var(--menu-ink, #5b3f9e); }
+        .tb-skin { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #a23a57); }
+        .tb-bgm { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #9a6414); }
+        .tb-cafe { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #2f6b3a); }
+        .tb-set { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #5b3f9e); }
         .btn {
             background: #fff; border: 2px solid var(--border-color); color: #444;
             padding: 5px 10px; border-radius: 12px; font-weight: bold; cursor: pointer;
@@ -198,7 +198,7 @@
             background: transparent; display: none; justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
-            background: var(--win-fill, #fff); color: var(--win-ink, inherit); padding: 20px; border-radius: 20px; width: 90%; max-width: 420px;
+            background: var(--win-fill, var(--page-bg)); color: var(--win-ink, inherit); padding: 20px; border-radius: 20px; width: 90%; max-width: 420px;
             border: 2px solid var(--win-border, var(--border-color));
             box-shadow: 0 12px 32px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12); max-height: 80vh; display: flex; flex-direction: column;
             overflow-y: auto;
@@ -2337,7 +2337,7 @@
         /* 📍 빈 곳을 누르면 나오는 추가 메뉴 (js/tapmenu.js) */
         .tap-menu, .layer-menu {
             position: fixed; z-index: 120; display: flex; flex-direction: column; gap: 2px;
-            padding: 8px; border-radius: 22px; background: var(--pop-fill, #fff);
+            padding: 8px; border-radius: 22px; background: var(--pop-fill, var(--page-bg));
             border: 2px solid var(--pop-border, var(--border-color)); box-shadow: 0 8px 24px rgba(90,61,74,.18);
             animation: tmPop .16s ease-out;
         }

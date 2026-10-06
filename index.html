@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261006-183">
+    <link rel="stylesheet" href="css/style.css?v=20261006-184">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -234,27 +234,27 @@
                 <summary>🎨 기본 색</summary>
                 <div class="color-picker-row"><label>전체 배경색:</label><input type="color" id="customBg" value="#ffe6f0" oninput="previewCustomColor()"></div>
                 <div class="color-picker-row"><label>겉표지 색상:</label><input type="color" id="customCover" value="#ff9a9e" oninput="previewCustomColor()"></div>
-                <div class="color-picker-row"><label>속지 배경색:</label><input type="color" id="customPage" value="#fff0f5" oninput="previewCustomColor()"></div>
+                <div class="color-picker-row"><label>속지 배경색:</label><input type="color" id="customPage" value="#fff0f5" oninput="customPageInput()"></div>
                 <div class="color-picker-row"><label>테두리 색상:</label><input type="color" id="customBorder" value="#ffb6c1" oninput="customBorderInput()"></div>
                 <div class="color-picker-row"><label>포인트 색상:</label><input type="color" id="customAccent" value="#ff6b81" oninput="previewCustomColor()"></div>
-                <div class="skin-grp-note">이 5가지만 골라도 아래 메뉴 · 창 색은 저절로 어울려요.</div>
+                <div class="skin-grp-note">이 5가지만 골라도 아래 메뉴 · 창의 테두리(테두리 색상) · 안쪽(속지 배경색)이 저절로 따라가요.</div>
             </details>
             <details class="skin-grp">
                 <summary>🔘 하단메뉴</summary>
                 <div class="color-picker-row"><label>테두리 색:</label><input type="color" id="customMenu" value="#ffb6c1" oninput="customOptInput('menu')"></div>
-                <div class="color-picker-row"><label>안쪽 색:</label><input type="color" id="customMenuFill" value="#fbd3dd" oninput="customOptInput('mfill')"></div>
-                <div class="skin-grp-note">안 고르면 버튼마다 다른 파스텔색이에요. 글자색은 저절로 맞춰져요.</div>
+                <div class="color-picker-row"><label>안쪽 색:</label><input type="color" id="customMenuFill" value="#fff0f5" oninput="customOptInput('mfill')"></div>
+                <div class="skin-grp-note">안 고르면 속지 배경색을 따라가요. 글자색은 저절로 맞춰져요.</div>
             </details>
             <details class="skin-grp">
                 <summary>📍 팝업메뉴</summary>
                 <div class="color-picker-row"><label>테두리 색:</label><input type="color" id="customPopBorder" value="#ffb6c1" oninput="customOptInput('pbd')"></div>
-                <div class="color-picker-row"><label>안쪽 색:</label><input type="color" id="customPopFill" value="#ffffff" oninput="customOptInput('pfill')"></div>
+                <div class="color-picker-row"><label>안쪽 색:</label><input type="color" id="customPopFill" value="#fff0f5" oninput="customOptInput('pfill')"></div>
                 <div class="color-picker-row"><label>선택했을 때 색:</label><input type="color" id="customPopSel" value="#ffe9f0" oninput="customOptInput('psel')"></div>
             </details>
             <details class="skin-grp">
                 <summary>🪟 창 (스티커 · 카페 · 설정 …)</summary>
                 <div class="color-picker-row"><label>테두리 색:</label><input type="color" id="customWinBorder" value="#ffb6c1" oninput="customOptInput('wbd')"></div>
-                <div class="color-picker-row"><label>안쪽 색:</label><input type="color" id="customWinFill" value="#ffffff" oninput="customOptInput('wfill')"></div>
+                <div class="color-picker-row"><label>안쪽 색:</label><input type="color" id="customWinFill" value="#fff0f5" oninput="customOptInput('wfill')"></div>
                 <div class="skin-grp-note">모든 창에 같은 색이 적용돼요. 너무 어두우면 일부 글자가 안 보일 수 있어요.</div>
             </details>
 
@@ -691,69 +691,69 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261006-183"></script>
-    <script src="js/sound.js?v=20261006-183"></script>
-    <script src="js/app.js?v=20261006-183"></script>
-    <script src="js/page.js?v=20261006-183"></script>
-    <script src="js/elements.js?v=20261006-183"></script>
-    <script src="js/tapmenu.js?v=20261006-183"></script>
-    <script src="js/settings.js?v=20261006-183"></script>
-    <script src="js/patterns.js?v=20261006-183"></script>
+    <script src="js/drive.js?v=20261006-184"></script>
+    <script src="js/sound.js?v=20261006-184"></script>
+    <script src="js/app.js?v=20261006-184"></script>
+    <script src="js/page.js?v=20261006-184"></script>
+    <script src="js/elements.js?v=20261006-184"></script>
+    <script src="js/tapmenu.js?v=20261006-184"></script>
+    <script src="js/settings.js?v=20261006-184"></script>
+    <script src="js/patterns.js?v=20261006-184"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261006-183"></script>
-    <script src="js/skins.js?v=20261006-183"></script>
-    <script src="js/pattern-maker.js?v=20261006-183"></script>
-    <script src="js/doll-render.js?v=20261006-183"></script>
-    <script src="js/doll-store.js?v=20261006-183"></script>
-    <script src="js/doll-room.js?v=20261006-183"></script>
-    <script src="js/service.js?v=20261006-183"></script>
+    <script src="js/pattern-recipe.js?v=20261006-184"></script>
+    <script src="js/skins.js?v=20261006-184"></script>
+    <script src="js/pattern-maker.js?v=20261006-184"></script>
+    <script src="js/doll-render.js?v=20261006-184"></script>
+    <script src="js/doll-store.js?v=20261006-184"></script>
+    <script src="js/doll-room.js?v=20261006-184"></script>
+    <script src="js/service.js?v=20261006-184"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261006-183"></script>
-    <script src="js/presence.js?v=20261006-183"></script>
+    <script src="js/gacha.js?v=20261006-184"></script>
+    <script src="js/presence.js?v=20261006-184"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261006-183"></script>
+    <script src="js/bgm.js?v=20261006-184"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261006-183"></script>
+    <script src="js/fortune.js?v=20261006-184"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261006-183"></script>
-    <script src="js/hof.js?v=20261006-183"></script>
+    <script src="js/arcade.js?v=20261006-184"></script>
+    <script src="js/hof.js?v=20261006-184"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/ritual.js?v=20261006-183"></script>
-    <script src="js/dream.js?v=20261006-183"></script>
+    <script src="js/ritual.js?v=20261006-184"></script>
+    <script src="js/dream.js?v=20261006-184"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261006-183"></script>
-    <script src="js/plant.js?v=20261006-183"></script>
-    <script src="js/capsule-stickers.js?v=20261006-183"></script>
-    <script src="js/attend.js?v=20261006-183"></script>
-    <script src="js/luck.js?v=20261006-183"></script>
-    <script src="js/question-data.js?v=20261006-183"></script>
-    <script src="js/question.js?v=20261006-183"></script>
-    <script src="js/tape.js?v=20261006-183"></script>
-    <script src="js/paper.js?v=20261006-183"></script>
-    <script src="js/draw.js?v=20261006-183"></script>
-    <script src="js/frame.js?v=20261006-183"></script>
-    <script src="js/season-data.js?v=20261006-183"></script>
-    <script src="js/season.js?v=20261006-183"></script>
-    <script src="js/lock.js?v=20261006-183"></script>
-    <script src="js/cycle.js?v=20261006-183"></script>
-    <script src="js/month.js?v=20261006-183"></script>
-    <script src="js/stamp.js?v=20261006-183"></script>
-    <script src="js/search.js?v=20261006-183"></script>
-    <script src="js/dday.js?v=20261006-183"></script>
-    <script src="js/show.js?v=20261006-183"></script>
-    <script src="js/photobooth.js?v=20261006-183"></script>
-    <script src="js/stickermaker.js?v=20261006-183"></script>
-    <script src="js/namematch.js?v=20261006-183"></script>
-    <script src="js/psytest-data.js?v=20261006-183"></script>
-    <script src="js/psytest.js?v=20261006-183"></script>
-    <script src="js/letter.js?v=20261006-183"></script>
-    <script src="js/install.js?v=20261006-183"></script>
-    <script src="js/piggy.js?v=20261006-183"></script>
-    <script src="js/wall.js?v=20261006-183"></script>
-    <script src="js/arrival.js?v=20261006-183"></script>
+    <script src="js/tojeong.js?v=20261006-184"></script>
+    <script src="js/plant.js?v=20261006-184"></script>
+    <script src="js/capsule-stickers.js?v=20261006-184"></script>
+    <script src="js/attend.js?v=20261006-184"></script>
+    <script src="js/luck.js?v=20261006-184"></script>
+    <script src="js/question-data.js?v=20261006-184"></script>
+    <script src="js/question.js?v=20261006-184"></script>
+    <script src="js/tape.js?v=20261006-184"></script>
+    <script src="js/paper.js?v=20261006-184"></script>
+    <script src="js/draw.js?v=20261006-184"></script>
+    <script src="js/frame.js?v=20261006-184"></script>
+    <script src="js/season-data.js?v=20261006-184"></script>
+    <script src="js/season.js?v=20261006-184"></script>
+    <script src="js/lock.js?v=20261006-184"></script>
+    <script src="js/cycle.js?v=20261006-184"></script>
+    <script src="js/month.js?v=20261006-184"></script>
+    <script src="js/stamp.js?v=20261006-184"></script>
+    <script src="js/search.js?v=20261006-184"></script>
+    <script src="js/dday.js?v=20261006-184"></script>
+    <script src="js/show.js?v=20261006-184"></script>
+    <script src="js/photobooth.js?v=20261006-184"></script>
+    <script src="js/stickermaker.js?v=20261006-184"></script>
+    <script src="js/namematch.js?v=20261006-184"></script>
+    <script src="js/psytest-data.js?v=20261006-184"></script>
+    <script src="js/psytest.js?v=20261006-184"></script>
+    <script src="js/letter.js?v=20261006-184"></script>
+    <script src="js/install.js?v=20261006-184"></script>
+    <script src="js/piggy.js?v=20261006-184"></script>
+    <script src="js/wall.js?v=20261006-184"></script>
+    <script src="js/arrival.js?v=20261006-184"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
