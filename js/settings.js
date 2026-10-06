@@ -251,6 +251,10 @@
         function findSkin(id, inline) {
             if (typeof id !== 'string' || !id) return null;
             if (hasOwn(skinPresets, id)) return { skin: skinPresets[id], kind: 'preset', name: SKIN_PRESET_NAMES[id] || id };
+            if (id.startsWith('th:')) {                                   // 🎁 테마 스킨 (보관함에 있는 것만 · js/skinstudio.js)
+                const th = typeof themeSkinOf === 'function' ? themeSkinOf(id.slice(3)) : null;
+                return th ? { skin: th.skin, kind: 'th', name: th.name } : null;
+            }
             if (id.startsWith('cs:')) {
                 const hit = skinCommunity().find(s => s.id === id);
                 if (hit) return { skin: hit.skin, kind: 'cs', name: hit.name, by: hit.by };
@@ -269,6 +273,7 @@
             root.style.setProperty('--border-color', skin.border);
             root.style.setProperty('--primary-accent', skin.accent);
             SK_OPT.forEach(o => skSetOpt(o, skin[o.k] || null, skin.page));   // 하단메뉴 · 팝업메뉴 색 : 따로 정한 색이 없으면 기본 모양(테두리는 테두리 색을 따라감)
+            if (typeof stuApply === 'function') stuApply(skin);               // 🎀 놓아 둔 꾸밈 · 바꾼 아이콘 (js/skinstudio.js)
         }
 
         /* 색 고르기 칸도 지금 스킨 색으로 맞춤 (고른 스킨을 조금 바꿔서 내 스킨으로 등록할 수 있게) */
@@ -295,10 +300,10 @@
             setSkinVars(hit.skin);
             syncSkinPickers(hit.skin);
             currentSkinId = id;
-            currentSkinInline = hit.kind === 'preset' ? null : hit.skin;
+            currentSkinInline = hit.kind === 'preset' || hit.kind === 'th' ? null : hit.skin;
             renderSkinSelect();
             if (opts.save !== false) {
-                const rec = hit.kind === 'preset' ? { id } : { id, c: hit.skin };
+                const rec = hit.kind === 'preset' || hit.kind === 'th' ? { id } : { id, c: hit.skin };
                 store.setItem(SKIN_KEY, JSON.stringify(rec));
             }
             updateSkinShareUI();
@@ -329,6 +334,7 @@
                 sel.appendChild(g);
             };
             group('기본 스킨', Object.keys(skinPresets).map(k => [k, SKIN_PRESET_NAMES[k] || k]));
+            group('🎁 테마 스킨 (보관함)', (typeof stuThemeList === 'function' ? stuThemeList() : []).filter(t => stuHasTheme(t.id)).map(t => ['th:' + t.id, '🎁 ' + t.name]));
             group('🌟 모두의 스킨 (카페에서 등록)', skinCommunity().map(s =>
                 [s.id, `${s.name}${s.by ? ' · by ' + s.by : ''}`]));
             group('🎨 내 스킨', Object.keys(customSkins).map(n => [n, '🎨 ' + n]));
@@ -399,20 +405,27 @@
             return name + Date.now().toString(36).slice(-3);
         }
 
-        async function saveCustomSkin() {
-            const nameInput = cleanSkinName(document.getElementById('customSkinName').value);
-            if (!nameInput) { showMsg('스킨 이름을 입력해주세요!'); return; }
-            if (hasOwn(skinPresets, nameInput) || nameInput.startsWith('cs:')) { showMsg('그 이름은 쓸 수 없어요.<br>다른 이름을 적어 주세요.'); return; }
-            if (hasOwn(customSkins, nameInput) && !(await showMsg(`'${nameInput}' 스킨이 이미 있어요.<br>지금 색으로 바꿀까요?`, true))) return;
-
-            const newSkin = {
+        /* 색 고르기 칸 → 스킨 색 (따로 고른 하단메뉴 · 팝업메뉴 · 창 색만 담김) */
+        function skinFromPickers() {
+            const skin = {
                 bg: document.getElementById('customBg').value,
                 cover: document.getElementById('customCover').value,
                 page: document.getElementById('customPage').value,
                 border: document.getElementById('customBorder').value,
                 accent: document.getElementById('customAccent').value
             };
-            SK_OPT.forEach(o => { if (skOwn[o.k]) newSkin[o.k] = document.getElementById(o.id).value; });   // 따로 고른 하단메뉴 · 팝업메뉴 색만 저장
+            SK_OPT.forEach(o => { if (skOwn[o.k]) skin[o.k] = document.getElementById(o.id).value; });
+            return skin;
+        }
+
+        async function saveCustomSkin() {
+            const nameInput = cleanSkinName(document.getElementById('customSkinName').value);
+            if (!nameInput) { showMsg('스킨 이름을 입력해주세요!'); return; }
+            if (hasOwn(skinPresets, nameInput) || nameInput.startsWith('cs:')) { showMsg('그 이름은 쓸 수 없어요.<br>다른 이름을 적어 주세요.'); return; }
+            if (hasOwn(customSkins, nameInput) && !(await showMsg(`'${nameInput}' 스킨이 이미 있어요.<br>지금 색으로 바꿀까요?`, true))) return;
+
+            const newSkin = skinFromPickers();
+            if (typeof stuExtra === 'function') Object.assign(newSkin, stuExtra());   // 🎀 스킨 만들기에서 놓은 꾸밈 · 아이콘도 함께
 
             customSkins[nameInput] = newSkin;
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));
@@ -525,7 +538,7 @@
             const f = e.target.files && e.target.files[0];
             e.target.value = '';
             if (!f) return;
-            if (f.size > 20000) { showMsg('⚠ 스킨 파일이 아니에요. (파일이 너무 커요)'); return; }
+            if (f.size > 400000) { showMsg('⚠ 스킨 파일이 아니에요. (파일이 너무 커요)'); return; }
             f.text().then(t => addReceivedSkin(parseSkinText(t)));
         }
         function pasteSkinCode() {

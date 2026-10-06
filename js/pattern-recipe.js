@@ -116,7 +116,7 @@
         function sanitizeSkin(input) {
             let s = input;
             if (typeof s === 'string') {
-                if (s.length > 2000) return null;
+                if (s.length > 300000) return null;
                 try { s = JSON.parse(s); } catch (e) { return null; }
             }
             if (!s || typeof s !== 'object' || Array.isArray(s)) return null;
@@ -130,6 +130,7 @@
                 const c = s[k] != null ? recipeColor(s[k], null) : null;
                 if (c) out[k] = c;
             });
+            if (typeof stuClean === 'function') stuClean(s, out);          // 🎀 꾸밈 · 아이콘 · 내 이미지 (js/skinstudio.js · 정해진 모양만 통과)
             return out;
         }
 

@@ -16,12 +16,12 @@
             trash: TM_SVG('<path d="M9.5 5.2V4a1.2 1.2 0 0 1 1.2-1.2h2.6A1.2 1.2 0 0 1 14.5 4v1.2" fill="none" stroke="#d9577a" stroke-width="1.8"/><path d="M6 9h12l-.9 10a2 2 0 0 1-2 1.8H8.9a2 2 0 0 1-2-1.8z" fill="#ee7f9f"/><rect x="4.5" y="5.2" width="15" height="2.8" rx="1.4" fill="#d9577a"/><path d="M10 11.5v6M14 11.5v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>')
         };
         const TM_ITEMS = [
-            { icon: TM_ICONS.sticker, label: '스티커', nw: 'tape,caps', run: () => openModal('stickerModal') },
-            { icon: TM_ICONS.write, label: '글쓰기', run: () => addText() },
-            { icon: TM_ICONS.pen, label: '펜', run: () => { tmAnchor = null; window.openDraw ? openDraw() : comingSoon('🖍️ 펜'); } },
-            { icon: TM_ICONS.image, label: '이미지', run: () => triggerImageUpload() },
-            { icon: TM_ICONS.lib, label: '그림모음', run: () => openLibrary() },
-            { icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } }
+            { key: 'p_sticker', icon: TM_ICONS.sticker, label: '스티커', nw: 'tape,caps', run: () => openModal('stickerModal') },
+            { key: 'p_write', icon: TM_ICONS.write, label: '글쓰기', run: () => addText() },
+            { key: 'p_pen', icon: TM_ICONS.pen, label: '펜', run: () => { tmAnchor = null; window.openDraw ? openDraw() : comingSoon('🖍️ 펜'); } },
+            { key: 'p_image', icon: TM_ICONS.image, label: '이미지', run: () => triggerImageUpload() },
+            { key: 'p_lib', icon: TM_ICONS.lib, label: '그림모음', run: () => openLibrary() },
+            { key: 'p_save', icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } }
         ];
         const TM_ANCHOR_MS = 120000;
         const TM_AUTO_CLOSE_MS = 3000;   // 메뉴가 나온 뒤 저절로 닫히는 시간
@@ -40,7 +40,7 @@
             items.forEach(it => {
                 const b = document.createElement('button');
                 b.type = 'button'; b.className = 'tap-menu-btn';
-                b.innerHTML = `<i class="tm-ic">${it.icon}</i><span>${it.label}</span>`;
+                b.innerHTML = `<i class="tm-ic">${(window.stuIcon && it.key && stuIcon(it.key)) || it.icon}</i><span>${it.label}</span>`;   // 🎀 스킨에서 바꾼 아이콘이 있으면 그것으로
                 if (it.nw) { b.dataset.nwAny = it.nw; if (window.nwOn && it.nw.split(',').some(nwOn)) b.classList.add('nw-on'); }
                 b.onclick = (ev) => {
                     ev.stopPropagation();
@@ -51,6 +51,7 @@
                 m.appendChild(b);
             });
             document.body.appendChild(m);
+            if (window.stuMount) stuMount('pop', m);        // 🎀 스킨에서 놓은 팝업메뉴 꾸밈
             const w = m.offsetWidth, h = m.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
             let x, y;
             if (pos.above) {
@@ -85,8 +86,8 @@
             tmAnchor = null;
             selectElement(el);
             tmShow([
-                { icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } },
-                { icon: TM_ICONS.trash, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }
+                { key: 'p_order', icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } },
+                { key: 'p_trash', icon: TM_ICONS.trash, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }
             ], { x, y, above: !!byTouch }, TM_ELEM_CLOSE_MS, 'elem');
         }
 
