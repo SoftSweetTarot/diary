@@ -74,6 +74,14 @@
             flex-shrink: 0; box-sizing: border-box;
         }
 
+        /* ◀ ▶ 날짜 넘기기 : 동글동글 분홍 화살표 */
+        .page-arrow { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; color: #fff;
+            background: linear-gradient(135deg, #ff9ab3, #ff6b81); box-shadow: 0 3px 8px rgba(255,107,129,.35);
+            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+        .page-arrow:hover { filter: brightness(1.06); box-shadow: 0 4px 10px rgba(255,107,129,.45); }
+        .page-arrow:active { transform: scale(.88); box-shadow: 0 1px 4px rgba(255,107,129,.4); }
+
         .canvas-area {
             flex: 1; position: relative; overflow: hidden; touch-action: none;
             background-size: 100% 25px;
@@ -187,9 +195,10 @@
         .alert-btns { display: flex; gap: 8px; justify-content: center; }
 
         .sticker-categories {
-            display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px;
-            border-bottom: 1px solid #eee; scrollbar-width: none;
+            display: flex; gap: 4px; overflow-x: auto; padding: 11px 8px 8px 2px; margin-bottom: 8px;   /* 위 · 오른쪽 여유 : NEW 표시가 잘리지 않게 */
+            border-bottom: 1px solid #eee; scrollbar-width: none; flex-shrink: 0;
         }
+        #stickerModal .modal-title { font-size: 1.05rem; margin-bottom: 2px; }
         .sticker-categories::-webkit-scrollbar { display: none; }
         @media (hover: hover) and (pointer: fine) { .sticker-categories { flex-wrap: wrap; overflow-x: visible; } }
         .cat-btn {
@@ -200,7 +209,7 @@
 
         .sticker-grid {
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-            overflow-y: auto; height: min(320px, 50vh); align-content: start; padding: 4px;   /* 스티커가 적거나 없어도 창 크기는 그대로 */
+            overflow-y: auto; height: min(360px, 54vh); align-content: start; padding: 4px;   /* 스티커가 적거나 없어도 창 크기는 그대로 */
         }
         .sticker-item { font-size: 1.8rem; text-align: center; cursor: pointer; padding: 4px; border-radius: 8px; }
         .sticker-item:hover { background: #ffe6f0; transform: scale(1.15); transition: transform 0.1s; }
