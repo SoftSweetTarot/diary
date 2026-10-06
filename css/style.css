@@ -25,7 +25,7 @@
             display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
             background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px);
             padding: 8px 12px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            margin-bottom: 8px; z-index: 100; max-width: 95vw;
+            margin-top: 8px; z-index: 100; max-width: 95vw;
         }
         .btn {
             background: #fff; border: 2px solid var(--border-color); color: #444;
@@ -260,12 +260,14 @@
         .gate-msg { font-size: 14px; color: #555; line-height: 1.7; }
         .gate-btn { justify-content: center; width: 100%; padding: 10px 12px; }
         .gate-guest { background: none; border: none; color: #888; font-size: 12px; text-decoration: underline; cursor: pointer; font-family: inherit; }
-        /* 아래 상태 줄 (드라이브 저장 표시 · 배경음악 막대) : PC 는 화면 아래 양쪽 구석에 떠 있어요 */
-        .status-dock { position: fixed; left: 10px; right: 12px; bottom: 10px; z-index: 1500; display: flex; align-items: center; gap: 8px; pointer-events: none; }
-        .status-dock > * { pointer-events: auto; }
-        .drive-badge { display: none; max-width: 70vw; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            padding: 5px 10px; border-radius: 12px; font-size: 12px; background: rgba(255,255,255,.92);
-            border: 2px solid var(--border-color); color: #555; cursor: pointer; font-family: var(--font-family); }
+        /* ☁ 드라이브 저장 알림 : 다이어리 페이지 왼쪽 하단 · 저장 기록이 바뀔 때만 부드럽게 나왔다 사라져요 (js/drive.js updateBadge) */
+        .drive-badge { position: absolute; left: 8px; bottom: 8px; z-index: 40; max-width: 70%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            padding: 4px 9px; border-radius: 12px; font-size: 11px; background: rgba(255,255,255,.92);
+            border: 2px solid var(--border-color); color: #555; cursor: pointer; font-family: var(--font-family);
+            opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(4px);
+            transition: opacity .7s ease, transform .7s ease, visibility 0s linear .7s; }
+        .drive-badge.show { opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+            transition: opacity .7s ease, transform .7s ease, visibility 0s; }
         .drive-badge.warn { border-color: #e57373; color: #c62828; }
 
         /* 💌 건의함 모달 (설정 모달 위에 겹쳐서 표시) */
@@ -714,22 +716,7 @@
         .bgm-song-t b { font-size: 14px; color: #444; }
         .bgm-song-t small { font-size: 11px; color: #aaa; }
         .bgm-note { font-size: 12px; color: #999; text-align: center; margin: 10px 0 0; }
-        .bgm-mini { margin-left: auto; display: flex; align-items: center; background: #fff; border: 2px solid var(--border-color); border-radius: 999px; box-shadow: 0 6px 18px rgba(0,0,0,.15); overflow: hidden; max-width: min(260px, calc(100vw - 24px)); }
-        .bgm-mini[hidden] { display: none; }
-        .bgm-mini button { border: 0; background: none; font: inherit; cursor: pointer; }
-        .bgm-mini-t { display: flex; align-items: center; gap: 8px; padding: 7px 6px 7px 12px; min-width: 0; font-size: 13px; font-weight: bold; color: #555; }
-        .bgm-mini-t span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bgm-mini-x { padding: 7px 12px 7px 8px; color: var(--primary-accent); font-size: 14px; }
         @media (prefers-reduced-motion: reduce) { .bgm-eq.on i { animation: none; height: 10px; } }
-        /* 폰 : 상태 줄을 다이어리 바로 아래 한 줄로 (다이어리를 가리지 않게 · 그만큼 다이어리 높이를 줄여요 → js/page.js refreshLayout) */
-        @media (max-width: 600px), (pointer: coarse) and (max-height: 900px) {
-            .status-dock { position: static; width: min(92vw, 480px); min-height: 26px; margin-top: 6px; }
-            .drive-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; max-width: 55%; }
-            .bgm-mini { max-width: 48%; box-shadow: none; }
-            .bgm-mini-t { padding: 3px 4px 3px 9px; font-size: 11px; gap: 6px; }
-            .bgm-mini-x { padding: 3px 9px 3px 6px; font-size: 12px; }
-            .bgm-mini .bgm-eq { height: 11px; }
-        }
         .bgm-seek { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: #999; font-variant-numeric: tabular-nums; }
         .bgm-seek input { flex: 1; min-width: 0; accent-color: var(--primary-accent); }
         .bgm-seek input:disabled { opacity: .45; }

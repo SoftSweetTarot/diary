@@ -2,7 +2,7 @@
    🎵 배경음악 : 다이어리를 꾸미면서 들을 수 있는 음악 플레이어 (툴바 🎵 배경음악)
    - 녹음 파일 없이 브라우저가 악보를 보고 그 자리에서 소리를 만들어요 (Web Audio)
    - 음색 3가지 : 🎐 오르골 · 🎹 피아노 · 👾 8비트(옛날 게임기)
-   - 창을 닫아도 계속 흘러나오고, 오른쪽 아래 작은 막대(미니 플레이어)로 멈추기·다시 열기
+   - 창을 닫아도 계속 흘러나와요 (멈추기는 이 창에서)
    - 곡 종류 두 가지
        ① 전곡 악보 (file: true) : js/bgm/곡이름.json 을 그 곡을 처음 틀 때만 받아 와요 (곡당 1~70KB · 깃허브에서 받음 · 드라이브 트래픽 없음)
           Mutopia Project(무료 공개 악보)의 악보를 그대로 연주 데이터로 바꾼 것 → 원곡 길이 그대로
@@ -364,7 +364,7 @@
             const r = bgmHandEvents(s); return r.total * (s.repeat || 1);
         }
 
-        /* ---------- 화면 : 배경음악 창 + 오른쪽 아래 미니 플레이어 ---------- */
+        /* ---------- 화면 : 배경음악 창 ---------- */
         function bgmBuild() {
             if (document.getElementById('bgmModal')) return;
             const m = document.createElement('div');
@@ -391,15 +391,11 @@
                 </div>
                 <div class="bgm-tabs" id="bgmTabs" role="tablist"></div>
                 <div class="bgm-list" id="bgmList"></div>
-                <p class="bgm-note">창을 닫아도 음악은 계속 나와요. 오른쪽 아래 🎵 막대로 멈추거나 다시 열 수 있어요.<br>
+                <p class="bgm-note">창을 닫아도 음악은 계속 나와요. 멈추려면 이 창을 다시 열어 ⏸를 눌러 주세요.<br>
                   전곡 악보는 <a href="https://www.mutopiaproject.org" target="_blank" rel="noopener">Mutopia Project</a>의 무료 공개 악보로 연주해요.</p>
                 <button class="btn" type="button" style="width:100%; justify-content:center; margin-top:8px;" onclick="closeModal('bgmModal')">닫기</button>
               </div>`;
             document.body.appendChild(m);
-            const mini = document.createElement('div');
-            mini.className = 'bgm-mini'; mini.id = 'bgmMini'; mini.hidden = true;
-            mini.innerHTML = `<button type="button" class="bgm-mini-t" onclick="openBgm()"><span class="bgm-eq on"><i></i><i></i><i></i></span><span id="bgmMiniTitle"></span></button><button type="button" class="bgm-mini-x" onclick="bgmStop()" aria-label="배경음악 멈추기">■</button>`;
-            (document.getElementById('statusDock') || document.body).appendChild(mini);   // 아래 상태 줄에 (폰에서는 다이어리 아래 한 줄)
             const tabs = document.getElementById('bgmTabs');
             BGM_CATS.forEach(c => {
                 const b = document.createElement('button');
@@ -458,9 +454,6 @@
                 list.appendChild(b);
             });
             bgmProgress();
-            const mini = document.getElementById('bgmMini');
-            mini.hidden = !bgm.playing;
-            document.getElementById('bgmMiniTitle').textContent = s ? s.title : '';
         }
 
         function bgmSetVol(v) {

@@ -512,21 +512,28 @@
         }
         function hideGate() { document.getElementById('driveGate').style.display = 'none'; }
 
+        /* ☁ 저장 알림 : 평소엔 숨김 · 저장 기록(글)이 바뀔 때만 부드럽게 나왔다가 사라짐
+           (로그인 만료 · 저장 실패처럼 눌러야 하는 경고는 해결될 때까지 떠 있음) */
+        let badgeLast = null, badgeTimer = null;
         function updateBadge() {
             const el = document.getElementById('driveBadge');
             if (!el) return;
-            let text = '', warn = false;
+            let text = '', warn = false, stay = false;
             if (drive.guest) { text = '☁ 저장 안 됨 · 눌러서 로그인'; warn = true; }
-            else if (!drive.ready) { el.style.display = 'none'; return; }
-            else if (drive.needAuth) { text = '⚠ 로그인이 만료됐어요 · 눌러서 다시 연결'; warn = true; }
+            else if (!drive.ready) { return; }
+            else if (drive.needAuth) { text = '⚠ 로그인이 만료됐어요 · 눌러서 다시 연결'; warn = true; stay = true; }
             else if (drive.uploading) text = '☁ 드라이브에 저장 중…';
-            else if (drive.error) { text = '⚠ 저장 실패 · 눌러서 다시 시도'; warn = true; }
+            else if (drive.error) { text = '⚠ 저장 실패 · 눌러서 다시 시도'; warn = true; stay = true; }
             else if (drive.dirty) text = '☁ 저장 대기 중…';
             else if (drive.lastSaved) text = '☁ 드라이브에 저장됨 ' + drive.lastSaved.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
             else text = '☁ 드라이브 연결됨';
+            if (text === badgeLast) return;                       // 바뀐 게 없으면 가만히
+            badgeLast = text;
             el.textContent = text;
             el.classList.toggle('warn', warn);
-            el.style.display = 'block';
+            el.classList.add('show');
+            clearTimeout(badgeTimer);
+            if (!stay) badgeTimer = setTimeout(() => el.classList.remove('show'), warn ? 4000 : 2600);
         }
 
         async function onBadgeClick() {
