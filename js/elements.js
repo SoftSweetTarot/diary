@@ -494,7 +494,7 @@
                 idleTimer = 0;
                 if (selectedElement !== el || !el.isConnected || idleDown) return;
                 const a = document.activeElement, typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest('#textPanel');
-                if (typing || document.getElementById('layerMenu')) { idleArm(); return; }
+                if (typing || document.getElementById('layerMenu') || document.querySelector('.tap-menu.elem')) { idleArm(); return; }
                 el.classList.remove('selected');
                 selectedElement = null;
                 updateTextPanel();
@@ -523,7 +523,7 @@
             return [...document.querySelectorAll('#canvasArea > .element-box')].map((el, i) => [el, parseInt(el.style.zIndex) || 1, i])
                 .sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(a => a[0]);
         }
-        function openLayerMenu(btn) {
+        function openLayerMenu(anchor) {   // anchor = 버튼 · 또는 { left, width, bottom } 자리
             let m = document.getElementById('layerMenu');
             if (m) { m.remove(); return; }
             if (!selectedElement) { showMsg('순서를 바꿀 스티커 · 글 · 사진을<br>먼저 눌러서 골라 주세요.'); return; }
@@ -532,9 +532,9 @@
             m.innerHTML = [['top', '⏫ 맨 앞'], ['up', '🔼 한 칸 앞'], ['down', '🔽 한 칸 뒤'], ['bottom', '⏬ 맨 뒤']]
                 .map(([k, t]) => `<button type="button" data-k="${k}" onclick="layerMove('${k}')">${t}</button>`).join('');
             document.body.appendChild(m);
-            const r = btn.getBoundingClientRect(), w = m.offsetWidth;
+            const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : anchor, w = m.offsetWidth, h = m.offsetHeight;
             m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
-            m.style.top = (r.bottom + 6) + 'px';
+            m.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.bottom + 6)) + 'px';
             layerMark();
             setTimeout(() => document.addEventListener('pointerdown', layerAway, true), 0);
         }

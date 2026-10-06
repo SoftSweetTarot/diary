@@ -84,7 +84,7 @@
             position: absolute; cursor: move; display: inline-block;
             padding: 6px; border: 1px dashed transparent;
             transform-origin: center center;
-            touch-action: none; user-select: none;
+            touch-action: none; user-select: none; -webkit-touch-callout: none;
         }
         .element-box.selected { border-color: #ff4757; }
         .element-box img { width: 100%; height: 100%; pointer-events: none; display: block; }
