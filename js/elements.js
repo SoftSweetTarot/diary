@@ -510,6 +510,18 @@
             }
         });
 
+        /* 📄 페이지 바깥(스킨 부분)을 눌러도 선택 풀기 · 메모(글상자)도 같이 (빨간 점선이 사라져요) */
+        document.addEventListener('pointerdown', (e) => {
+            const t = e.target;
+            if (!selectedElement || !(t === document.body || t === document.documentElement || t.id === 'diaryWrapper' || t.id === 'diaryBook')) return;
+            const a = document.activeElement;
+            if (a && a.closest && a.closest('#canvasArea') && a.blur) a.blur();
+            selectedElement.classList.remove('selected');
+            selectedElement = null;
+            updateTextPanel();
+            if (window.tmClose) tmClose();
+        }, true);
+
         /* ↕️ 순서 : 고른 것의 겹친 순서 바꾸기 (맨 앞 · 한 칸 앞 · 한 칸 뒤 · 맨 뒤) */
         function layerBoxes() {
             return [...document.querySelectorAll('#canvasArea > .element-box')].map((el, i) => [el, parseInt(el.style.zIndex) || 1, i])

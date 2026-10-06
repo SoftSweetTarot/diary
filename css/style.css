@@ -2480,7 +2480,6 @@
 #themeBoxBtn[hidden] { display: none; }
 .sm-grid { grid-template-columns: repeat(2, 1fr); }
 .svc-cat[hidden] { display: none; }
-.sm-grid .tpm-open { grid-column: 1 / -1; }
 .cat-btn.mtp-cat:not(.active) { background: #fff7e6; border-color: #ffc46b; }
 /* ===== 🎀 마스킹테이프 만들기 (js/tapemaker.js · 화면 모양은 .smk-* 를 같이 써요) ===== */
 .tpm-stage { display: flex; align-items: center; justify-content: center; height: 96px; overflow: hidden; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,.1);
