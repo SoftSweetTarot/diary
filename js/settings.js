@@ -268,7 +268,7 @@
             root.style.setProperty('--page-bg', skin.page);
             root.style.setProperty('--border-color', skin.border);
             root.style.setProperty('--primary-accent', skin.accent);
-            if (skin.menu) root.style.setProperty('--menu-border', skin.menu); else root.style.removeProperty('--menu-border');   // 하단 메뉴 테두리 : 따로 정한 색이 없으면 테두리 색을 따라감
+            SK_OPT.forEach(o => { if (skin[o.k]) root.style.setProperty(o.v, skin[o.k]); else root.style.removeProperty(o.v); });   // 하단메뉴 · 팝업메뉴 색 : 따로 정한 색이 없으면 기본 모양(테두리는 테두리 색을 따라감)
         }
 
         /* 색 고르기 칸도 지금 스킨 색으로 맞춤 (고른 스킨을 조금 바꿔서 내 스킨으로 등록할 수 있게) */
@@ -277,8 +277,11 @@
             const set = (id, v) => { const el = document.getElementById(id); if (el && hex(v)) el.value = v; };
             set('customBg', skin.bg); set('customCover', skin.cover); set('customPage', skin.page);
             set('customBorder', skin.border); set('customAccent', skin.accent);
-            set('customMenu', skin.menu || skin.border);
-            skMenuOwn = !!(skin.menu && skin.menu.toLowerCase() !== String(skin.border).toLowerCase());
+            SK_OPT.forEach(o => {
+                const own = !!(hex(skin[o.k]) && !(o.follow && skin[o.k].toLowerCase() === String(skin.border).toLowerCase()));
+                skOwn[o.k] = own;
+                set(o.id, own ? skin[o.k] : (o.follow ? skin.border : o.def));
+            });
         }
 
         /* 스킨 고르기 (목록 선택 · 등록 직후 · 불러올 때 공용)
@@ -335,13 +338,21 @@
             if (sel.value !== currentSkinId) sel.value = 'pink';
         }
 
-        /* 🔘 하단 메뉴 버튼 테두리 색 : 따로 고르기 전에는 '테두리 색상'을 따라가요 */
-        let skMenuOwn = false;
+        /* 🔘 하단메뉴 · 📍 팝업메뉴 색 (따로 고르기 전에는 기본 모양 · 테두리는 '테두리 색상'을 따라가요)
+           menu = 하단메뉴 테두리 · mfill = 하단메뉴 안쪽 · pbd = 팝업메뉴 테두리 · pfill = 팝업메뉴 안쪽 · psel = 팝업메뉴 선택했을 때 */
+        const SK_OPT = [
+            { k: 'menu', id: 'customMenu', v: '--menu-border', follow: true },
+            { k: 'mfill', id: 'customMenuFill', v: '--menu-fill', def: '#fbd3dd' },
+            { k: 'pbd', id: 'customPopBorder', v: '--pop-border', follow: true },
+            { k: 'pfill', id: 'customPopFill', v: '--pop-fill', def: '#ffffff' },
+            { k: 'psel', id: 'customPopSel', v: '--pop-sel', def: '#ffe9f0' }
+        ];
+        const skOwn = {};
         function customBorderInput() {
-            if (!skMenuOwn) document.getElementById('customMenu').value = document.getElementById('customBorder').value;
+            SK_OPT.forEach(o => { if (o.follow && !skOwn[o.k]) document.getElementById(o.id).value = document.getElementById('customBorder').value; });
             previewCustomColor();
         }
-        function customMenuInput() { skMenuOwn = true; previewCustomColor(); }
+        function customOptInput(k) { skOwn[k] = true; previewCustomColor(); }
 
         function previewCustomColor() {
             const root = document.documentElement;
@@ -350,7 +361,7 @@
             root.style.setProperty('--page-bg', document.getElementById('customPage').value);
             root.style.setProperty('--border-color', document.getElementById('customBorder').value);
             root.style.setProperty('--primary-accent', document.getElementById('customAccent').value);
-            root.style.setProperty('--menu-border', document.getElementById('customMenu').value);
+            SK_OPT.forEach(o => { if (skOwn[o.k]) root.style.setProperty(o.v, document.getElementById(o.id).value); else root.style.removeProperty(o.v); });
         }
 
         /* 스킨 이름 : 따옴표·꺾쇠 같은 기호는 빼고 20자까지 */
@@ -377,7 +388,7 @@
                 border: document.getElementById('customBorder').value,
                 accent: document.getElementById('customAccent').value
             };
-            if (skMenuOwn) newSkin.menu = document.getElementById('customMenu').value;   // 따로 고른 하단 메뉴 테두리 색 (안 골랐으면 테두리 색을 따라감)
+            SK_OPT.forEach(o => { if (skOwn[o.k]) newSkin[o.k] = document.getElementById(o.id).value; });   // 따로 고른 하단메뉴 · 팝업메뉴 색만 저장
 
             customSkins[nameInput] = newSkin;
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));

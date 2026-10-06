@@ -126,8 +126,10 @@
                 if (!c) return null;
                 out[k] = c;
             }
-            const mn = s.menu != null ? recipeColor(s.menu, null) : null;     // 🔘 하단 메뉴 테두리 색 (있을 때만)
-            if (mn) out.menu = mn;
+            ['menu', 'mfill', 'pbd', 'pfill', 'psel'].forEach(k => {          // 🔘 하단메뉴 · 📍 팝업메뉴 색 (있을 때만)
+                const c = s[k] != null ? recipeColor(s[k], null) : null;
+                if (c) out[k] = c;
+            });
             return out;
         }
 
