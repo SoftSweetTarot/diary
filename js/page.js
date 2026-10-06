@@ -283,9 +283,9 @@
             page.style.pointerEvents = 'none';
             page.innerHTML =
                 `<div class="page-header">
-                    <button class="btn" style="padding:2px 8px;">◀ 이전</button>
-                    <span>${formatDate(date)}</span>
-                    <button class="btn" style="padding:2px 8px;">다음 ▶</button>
+                    <button type="button" class="page-nav-btn page-arrow" tabindex="-1"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <span class="page-date-wrap"><span class="page-date-btn">${formatDate(date)}</span><button type="button" class="page-search-btn" tabindex="-1">🔍</button></span>
+                    <button type="button" class="page-nav-btn page-arrow" tabindex="-1"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 </div>
                 <div class="canvas-area"></div>`;
             const canvas = page.querySelector('.canvas-area');
