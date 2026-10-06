@@ -38,10 +38,10 @@
         .tb-btn span { position: relative; }
         .tb-btn:hover { transform: translateY(-2px); }
         .tb-btn:active { transform: scale(.93); }
-        .tb-skin { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #a23a57); }
-        .tb-bgm { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #9a6414); }
-        .tb-cafe { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #2f6b3a); }
-        .tb-set { background: var(--menu-fill, var(--page-bg)); color: var(--menu-ink, #5b3f9e); }
+        .tb-skin { background: var(--menu-fill-1, #fbd3dd); color: var(--menu-ink-1, #a23a57); }
+        .tb-bgm { background: var(--menu-fill-2, #fde9a8); color: var(--menu-ink-2, #9a6414); }
+        .tb-cafe { background: var(--menu-fill-3, #cdebc3); color: var(--menu-ink-3, #2f6b3a); }
+        .tb-set { background: var(--menu-fill-4, #dccdf5); color: var(--menu-ink-4, #5b3f9e); }
         .btn {
             background: #fff; border: 2px solid var(--border-color); color: #444;
             padding: 5px 10px; border-radius: 12px; font-weight: bold; cursor: pointer;

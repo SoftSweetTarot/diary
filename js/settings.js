@@ -278,7 +278,7 @@
             set('customBg', skin.bg); set('customCover', skin.cover); set('customPage', skin.page);
             set('customBorder', skin.border); set('customAccent', skin.accent);
             SK_OPT.forEach(o => {
-                const base = o.follow === 'page' ? skin.page : skin.border;
+                const base = o.def || (o.follow === 'page' ? skin.page : skin.border);
                 const own = !!(hex(skin[o.k]) && skin[o.k].toLowerCase() !== String(base).toLowerCase());
                 skOwn[o.k] = own;
                 set(o.id, own ? skin[o.k] : base);
@@ -340,11 +340,14 @@
         }
 
         /* 🔘 하단메뉴 · 📍 팝업메뉴 · 🪟 창 색 (따로 고르기 전에는 기본 모양 · 테두리는 '테두리 색상'을 따라가요)
-           menu = 하단메뉴 테두리 · mfill = 하단메뉴 안쪽 · pbd = 팝업메뉴 테두리 · pfill = 팝업메뉴 안쪽 · psel = 팝업메뉴 선택했을 때
+           menu = 하단메뉴 테두리 · mf1~mf4 = 하단메뉴 버튼 4개 각각의 안쪽 · pbd = 팝업메뉴 테두리 · pfill = 팝업메뉴 안쪽 · psel = 팝업메뉴 선택했을 때
            wbd = 창 테두리 · wfill = 창 안쪽 · ink = 그 색 위에 올라가는 글자색(밝기를 보고 저절로 정함) */
         const SK_OPT = [
             { k: 'menu', id: 'customMenu', v: '--menu-border', follow: 'border' },
-            { k: 'mfill', id: 'customMenuFill', v: '--menu-fill', follow: 'page', ink: '--menu-ink' },
+            { k: 'mf1', id: 'customMenuFill1', v: '--menu-fill-1', def: '#fbd3dd', ink: '--menu-ink-1' },
+            { k: 'mf2', id: 'customMenuFill2', v: '--menu-fill-2', def: '#fde9a8', ink: '--menu-ink-2' },
+            { k: 'mf3', id: 'customMenuFill3', v: '--menu-fill-3', def: '#cdebc3', ink: '--menu-ink-3' },
+            { k: 'mf4', id: 'customMenuFill4', v: '--menu-fill-4', def: '#dccdf5', ink: '--menu-ink-4' },
             { k: 'pbd', id: 'customPopBorder', v: '--pop-border', follow: 'border' },
             { k: 'pfill', id: 'customPopFill', v: '--pop-fill', follow: 'page', ink: '--pop-ink' },
             { k: 'psel', id: 'customPopSel', v: '--pop-sel', def: '#ffe9f0', ink: '--pop-sel-ink' },
