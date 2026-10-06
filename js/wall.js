@@ -16,7 +16,7 @@
 
         const wl = { items: [], tab: '', pick: null, at: 0, loading: null };
         const WL_FRESH = 60000;
-        const WL_PX = { phone: 216, pc: 384 };        // 그림 가로 크기 = 원본(휴대폰 1080 · PC 1920 기준)의 20% · 목록 · 크게 보기 모두 같음 (원본 화질은 안 보여 줘요)
+        const WL_PX = { phone: 324, pc: 576 };        // 그림 가로 크기 = 원본(휴대폰 1080 · PC 1920 기준)의 30% · 목록 · 크게 보기 모두 같음 (원본 화질은 안 보여 줘요)
         const WL_MINE = 'malang_mywalls';                 // 내가 받은 배경화면 { 번호: { n: 이름, u: 드라이브 폴더 링크 } }
         const wlIsPc = no => no >= 1000;                        // 안에서 쓰는 번호 : 휴대폰 = 탭의 번호 · PC = 1000 + 탭의 번호 (서버 WALL_PC)
         const wlTag = no => (wlIsPc(no) ? 'PC ' + (no - 1000) : '휴대폰 ' + no);   // 사람이 보는 이름표 : '휴대폰 3' · 'PC 3'
