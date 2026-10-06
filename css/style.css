@@ -82,17 +82,13 @@
 
         /* 📄 속지 : 날짜 알약은 위에 따로 떠 있고, 종이(캔버스)는 그 아래 별도 카드 (PNG 저장 땐 .png-mode 로 예전 모양) */
         .inner-page { background: none; border-color: transparent; box-shadow: none; overflow: visible; z-index: 5; }
-        .inner-page .canvas-area { background-color: var(--page-bg); border-radius: 11px 18px 18px 11px; box-shadow: 0 0 0 4px #fff, 5px 10px 25px rgba(0,0,0,.12); }
-        /* 🎨 스킨의 '테두리 색'(--border-color) : 종이 카드와 날짜 알약 안쪽의 점선 */
-        .inner-page .canvas-area::before { content: ''; position: absolute; inset: 5px; border: 2px dashed var(--border-color); border-radius: 7px 14px 14px 7px; pointer-events: none; z-index: 0; }
-        .inner-page .page-header { position: relative; }
-        .inner-page .page-header::before { content: ''; position: absolute; inset: 2px; border: 2px dashed var(--border-color); border-radius: 15px; pointer-events: none; }
-        .inner-page.png-mode .canvas-area::before, .inner-page.png-mode .page-header::before { display: none; }
-        .inner-page.png-mode { background-color: var(--page-bg); border-color: #fff; overflow: hidden; }
+        .inner-page .canvas-area { background-color: var(--page-bg); border-radius: 11px 18px 18px 11px; box-shadow: 0 0 0 4px var(--border-color), 5px 10px 25px rgba(0,0,0,.12); }
+        /* 🎨 스킨의 '테두리 색'(--border-color) : 종이 카드 · 날짜 알약의 바깥 테두리 */
+        .inner-page.png-mode { background-color: var(--page-bg); border-color: var(--border-color); overflow: hidden; }
         .inner-page.png-mode .canvas-area { border-radius: 0; box-shadow: none; }
         .inner-page.png-mode .page-header { height: 48px; margin: 0; border: 0; border-bottom: 2px dashed var(--border-color); border-radius: 0; background: none; box-shadow: none; padding: 0 15px; }
         .page-header {
-            height: 38px; margin: 0 -4px 10px; border: 4px solid #fff; border-radius: 19px;
+            height: 38px; margin: 0 -4px 10px; border: 4px solid var(--border-color); border-radius: 19px;
             background: var(--page-bg); box-shadow: 0 4px 12px rgba(0,0,0,.08);
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 2px; font-size: 1.2rem; color: var(--primary-accent); font-weight: bold;
