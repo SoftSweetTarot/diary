@@ -268,7 +268,7 @@
             root.style.setProperty('--page-bg', skin.page);
             root.style.setProperty('--border-color', skin.border);
             root.style.setProperty('--primary-accent', skin.accent);
-            SK_OPT.forEach(o => { if (skin[o.k]) root.style.setProperty(o.v, skin[o.k]); else root.style.removeProperty(o.v); });   // 하단메뉴 · 팝업메뉴 색 : 따로 정한 색이 없으면 기본 모양(테두리는 테두리 색을 따라감)
+            SK_OPT.forEach(o => skSetOpt(o, skin[o.k] || null));   // 하단메뉴 · 팝업메뉴 색 : 따로 정한 색이 없으면 기본 모양(테두리는 테두리 색을 따라감)
         }
 
         /* 색 고르기 칸도 지금 스킨 색으로 맞춤 (고른 스킨을 조금 바꿔서 내 스킨으로 등록할 수 있게) */
@@ -338,15 +338,29 @@
             if (sel.value !== currentSkinId) sel.value = 'pink';
         }
 
-        /* 🔘 하단메뉴 · 📍 팝업메뉴 색 (따로 고르기 전에는 기본 모양 · 테두리는 '테두리 색상'을 따라가요)
-           menu = 하단메뉴 테두리 · mfill = 하단메뉴 안쪽 · pbd = 팝업메뉴 테두리 · pfill = 팝업메뉴 안쪽 · psel = 팝업메뉴 선택했을 때 */
+        /* 🔘 하단메뉴 · 📍 팝업메뉴 · 🪟 창 색 (따로 고르기 전에는 기본 모양 · 테두리는 '테두리 색상'을 따라가요)
+           menu = 하단메뉴 테두리 · mfill = 하단메뉴 안쪽 · pbd = 팝업메뉴 테두리 · pfill = 팝업메뉴 안쪽 · psel = 팝업메뉴 선택했을 때
+           wbd = 창 테두리 · wfill = 창 안쪽 · ink = 그 색 위에 올라가는 글자색(밝기를 보고 저절로 정함) */
         const SK_OPT = [
             { k: 'menu', id: 'customMenu', v: '--menu-border', follow: true },
-            { k: 'mfill', id: 'customMenuFill', v: '--menu-fill', def: '#fbd3dd' },
+            { k: 'mfill', id: 'customMenuFill', v: '--menu-fill', def: '#fbd3dd', ink: '--menu-ink' },
             { k: 'pbd', id: 'customPopBorder', v: '--pop-border', follow: true },
-            { k: 'pfill', id: 'customPopFill', v: '--pop-fill', def: '#ffffff' },
-            { k: 'psel', id: 'customPopSel', v: '--pop-sel', def: '#ffe9f0' }
+            { k: 'pfill', id: 'customPopFill', v: '--pop-fill', def: '#ffffff', ink: '--pop-ink' },
+            { k: 'psel', id: 'customPopSel', v: '--pop-sel', def: '#ffe9f0', ink: '--pop-sel-ink' },
+            { k: 'wbd', id: 'customWinBorder', v: '--win-border', follow: true },
+            { k: 'wfill', id: 'customWinFill', v: '--win-fill', def: '#ffffff', ink: '--win-ink' }
         ];
+        /* 어두운 바탕이면 흰 글자 · 밝은 바탕이면 짙은 글자 */
+        function skInk(hex) {
+            const n = parseInt(String(hex).slice(1), 16);
+            const l = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
+            return l < 0.55 ? '#ffffff' : '#5a3d4a';
+        }
+        function skSetOpt(o, val) {
+            const root = document.documentElement;
+            if (val) { root.style.setProperty(o.v, val); if (o.ink) root.style.setProperty(o.ink, skInk(val)); }
+            else { root.style.removeProperty(o.v); if (o.ink) root.style.removeProperty(o.ink); }
+        }
         const skOwn = {};
         function customBorderInput() {
             SK_OPT.forEach(o => { if (o.follow && !skOwn[o.k]) document.getElementById(o.id).value = document.getElementById('customBorder').value; });
@@ -361,7 +375,7 @@
             root.style.setProperty('--page-bg', document.getElementById('customPage').value);
             root.style.setProperty('--border-color', document.getElementById('customBorder').value);
             root.style.setProperty('--primary-accent', document.getElementById('customAccent').value);
-            SK_OPT.forEach(o => { if (skOwn[o.k]) root.style.setProperty(o.v, document.getElementById(o.id).value); else root.style.removeProperty(o.v); });
+            SK_OPT.forEach(o => skSetOpt(o, skOwn[o.k] ? document.getElementById(o.id).value : null));
         }
 
         /* 스킨 이름 : 따옴표·꺾쇠 같은 기호는 빼고 20자까지 */

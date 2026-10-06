@@ -38,10 +38,10 @@
         .tb-btn span { position: relative; }
         .tb-btn:hover { transform: translateY(-2px); }
         .tb-btn:active { transform: scale(.93); }
-        .tb-skin { background: var(--menu-fill, #fbd3dd); color: #a23a57; }
-        .tb-bgm { background: var(--menu-fill, #fde9a8); color: #9a6414; }
-        .tb-cafe { background: var(--menu-fill, #cdebc3); color: #2f6b3a; }
-        .tb-set { background: var(--menu-fill, #dccdf5); color: #5b3f9e; }
+        .tb-skin { background: var(--menu-fill, #fbd3dd); color: var(--menu-ink, #a23a57); }
+        .tb-bgm { background: var(--menu-fill, #fde9a8); color: var(--menu-ink, #9a6414); }
+        .tb-cafe { background: var(--menu-fill, #cdebc3); color: var(--menu-ink, #2f6b3a); }
+        .tb-set { background: var(--menu-fill, #dccdf5); color: var(--menu-ink, #5b3f9e); }
         .btn {
             background: #fff; border: 2px solid var(--border-color); color: #444;
             padding: 5px 10px; border-radius: 12px; font-weight: bold; cursor: pointer;
@@ -198,8 +198,8 @@
             background: transparent; display: none; justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
-            background: #fff; padding: 20px; border-radius: 20px; width: 90%; max-width: 420px;
-            border: 2px solid var(--border-color);
+            background: var(--win-fill, #fff); color: var(--win-ink, inherit); padding: 20px; border-radius: 20px; width: 90%; max-width: 420px;
+            border: 2px solid var(--win-border, var(--border-color));
             box-shadow: 0 12px 32px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12); max-height: 80vh; display: flex; flex-direction: column;
             overflow-y: auto;
         }
@@ -2344,14 +2344,20 @@
         .layer-menu { z-index: 1500; }
         .tap-menu-btn {
             position: relative; display: flex; align-items: center; gap: 12px; min-width: 150px; padding: 9px 18px 9px 10px;
-            border: none; border-radius: 14px; background: transparent; color: #5a3d4a; text-align: left;
+            border: none; border-radius: 14px; background: transparent; color: var(--pop-ink, #5a3d4a); text-align: left;
             font: inherit; font-size: 16px; font-weight: bold; cursor: pointer; touch-action: manipulation; white-space: nowrap;
             -webkit-tap-highlight-color: transparent;
         }
         .tap-menu-btn .tm-ic { display: block; flex: none; width: 28px; height: 28px; }
         .tap-menu-btn .tm-ic svg { display: block; width: 100%; height: 100%; }
-        .tap-menu-btn:hover, .tap-menu-btn:active { background: var(--pop-sel, #ffe9f0); }
-        .skin-grp { margin: 12px 0 4px; font-weight: bold; font-size: 14px; color: #5a3d4a; }
+        .tap-menu-btn:hover, .tap-menu-btn:active { background: var(--pop-sel, #ffe9f0); color: var(--pop-sel-ink, #5a3d4a); }
+        .skin-grp { margin: 8px 0 0; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 0 8px; }
+        .skin-grp > summary { cursor: pointer; font-weight: bold; font-size: 13px; padding: 7px 2px; color: #5a3d4a; list-style: none; }
+        .skin-grp > summary::-webkit-details-marker { display: none; }
+        .skin-grp > summary::after { content: '▾'; float: right; opacity: .6; }
+        .skin-grp[open] > summary::after { content: '▴'; }
+        .skin-grp[open] { padding-bottom: 6px; }
+        .skin-grp-note { font-size: 11px; color: #999; margin: 0 0 4px; }
         .tap-menu-btn:disabled { opacity: .35; cursor: default; background: transparent; }
         @keyframes tmPop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
 

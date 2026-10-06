@@ -126,7 +126,7 @@
                 if (!c) return null;
                 out[k] = c;
             }
-            ['menu', 'mfill', 'pbd', 'pfill', 'psel'].forEach(k => {          // 🔘 하단메뉴 · 📍 팝업메뉴 색 (있을 때만)
+            ['menu', 'mfill', 'pbd', 'pfill', 'psel', 'wbd', 'wfill'].forEach(k => {          // 🔘 하단메뉴 · 📍 팝업메뉴 · 🪟 창 색 (있을 때만)
                 const c = s[k] != null ? recipeColor(s[k], null) : null;
                 if (c) out[k] = c;
             });
