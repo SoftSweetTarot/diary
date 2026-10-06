@@ -19,7 +19,7 @@
             el.innerHTML = `
               <div class="mo-bar"><span class="mo-sp"></span><b>📅 한 달 모아보기</b><button class="mo-x" type="button" onclick="closeMonth()" aria-label="닫기">✕</button></div>
               <div class="mo-wrap">
-                <div class="mo-head"><button type="button" onclick="moMove(-1)" aria-label="지난달">‹</button><b id="moTitle"></b><button type="button" onclick="moMove(1)" aria-label="다음 달">›</button></div>
+                <div class="mo-head"><button type="button" onclick="moMove(-1)" aria-label="지난달"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><b id="moTitle"></b><button type="button" onclick="moMove(1)" aria-label="다음 달"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
                 <div class="mo-sum" id="moSum"></div>
                 <div class="mo-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
                 <div class="mo-grid" id="moGrid"></div>

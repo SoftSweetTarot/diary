@@ -83,6 +83,11 @@
         /* 📄 속지 : 날짜 알약은 위에 따로 떠 있고, 종이(캔버스)는 그 아래 별도 카드 (PNG 저장 땐 .png-mode 로 예전 모양) */
         .inner-page { background: none; border-color: transparent; box-shadow: none; overflow: visible; z-index: 5; }
         .inner-page .canvas-area { background-color: var(--page-bg); border-radius: 11px 18px 18px 11px; box-shadow: 0 0 0 4px #fff, 5px 10px 25px rgba(0,0,0,.12); }
+        /* 🎨 스킨의 '테두리 색'(--border-color) : 종이 카드와 날짜 알약 안쪽의 점선 */
+        .inner-page .canvas-area::before { content: ''; position: absolute; inset: 5px; border: 2px dashed var(--border-color); border-radius: 7px 14px 14px 7px; pointer-events: none; z-index: 0; }
+        .inner-page .page-header { position: relative; }
+        .inner-page .page-header::before { content: ''; position: absolute; inset: 2px; border: 2px dashed var(--border-color); border-radius: 15px; pointer-events: none; }
+        .inner-page.png-mode .canvas-area::before, .inner-page.png-mode .page-header::before { display: none; }
         .inner-page.png-mode { background-color: var(--page-bg); border-color: #fff; overflow: hidden; }
         .inner-page.png-mode .canvas-area { border-radius: 0; box-shadow: none; }
         .inner-page.png-mode .page-header { height: 48px; margin: 0; border: 0; border-bottom: 2px dashed var(--border-color); border-radius: 0; background: none; box-shadow: none; padding: 0 15px; }
@@ -1638,7 +1643,8 @@
         .mo-wrap { max-width: 520px; margin: 0 auto; padding: 4px 12px max(30px, env(safe-area-inset-bottom)); box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
         .mo-head { display: flex; justify-content: space-between; align-items: center; }
         .mo-head b { font-size: 20px; color: var(--primary-accent, #ff6b81); }
-        .mo-head button { width: 38px; height: 38px; border-radius: 50%; border: none; background: #fff; color: var(--primary-accent, #ff6b81); font-size: 22px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .mo-head button { width: 38px; height: 38px; padding: 0; border: 0; background: none; color: var(--primary-accent, #ff6b81); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .mo-head button:active { transform: scale(.88); }
         .mo-sum { text-align: center; font-size: 14px; } .mo-sum b { color: var(--primary-accent, #ff6b81); font-size: 17px; }
         .mo-week, .mo-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .mo-week span { text-align: center; font-size: 12px; color: #a08890; }
