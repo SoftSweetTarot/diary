@@ -63,8 +63,14 @@
 
         /* ---------- 현재 적용 중인 꾸밈 (스킨을 고르면 stuApply 가 채워요) ---------- */
         const STU_LAY = [   // [키, 이름, 최소, 최대, 기본, 단위, css 변수, 값→css]
+            ['bs', '하단 버튼 전체(테두리 포함)', 70, 130, 100, '%', '--tb-bs', v => v / 100],
             ['is', '하단 아이콘 크기', 16, 40, 26, 'px', '--tb-ico', v => v + 'px'],
+            ['fs', '하단 글씨 크기', 8, 20, 12, 'px', '--tb-fs', v => v + 'px'],
             ['gap', '하단 버튼 간격', 0, 30, 10, 'px', '--tb-gap', v => v + 'px'],
+            ['ps', '팝업메뉴 전체 크기', 70, 150, 100, '%', '--pop-s', v => v / 100],
+            ['pi', '팝업 아이콘 크기', 16, 44, 28, 'px', '--pop-ico', v => v + 'px'],
+            ['pf', '팝업 글씨 크기', 10, 26, 16, 'px', '--pop-fs', v => v + 'px'],
+            ['pg', '팝업 메뉴끼리 간격', 0, 16, 2, 'px', '--pop-gap', v => v + 'px'],
             ['dw', '날짜칸 길이', 50, 110, 100, '%', '--pill-w', v => v / 100],
             ['dx', '날짜칸 좌우', -60, 60, 0, 'px', '--pill-x', v => v + 'px']
         ];
@@ -424,7 +430,7 @@
         }
 
         function stuBuildLay(w) {
-            w.appendChild(stuEl('div', 'stu-hint', '하단메뉴 버튼과 맨 위 날짜칸의 크기 · 위치를 조절해요. 바로 다이어리에 보여요.'));
+            w.appendChild(stuEl('div', 'stu-hint', '하단메뉴 · 팝업메뉴 · 맨 위 날짜칸의 크기 · 간격 · 위치를 조절해요. 바로 다이어리에 보여요.'));
             STU_LAY.forEach(([k, t, mn, mx, df, u]) => {
                 const cur = stuCur.lay[k] != null ? stuCur.lay[k] : df;
                 const row = stuEl('div', 'stu-lay-row', `<span>${t}</span><input type="range" min="${mn}" max="${mx}" value="${cur}"><b>${cur}${u}</b>`);

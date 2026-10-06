@@ -28,14 +28,14 @@
         }
         /* 🔘 하단 메뉴 버튼 : 말랑한 버블 4개 (스킨 · 배경음악 · 카페 · 설정) */
         .tb-btn {
-            position: relative; width: 66px; height: 58px; padding: 0; border: 2px solid var(--menu-border); border-radius: 24px;
+            position: relative; width: calc(66px * var(--tb-bs, 1)); height: calc(58px * var(--tb-bs, 1)); padding: 0; border: 2px solid var(--menu-border); border-radius: calc(24px * var(--tb-bs, 1));
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-            font-family: inherit; font-size: 12px; font-weight: bold; line-height: 1.2; cursor: pointer;
+            font-family: inherit; font-size: calc(var(--tb-fs, 12px) * var(--tb-bs, 1)); font-weight: bold; line-height: 1.2; cursor: pointer;
             box-shadow: 0 3px 8px rgba(0,0,0,.10); transition: transform .15s ease; -webkit-tap-highlight-color: transparent;
         }
-        .tb-btn::before { content: ''; position: absolute; top: 4px; left: 10px; width: 22px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.55); pointer-events: none; }
-        .tb-btn svg { position: relative; width: var(--tb-ico, 26px); height: var(--tb-ico, 26px); display: block; }
-        .tb-btn .stu-ico { width: var(--tb-ico, 26px); height: var(--tb-ico, 26px); } .tb-btn .stu-ico > b { font-size: calc(var(--tb-ico, 26px) * .8); }
+        .tb-btn::before { content: ''; position: absolute; top: calc(4px * var(--tb-bs, 1)); left: calc(10px * var(--tb-bs, 1)); width: calc(22px * var(--tb-bs, 1)); height: calc(7px * var(--tb-bs, 1)); border-radius: 50%; background: rgba(255,255,255,.55); pointer-events: none; }
+        .tb-btn svg { position: relative; width: calc(var(--tb-ico, 26px) * var(--tb-bs, 1)); height: calc(var(--tb-ico, 26px) * var(--tb-bs, 1)); display: block; }
+        .tb-btn .stu-ico { width: calc(var(--tb-ico, 26px) * var(--tb-bs, 1)); height: calc(var(--tb-ico, 26px) * var(--tb-bs, 1)); } .tb-btn .stu-ico > b { font-size: calc(var(--tb-ico, 26px) * var(--tb-bs, 1) * .8); }
         .tb-btn span { position: relative; }
         .tb-btn:hover { transform: translateY(-2px); }
         .tb-btn:active { transform: scale(.93); }
@@ -2337,19 +2337,19 @@
 
         /* 📍 빈 곳을 누르면 나오는 추가 메뉴 (js/tapmenu.js) */
         .tap-menu, .layer-menu {
-            position: fixed; z-index: 120; display: flex; flex-direction: column; gap: 2px;
-            padding: 8px; border-radius: 22px; background: var(--pop-fill, var(--page-bg));
+            position: fixed; z-index: 120; display: flex; flex-direction: column; gap: calc(var(--pop-gap, 2px) * var(--pop-s, 1));
+            padding: calc(8px * var(--pop-s, 1)); border-radius: calc(22px * var(--pop-s, 1)); background: var(--pop-fill, var(--page-bg));
             border: 2px solid var(--pop-border, var(--border-color)); box-shadow: 0 8px 24px rgba(90,61,74,.18);
             animation: tmPop .16s ease-out;
         }
         .layer-menu { z-index: 1500; }
         .tap-menu-btn {
-            position: relative; display: flex; align-items: center; gap: 12px; min-width: 150px; padding: 9px 18px 9px 10px;
-            border: none; border-radius: 14px; background: transparent; color: var(--pop-ink, #5a3d4a); text-align: left;
-            font: inherit; font-size: 16px; font-weight: bold; cursor: pointer; touch-action: manipulation; white-space: nowrap;
+            position: relative; display: flex; align-items: center; gap: calc(12px * var(--pop-s, 1)); min-width: calc(150px * var(--pop-s, 1)); padding: calc(9px * var(--pop-s, 1)) calc(18px * var(--pop-s, 1)) calc(9px * var(--pop-s, 1)) calc(10px * var(--pop-s, 1));
+            border: none; border-radius: calc(14px * var(--pop-s, 1)); background: transparent; color: var(--pop-ink, #5a3d4a); text-align: left;
+            font: inherit; font-size: calc(var(--pop-fs, 16px) * var(--pop-s, 1)); font-weight: bold; cursor: pointer; touch-action: manipulation; white-space: nowrap;
             -webkit-tap-highlight-color: transparent;
         }
-        .tap-menu-btn .tm-ic { display: block; flex: none; width: 28px; height: 28px; }
+        .tap-menu-btn .tm-ic { display: block; flex: none; width: calc(var(--pop-ico, 28px) * var(--pop-s, 1)); height: calc(var(--pop-ico, 28px) * var(--pop-s, 1)); }
         .tap-menu-btn .tm-ic svg { display: block; width: 100%; height: 100%; }
         .tap-menu-btn:hover, .tap-menu-btn:active { background: var(--pop-sel, #ffe9f0); color: var(--pop-sel-ink, #5a3d4a); }
         .skin-grp { margin: 8px 0 0; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 0 8px; }
@@ -2405,7 +2405,7 @@
         .stu-ico > svg, .stu-ico > img { width: 100%; height: 100%; object-fit: contain; }
         .stu-ico > b { font-weight: normal; font-size: 21px; line-height: 1; }
         .tm-ic .stu-ico { width: 100%; height: 100%; }
-        .tm-ic .stu-ico > b { font-size: 22px; }
+        .tm-ic .stu-ico > b { font-size: calc(var(--pop-ico, 28px) * var(--pop-s, 1) * .78); }
         .page-arrow .stu-ico { width: 20px; height: 20px; } .page-arrow .stu-ico > b { font-size: 16px; }
         .page-cal-btn .stu-ico, .page-search-btn .stu-ico { width: 21px; height: 21px; } .page-cal-btn .stu-ico > b, .page-search-btn .stu-ico > b { font-size: 17px; }
         body.stu-edit .stu-deco { pointer-events: auto; cursor: move; touch-action: none; outline: 1px dashed rgba(120,120,120,.35); outline-offset: 2px; }
@@ -2474,4 +2474,4 @@
 
         .stu-tab { font-size: 11.5px; padding: 6px 1px; }
         .stu-lay-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 7px; color: #6a4f5a; }
-        .stu-lay-row span { flex: none; width: 92px; } .stu-lay-row input { flex: 1; } .stu-lay-row b { flex: none; width: 46px; text-align: right; font-weight: normal; color: #999; }
+        .stu-lay-row span { flex: none; width: 118px; } .stu-lay-row input { flex: 1; } .stu-lay-row b { flex: none; width: 46px; text-align: right; font-weight: normal; color: #999; }
