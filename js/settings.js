@@ -79,9 +79,11 @@
             const innerPage = document.getElementById('innerPage');
             const prevShadow = innerPage.style.boxShadow;
             innerPage.style.boxShadow = 'none';
+            innerPage.classList.add('png-mode');
 
             const restore = () => {
                 innerPage.style.boxShadow = prevShadow;
+                innerPage.classList.remove('png-mode');
                 navButtons.forEach(btn => btn.style.visibility = 'visible');
                 if (selectedElement) selectedElement.classList.add('selected');
             };
