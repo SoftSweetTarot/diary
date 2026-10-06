@@ -2477,3 +2477,8 @@
         .stu-tab { font-size: 11.5px; padding: 6px 1px; }
         .stu-lay-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 7px; color: #6a4f5a; }
         .stu-lay-row span { flex: none; width: 118px; } .stu-lay-row input { flex: 1; } .stu-lay-row b { flex: none; width: 46px; text-align: right; font-weight: normal; color: #999; }
+
+/* 📱 설정 창: 가로로 밀리지 않고 세로로만 움직이게 */
+#settingsModal .modal-content { overflow-x: hidden; touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+#settingsModal .modal-content > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
+#settingsModal input[type="range"] { touch-action: none; }
