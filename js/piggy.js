@@ -89,7 +89,7 @@
                 </div>
                 <div class="pg-gift" data-t="pat">
                   <p class="pg-gift-d">다이어리 뒤 배경에 까는 그림 패턴이에요. 보기만 해도 기분이 몽글몽글해져요.</p>
-                  <p class="pg-where">📍 선물이 열리면 다이어리 위쪽 <b>👗 스킨</b> → <b>🍬 달콤패턴</b> 버튼이 생겨요</p>
+                  <p class="pg-where">📍 선물이 열리면 다이어리 위쪽 <b>🎨 스킨</b> → <b>🍬 달콤패턴</b> 버튼이 생겨요</p>
                   <div class="pg-pats">${sweet.map((p, i) => `<div class="pg-pt"><div class="pg-pt-sw"><i data-i="${i}"></i></div><small>${p.name}</small></div>`).join('')}</div>
                 </div>
                 <ul class="pg-promise">

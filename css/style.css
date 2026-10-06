@@ -346,7 +346,7 @@
             transform: scale(var(--pat-s, 1)); transform-origin: 0 0;
         }
 
-        /* 👗 스킨 하위 창 공통 버튼 줄 (← 스킨 메뉴 / 닫기) */
+        /* 🎨 스킨 하위 창 공통 버튼 줄 (← 스킨 메뉴 / 닫기) */
         .sub-modal-btns { display: flex; gap: 8px; margin-top: 15px; flex-shrink: 0; }
         .sub-modal-btns .btn { flex: 1; justify-content: center; }
         .skin-pattern-note {
@@ -389,7 +389,7 @@
         .pat-name { font-size: 12px; color: #444; text-align: center; line-height: 1.3; word-break: keep-all; }
         .pat-item.empty { visibility: hidden; pointer-events: none; }
 
-        /* 👗 스킨 메뉴 구역 */
+        /* 🎨 스킨 메뉴 구역 */
         .skin-basic-btn { width: 100%; justify-content: center; padding: 10px; font-size: 15px; }
         .skin-basic-btn small { font-weight: normal; color: #888; }
         .skin-section-title { font-size: 13px; font-weight: bold; color: var(--primary-accent); margin: 14px 0 6px; }
@@ -525,7 +525,7 @@
         .save-choice-text small { font-size: 12px; color: #777; line-height: 1.45; }
         .save-chooser-note { font-size: 12px; color: #999; text-align: center; margin: 2px 0 10px; }
 
-        /* ===== 👗 스킨 창 : 원래 크기의 2/3 · 제목을 끌어 옮기기 · 👀 꾹 눌러 보기 ===== */
+        /* ===== 🎨 스킨 창 : 원래 크기의 2/3 · 제목을 끌어 옮기기 · 👀 꾹 눌러 보기 ===== */
         .modal-content.skin-compact {
             width: 66%; max-width: 280px; max-height: 54vh; padding: 12px 13px; border-radius: 16px; font-size: 12.5px;
             transition: opacity .15s;
