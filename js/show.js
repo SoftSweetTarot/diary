@@ -42,7 +42,10 @@
             const t = e.target; if (!t || !t.closest) return;
             const mc = t.closest('.modal-content'); if (!mc) return;
             for (let n = t; n && n !== mc.parentNode; n = n.parentNode) {
-                if (n.nodeType === 1 && n.scrollHeight > n.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(n).overflowY)) return;
+                if (n.nodeType !== 1) continue;
+                const cs = getComputedStyle(n);
+                if (n.scrollHeight > n.clientHeight + 1 && /(auto|scroll)/.test(cs.overflowY)) return;
+                if (n.scrollWidth > n.clientWidth + 1 && /(auto|scroll)/.test(cs.overflowX)) return;     // ↔ 좌우로 밀리는 칸(스티커 카테고리 등)
             }
             e.preventDefault();
         }, { passive: false });

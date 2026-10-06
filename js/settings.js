@@ -350,8 +350,8 @@
            wbd = 창 테두리 · wfill = 창 안쪽 · ink = 그 색 위에 올라가는 글자색(밝기를 보고 저절로 정함) */
         const SK_OPT = [
             { k: 'menu', id: 'customMenu', v: '--menu-border', follow: 'border' },
-            { k: 'mf1', id: 'customMenuFill1', v: '--menu-fill-1', def: '#fbd3dd', ink: '--menu-ink-1' },
-            { k: 'mf2', id: 'customMenuFill2', v: '--menu-fill-2', def: '#fde9a8', ink: '--menu-ink-2' },
+            { k: 'mf1', id: 'customMenuFill1', v: '--menu-fill-1', def: '#fde9a8', ink: '--menu-ink-1' },
+            { k: 'mf2', id: 'customMenuFill2', v: '--menu-fill-2', def: '#fbd3dd', ink: '--menu-ink-2' },
             { k: 'mf3', id: 'customMenuFill3', v: '--menu-fill-3', def: '#cdebc3', ink: '--menu-ink-3' },
             { k: 'mf4', id: 'customMenuFill4', v: '--menu-fill-4', def: '#dccdf5', ink: '--menu-ink-4' },
             { k: 'pbd', id: 'customPopBorder', v: '--pop-border', follow: 'border' },

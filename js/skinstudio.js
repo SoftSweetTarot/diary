@@ -15,11 +15,11 @@
         const STU_THEMES_KEY = 'diary_themes';
         const STU_ANCHORS = [
             ['pill', '📅 날짜 줄'], ['paper', '📄 종이'], ['pop', '📍 팝업메뉴'], ['bar', '🔘 하단메뉴'],
-            ['b1', '① 스킨 버튼'], ['b2', '② 배경음악 버튼'], ['b3', '③ 카페 버튼'], ['b4', '④ 설정 버튼']
+            ['b1', '① 스티커 버튼'], ['b2', '② 스킨 버튼'], ['b3', '③ 카페 버튼'], ['b4', '④ 설정 버튼']
         ];
         /* 바꿀 수 있는 아이콘 자리 */
         const STU_SLOTS = [
-            { k: 'b1', t: '하단 · 스킨' }, { k: 'b2', t: '하단 · 배경음악' }, { k: 'b3', t: '하단 · 카페' }, { k: 'b4', t: '하단 · 설정' },
+            { k: 'b1', t: '하단 · 스티커' }, { k: 'b2', t: '하단 · 스킨' }, { k: 'b3', t: '하단 · 카페' }, { k: 'b4', t: '하단 · 설정' },
             { k: 'p_sticker', t: '팝업 · 스티커' }, { k: 'p_write', t: '팝업 · 글쓰기' }, { k: 'p_pen', t: '팝업 · 펜' }, { k: 'p_image', t: '팝업 · 이미지' },
             { k: 'p_lib', t: '팝업 · 그림모음' }, { k: 'p_save', t: '팝업 · 저장' }, { k: 'p_order', t: '팝업 · 순서' }, { k: 'p_trash', t: '팝업 · 삭제' },
             { k: 'h_prev', t: '날짜 · 이전 <' }, { k: 'h_next', t: '날짜 · 다음 >' }, { k: 'h_cal', t: '날짜 · 달력' }, { k: 'h_search', t: '날짜 · 검색' }
@@ -140,7 +140,7 @@
             if (a === 'paper') return stuPaperLayer();
             if (a === 'bar') return document.querySelector('.toolbar');
             if (a === 'pop') return null;
-            const n = { b1: 'tb-skin', b2: 'tb-bgm', b3: 'tb-cafe', b4: 'tb-set' }[a];
+            const n = { b1: 'tb-sticker', b2: 'tb-skin', b3: 'tb-cafe', b4: 'tb-set' }[a];
             return n ? document.querySelector('.toolbar .' + n) : null;
         }
         function stuPaperLayer() {
@@ -170,7 +170,7 @@
         /* 아이콘 자리 → 다이어리 속 버튼 */
         function stuSlotEl(k) {
             if (k === 'h_prev' || k === 'h_next') return document.querySelectorAll('#pageHeader > .page-arrow')[k === 'h_prev' ? 0 : 1] || null;
-            const q = { b1: '.toolbar .tb-skin', b2: '.toolbar .tb-bgm', b3: '.toolbar .tb-cafe', b4: '.toolbar .tb-set',
+            const q = { b1: '.toolbar .tb-sticker', b2: '.toolbar .tb-skin', b3: '.toolbar .tb-cafe', b4: '.toolbar .tb-set',
                 h_cal: '#pageHeader .page-cal-btn', h_search: '#pageHeader .page-search-btn' }[k];
             return q ? document.querySelector(q) : null;
         }
@@ -209,7 +209,10 @@
         function stuExtra() { const o = {}; stuClean(stuCur, o); return o; }
 
         /* ---------- 🎁 테마 보관함 ---------- */
-        const stuThemeList = () => (typeof THEME_SKINS !== 'undefined' && Array.isArray(THEME_SKINS)) ? THEME_SKINS : [];
+        /* 🔒 THEME_OPEN : false 면 🎁 테마 보관함 버튼 · 스킨 목록의 테마 그룹 · 테마 적용이 모두 숨어요 (코드는 그대로 · 판매/보상 시작 때 true 로) */
+        const THEME_OPEN = false;
+        { const b = document.getElementById('themeBoxBtn'); if (b) { b.hidden = !THEME_OPEN; b.parentNode.style.gridTemplateColumns = THEME_OPEN ? '' : 'repeat(2, 1fr)'; } }
+        const stuThemeList = () => (THEME_OPEN && typeof THEME_SKINS !== 'undefined' && Array.isArray(THEME_SKINS)) ? THEME_SKINS : [];
         function stuOwned() {
             let ids = [];
             try { const v = JSON.parse(store.getItem(STU_THEMES_KEY) || '[]'); if (Array.isArray(v)) ids = v.filter(x => typeof x === 'string'); } catch (e) {}

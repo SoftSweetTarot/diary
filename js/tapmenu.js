@@ -3,7 +3,7 @@
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
    📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
-        /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스킨 · 배경음악 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
+        /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
             sticker: TM_SVG('<circle cx="12" cy="12" r="9.2" fill="#ee7f9f"/><path d="M21 14c-2.8.2-5.6 2.8-6 6 3-.5 5.4-3 6-6z" fill="#fbc3d2"/><circle cx="8.7" cy="10.2" r="1.4" fill="#fff"/><circle cx="15.3" cy="10.2" r="1.4" fill="#fff"/><path d="M8.4 13.8c1 1.9 2.4 2.7 3.6 2.7s2.6-.8 3.6-2.7" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>'),

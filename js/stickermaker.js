@@ -1,11 +1,11 @@
 /* 말랑달콤 다이어리 - js/stickermaker.js
-   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (카페 → 만들기·꾸미기 → ✂️ 스티커 만들기)
+   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → 📷 사진 찍기 · 🖼️ 사진 고르기 · 🔤 글씨 스티커)
    - 사진 스티커 : 📷 찍기 · 🖼 고르기 → 모양(동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
    - 글씨 스티커 : 글자 · 글꼴 · 색을 골라 말랑한 글씨 스티커
    - 💾 내 스티커에 저장 : ✏️ 스티커 창 → ✂️ 내 스티커 에서 언제든 다시 붙여요 (최대 40개)
      저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내스티커.json (게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
-   ※ 이 파일이 없어도 다이어리는 정상 동작 (스티커 만들기만 '준비 중') */
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
 
         const SM_FILE = '내스티커.json', SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260;
         const SM_SHAPES = [['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
@@ -50,22 +50,11 @@
             const el = document.createElement('div');
             el.id = 'smRoom'; el.className = 'smk-room';
             el.innerHTML = `
-              <div class="smk-bar"><button class="smk-x" type="button" id="smBack" onclick="smStep(1)" aria-label="앞으로" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="smk-sp" id="smSp"></span><b>✂️ 스티커 만들기</b><button class="smk-x" type="button" onclick="closeStickerMaker()" aria-label="닫기">✕</button></div>
+              <div class="smk-bar"><span class="smk-x"></span><b>✂️ 스티커 만들기</b><button class="smk-x" type="button" onclick="closeStickerMaker()" aria-label="닫기">✕</button></div>
               <div class="smk-wrap">
-                <section id="smStep1" class="smk-step">
-                  <p class="smk-lead">무엇으로 스티커를 만들까요?</p>
-                  <div class="smk-pick">
-                    <button type="button" onclick="smq('smCam').click()"><span>📷</span><b>사진 찍기</b></button>
-                    <button type="button" onclick="smq('smFile').click()"><span>🖼️</span><b>사진 고르기</b></button>
-                    <button type="button" onclick="smStartText()"><span>🔤</span><b>글씨 스티커</b></button>
-                  </div>
-                  <input type="file" id="smCam" accept="image/*" capture="environment" hidden onchange="smPickFile(this)">
-                  <input type="file" id="smFile" accept="image/*" hidden onchange="smPickFile(this)">
-                  <p class="smk-lead">✂️ 내 스티커 <small id="smCount"></small></p>
-                  <div class="smk-mine" id="smMine"></div>
-                  <p class="smk-note">💡 만든 스티커는 ✏️ 스티커 창의 <b>✂️ 내 스티커</b>에서도 언제든 붙일 수 있어요.<br>사진은 이 기기에서만 오려서, 완성한 스티커만 저장돼요.</p>
-                </section>
-                <section id="smStep2" class="smk-step" hidden>
+                <input type="file" id="smCam" accept="image/*" capture="environment" hidden onchange="smPickFile(this)">
+                <input type="file" id="smFile" accept="image/*" hidden onchange="smPickFile(this)">
+                <section id="smStep2" class="smk-step">
                   <div class="smk-stage"><canvas id="smCanvas" width="${SM_SIZE}" height="${SM_SIZE}"></canvas></div>
                   <p class="smk-hint" id="smHint"></p>
                   <div id="smPhotoOpts">
@@ -88,12 +77,6 @@
             cv.addEventListener('pointerup', smUp); cv.addEventListener('pointercancel', smUp);
             cv.addEventListener('wheel', e => { if (smS.mode !== 'photo') return; e.preventDefault(); smS.zoom = Math.max(.4, Math.min(3, smS.zoom * (e.deltaY < 0 ? 1.06 : .94))); smq('smZoom').value = smS.zoom; smDraw(); }, { passive: false });
         }
-        function smStep(n) {
-            smq('smStep1').hidden = n !== 1; smq('smStep2').hidden = n !== 2;
-            smq('smBack').hidden = n === 1; smq('smSp').hidden = n !== 1;
-            if (n === 1) smRenderMine();
-            smq('smRoom').scrollTop = 0;
-        }
 
         /* ---------- 사진 ---------- */
         function smPickFile(inp) {
@@ -106,7 +89,7 @@
                 c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(im.src);
                 smS.mode = 'photo'; smS.img = c; smS.zoom = 1; smS.ox = 0; smS.oy = 0; smS.path = [];
                 smq('smZoom').value = 1; smq('smPhotoOpts').hidden = false; smq('smTextOpts').hidden = true;
-                smStep(2); smSetShape(smS.shape === 'free' ? 'circle' : smS.shape);
+                smShow(); smSetShape(smS.shape === 'free' ? 'circle' : smS.shape);
             };
             im.onerror = () => showMsg('사진을 열지 못했어요. 다른 사진을 골라 주세요.');
             im.src = URL.createObjectURL(f);
@@ -187,7 +170,7 @@
         function smStartText() {
             smS.mode = 'text'; smq('smPhotoOpts').hidden = true; smq('smTextOpts').hidden = false;
             smq('smText').value = smS.text; smq('smHint').textContent = '글자를 쓰고 글꼴 · 색을 골라요';
-            smStep(2); smSetFont(smS.font); smSetColor(smS.color);
+            smShow(); smSetFont(smS.font); smSetColor(smS.color);
             if (document.fonts && document.fonts.load) SM_FONTS.forEach(f => document.fonts.load(`40px ${f[0]}`).then(() => smDraw()).catch(() => {}));
             setTimeout(() => smq('smText').focus(), 50);
         }
@@ -218,7 +201,8 @@
                 else { smS.list.unshift({ id: Date.now().toString(36), src, t: smS.mode === 'text' ? smS.text : '' }); await smSave(); }
             } catch (e) { if (!stick) { showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
             if (stick) { smStick(src); return; }
-             smStep(1);
+            closeStickerMaker();
+            showMsg('✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">빈 곳을 눌러 🎨 스티커 → ✂️ 내 스티커에서 붙일 수 있어요.</span>');
         }
         function smStick(src) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">스티커는 ✂️ 내 스티커에 저장돼 있어요.</span>'); return; }
@@ -228,36 +212,34 @@
             if (typeof closeModal === 'function') closeModal('stickerModal');
         }
 
-        /* ---------- 내 스티커 (만들기 화면 · ✏️ 스티커 창 공용) ---------- */
-        function smGrid(forModal) {
+        /* ---------- 내 스티커 (✏️ 스티커 창 → ✂️ 내 스티커) ---------- */
+        function smGrid() {
             const L = smS.list || [];
-            if (!L.length) return `<div class="smk-empty">${forModal ? '✂️ 아직 만든 스티커가 없어요.<br>카페 → 만들기·꾸미기 → 스티커 만들기에서 만들어 보세요!' : '아직 만든 스티커가 없어요'}</div>`;
+            if (!L.length) return '<div class="smk-empty">✂️ 아직 만든 스티커가 없어요.<br>하단메뉴 ✨ 스티커에서 만들어 보세요!</div>';
             return L.map((s, i) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button><i onclick="smDel(${i})" title="지우기">✕</i></span>`).join('');
-        }
-        async function smRenderMine() {
-            const box = smq('smMine'); if (!box) return;
-            if (!smS.list) { box.innerHTML = '<div class="smk-empty">불러오는 중…</div>'; await smLoad(); }
-            box.innerHTML = smGrid(false); smq('smCount').textContent = `${smS.list.length} / ${SM_MAX}`;
         }
         function smUse(i) { const s = smS.list && smS.list[i]; if (s) smStick(s.src); }
         async function smDel(i) {
             if (!(await showMsg('이 스티커를 내 스티커에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 일기에 붙인 스티커는 그대로 남아요.</span>', true))) return;
             smS.list.splice(i, 1);
             try { await smSave(); } catch (e) {}
-            smRenderMine(); const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers();
+            const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers();
         }
         async function loadMyStickers(btn) {
             if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
             const g = smq('stickerGrid'); g.dataset.mine = '1';
             g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
             await smLoad();
-            g.innerHTML = `<div class="smk-mine smk-in-modal">${smGrid(true)}</div>`;
+            g.innerHTML = `<div class="smk-mine smk-in-modal">${smGrid()}</div>`;
         }
 
-        function openStickerMaker() {
-            if (typeof closeModal === 'function') closeModal('serviceModal');
-            smBuild(); smStep(1);
-            smq('smRoom').classList.add('show');
+        /* 하단메뉴 ✨ 스티커 창의 세 버튼 (사진 고르는 창은 눌렀을 때 바로 열려야 해서 화면을 먼저 만들어 둬요) */
+        function smOpenCam() { smBuild(); smq('smCam').click(); }
+        function smOpenFile() { smBuild(); smq('smFile').click(); }
+        function smOpenText() { smBuild(); smStartText(); }
+        function smShow() {
+            smBuild();
+            smq('smRoom').classList.add('show'); smq('smRoom').scrollTop = 0;
             document.body.classList.add('fc-lock');
         }
         function closeStickerMaker() {
@@ -266,5 +248,5 @@
         }
         /* 스티커 창의 다른 칸을 누르면 '내 스티커' 표시 지우기 */
         document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b && !b.classList.contains('sm-cat')) { const g = smq('stickerGrid'); if (g) delete g.dataset.mine; } }, true);
-        window.openStickerMaker = openStickerMaker;
+        window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText;
         window.loadMyStickers = loadMyStickers;
