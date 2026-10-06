@@ -284,7 +284,7 @@
             page.innerHTML =
                 `<div class="page-header">
                     <button type="button" class="page-nav-btn page-arrow" tabindex="-1"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                    <span class="page-date-wrap"><span class="page-date-btn">${formatDate(date)}</span><button type="button" class="page-search-btn" tabindex="-1">🔍</button></span>
+                    <span class="page-date-wrap"><span class="page-date-btn">${formatDate(date)}</span><button type="button" class="page-search-btn" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="#d9f0f3" stroke="#2f8a9a" stroke-width="2.6"/><line x1="15" y1="15" x2="21" y2="21" stroke="#2f8a9a" stroke-width="3" stroke-linecap="round"/></svg></button></span>
                     <button type="button" class="page-nav-btn page-arrow" tabindex="-1"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 </div>
                 <div class="canvas-area"></div>`;
