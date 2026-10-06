@@ -26,7 +26,7 @@
             const el = document.createElement('div');
             el.id = 'psyRoom'; el.className = 'psy-room';
             el.innerHTML = `
-              <div class="psy-bar"><button class="psy-x" type="button" id="psyBack" onclick="psyBack()" aria-label="뒤로" hidden>&lt;</button><span id="psySp">${typeof sndFxBtn === 'function' ? sndFxBtn('psy-x') : ''}</span><b id="psyTitle">🧠 심리테스트</b><button class="psy-x" type="button" onclick="closePsyTest()" aria-label="닫기">✕</button></div>
+              <div class="psy-bar"><button class="psy-x" type="button" id="psyBack" onclick="psyBack()" aria-label="뒤로" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span id="psySp">${typeof sndFxBtn === 'function' ? sndFxBtn('psy-x') : ''}</span><b id="psyTitle">🧠 심리테스트</b><button class="psy-x" type="button" onclick="closePsyTest()" aria-label="닫기">✕</button></div>
               <div class="psy-wrap">
                 <section id="psyList" class="psy-step"></section>
                 <section id="psyQ" class="psy-step" hidden></section>

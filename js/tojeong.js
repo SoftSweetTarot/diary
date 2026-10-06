@@ -189,7 +189,7 @@
             el.id = 'tojeongRoom'; el.className = 'tj-room';
             el.innerHTML = `
               <span id="tjSnd">${typeof sndFxBtn === 'function' ? sndFxBtn('tj-x tj-back') : ''}</span>
-              <button class="tj-x tj-back" type="button" id="tjBack" onclick="tjShow('tjForm')" aria-label="생년월일 화면으로" hidden>&lt;</button>
+              <button class="tj-x tj-back" type="button" id="tjBack" onclick="tjShow('tjForm')" aria-label="생년월일 화면으로" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button class="tj-x" type="button" onclick="closeTojeong()" aria-label="닫기">✕</button>
               <div class="tj-wrap">
                 <section id="tjForm" class="tj-stage">

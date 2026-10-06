@@ -78,7 +78,7 @@
             el.innerHTML = `
               <div class="fc-sky" aria-hidden="true"><i class="fc-aurora a1"></i><i class="fc-aurora a2"></i><i class="fc-stars"></i><i class="fc-stars s2"></i></div>
               <span id="drSnd">${typeof sndFxBtn === 'function' ? sndFxBtn('fc-x fc-left') : ''}</span>
-              <button class="fc-x fc-left" type="button" id="drBack" onclick="dmShow('drWrite')" aria-label="꿈 적는 화면으로" hidden>&lt;</button>
+              <button class="fc-x fc-left" type="button" id="drBack" onclick="dmShow('drWrite')" aria-label="꿈 적는 화면으로" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button class="fc-x" type="button" onclick="closeDream()" aria-label="닫기">✕</button>
               <div class="dm-wrap">
                 <section id="drWrite" class="dm-stage">

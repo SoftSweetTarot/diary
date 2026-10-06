@@ -902,7 +902,7 @@
               </div>
               <div class="ar-play" id="arPlay" hidden>
                 <div class="ar-bar">
-                  <button class="ar-ibtn ar-plain" type="button" onclick="arBackToLobby()" aria-label="오락실로">&lt;</button>
+                  <button class="ar-ibtn ar-plain" type="button" onclick="arBackToLobby()" aria-label="오락실로"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                   <div class="ar-bar-t" id="arTitle"></div>
                   <div class="ar-stat"><small>SCORE</small><b id="arScore">0</b></div>
                   <div class="ar-stat"><small>BEST</small><b id="arBest">0</b></div>

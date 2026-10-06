@@ -27,7 +27,7 @@
             const el = document.createElement('div');
             el.id = 'boothRoom'; el.className = 'pb-room';
             el.innerHTML = `
-              <div class="pb-bar"><button class="pb-x pb-back" type="button" id="pbBack" onclick="pbBackStep()" aria-label="앞으로" hidden>&lt;</button><span class="pb-sp" id="pbSp"></span><b>📸 말랑 포토부스</b><button class="pb-x" type="button" onclick="closeBooth()" aria-label="닫기">✕</button></div>
+              <div class="pb-bar"><button class="pb-x pb-back" type="button" id="pbBack" onclick="pbBackStep()" aria-label="앞으로" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="pb-sp" id="pbSp"></span><b>📸 말랑 포토부스</b><button class="pb-x" type="button" onclick="closeBooth()" aria-label="닫기">✕</button></div>
               <div class="pb-wrap">
                 <section id="pbStep1" class="pb-step">
                   <p class="pb-lead">어떤 틀로 찍을까요?</p>

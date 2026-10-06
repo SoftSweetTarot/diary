@@ -1028,6 +1028,7 @@
         .mt-btn { width: 34px; height: 34px; flex-shrink: 0; border: 0; background: none; color: #888; padding: 0;
             font: inherit; font-size: 18px; font-weight: bold; line-height: 1; cursor: pointer; display: grid; place-items: center; }
         .mt-btn:hover { color: var(--primary-accent); }
+        .mt-back { color: var(--primary-accent); }
         .mt-btn.mt-none { visibility: hidden; pointer-events: none; }
         .mt-moved { display: none !important; }
         .svc-extra { padding: 12px 8px; }
