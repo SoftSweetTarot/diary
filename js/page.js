@@ -63,8 +63,19 @@
             return /^data:image\/svg/i.test(img.dataset.src || '') ? null : img;
         }
 
+        /* 📦 메모지 · 사진 꾸미기 창은 늘 접힌 채로 나와요 (▾ 를 눌러 펼침) · 다른 그림을 고르거나 선택을 풀었다가 다시 고르면 또 접힘 */
+        let panelFor = null;
+        function setPanelFold(f) {
+            const panel = document.getElementById('textPanel'), b = document.getElementById('textPanelFold');
+            panel.classList.toggle('folded', f);
+            if (b) { b.textContent = f ? '▾' : '▴'; b.title = f ? '펼치기' : '접기'; }
+            positionTextPanel();
+        }
+        function toggleTextPanelFold() { setPanelFold(!document.getElementById('textPanel').classList.contains('folded')); }
         function updateTextPanel() {
             const panel = document.getElementById('textPanel');
+            const nowFor = selectedElement && (getSelectedTextarea() || getSelectedPhoto()) ? selectedElement : null;
+            if (nowFor !== panelFor) { panelFor = nowFor; if (nowFor) setPanelFold(true); }
             const ta = getSelectedTextarea();
             if (!ta && getSelectedPhoto()) {                 // 사진 → 사진 꾸미기 (틀 · 글씨)
                 panel.dataset.mode = 'photo';

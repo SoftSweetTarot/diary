@@ -2514,3 +2514,7 @@ body.stu-edit #canvasArea .element-box { visibility: hidden !important; pointer-
 .stu-deco .rot-tl { left: -15px; top: -15px; } .stu-deco .rot-tr { right: -15px; top: -15px; }
 .stu-deco .rot-bl { left: -15px; bottom: -15px; } .stu-deco .rot-br { right: -15px; bottom: -15px; }
 body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; touch-action: none; }
+
+/* 📦 메모지 · 사진 꾸미기 창 접기 (제목 줄만 보임) */
+.text-panel.folded > :not(.text-panel-handle) { display: none !important; }
+.panel-fold { margin-left: auto; border: 0; background: none; font-size: 15px; line-height: 1; cursor: pointer; padding: 2px 6px; color: inherit; touch-action: manipulation; }
