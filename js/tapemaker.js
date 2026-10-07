@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/tapemaker.js
-   🎀 마스킹테이프 만들기 : 내가 고른 무늬 · 색, 또는 내 사진으로 나만의 마스킹테이프를 만들어요 (하단메뉴 ✨ 스티커 → 🎀 마스킹테이프)
-   - 🎨 무늬로 : 무늬(단색 · 도트 · 세로줄 · 가로줄 · 사선 · 깅엄 · 하트 · 별 · 물결) + 바탕색 · 무늬색 + 크기
+   🎀 마스킹테이프 만들기 : 내가 직접 그린 그림, 또는 내 사진으로 나만의 마스킹테이프를 만들어요 (하단메뉴 ✨ 스티커 → 🎀 마스킹테이프)
+   - ✏️ 그리기 : 네모 한 칸에 펜 · 지우개로 직접 그리면 테이프에 쭉 이어 붙어요 (🔁 이어지게 그리기 · 되돌리기 · 바탕색 · 크기)
    - 🖼️ 내 사진으로 : 사진 가운데를 네모로 잘라 테이프에 이어 붙여요 (사진은 이 기기에서만 줄여서, 완성된 테이프만 저장돼요)
    - 📌 바로 붙이거나 💾 내 마스킹테이프에 저장 → ✏️ 스티커 창 → 🎀 내 마스킹테이프 칸에서 언제든 다시 붙여요 (최대 30개 · 선물 받은 🎀 마스킹테이프와는 다른 칸)
      저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내마스킹테이프.json (게스트는 이 기기에만)
@@ -8,36 +8,18 @@
    ※ 이 파일이 없어도 다이어리는 정상 동작 (마스킹테이프 만들기 · 내 마스킹테이프만 '준비 중') */
 
         const TPM_FILE = '내마스킹테이프.json', TPM_LOCAL = 'malang_my_tapes', TPM_MAX = 30, TPM_PHOTO_PX = 96;
-        const TPM_KINDS = [['solid', '단색'], ['dot', '도트'], ['vline', '세로줄'], ['hline', '가로줄'], ['diag', '사선'], ['check', '깅엄'], ['heart', '하트'], ['star', '별'], ['wave', '물결']];
+        const TPM_PAD = 240, TPM_OUT = 120;                              // 그리는 칸(안쪽 해상도) · 저장되는 그림 크기
+        const TPM_BRUSH = [['가늘게', 3], ['보통', 7], ['굵게', 14]];
         const TPM_COLORS = ['#ffc9d9', '#ffd9c2', '#fff3a6', '#bff0dc', '#bfe3ff', '#e9e1ff', '#ffffff', '#ff8fab', '#f2a12a', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#4b5aa8'];
-        const TPM_SIZE = { p: [8, 40, 16], i: [16, 60, 30] };            // 크기 막대 : [가장 작게, 가장 크게, 처음 값] (무늬 · 사진)
-        const tpmS = { built: false, m: 'p', k: 'dot', bg: '#ffc9d9', fg: '#ffffff', sp: 16, si: 30, img: '', list: null, fileId: null, loading: null };
+        const TPM_SIZE = { d: [16, 60, 30], i: [16, 60, 30] };            // 크기 막대 : [가장 작게, 가장 크게, 처음 값] (그리기 · 사진)
+        const tpmS = { built: false, m: 'd', bg: '#ffc9d9', pen: '#ffffff', br: 7, er: false, wrap: true, sd: 30, si: 30, dimg: '', img: '', undo: [], list: null, fileId: null, loading: null };
         const tpmq = id => document.getElementById(id);
         const tpmSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
         const tpmR = n => Math.round(n * 100) / 100;
 
-        /* ---------- 무늬 한 칸 그림 ---------- */
-        function tpmPat(k, c, s) {
-            const r = tpmR;
-            if (k === 'dot') return { w: s, h: s, p: `<circle cx="${r(s * .28)}" cy="${r(s * .28)}" r="${r(s * .17)}" fill="${c}"/><circle cx="${r(s * .78)}" cy="${r(s * .78)}" r="${r(s * .17)}" fill="${c}"/>` };
-            if (k === 'vline') return { w: s, h: s, p: `<rect width="${r(s / 2)}" height="${s}" fill="${c}"/>` };
-            if (k === 'hline') return { w: s, h: s, p: `<rect width="${s}" height="${r(s / 2)}" fill="${c}"/>` };
-            if (k === 'diag') return { w: s, h: s, p: `<path d="M${r(-s * .25)} ${r(s * .25)}L${r(s * .25)} ${r(-s * .25)}M0 ${s}L${s} 0M${r(s * .75)} ${r(s * 1.25)}L${r(s * 1.25)} ${r(s * .75)}" stroke="${c}" stroke-width="${r(s * .28)}"/>` };
-            if (k === 'check') return { w: s, h: s, p: `<rect width="${r(s / 2)}" height="${s}" fill="${c}" opacity=".55"/><rect width="${s}" height="${r(s / 2)}" fill="${c}" opacity=".55"/>` };
-            if (k === 'heart') return { w: r(s * 1.1), h: s, p: `<path transform="scale(${r(s / 20)})" d="M11 15 C3 10 4 4 8 4 C10 4 11 6 11 7 C11 6 12 4 14 4 C18 4 19 10 11 15Z" fill="${c}"/>` };
-            if (k === 'star') {
-                const pts = Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? .22 : .46; return `${r(s * (.5 + Math.cos(a) * rr))},${r(s * (.5 + Math.sin(a) * rr))}`; }).join(' ');
-                return { w: s, h: s, p: `<polygon points="${pts}" fill="${c}"/>` };
-            }
-            if (k === 'wave') return { w: r(s * 1.6), h: r(s * .9), p: `<path d="M0 ${r(s * .45)} q${r(s * .4)} ${r(-s * .4)} ${r(s * .8)} 0 t${r(s * .8)} 0" stroke="${c}" stroke-width="${r(s * .17)}" fill="none"/>` };
-            return { w: 10, h: 10, p: '' };                                // 단색
-        }
-        /* 저장해 둔 모양(o) → tape.js 의 tapeSvg 가 읽는 모양 */
+        /* 저장해 둔 모양(o) → tape.js 의 tapeSvg 가 읽는 모양 (그림 · 사진 모두 '한 칸 그림'을 이어 붙여요) */
         function tpmDef(o) {
-            const t = { id: 'my-' + o.id, name: '내 마스킹테이프', bg: o.bg };
-            if (o.m === 'i') { t.w = o.s; t.h = o.s; t.p = `<image href="${o.img}" width="${o.s}" height="${o.s}" preserveAspectRatio="xMidYMid slice"/>`; }
-            else Object.assign(t, tpmPat(o.k, o.fg, o.s));
-            return t;
+            return { id: 'my-' + o.id, name: '내 마스킹테이프', bg: o.bg, w: o.s, h: o.s, p: o.img ? `<image href="${o.img}" width="${o.s}" height="${o.s}" preserveAspectRatio="xMidYMid slice"/>` : '' };
         }
         const tpmUrl = o => tapeUrl(tpmDef(o));
         /* 드라이브 · 기기에서 읽은 것은 정해진 모양만 통과 (그림 안에 들어가는 글자라서 꼼꼼히 확인) */
@@ -45,8 +27,8 @@
             if (!o || typeof o !== 'object') return null;
             const col = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v), s = +o.s;
             if (!/^[\w-]{1,20}$/.test(o.id || '') || !col(o.bg) || !(s >= 8 && s <= 60)) return null;
-            if (o.m === 'i') return /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(o.img || '') ? { id: o.id, m: 'i', bg: o.bg, s, img: o.img } : null;
-            return TPM_KINDS.some(x => x[0] === o.k) && col(o.fg) ? { id: o.id, m: 'p', k: o.k, bg: o.bg, fg: o.fg, s } : null;
+            const re = o.m === 'd' ? /^data:image\/png;base64,[A-Za-z0-9+/=]+$/ : o.m === 'i' ? /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/ : null;
+            return re && re.test(o.img || '') ? { id: o.id, m: o.m, bg: o.bg, s, img: o.img } : null;
         }
 
         /* ---------- 내 마스킹테이프 목록 (드라이브) ---------- */
@@ -89,14 +71,17 @@
                 <input type="file" id="tpmFile" accept="image/*" hidden onchange="tpmPickFile(this)">
                 <section class="smk-step">
                   <div class="tpm-stage"><span class="tpm-tape" id="tpmTape"></span></div>
-                  <div class="smk-chips" id="tpmTabs"><button type="button" data-m="p" onclick="tpmSetMode('p')">🎨 무늬로</button><button type="button" data-m="i" onclick="tpmSetMode('i')">🖼️ 내 사진으로</button></div>
-                  <div id="tpmPatOpts" class="smk-step">
-                    <p class="tpm-lead">무늬</p>
-                    <div class="smk-chips" id="tpmKinds">${TPM_KINDS.map(x => `<button type="button" data-k="${x[0]}" onclick="tpmSetKind('${x[0]}')">${x[1]}</button>`).join('')}</div>
+                  <div class="smk-chips" id="tpmTabs"><button type="button" data-m="d" onclick="tpmSetMode('d')">✏️ 그리기</button><button type="button" data-m="i" onclick="tpmSetMode('i')">🖼️ 내 사진으로</button></div>
+                  <div id="tpmDrawOpts" class="smk-step">
+                    <p class="tpm-lead">✏️ 네모 한 칸에 그려 보세요 · 위 테이프에 쭉 이어져요</p>
+                    <canvas id="tpmPad" class="tpm-pad" width="${TPM_PAD}" height="${TPM_PAD}"></canvas>
+                    <div class="smk-chips" id="tpmTools"><button type="button" data-t="pen" onclick="tpmSetEraser(false)">✏️ 펜</button><button type="button" data-t="er" onclick="tpmSetEraser(true)">🧽 지우개</button><button type="button" onclick="tpmUndo()">↩️ 되돌리기</button><button type="button" onclick="tpmClear()">🗑️ 비우기</button></div>
+                    <div class="smk-chips" id="tpmBrush">${TPM_BRUSH.map(x => `<button type="button" data-b="${x[1]}" onclick="tpmSetBrush(${x[1]})">${x[0]}</button>`).join('')}</div>
+                    <label class="tpm-wrap"><input type="checkbox" id="tpmWrap" checked onchange="tpmS.wrap = this.checked"> 🔁 이어지게 그리기 <small>가장자리를 넘기면 반대쪽에서 이어져요</small></label>
+                    <p class="tpm-lead">펜 색</p>
+                    <div class="smk-colors tpm-colors" id="tpmPen">${sw('pen', TPM_COLORS)}</div>
                     <p class="tpm-lead">바탕색</p>
                     <div class="smk-colors tpm-colors" id="tpmBg">${sw('bg', TPM_COLORS)}</div>
-                    <div id="tpmFgBox" class="smk-step"><p class="tpm-lead">무늬색</p>
-                    <div class="smk-colors tpm-colors" id="tpmFg">${sw('fg', TPM_COLORS)}</div></div>
                   </div>
                   <div id="tpmPhotoOpts" class="smk-step" hidden>
                     <button type="button" class="smk-go smk-sub" onclick="tpmq('tpmFile').click()">🖼️ 사진 고르기</button>
@@ -108,30 +93,74 @@
                 </section>
               </div>`;
             document.body.appendChild(el);
+            tpmBindPad();
         }
         function tpmCur() {                                            // 지금 만들고 있는 테이프 (저장 모양)
             const o = { id: Date.now().toString(36), m: tpmS.m, bg: tpmS.bg };
-            if (tpmS.m === 'i') { o.s = tpmS.si; o.img = tpmS.img; } else { o.s = tpmS.sp; o.k = tpmS.k; o.fg = tpmS.fg; }
+            if (tpmS.m === 'i') { o.s = tpmS.si; o.img = tpmS.img; } else { o.s = tpmS.sd; o.img = tpmS.dimg; }
             return o;
         }
         function tpmDraw() {
             const t = tpmq('tpmTape'); if (!t) return;
             t.style.backgroundImage = tpmS.m === 'i' && !tpmS.img ? 'none' : `url("${tpmUrl(tpmCur())}")`;
             document.querySelectorAll('#tpmTabs button').forEach(b => b.classList.toggle('on', b.dataset.m === tpmS.m));
-            document.querySelectorAll('#tpmKinds button').forEach(b => b.classList.toggle('on', b.dataset.k === tpmS.k));
-            ['bg', 'fg'].forEach(k => {
-                document.querySelectorAll(`#tpm${k === 'bg' ? 'Bg' : 'Fg'} button`).forEach(b => b.classList.toggle('on', b.dataset.c.toLowerCase() === tpmS[k].toLowerCase()));
+            document.querySelectorAll('#tpmTools button[data-t]').forEach(b => b.classList.toggle('on', (b.dataset.t === 'er') === tpmS.er));
+            document.querySelectorAll('#tpmBrush button').forEach(b => b.classList.toggle('on', +b.dataset.b === tpmS.br));
+            [['bg', 'Bg'], ['pen', 'Pen']].forEach(([k, id]) => {
+                document.querySelectorAll(`#tpm${id} button`).forEach(b => b.classList.toggle('on', b.dataset.c.toLowerCase() === tpmS[k].toLowerCase()));
                 const p = tpmq('tpmPick-' + k); if (p) p.value = tpmS[k];
             });
-            tpmq('tpmPatOpts').hidden = tpmS.m !== 'p'; tpmq('tpmPhotoOpts').hidden = tpmS.m !== 'i';
-            tpmq('tpmFgBox').hidden = tpmS.k === 'solid';
+            tpmq('tpmPad').style.background = tpmS.bg;
+            tpmq('tpmDrawOpts').hidden = tpmS.m !== 'd'; tpmq('tpmPhotoOpts').hidden = tpmS.m !== 'i';
             const z = tpmq('tpmSize'), r = TPM_SIZE[tpmS.m];
-            z.min = r[0]; z.max = r[1]; z.step = 1; z.value = tpmS.m === 'i' ? tpmS.si : tpmS.sp;
+            z.min = r[0]; z.max = r[1]; z.step = 1; z.value = tpmS.m === 'i' ? tpmS.si : tpmS.sd;
         }
         function tpmSetMode(m) { tpmS.m = m; tpmDraw(); if (m === 'i' && !tpmS.img) tpmq('tpmFile').click(); }
-        function tpmSetKind(k) { tpmS.k = k; tpmDraw(); }
-        function tpmSetColor(key, c) { tpmS[key] = c; tpmDraw(); }
-        function tpmSetSize(v) { if (tpmS.m === 'i') tpmS.si = v; else tpmS.sp = v; tpmDraw(); }
+        function tpmSetColor(key, c) { tpmS[key] = c; if (key === 'pen') tpmS.er = false; tpmDraw(); }
+        function tpmSetSize(v) { if (tpmS.m === 'i') tpmS.si = v; else tpmS.sd = v; tpmDraw(); }
+        function tpmSetEraser(on) { tpmS.er = on; tpmDraw(); }
+        function tpmSetBrush(n) { tpmS.br = n; tpmDraw(); }
+
+        /* ---------- ✏️ 그리기 ---------- */
+        const tpmCtx = () => tpmq('tpmPad').getContext('2d');
+        function tpmSeg(x0, y0, x1, y1) {                              // 선 하나 (이어지게 그리기가 켜져 있으면 반대쪽 가장자리에도 같이 그려요)
+            const c = tpmCtx(), N = TPM_PAD, offs = tpmS.wrap ? [-N, 0, N] : [0];
+            c.save();
+            c.globalCompositeOperation = tpmS.er ? 'destination-out' : 'source-over';
+            c.strokeStyle = c.fillStyle = tpmS.pen; c.lineWidth = tpmS.br; c.lineCap = c.lineJoin = 'round';
+            offs.forEach(dx => offs.forEach(dy => {
+                c.beginPath(); c.moveTo(x0 + dx, y0 + dy); c.lineTo(x1 + dx, y1 + dy); c.stroke();
+                c.beginPath(); c.arc(x1 + dx, y1 + dy, tpmS.br / 2, 0, 6.2832); c.fill();
+            }));
+            c.restore();
+        }
+        function tpmExport() {                                         // 그린 것 → 작은 투명 PNG (비었으면 '')
+            const src = tpmq('tpmPad'), N = TPM_PAD, d = tpmCtx().getImageData(0, 0, N, N).data;
+            let any = false; for (let i = 3; i < d.length; i += 4) if (d[i]) { any = true; break; }
+            if (!any) tpmS.dimg = '';
+            else { const c = document.createElement('canvas'); c.width = c.height = TPM_OUT; c.getContext('2d').drawImage(src, 0, 0, TPM_OUT, TPM_OUT); tpmS.dimg = c.toDataURL('image/png'); }
+            tpmDraw();
+        }
+        function tpmUndo() {
+            const u = tpmS.undo.pop(); if (!u) return;
+            tpmCtx().putImageData(u, 0, 0); tpmExport();
+        }
+        function tpmClear() {
+            tpmS.undo.push(tpmCtx().getImageData(0, 0, TPM_PAD, TPM_PAD)); if (tpmS.undo.length > 20) tpmS.undo.shift();
+            tpmCtx().clearRect(0, 0, TPM_PAD, TPM_PAD); tpmExport();
+        }
+        function tpmBindPad() {
+            const pad = tpmq('tpmPad'); let last = null;
+            const pt = e => { const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * TPM_PAD / r.width, (e.clientY - r.top) * TPM_PAD / r.height]; };
+            pad.addEventListener('pointerdown', e => {
+                e.preventDefault(); pad.setPointerCapture(e.pointerId);
+                tpmS.undo.push(tpmCtx().getImageData(0, 0, TPM_PAD, TPM_PAD)); if (tpmS.undo.length > 20) tpmS.undo.shift();
+                last = pt(e); tpmSeg(last[0], last[1], last[0], last[1]);
+            });
+            pad.addEventListener('pointermove', e => { if (!last) return; const p = pt(e); tpmSeg(last[0], last[1], p[0], p[1]); last = p; });
+            const end = () => { if (!last) return; last = null; tpmExport(); };
+            pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
+        }
 
         /* ---------- 사진 ---------- */
         function tpmPickFile(inp) {
@@ -152,6 +181,7 @@
         /* ---------- 완성 ---------- */
         async function tpmFinish(stick) {
             if (tpmS.m === 'i' && !tpmS.img) { showMsg('🖼️ 사진을 먼저 골라 주세요.'); return; }
+            if (tpmS.m === 'd') { tpmExport(); if (!tpmS.dimg) { showMsg('✏️ 먼저 네모 칸에 그려 주세요.'); return; } }
             const o = tpmCur();
             try {
                 await tpmLoad();
@@ -191,7 +221,7 @@
 
         function openTapeMaker() {
             tpmBuild();
-            if (!tpmS.img && tpmS.m === 'i') tpmS.m = 'p';
+            if (!tpmS.img && tpmS.m === 'i') tpmS.m = 'd';
             tpmDraw();
             tpmq('tpmRoom').classList.add('show'); tpmq('tpmRoom').scrollTop = 0;
             document.body.classList.add('fc-lock');
