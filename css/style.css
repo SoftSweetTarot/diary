@@ -2483,7 +2483,7 @@
 .svc-cat[hidden] { display: none; }
 .cat-btn.mtp-cat:not(.active) { background: #fff7e6; border-color: #ffc46b; }
 /* ===== 🎀 마스킹테이프 만들기 (js/tapemaker.js · 화면 모양은 .smk-* 를 같이 써요) ===== */
-.tpm-top { position: sticky; top: calc(max(10px, env(safe-area-inset-top)) + 48px); z-index: 2; display: flex; flex-direction: column; gap: 6px; padding: 4px 0 8px; background: linear-gradient(#f6fbff, rgba(246,251,255,.92)); }
+.tpm-top { position: sticky; top: calc(max(10px, env(safe-area-inset-top)) + 48px); z-index: 2; display: flex; flex-direction: column; gap: 6px; padding: 4px 0 8px; background: #f6fbff; box-shadow: 0 6px 8px -6px rgba(0,0,0,.12); }
 .tpm-zoom { margin-top: 0; } .tpm-zoom small { font-size: 12px; color: #6a8aa0; }
 .tpm-stage { display: flex; align-items: center; justify-content: center; height: 96px; overflow: hidden; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,.1);
     background: repeating-conic-gradient(#eef3f7 0 25%, #fff 0 50%) 50% / 20px 20px; }
