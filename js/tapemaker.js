@@ -70,9 +70,7 @@
               <div class="smk-wrap">
                 <input type="file" id="tpmFile" accept="image/*" hidden onchange="tpmPickFile(this)">
                 <section class="smk-step">
-                  <div class="tpm-top"><div class="tpm-stage"><span class="tpm-tape" id="tpmTape"></span></div>
-                  <label class="smk-zoom tpm-zoom">🔍 <small>크기</small> <input type="range" id="tpmSize" oninput="tpmSetSize(+this.value)"></label>
-                  </div>
+                  <div class="tpm-stage"><span class="tpm-tape" id="tpmTape"></span></div>
                   <div class="smk-chips" id="tpmTabs"><button type="button" data-m="d" onclick="tpmSetMode('d')">✏️ 그리기</button><button type="button" data-m="i" onclick="tpmSetMode('i')">🖼️ 내 사진으로</button></div>
                   <div id="tpmDrawOpts" class="smk-step">
                     <p class="tpm-lead">✏️ 네모 한 칸에 그려 보세요 · 위 테이프에 쭉 이어져요</p>
@@ -89,6 +87,7 @@
                     <button type="button" class="smk-go smk-sub" onclick="tpmq('tpmFile').click()">🖼️ 사진 고르기</button>
                     <p class="smk-hint">사진 가운데를 네모로 잘라서 테이프에 쭉 이어 붙여요</p>
                   </div>
+                  <label class="smk-zoom">🔍 <input type="range" id="tpmSize" oninput="tpmSetSize(+this.value)"></label>
                   <button type="button" class="smk-go" onclick="tpmFinish(true)">📌 다이어리에 붙이기</button>
                   <button type="button" class="smk-go smk-sub" onclick="tpmFinish(false)">💾 내 마스킹테이프에 저장만</button>
                 </section>
