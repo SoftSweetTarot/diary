@@ -75,6 +75,18 @@
             /* 📱 글을 쓰는 중에 버튼을 누르면 입력칸이 포커스를 잃으면서 키보드가 접히고 화면이 움직여서(아이패드) 누른 버튼 밑의 버튼이 눌렸어요
                → 버튼을 눌러도 입력칸이 포커스를 그대로 가지게 해서 화면이 안 움직이게 해요 (눌림 자체는 그대로 동작) */
             el.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button')) e.preventDefault(); });
+            /* 📱 손가락으로 누르면 '누르기 시작한 버튼'을 직접 눌러 줘요 (키보드가 접히며 화면이 움직여도 옆 · 아래 버튼이 눌리지 않게)
+               브라우저가 따로 보내는 터치 클릭은 막고, 아래 button.click() 이 보내는 클릭만 통과시켜요 */
+            let tdown = null, tlast = 0;
+            el.addEventListener('pointerdown', e => { const b = e.pointerType !== 'mouse' && e.target.closest && e.target.closest('button'); tdown = b ? { b, x: e.clientX, y: e.clientY } : null; });
+            el.addEventListener('pointerup', e => {
+                const d = tdown; tdown = null; if (!d || e.pointerType === 'mouse') return;
+                if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10) return;          // 끌었으면(스크롤) 누른 게 아니에요
+                tlast = Date.now(); d.b.click();
+            });
+            el.addEventListener('click', e => {
+                if (e.isTrusted && e.detail > 0 && Date.now() - tlast < 800 && e.target.closest && e.target.closest('button')) { e.stopPropagation(); e.preventDefault(); }
+            }, true);
             const cv = smq('smCanvas');
             cv.addEventListener('pointerdown', smDown); cv.addEventListener('pointermove', smMove);
             cv.addEventListener('pointerup', smUp); cv.addEventListener('pointercancel', smUp);
