@@ -68,7 +68,7 @@
         function setPanelFold(f) {
             const panel = document.getElementById('textPanel'), b = document.getElementById('textPanelFold');
             panel.classList.toggle('folded', f);
-            if (b) { b.textContent = f ? '▾' : '▴'; b.title = f ? '펼치기' : '접기'; }
+            if (b) { b.textContent = f ? '▾' : '▴'; }
             positionTextPanel();
         }
         function toggleTextPanelFold() { setPanelFold(!document.getElementById('textPanel').classList.contains('folded')); }
@@ -144,11 +144,11 @@
         function setupPanelDrag() {
             const panel = document.getElementById('textPanel');
             const handle = document.getElementById('textPanelHandle');
-            let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+            let dragging = false, moved = false, sx = 0, sy = 0, sl = 0, st = 0;
 
             handle.addEventListener('pointerdown', (e) => {
                 if (e.target.closest('button')) return;
-                dragging = true;
+                dragging = true; moved = false;
                 const r = panel.getBoundingClientRect();
                 sx = e.clientX; sy = e.clientY; sl = r.left; st = r.top;
                 try { handle.setPointerCapture(e.pointerId); } catch (err) {}
@@ -158,6 +158,8 @@
 
             handle.addEventListener('pointermove', (e) => {
                 if (!dragging) return;
+                if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) < 6) return;      // 살짝 흔들린 건 '누름'
+                moved = true;
                 const p = clampPanelPos(sl + e.clientX - sx, st + e.clientY - sy, panel.offsetWidth, panel.offsetHeight);
                 panel.style.left = p.l + 'px';
                 panel.style.top = p.t + 'px';
@@ -168,7 +170,8 @@
             });
 
             const stop = () => { dragging = false; };
-            handle.addEventListener('pointerup', stop);
+            /* 제목 줄 어디든(✕ 빼고) 한 번 누르면 접기 · 펴기 / 끌면 창 옮기기 */
+            handle.addEventListener('pointerup', () => { const tap = dragging && !moved; stop(); if (tap) toggleTextPanelFold(); });
             handle.addEventListener('pointercancel', stop);
             window.addEventListener('resize', positionTextPanel);
         }

@@ -2517,4 +2517,5 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 
 /* 📦 메모지 · 사진 꾸미기 창 접기 (제목 줄만 보임) */
 .text-panel.folded > :not(.text-panel-handle) { display: none !important; }
-.panel-fold { margin-left: auto; border: 0; background: none; font-size: 15px; line-height: 1; cursor: pointer; padding: 2px 6px; color: inherit; touch-action: manipulation; }
+.panel-fold { margin-left: auto; margin-right: 10px; font-size: 15px; line-height: 1; color: inherit; pointer-events: none; }
+.text-panel-handle { cursor: pointer; }
