@@ -58,7 +58,7 @@
     body.bare .dv-only { display: none !important; }
 
     /* ---------- 커서 · 클릭 ---------- */
-    #cursor { position: absolute; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; z-index: 50; display: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+    #cursor { will-change: transform; position: absolute; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; z-index: 50; display: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
     .ripple { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; pointer-events: none; z-index: 49;
         border: 3px solid rgba(255,107,129,.9); background: rgba(255,143,171,.25); animation: rip .55s ease-out forwards; }
     @keyframes rip { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
@@ -321,13 +321,26 @@
     /* ---------- 🖱 영상용 커서 · 클릭 효과 (다이어리 안에서 움직여도 따라가요) ---------- */
     let sameOrigin = true;
     function stagePoint(x, y) { const r = $('stage').getBoundingClientRect(); return [x - r.left, y - r.top]; }
+    /* 마우스 신호는 들쭉날쭉 들어오고 영상은 1초 30장이라 그대로 따라가면 뚝뚝 끊겨 보여요
+       → 신호는 '목표 위치'로만 받고, 화면이 갱신될 때마다(requestAnimationFrame) 커서가 목표를 부드럽게 따라가요 */
+    const cur = { x: 0, y: 0, tx: 0, ty: 0, vis: false, t: 0 };
     function moveCursor(sx, sy) {                             // sx · sy = 무대 안 좌표
         const c = $('cursor'); if (!S.showCursor) return;
         const r = $('stage').getBoundingClientRect();
         const inside = sx >= 0 && sy >= 0 && sx <= r.width && sy <= r.height;
         c.style.display = inside ? 'block' : 'none';
-        c.style.transform = `translate(${sx - 3}px, ${sy - 2}px)`;
+        if (inside && !cur.vis) { cur.x = sx; cur.y = sy; }   // 무대에 처음 들어올 때는 날아오지 않고 바로 그 자리
+        cur.vis = inside; cur.tx = sx; cur.ty = sy;
     }
+    (function cursorLoop(t) {
+        requestAnimationFrame(cursorLoop);
+        const dt = Math.min(0.1, (t - cur.t) / 1000); cur.t = t;
+        if (!cur.vis) return;
+        const a = 1 - Math.exp(-dt / 0.035);                  // 0.035초 : 작을수록 빠르게 · 클수록 더 부드럽게 따라감
+        cur.x += (cur.tx - cur.x) * a; cur.y += (cur.ty - cur.y) * a;
+        if (Math.abs(cur.tx - cur.x) < .05 && Math.abs(cur.ty - cur.y) < .05) { cur.x = cur.tx; cur.y = cur.ty; }
+        $('cursor').style.transform = `translate3d(${(cur.x - 3).toFixed(2)}px, ${(cur.y - 2).toFixed(2)}px, 0)`;
+    })(0);
     function clickFx(sx, sy) {
         if (!S.showClick) return;
         const d = document.createElement('div');
@@ -441,9 +454,9 @@
                 })();
             }
             R.tick = () => {
-                draw();
                 const k = Math.round((performance.now() - R.t0) * FPS / 1000);      // 지금이 몇 번째 장면인지 (시간에 딱 맞춰서)
                 if (k <= R.last || R.venc.encodeQueueSize > 4) return;              // 이미 찍은 장면 · 컴퓨터가 바쁘면 건너뛰기
+                draw();
                 const key = R.last < 0 || Math.floor(k / KEY_EVERY) > Math.floor(R.last / KEY_EVERY);
                 R.last = k;
                 const f = new VideoFrame(R.cv, { timestamp: Math.round(k * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
@@ -458,7 +471,9 @@
             R.tick = draw;
         }
         draw(); R.tick();
-        R.iv = setInterval(R.tick, 1000 / FPS);
+        R.iv = setInterval(R.tick, 1000 / FPS);                                  // 예비 (탭이 가려져도 계속)
+        const loop = () => { if (R !== r0 || r0.stopping) return; r0.tick(); requestAnimationFrame(loop); };   // 화면 갱신 박자에 맞춰 장면을 고르면 시간이 덜 들쭉날쭉
+        const r0 = R; requestAnimationFrame(loop);
         $('recState').classList.add('on'); $('recBtn').textContent = '⏹ 녹화 끝 (F2)';
         timer = setInterval(() => { const s = (performance.now() - R.t0) / 1000 | 0; $('recState').textContent = `녹화 중 ${String(s / 60 | 0).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }, 250);
     }
