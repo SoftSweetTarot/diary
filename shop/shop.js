@@ -77,4 +77,6 @@ async function init() {
   addEventListener('hashchange', render);
   render();
 }
+// ✕ : 카페에서 열린 탭이면 그냥 닫기 (다이어리 탭이 그대로 남아 로그인 안 해도 됨) · 못 닫으면 다이어리로
+$('shClose').onclick = () => { window.close(); setTimeout(() => { location.href = '../'; }, 300); };
 init();

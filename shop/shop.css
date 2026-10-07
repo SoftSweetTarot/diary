@@ -4,7 +4,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
 a{color:inherit;text-decoration:none}
 .sh-top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;max-width:1000px;margin:0 auto}
 .sh-logo{font-size:20px;font-weight:800;color:var(--pk-d)}
-.sh-diary{font-size:13px;background:var(--soft);padding:6px 12px;border-radius:999px}
+.sh-x{border:0;background:none;color:#888;font-size:20px;font-weight:700;width:36px;height:36px;cursor:pointer;line-height:1}
+@media(hover:hover){.sh-x:hover{color:var(--pk-d)}}
 .sh-main,.sh-sub{display:flex;gap:8px;overflow-x:auto;padding:4px 16px;max-width:1000px;margin:0 auto;scrollbar-width:none}
 .sh-main::-webkit-scrollbar,.sh-sub::-webkit-scrollbar{display:none}
 .sh-main a,.sh-sub a{flex:none;padding:8px 16px;border-radius:999px;background:#fff;border:2px solid var(--pk);font-weight:700;font-size:15px}
