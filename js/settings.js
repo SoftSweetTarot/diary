@@ -538,7 +538,7 @@
             const f = e.target.files && e.target.files[0];
             e.target.value = '';
             if (!f) return;
-            if (f.size > 400000) { showMsg('⚠ 페이지 파일이 아니에요. (파일이 너무 커요)'); return; }
+            if (f.size > 6000000) { showMsg('⚠ 페이지 파일이 아니에요. (파일이 너무 커요)'); return; }
             f.text().then(t => addReceivedSkin(parseSkinText(t)));
         }
         function pasteSkinCode() {

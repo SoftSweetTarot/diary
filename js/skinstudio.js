@@ -11,7 +11,8 @@
    - 테마 페이지(js/theme-skins.js)은 id 'th:이름' · 보관함에 있는 것만 쓸 수 있어요 (diary_themes = 가진 테마 id 목록)
    ※ 불러오는 순서: settings → … → skins → skinstudio → theme-skins */
 
-        const STU_MAX_DECO = 60, STU_MAX_IMGS = 8, STU_IMG_PX = 112, STU_IMG_MAX_LEN = 24000;
+        const STU_MAX_DECO = 60, STU_MAX_IMGS = 16, STU_IMG_PX = 112, STU_IMG_MAX_LEN = 24000;
+        const STU_DECO_PX = 640, STU_DECO_IMG_MAX_LEN = 450000, STU_IMGS_TOTAL = 4000000;   // 🖼 꾸밈놓기용 내 이미지는 크게 (아이콘용만 작게 · 위 STU_IMG_PX / STU_IMG_MAX_LEN)
         const STU_THEMES_KEY = 'diary_themes';
         const STU_ANCHORS = [
             ['pill', '📅 날짜 줄'], ['paper', '📄 종이'], ['pop', '📍 팝업메뉴'], ['bar', '🔘 하단메뉴'],
@@ -88,7 +89,7 @@
             if (src && src.imgs && typeof src.imgs === 'object') {
                 Object.keys(src.imgs).slice(0, STU_MAX_IMGS).forEach(k => {
                     const v = src.imgs[k];
-                    if (/^[\w-]{1,12}$/.test(k) && typeof v === 'string' && v.length <= STU_IMG_MAX_LEN && /^data:image\/(png|webp|jpeg|gif);base64,[A-Za-z0-9+/=]+$/.test(v)) imgs[k] = v;
+                    if (/^[\w-]{1,12}$/.test(k) && typeof v === 'string' && v.length <= STU_DECO_IMG_MAX_LEN && /^data:image\/(png|webp|jpeg|gif);base64,[A-Za-z0-9+/=]+$/.test(v)) imgs[k] = v;
                 });
             }
             const okImg = i => {
@@ -392,15 +393,24 @@
             const f = ev.target.files && ev.target.files[0]; ev.target.value = '';
             if (!f || !/^image\//.test(f.type)) return;
             if (Object.keys(stuCur.imgs).length >= STU_MAX_IMGS) { showMsg(`내 이미지는 페이지 하나에 ${STU_MAX_IMGS}개까지예요.<br>안 쓰는 이미지를 지우고 다시 넣어 주세요.`); return; }
+            const small = stuTab === 'icon';                       // 아이콘용은 작게 (제약) · 꾸밈놓기용은 크고 선명하게 (거의 제약 없음)
+            const maxPx = small ? STU_IMG_PX : STU_DECO_PX, maxLen = small ? STU_IMG_MAX_LEN : STU_DECO_IMG_MAX_LEN;
             const url = URL.createObjectURL(f), im = new Image();
             im.onload = () => {
-                const sc = Math.min(1, STU_IMG_PX / Math.max(im.width, im.height)), cv = document.createElement('canvas');
-                cv.width = Math.max(1, Math.round(im.width * sc)); cv.height = Math.max(1, Math.round(im.height * sc));
-                cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
                 URL.revokeObjectURL(url);
-                let data = cv.toDataURL('image/webp', 0.85);
-                if (!/^data:image\/webp/.test(data)) data = cv.toDataURL('image/png');
-                if (data.length > STU_IMG_MAX_LEN) { showMsg('이미지가 너무 복잡해서 담을 수 없어요.<br>더 단순한 그림으로 해 주세요.'); return; }
+                let k = Math.min(1, maxPx / Math.max(im.width, im.height)), data = '';
+                for (let t = 0; t < 6; t++) {                       // 너무 크면 조금씩 줄여서 담아요
+                    const cv = document.createElement('canvas');
+                    cv.width = Math.max(1, Math.round(im.width * k)); cv.height = Math.max(1, Math.round(im.height * k));
+                    cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+                    data = cv.toDataURL('image/webp', small ? 0.85 : 0.92);
+                    if (!/^data:image\/webp/.test(data)) data = cv.toDataURL('image/png');
+                    if (data.length <= maxLen) break;
+                    k *= 0.8;
+                }
+                if (data.length > maxLen) { showMsg(small ? '이미지가 너무 복잡해서 담을 수 없어요.<br>더 단순한 그림으로 해 주세요.' : '이미지가 너무 커서 담을 수 없어요.<br>조금 작은 그림으로 해 주세요.'); return; }
+                const total = Object.keys(stuCur.imgs).reduce((n, q) => n + stuCur.imgs[q].length, 0);
+                if (total + data.length > STU_IMGS_TOTAL) { showMsg('내 이미지가 너무 많이 쌓였어요.<br>안 쓰는 이미지를 지우고 다시 넣어 주세요.'); return; }
                 let n = 1; while (stuCur.imgs['u' + n]) n++;
                 stuCur.imgs['u' + n] = data;
                 stuRefreshWin();

@@ -116,7 +116,7 @@
         function sanitizeSkin(input) {
             let s = input;
             if (typeof s === 'string') {
-                if (s.length > 300000) return null;
+                if (s.length > 4500000) return null;       // 꾸밈놓기 내 이미지(크게)까지 담을 수 있게
                 try { s = JSON.parse(s); } catch (e) { return null; }
             }
             if (!s || typeof s !== 'object' || Array.isArray(s)) return null;
