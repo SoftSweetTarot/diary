@@ -1,5 +1,5 @@
 // 말랑달콤 문구점 · 주소: #/ (전체) · #/c/대분류 · #/c/대분류/소분류 · #/p/번호
-const SHOP_API_URL = ''; // ← 문구점 앱스크립트 웹 앱 주소
+const SHOP_API_URL = 'https://script.google.com/macros/s/AKfycbxL7hfPoBvaHb_bZV7CQAGGwFcvdf7887PPwkSu4Nwbj9h_B80dal0e6IYGxLv-IS9_/exec'; // ← 문구점 앱스크립트 웹 앱 주소
 const TALL_CATS = ['배경화면']; // 썸네일을 세로로 보여 줄 대분류 (PC 소분류는 아래서 가로)
 let SH = { cats: [], items: [] };
 let CHAT = '';
