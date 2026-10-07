@@ -72,6 +72,9 @@
                 </section>
               </div>`;
             document.body.appendChild(el);
+            /* 📱 글을 쓰는 중에 버튼을 누르면 입력칸이 포커스를 잃으면서 키보드가 접히고 화면이 움직여서(아이패드) 누른 버튼 밑의 버튼이 눌렸어요
+               → 버튼을 눌러도 입력칸이 포커스를 그대로 가지게 해서 화면이 안 움직이게 해요 (눌림 자체는 그대로 동작) */
+            el.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button')) e.preventDefault(); });
             const cv = smq('smCanvas');
             cv.addEventListener('pointerdown', smDown); cv.addEventListener('pointermove', smMove);
             cv.addEventListener('pointerup', smUp); cv.addEventListener('pointercancel', smUp);
