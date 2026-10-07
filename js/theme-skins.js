@@ -25,7 +25,7 @@ const THEME_SKINS = [
                 { a: 'b1', i: 's:bunny', x: 50, y: -6, s: 24, r: 0 },
                 { a: 'bar', i: 's:heart', x: 97, y: 12, s: 18, r: 10 }
             ],
-            icons: { b1: 's:bunny', b2: 'e:🎵', b3: 'e:🧁', b4: 'e:🎀', p_sticker: 's:heart', p_write: 'e:✏️', p_pen: 'e:🖍️', p_image: 'e:🌷', p_lib: 'e:🧸', p_save: 'e:💌' }
+            icons: { b1: 's:bunny', b2: 'e:🎵', b3: 'e:🧁', b4: 'e:🎀', p_pen: 'e:🖍️', p_save: 'e:💌' }
         }
     },
     {
@@ -44,7 +44,7 @@ const THEME_SKINS = [
                 { a: 'b1', i: 's:sakura', x: 50, y: -6, s: 22, r: 0 },
                 { a: 'b4', i: 's:sakura', x: 88, y: 10, s: 20, r: 20 }
             ],
-            icons: { b1: 's:sakura', b2: 'e:🎶', b3: 'e:🍵', b4: 'e:🌸', p_sticker: 's:sakura', p_write: 'e:🪄', p_pen: 'e:🖊️', p_image: 'e:🌷', p_lib: 'e:🌸', p_save: 'e:🎀' }
+            icons: { b1: 's:sakura', b2: 'e:🎶', b3: 'e:🍵', b4: 'e:🌸', p_pen: 'e:🖊️', p_save: 'e:🎀' }
         }
     },
     {
@@ -64,7 +64,7 @@ const THEME_SKINS = [
                 { a: 'bar', i: 's:cloud', x: 96, y: 94, s: 44, r: 0, b: 1 },
                 { a: 'b1', i: 's:star', x: 82, y: 12, s: 18, r: 0 }
             ],
-            icons: { b1: 's:star', b2: 'e:🎵', b3: 'e:☕', b4: 'e:🔮', p_sticker: 's:star', p_write: 'e:🪄', p_pen: 'e:✨', p_image: 'e:🌙', p_lib: 'e:🔮', p_save: 'e:💎' }
+            icons: { b1: 's:star', b2: 'e:🎵', b3: 'e:☕', b4: 'e:🔮', p_pen: 'e:✨', p_save: 'e:💎' }
         }
     },
     {
@@ -84,7 +84,7 @@ const THEME_SKINS = [
                 { a: 'b1', i: 's:leaf', x: 50, y: -4, s: 22, r: 0 },
                 { a: 'bar', i: 's:vine', x: 3, y: 96, s: 36, r: 0, b: 1 }
             ],
-            icons: { b1: 's:sprout', b2: 'e:🎵', b3: 'e:🍵', b4: 'e:🍀', p_sticker: 's:sprout', p_write: 'e:🌿', p_pen: 'e:🍃', p_image: 'e:🌳', p_lib: 'e:🍄', p_save: 'e:🌼' }
+            icons: { b1: 's:sprout', b2: 'e:🎵', b3: 'e:🍵', b4: 'e:🍀', p_pen: 'e:🍃', p_save: 'e:🌼' }
         }
     }
 ];

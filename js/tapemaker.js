@@ -192,7 +192,7 @@
             } catch (e) { if (!stick) { showMsg('⚠ 내 마스킹테이프를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
             if (stick) { tpmStick(o); return; }
             closeTapeMaker();
-            showMsg('🎀 내 마스킹테이프에 저장했어요!<br><span style="font-size:12px;color:#777;">빈 곳을 눌러 🎨 스티커 → 🎀 내 마스킹테이프에서 붙일 수 있어요.</span>');
+            showMsg('🎀 내 마스킹테이프에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → 🎀 내 마스킹테이프에서 붙일 수 있어요.</span>');
         }
         function tpmStick(o) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">테이프는 🎀 내 마스킹테이프에 저장돼 있어요.</span>'); return; }

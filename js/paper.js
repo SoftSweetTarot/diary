@@ -49,6 +49,18 @@
             box.innerHTML = PAPERS.map(p => `<button type="button" data-pp="${p.id}" title="${p.name}" onclick="applyPaper('${p.id}')"><span class="pp-chip${p.id ? ' pp-' + p.id : ''}"></span><small>${p.s || p.name}</small></button>`).join('');
             document.getElementById('paperRow').hidden = false;
         })();
+        /* 📝 메모지 창 (하단메뉴 ✨ 스티커 → 📝 메모지) : 모양을 고르면 그 모양의 메모지가 페이지에 놓이고, 눌러서 글을 써요 */
+        function openPaperPicker() {
+            const box = document.getElementById('paperPick'); if (!box) return;
+            if (!box.firstChild) box.innerHTML = PAPERS.map(p => `<button type="button" class="btn pp-pick-btn" title="${p.name}" onclick="pickPaper('${p.id}')"><span class="pp-chip${p.id ? ' pp-' + p.id : ''}"></span><small>${p.name}</small></button>`).join('');
+            openModal('paperModal');
+        }
+        function pickPaper(id) {
+            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
+            closeModal('paperModal');
+            addText(); applyPaper(id);
+        }
+        window.openPaperPicker = openPaperPicker; window.pickPaper = pickPaper;
         window.applyPaper = applyPaper;
         window.setPaper = setPaper;
         window.updatePaperChips = updatePaperChips;

@@ -140,7 +140,7 @@ let fontList = [
         };
 
         window.onload = () => {
-            loadEmojiCategory('faces');
+            loadEmojiCategory('all');
             setupCurlDrag();
             loadCustomSkins();
             setupFontSelects();

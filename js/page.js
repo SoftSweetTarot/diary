@@ -196,7 +196,7 @@
             const grid = document.getElementById('stickerGrid');
             grid.innerHTML = '';
 
-            const ranges = emojiRanges[category];
+            const ranges = category === 'all' ? Object.values(emojiRanges).flat() : emojiRanges[category];      // 'all' = 표정부터 기호까지 한 칸에 전부
             if (!ranges) return;
 
             const fragment = document.createDocumentFragment();

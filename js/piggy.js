@@ -84,7 +84,7 @@
                 </div>
                 <div class="pg-gift" data-t="tape">
                   <p class="pg-gift-d">사진 모서리나 글 위에 붙이는 다꾸 테이프예요. 붙인 뒤 길이도 마음대로!</p>
-                  <p class="pg-where">📍 선물이 열리면 다이어리 위쪽 <b>🎨 스티커</b> → <b>🎀 마스킹테이프</b> 칸에 생겨요</p>
+                  <p class="pg-where">📍 선물이 열리면 다이어리 아래 <b>✨ 스티커</b> → <b>🎀 마스킹테이프</b> 칸에 생겨요</p>
                   <div class="pg-tapes">${tapes.map((t, i) => `<div class="pg-tp"><span style="background-image:url(&quot;${tapeUrl(t)}&quot;);--r:${(i % 3 - 1) * 3}deg"></span><small>${t.name}</small></div>`).join('')}</div>
                 </div>
                 <div class="pg-gift" data-t="pat">
@@ -135,7 +135,7 @@
             const part = (all, map, tag) => giftOk(all) ? `${tag} 전체 <b>${dLabel(giftLeft(all))}</b>` : `${tag} <b>${giftCount(map)}가지</b>`;
             el.innerHTML = '💝 마음을 넣어 주셔서 고마워요! 선물이 열려 있어요<br>'
                 + [t ? part(giftBox.ta, giftBox.tp, '🎀 마스킹테이프') : '', p ? part(giftBox.pa, giftBox.pp, '🍬 달콤배경지') : ''].filter(Boolean).join(' · ')
-                + '<br><small>디자인마다 남은 날은 🎨 스티커 · 🍬 달콤배경지 목록에서 볼 수 있어요</small>';
+                + '<br><small>디자인마다 남은 날은 ✨ 스티커 · 🍬 달콤배경지 목록에서 볼 수 있어요</small>';
         }
 
         /* 내 저금 코드 (구글 로그인했을 때만) */

@@ -230,6 +230,18 @@
             o.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, o.width, o.height);
             return (smS.out = o.toDataURL('image/png'));
         }
+        /* ✨ 스티커 창(하단메뉴) → 목록 창 : 😀 이모지 · 🎁 캡슐 스티커 · ✂️ 내 스티커 · 🎀 내 마스킹테이프 · 🎀 마스킹테이프 · 🌸 계절 스티커
+           목록을 불러오는 코드(loadXxx)는 stickerModal 안의 눈에 안 보이는 카테고리 버튼(.cat-btn)이 불러요 → 그 버튼을 대신 눌러 줘요 */
+        const SL_KINDS = { emoji: ['😀 이모지', 'em-cat'], caps: ['🎁 캡슐 스티커', 'cs-cat'], mine: ['✂️ 내 스티커', 'sm-cat'], mytape: ['🎀 내 마스킹테이프', 'mtp-cat'], tape: ['🎀 마스킹테이프', 'tp-cat'], season: ['🌸 계절 스티커', 'ss-cat'] };
+        function openStickerList(kind) {
+            const k = SL_KINDS[kind]; if (!k) return;
+            closeModal('stickerMakeModal');
+            openModal('stickerModal');
+            const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0];
+            const b = document.querySelector('#stickerCategories .' + k[1]); if (b) b.click();
+        }
+        window.openStickerList = openStickerList;
+
         /* 💾/📌 버튼을 누르면 '저장하는 중…'으로 바뀌고 끝날 때까지 다시 못 눌러요 (눌렸는지 바로 보이고 두 번 저장도 막음) */
         let smkLock = false;
         async function smkRun(btn, label, fn) {
@@ -252,7 +264,7 @@
             } catch (e) { if (!stick) { showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
             if (stick) { smStick(src); return; }
             closeStickerMaker();
-            showMsg('✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">빈 곳을 눌러 🎨 스티커 → ✂️ 내 스티커에서 붙일 수 있어요.</span>');
+            showMsg('✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → ✂️ 내 스티커에서 붙일 수 있어요.</span>');
         }
         function smStick(src) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">스티커는 ✂️ 내 스티커에 저장돼 있어요.</span>'); return; }

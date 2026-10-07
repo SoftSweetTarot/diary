@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261006-222">
+    <link rel="stylesheet" href="css/style.css?v=20261006-223">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -65,7 +65,7 @@
     <!-- 하단 컨트롤 툴바 -->
     <div class="toolbar">
         <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
-        <button type="button" class="tb-btn tb-sticker" aria-label="스티커" onclick="openModal('stickerMakeModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 3.2h13a2.6 2.6 0 0 1 2.6 2.6v8.6L14.4 21H5.5a2.6 2.6 0 0 1-2.6-2.6V5.8a2.6 2.6 0 0 1 2.6-2.6z" fill="#f2a12a"/><path d="M21.1 14.4h-4.3a2.4 2.4 0 0 0-2.4 2.4V21z" fill="#fff" fill-opacity=".72"/><path d="M12 6.6l1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z" fill="#fff"/></svg><span>스티커</span></button>
+        <button type="button" class="tb-btn tb-sticker" data-nw-any="tape,caps" aria-label="스티커" onclick="openModal('stickerMakeModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 3.2h13a2.6 2.6 0 0 1 2.6 2.6v8.6L14.4 21H5.5a2.6 2.6 0 0 1-2.6-2.6V5.8a2.6 2.6 0 0 1 2.6-2.6z" fill="#f2a12a"/><path d="M21.1 14.4h-4.3a2.4 2.4 0 0 0-2.4 2.4V21z" fill="#fff" fill-opacity=".72"/><path d="M12 6.6l1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z" fill="#fff"/></svg><span>스티커</span></button>
         <button type="button" class="tb-btn tb-skin" data-nw-any="pat" aria-label="페이지" onclick="openModal('skinModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8C6.6 2.8 2.5 6.8 2.5 11.8c0 5 4.1 9.2 8.8 9.2 1.7 0 2.4-1 2.4-2.1 0-1.6-1.4-1.8-1.4-3.1 0-1.2 1-2.1 2.3-2.1h2.6c2.6 0 4.7-1.9 4.7-4.6C21.9 6.5 17.6 2.8 12 2.8z" fill="#ee7f9f"/><circle cx="7.4" cy="10.6" r="1.7" fill="#ffe38a"/><circle cx="10.2" cy="6.9" r="1.7" fill="#8fd3a2"/><circle cx="15" cy="6.9" r="1.7" fill="#8bbcf0"/><circle cx="18" cy="10.4" r="1.7" fill="#fff"/></svg><span>페이지</span></button>
         <button type="button" class="tb-btn tb-cafe" data-nw-any="coin,wall" aria-label="카페" onclick="openModal('serviceModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h14v3.8a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6z" fill="#4fa860"/><path d="M18 11h1.4a2.6 2.6 0 0 1 0 5.2H17.6" fill="none" stroke="#4fa860" stroke-width="2"/><ellipse cx="11" cy="9.5" rx="7" ry="2" fill="#8a5a3a"/><path d="M8.5 6.6c-1-1.4 0-2.4 0-3.6M13 6.6c-1-1.4 0-2.4 0-3.6" fill="none" stroke="#4fa860" stroke-width="1.6" stroke-linecap="round"/></svg><span>카페</span></button>
         <button type="button" class="tb-btn tb-set" aria-label="설정" onclick="openSettingsMenu()"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(12 12)" fill="#8e6fd6"><rect x="-2" y="-10.5" width="4" height="21" rx="1.2"/><rect x="-2" y="-10.5" width="4" height="21" rx="1.2" transform="rotate(45)"/><rect x="-2" y="-10.5" width="4" height="21" rx="1.2" transform="rotate(90)"/><rect x="-2" y="-10.5" width="4" height="21" rx="1.2" transform="rotate(135)"/><circle r="7"/><circle r="2.9" fill="#dccdf5"/></g></svg><span>설정</span></button>
@@ -152,45 +152,83 @@
         </div>
     </div>
 
-    <!-- 전체 유니코드 이모지 스티커 모달 -->
+    <!-- 스티커 목록 창 (하단메뉴 ✨ 스티커 창의 😀 이모지 · 🎁 캡슐 스티커 · ✂️ 내 스티커 · 🎀 내 마스킹테이프 · 🎀 마스킹테이프 버튼이 열어요 · openStickerList)
+         ※ 위쪽 카테고리 줄(#stickerCategories)은 눈에 안 보이는 '연결용'이에요 (css 로 숨김 · 각 목록을 불러오는 코드가 이 버튼들을 써요) -->
     <div class="modal" id="stickerModal">
         <div class="modal-content">
-            <div class="modal-title">전체 이모지 스티커 목록</div>
-            
+            <div class="modal-title" id="stickerListTitle">😀 이모지</div>
+
             <div class="sticker-categories" id="stickerCategories">
+                <button class="cat-btn em-cat active" onclick="loadEmojiCategory('all', this)">😀 이모지</button>
                 <button class="cat-btn cs-cat" data-nw="caps" onclick="window.loadCapsStickers ? loadCapsStickers(this) : 0">🎁 캡슐 스티커</button>
                 <button class="cat-btn sm-cat" onclick="window.loadMyStickers ? loadMyStickers(this) : 0">✂️ 내 스티커</button>
                 <button class="cat-btn mtp-cat" onclick="window.loadMyTapes ? loadMyTapes(this) : 0">🎀 내 마스킹테이프</button>
                 <button class="cat-btn tp-cat tape-only" data-nw="tape" onclick="loadTapes(this)">🎀 마스킹테이프</button>
                 <button class="cat-btn ss-cat" id="seasonTab" onclick="loadSeasonStickers(this)" hidden>🌸 계절 스티커</button>
-                <button class="cat-btn active" onclick="loadEmojiCategory('faces', this)">😀 표정/감정</button>
-                <button class="cat-btn" onclick="loadEmojiCategory('animals', this)">🐱 동물/자연</button>
-                <button class="cat-btn" onclick="loadEmojiCategory('food', this)">🍔 음식/음료</button>
-                <button class="cat-btn" onclick="loadEmojiCategory('activities', this)">⚽ 활동/스포츠</button>
-                <button class="cat-btn" onclick="loadEmojiCategory('travel', this)">🚗 여행/장소</button>
-                <button class="cat-btn" onclick="loadEmojiCategory('objects', this)">💡 사물</button>
-                <button class="cat-btn" onclick="loadEmojiCategory('symbols', this)">❤️ 기호/심볼</button>
             </div>
 
             <div class="sticker-grid" id="stickerGrid"></div>
-            
-            <button class="btn" style="width:100%; margin-top:15px; justify-content:center;" onclick="closeModal('stickerModal')">닫기</button>
+
+            <div class="sub-modal-btns">
+                <button class="btn" onclick="closeModal('stickerModal'); openModal('stickerMakeModal')">← 스티커</button>
+                <button class="btn" onclick="closeModal('stickerModal')">닫기</button>
+            </div>
         </div>
     </div>
 
-    <!-- ✨ 스티커 창 (하단메뉴 스티커 버튼 · 포토부스 js/photobooth.js · 사진/글씨 스티커 js/stickermaker.js · 마스킹테이프 js/tapemaker.js) -->
+    <!-- ✨ 스티커 창 (하단메뉴 스티커 버튼 · 스티커 · 이미지 · 메모지에 관한 것은 모두 여기서 열어요)
+         목록 : js/stickermaker.js openStickerList · 포토부스 js/photobooth.js · 사진/글씨 스티커 js/stickermaker.js · 마스킹테이프 js/tapemaker.js · 메모지 js/paper.js -->
     <div class="modal" id="stickerMakeModal">
         <div class="modal-content">
             <div class="modal-title">✨ 스티커</div>
+
+            <div class="skin-section-title">🎒 내 스티커 · 보관함</div>
+            <div class="service-grid sm-grid">
+                <button class="btn service-btn" onclick="openStickerList('emoji')"><span class="service-icon">😀</span>이모지<small>표정 · 동물 · 음식 …</small></button>
+                <button class="btn service-btn" data-nw="caps" onclick="openStickerList('caps')"><span class="service-icon">🎁</span>캡슐 스티커<small>랜덤박스로 모아요</small></button>
+                <button class="btn service-btn" onclick="openStickerList('mine')"><span class="service-icon">✂️</span>내 스티커<small>내가 만든 스티커</small></button>
+                <button class="btn service-btn" onclick="openStickerList('mytape')"><span class="service-icon">🎀</span>내 마스킹테이프<small>내가 만든 테이프</small></button>
+                <button class="btn service-btn tape-only" data-nw="tape" onclick="openStickerList('tape')"><span class="service-icon">🎀</span>마스킹테이프<small>받은 테이프</small></button>
+                <button class="btn service-btn" id="seasonHubBtn" hidden onclick="openStickerList('season')"><span class="service-icon">🌸</span><span id="seasonHubName">계절 스티커</span><small>지금 계절 스티커</small></button>
+            </div>
+
+            <div class="skin-section-title">✨ 만들기</div>
             <div class="service-grid sm-grid">
                 <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); window.openBooth ? openBooth() : comingSoon('📸 말랑 포토부스')"><span class="service-icon">📸</span>포토부스<small>네컷 사진 찍기</small></button>
                 <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); window.smOpenCam ? smOpenCam() : comingSoon('📷 사진 찍기')"><span class="service-icon">📷</span>사진 찍기<small>찍어서 스티커로</small></button>
                 <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); window.smOpenFile ? smOpenFile() : comingSoon('🖼️ 사진 고르기')"><span class="service-icon">🖼️</span>사진 고르기<small>내 사진으로</small></button>
                 <button class="btn service-btn" hidden onclick="closeModal('stickerMakeModal'); window.smOpenText ? smOpenText() : comingSoon('🔤 글씨 스티커')"><span class="service-icon">🔤</span>글씨 스티커<small>말랑한 글씨로</small></button>
-                <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); window.openTapeMaker ? openTapeMaker() : comingSoon('🎀 마스킹테이프')"><span class="service-icon">🎀</span>마스킹테이프<small>나만의 테이프</small></button>
+                <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); window.openTapeMaker ? openTapeMaker() : comingSoon('🎀 마스킹테이프 만들기')"><span class="service-icon">🎀</span>마스킹테이프 만들기<small>나만의 테이프</small></button>
             </div>
-            <p class="svc-tip">💡 만든 스티커는 일기에 바로 붙이거나, 빈 곳을 눌러 🎨 스티커 → ✂️ 내 스티커 · 🎀 내 마스킹테이프에서 다시 붙일 수 있어요.</p>
+
+            <div class="skin-section-title">🖼️ 이미지 · 그림</div>
+            <div class="service-grid sm-grid">
+                <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); triggerImageUpload()"><span class="service-icon">🏞️</span>이미지<small>내 사진 · 그림 올리기</small></button>
+                <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); openLibrary()"><span class="service-icon">📚</span>그림모음<small>말랑달콤 그림 모음</small></button>
+            </div>
+
+            <div class="skin-section-title">📝 메모지 · 종이</div>
+            <div class="service-grid sm-grid">
+                <button class="btn service-btn" onclick="closeModal('stickerMakeModal'); window.openPaperPicker ? openPaperPicker() : comingSoon('📝 메모지')"><span class="service-icon">📝</span>메모지<small>놓고 눌러서 글쓰기</small></button>
+                <button class="btn service-btn soon" onclick="comingSoon('🏷️ 씰스티커')"><span class="service-icon">🏷️</span>씰스티커<small>준비 중</small></button>
+                <button class="btn service-btn soon" onclick="comingSoon('📄 모조지 스티커')"><span class="service-icon">📄</span>모조지 스티커<small>준비 중</small></button>
+                <button class="btn service-btn soon" onclick="comingSoon('📃 속지')"><span class="service-icon">📃</span>속지<small>준비 중</small></button>
+            </div>
+
             <button class="btn" style="width:100%; margin-top:12px; justify-content:center;" onclick="closeModal('stickerMakeModal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 📝 메모지 창 (✨ 스티커 → 📝 메모지 · 모양을 고르면 페이지에 놓여요 · js/paper.js) -->
+    <div class="modal" id="paperModal">
+        <div class="modal-content">
+            <div class="modal-title">📝 메모지</div>
+            <p class="svc-tip" style="margin-top:0">모양을 고르면 페이지에 놓여요. 놓인 메모지를 눌러 글을 써 보세요!</p>
+            <div class="paper-pick" id="paperPick"></div>
+            <div class="sub-modal-btns">
+                <button class="btn" onclick="closeModal('paperModal'); openModal('stickerMakeModal')">← 스티커</button>
+                <button class="btn" onclick="closeModal('paperModal')">닫기</button>
+            </div>
         </div>
     </div>
 
@@ -764,73 +802,73 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261006-222"></script>
-    <script src="js/sound.js?v=20261006-222"></script>
-    <script src="js/app.js?v=20261006-222"></script>
-    <script src="js/page.js?v=20261006-222"></script>
-    <script src="js/elements.js?v=20261006-222"></script>
-    <script src="js/tapmenu.js?v=20261006-222"></script>
-    <script src="js/settings.js?v=20261006-222"></script>
-    <script src="js/patterns.js?v=20261006-222"></script>
+    <script src="js/drive.js?v=20261006-223"></script>
+    <script src="js/sound.js?v=20261006-223"></script>
+    <script src="js/app.js?v=20261006-223"></script>
+    <script src="js/page.js?v=20261006-223"></script>
+    <script src="js/elements.js?v=20261006-223"></script>
+    <script src="js/tapmenu.js?v=20261006-223"></script>
+    <script src="js/settings.js?v=20261006-223"></script>
+    <script src="js/patterns.js?v=20261006-223"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261006-222"></script>
-    <script src="js/skins.js?v=20261006-222"></script>
-    <script src="js/pattern-maker.js?v=20261006-222"></script>
-    <script src="js/skinstudio.js?v=20261006-222"></script>
-    <script src="js/theme-skins.js?v=20261006-222"></script>
-    <script src="js/doll-render.js?v=20261006-222"></script>
-    <script src="js/doll-store.js?v=20261006-222"></script>
-    <script src="js/doll-room.js?v=20261006-222"></script>
-    <script src="js/service.js?v=20261006-222"></script>
+    <script src="js/pattern-recipe.js?v=20261006-223"></script>
+    <script src="js/skins.js?v=20261006-223"></script>
+    <script src="js/pattern-maker.js?v=20261006-223"></script>
+    <script src="js/skinstudio.js?v=20261006-223"></script>
+    <script src="js/theme-skins.js?v=20261006-223"></script>
+    <script src="js/doll-render.js?v=20261006-223"></script>
+    <script src="js/doll-store.js?v=20261006-223"></script>
+    <script src="js/doll-room.js?v=20261006-223"></script>
+    <script src="js/service.js?v=20261006-223"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261006-222"></script>
-    <script src="js/presence.js?v=20261006-222"></script>
+    <script src="js/gacha.js?v=20261006-223"></script>
+    <script src="js/presence.js?v=20261006-223"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261006-222"></script>
+    <script src="js/bgm.js?v=20261006-223"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261006-222"></script>
+    <script src="js/fortune.js?v=20261006-223"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261006-222"></script>
-    <script src="js/hof.js?v=20261006-222"></script>
+    <script src="js/arcade.js?v=20261006-223"></script>
+    <script src="js/hof.js?v=20261006-223"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/ritual.js?v=20261006-222"></script>
-    <script src="js/dream.js?v=20261006-222"></script>
+    <script src="js/ritual.js?v=20261006-223"></script>
+    <script src="js/dream.js?v=20261006-223"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261006-222"></script>
-    <script src="js/plant.js?v=20261006-222"></script>
-    <script src="js/capsule-stickers.js?v=20261006-222"></script>
-    <script src="js/attend.js?v=20261006-222"></script>
-    <script src="js/luck.js?v=20261006-222"></script>
-    <script src="js/question-data.js?v=20261006-222"></script>
-    <script src="js/question.js?v=20261006-222"></script>
-    <script src="js/tape.js?v=20261006-222"></script>
-    <script src="js/paper.js?v=20261006-222"></script>
-    <script src="js/draw.js?v=20261006-222"></script>
-    <script src="js/frame.js?v=20261006-222"></script>
-    <script src="js/season-data.js?v=20261006-222"></script>
-    <script src="js/season.js?v=20261006-222"></script>
-    <script src="js/lock.js?v=20261006-222"></script>
-    <script src="js/cycle.js?v=20261006-222"></script>
-    <script src="js/month.js?v=20261006-222"></script>
-    <script src="js/stamp.js?v=20261006-222"></script>
-    <script src="js/search.js?v=20261006-222"></script>
-    <script src="js/dday.js?v=20261006-222"></script>
-    <script src="js/show.js?v=20261006-222"></script>
-    <script src="js/press.js?v=20261006-222"></script>
-    <script src="js/photobooth.js?v=20261006-222"></script>
-    <script src="js/stickermaker.js?v=20261006-222"></script>
-    <script src="js/tapemaker.js?v=20261006-222"></script>
-    <script src="js/namematch.js?v=20261006-222"></script>
-    <script src="js/psytest-data.js?v=20261006-222"></script>
-    <script src="js/psytest.js?v=20261006-222"></script>
-    <script src="js/letter.js?v=20261006-222"></script>
-    <script src="js/install.js?v=20261006-222"></script>
-    <script src="js/piggy.js?v=20261006-222"></script>
-    <script src="js/wall.js?v=20261006-222"></script>
-    <script src="js/arrival.js?v=20261006-222"></script>
+    <script src="js/tojeong.js?v=20261006-223"></script>
+    <script src="js/plant.js?v=20261006-223"></script>
+    <script src="js/capsule-stickers.js?v=20261006-223"></script>
+    <script src="js/attend.js?v=20261006-223"></script>
+    <script src="js/luck.js?v=20261006-223"></script>
+    <script src="js/question-data.js?v=20261006-223"></script>
+    <script src="js/question.js?v=20261006-223"></script>
+    <script src="js/tape.js?v=20261006-223"></script>
+    <script src="js/paper.js?v=20261006-223"></script>
+    <script src="js/draw.js?v=20261006-223"></script>
+    <script src="js/frame.js?v=20261006-223"></script>
+    <script src="js/season-data.js?v=20261006-223"></script>
+    <script src="js/season.js?v=20261006-223"></script>
+    <script src="js/lock.js?v=20261006-223"></script>
+    <script src="js/cycle.js?v=20261006-223"></script>
+    <script src="js/month.js?v=20261006-223"></script>
+    <script src="js/stamp.js?v=20261006-223"></script>
+    <script src="js/search.js?v=20261006-223"></script>
+    <script src="js/dday.js?v=20261006-223"></script>
+    <script src="js/show.js?v=20261006-223"></script>
+    <script src="js/press.js?v=20261006-223"></script>
+    <script src="js/photobooth.js?v=20261006-223"></script>
+    <script src="js/stickermaker.js?v=20261006-223"></script>
+    <script src="js/tapemaker.js?v=20261006-223"></script>
+    <script src="js/namematch.js?v=20261006-223"></script>
+    <script src="js/psytest-data.js?v=20261006-223"></script>
+    <script src="js/psytest.js?v=20261006-223"></script>
+    <script src="js/letter.js?v=20261006-223"></script>
+    <script src="js/install.js?v=20261006-223"></script>
+    <script src="js/piggy.js?v=20261006-223"></script>
+    <script src="js/wall.js?v=20261006-223"></script>
+    <script src="js/arrival.js?v=20261006-223"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

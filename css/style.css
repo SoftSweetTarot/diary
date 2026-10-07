@@ -2533,3 +2533,12 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .smk-chips button:active, .smk-chips button.pressing { background: #eaf5ff; }
 .smk-chips button.on:active { background: #4a95cc; }
 .smk-colors button:active { scale: .85; }
+
+/* ===== ✨ 스티커 창 모으기 (20261007-07) ===== */
+#stickerCategories { display: none; }                         /* 목록 창의 카테고리 줄은 연결용으로만 남김 (버튼은 ✨ 스티커 창에 있어요) */
+#stickerMakeModal .service-btn { position: relative; }
+#stickerMakeModal .skin-section-title:first-of-type { margin-top: 0; }
+.paper-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.paper-pick .pp-pick-btn { flex-direction: column; gap: 4px; padding: 14px 4px 8px; font-size: 12px; justify-content: center; }
+.paper-pick .pp-pick-btn small { font-size: 11.5px; color: inherit; line-height: 1.2; }
+.paper-pick .pp-chip { transform: scale(1.5); margin: 8px 0 10px; }

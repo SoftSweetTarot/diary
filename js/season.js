@@ -128,6 +128,8 @@
             if (sk) sk.hidden = !SEASON_OPEN;
             if (!SEASON_OPEN) return;
             if (b) { const S = SEASONS[seasonNow()]; b.textContent = `${S.icon} ${S.name} 스티커`; b.hidden = false; }
+            const hb = ssq('seasonHubBtn'), hn = ssq('seasonHubName');       // ✨ 스티커 창의 계절 스티커 버튼
+            if (hb) { const S = SEASONS[seasonNow()]; if (hn) hn.textContent = `${S.name} 스티커`; hb.hidden = false; const ic = hb.querySelector('.service-icon'); if (ic) ic.textContent = S.icon; }
             seasonRenderCard();
         })();
         window.seasonToggle = seasonToggle;

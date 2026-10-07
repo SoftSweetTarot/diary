@@ -111,9 +111,9 @@
         /* ---------- 🎁 도착 창 (하나) ---------- */
         const AR_WHERE = {
             coin: ['🪙', '코인', '☕ 카페 → 🌱 매일 → 🎁 랜덤박스'],
-            tape: ['🎀', '마스킹테이프', '🎨 스티커 → 🎀 마스킹테이프'],
+            tape: ['🎀', '마스킹테이프', '✨ 스티커 → 🎀 마스킹테이프'],
             pat: ['🍬', '달콤배경지', '🎨 페이지 → 🍬 달콤배경지'],
-            caps: ['🎁', '캡슐 스티커', '🎨 스티커 → 🎁 캡슐 스티커'],
+            caps: ['🎁', '캡슐 스티커', '✨ 스티커 → 🎁 캡슐 스티커'],
             wall: ['🖼️', '배경화면', '☕ 카페 → 📱 말랑달콤 배경화면']
         };
         const arDay = u => { const d = new Date(u + 'T00:00:00'); return isNaN(d) ? '' : `${d.getMonth() + 1}월 ${d.getDate()}일`; };
@@ -209,7 +209,7 @@
         }
         function arGo(kind) {                           // '열어 보기' : 그 아이템이 있는 자리로 바로
             try {
-                if (kind === 'tape' || kind === 'caps') { openModal('stickerModal'); const b = document.querySelector('.cat-btn.' + (kind === 'tape' ? 'tp-cat' : 'cs-cat')); if (b) b.click(); }
+                if (kind === 'tape' || kind === 'caps') openStickerList(kind);
                 else if (kind === 'pat') openPatternList('paid');
                 else if (kind === 'coin') openRandomBox();
                 else if (kind === 'wall') openWall();
