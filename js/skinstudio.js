@@ -288,9 +288,9 @@
             let fp = document.getElementById('stuFakePop');
             if (!fp) { fp = document.createElement('div'); fp.id = 'stuFakePop'; fp.className = 'tap-menu stu-fake'; document.body.appendChild(fp); }
             stuFillFakePop(fp);
-            const w = document.getElementById('diaryWrapper').getBoundingClientRect();
-            fp.style.left = Math.max(6, Math.min(innerWidth - fp.offsetWidth - 6, w.left + 18)) + 'px';
-            fp.style.top = Math.max(6, w.top + 70) + 'px';
+            const w = (document.getElementById('innerPage') || document.getElementById('diaryWrapper')).getBoundingClientRect();   // 페이지 정중앙
+            fp.style.left = Math.max(6, Math.min(innerWidth - fp.offsetWidth - 6, w.left + (w.width - fp.offsetWidth) / 2)) + 'px';
+            fp.style.top = Math.max(6, w.top + (w.height - fp.offsetHeight) / 2) + 'px';
         }
         function stuFillFakePop(fp) {
             const items = typeof TM_ITEMS !== 'undefined' ? TM_ITEMS.concat([{ key: 'p_order', label: '순서', icon: TM_ICONS.order }, { key: 'p_trash', label: '삭제', icon: TM_ICONS.trash }]) : [];

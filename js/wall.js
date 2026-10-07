@@ -81,7 +81,7 @@
                     </button>
                     <div class="wl-name">${wlEsc(w.name)}</div>
                     ${wlMine[w.no] ? `<div class="wl-buy own"><b>✅ 내 배경화면</b><button type="button" class="btn wl-get own" onclick="wlLinkPop(${w.no})">🎁 받기</button></div>`
-                    : `<div class="wl-buy"><b>${wlWon(w.price)}</b><button type="button" class="btn wl-get" onclick="wlPick(${w.no})">💬 구입</button></div>`}
+                    : `<div class="wl-buy"><b>${wlWon(w.price)}</b><button type="button" class="btn wl-get" onclick="wlPick(${w.no})">💬 주문</button></div>`}
                   </div>`).join('')}</div>`}
               <div class="wl-note">🎁 결제가 확인되면 <b>다운로드 링크</b>가 도착해요 · 받으면 계속 쓸 수 있어요<br>사기 전에 <a href="#" class="wl-link" onclick="wlGuide(); return false;">📖 설정 방법</a>으로 내 기기에서 되는지 확인해 주세요 😊</div>
               <div class="wl-sheet" id="wlSheet" hidden></div>
@@ -105,14 +105,14 @@
                 <div class="wl-view-s">움직이는 모습은 <a href="#" class="wl-link" onclick="goCafe(); return false;">👭 말랑달콤 모임방</a>에서 볼 수 있어요</div>
                 <div class="wl-view-btns">
                   <button type="button" class="btn" onclick="wlUnview()">닫기</button>
-                  <button type="button" class="btn btn-primary pg-copy" onclick="wlUnview(); ${wlMine[w.no] ? 'wlLinkPop' : 'wlPick'}(${w.no})">${wlMine[w.no] ? '🎁 받기' : '💬 구입'}</button>
+                  <button type="button" class="btn btn-primary pg-copy" onclick="wlUnview(); ${wlMine[w.no] ? 'wlLinkPop' : 'wlPick'}(${w.no})">${wlMine[w.no] ? '🎁 받기' : '💬 주문'}</button>
                 </div>
               </div>`;
             v.hidden = false;
         }
         function wlUnview() { const v = document.getElementById('wlView'); if (v) { v.hidden = true; v.innerHTML = ''; } }
 
-        /* 💬 구입 (아직 안 산 배경화면) : 사는 방법 안내 (휴대폰은 버튼 · PC · 태블릿은 QR) — 채팅에는 번호와 내 저금 코드를 함께 보내요 (주인이 코드로 찾아서 링크를 보내 줘요) */
+        /* 💬 주문 (아직 안 산 배경화면) : 사는 방법 안내 (휴대폰은 버튼 · PC · 태블릿은 QR) — 채팅에는 번호와 내 저금 코드를 함께 보내요 (주인이 코드로 찾아서 링크를 보내 줘요) */
         async function wlCode() {                         // 내 저금 코드 (로그인했을 때만 · 접속 신호의 답을 기다려요, 최대 20초)
             if (typeof pr !== 'undefined' && pr.code) return pr.code;
             if (typeof drive === 'undefined' || !drive.ready || drive.guest) return '';
