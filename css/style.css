@@ -1844,11 +1844,11 @@
         .smk-stage canvas { width: min(300px, 82vw); height: auto; aspect-ratio: 1; border-radius: 18px; touch-action: none; cursor: grab;
             background: repeating-conic-gradient(#eef3f7 0 25%, #fff 0 50%) 50% / 20px 20px; box-shadow: 0 6px 18px rgba(0,0,0,.1); }
         .smk-hint { margin: 0; text-align: center; font-size: 13px; color: #6a8aa0; min-height: 18px; }
+        .smk-col { display: flex; flex-direction: column; gap: 12px; }
         .smk-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
         .smk-chips button { border: 1.5px solid #d8e6f0; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; cursor: pointer; }
         .smk-chips button.on { background: #5aa8e0; border-color: #5aa8e0; color: #fff; }
         .smk-zoom { display: flex; align-items: center; gap: 8px; margin-top: 8px; } .smk-zoom input { flex: 1; }
-        #smTextOpts { display: flex; flex-direction: column; gap: 8px; }
         #smText { font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 2px solid #d8e6f0; outline: none; }
         .smk-colors { display: flex; gap: 8px; justify-content: center; }
         .smk-colors button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; background: var(--c); box-shadow: 0 0 0 1.5px #ccc; cursor: pointer; padding: 0; }

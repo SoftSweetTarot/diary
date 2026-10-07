@@ -1,7 +1,7 @@
 /* 말랑달콤 다이어리 - js/stickermaker.js
    ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → 📷 사진 찍기 · 🖼️ 사진 고르기 · 🔤 글씨 스티커)
    - 사진 스티커 : 📷 찍기 · 🖼 고르기 → 모양(동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
-   - 글씨 스티커 : 글자 · 글꼴 · 색을 골라 말랑한 글씨 스티커
+   - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기
    - 💾 내 스티커에 저장 : ✏️ 스티커 창 → ✂️ 내 스티커 에서 언제든 다시 붙여요 (최대 40개)
      저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내스티커.json (게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
@@ -12,7 +12,7 @@
         const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
-            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '' };
+            text: '', step: 1, font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '' };
         const smq = id => document.getElementById(id);
         const smSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
 
@@ -61,14 +61,20 @@
                     <div class="smk-chips" id="smShapes">${SM_SHAPES.map(s => `<button type="button" data-s="${s[0]}" onclick="smSetShape('${s[0]}')">${s[1]}</button>`).join('')}</div>
                     <label class="smk-zoom">🔍 <input type="range" id="smZoom" min="0.4" max="3" step="0.02" value="1" oninput="smS.zoom=+this.value;smDraw()"></label>
                   </div>
-                  <div id="smTextOpts" hidden>
-                    <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()">
+                  <div id="smTextA" class="smk-col" hidden>
+                    <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()" onkeydown="if(event.key==='Enter'){event.preventDefault();smTextNext()}">
+                    <button type="button" class="smk-go" onclick="smTextNext()">다음 단계 ▶</button>
+                  </div>
+                  <div id="smTextB" class="smk-col" hidden>
                     <div class="smk-chips smk-fonts" id="smFonts"></div>
                     <div class="smk-colors" id="smColors">${SM_COLORS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" onclick="smSetColor('${c}')" aria-label="색"></button>`).join('')}</div>
                   </div>
-                  <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
-                  <button type="button" class="smk-go" onclick="smFinish(true)">📌 다이어리에 붙이기</button>
-                  <button type="button" class="smk-go smk-sub" onclick="smFinish(false)">💾 내 스티커에 저장만</button>
+                  <div id="smFinal" class="smk-col">
+                    <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
+                    <button type="button" class="smk-go" onclick="smFinish(true)">📌 다이어리에 붙이기</button>
+                    <button type="button" class="smk-go smk-sub" onclick="smFinish(false)">💾 내 스티커에 저장만</button>
+                    <button type="button" class="smk-go smk-sub" id="smTextBack" onclick="smTextPrev()" hidden>◀ 이전 단계</button>
+                  </div>
                 </section>
               </div>`;
             document.body.appendChild(el);
@@ -103,7 +109,7 @@
                 c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
                 c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(im.src);
                 smS.mode = 'photo'; smS.img = c; smS.zoom = 1; smS.ox = 0; smS.oy = 0; smS.path = [];
-                smq('smZoom').value = 1; smq('smPhotoOpts').hidden = false; smq('smTextOpts').hidden = true;
+                smq('smZoom').value = 1; smS.step = 1; smPhase();
                 smShow(); smSetShape(smS.shape === 'free' ? 'circle' : smS.shape);
             };
             im.onerror = () => showMsg('사진을 열지 못했어요. 다른 사진을 골라 주세요.');
@@ -183,12 +189,27 @@
 
         /* ---------- 글씨 스티커 ---------- */
         function smStartText() {
-            smS.mode = 'text'; smq('smPhotoOpts').hidden = true; smq('smTextOpts').hidden = false;
-            smq('smText').value = smS.text; smq('smHint').textContent = '글자를 쓰고 글꼴 · 색을 골라요';
+            smS.mode = 'text'; smS.step = 1; smPhase();
+            smq('smText').value = smS.text;
             smFillFonts();
             smShow(); smSetFont(smS.font); smSetColor(smS.color);
             setTimeout(() => smq('smText').focus(), 50);
         }
+        /* 글씨 스티커는 두 단계 : 1) 글만 쓰기 → 2) 글꼴 · 색 · 테두리 고르고 붙이기 (사진 스티커는 한 화면 그대로) */
+        function smPhase() {
+            const t = smS.mode === 'text', one = t && smS.step === 1;
+            smq('smPhotoOpts').hidden = t;
+            smq('smTextA').hidden = !one;
+            smq('smTextB').hidden = !t || one;
+            smq('smFinal').hidden = one;
+            smq('smTextBack').hidden = !t || one;
+            if (t) smq('smHint').textContent = one ? '✏️ 스티커에 쓸 글자를 써요' : '글꼴 · 색 · 테두리를 골라요';
+        }
+        function smTextNext() {
+            if (!(smS.text || '').trim()) { showMsg('스티커에 쓸 글씨를 먼저 써 주세요.'); return; }
+            smS.step = 2; smPhase(); smq('smText').blur(); smq('smRoom').scrollTop = 0;
+        }
+        function smTextPrev() { smS.step = 1; smPhase(); smq('smRoom').scrollTop = 0; setTimeout(() => smq('smText').focus(), 50); }
         /* 글꼴 후보 : 설정창 글꼴 목록(fontList · js/app.js) 중 웹폰트 전부 (기기마다 다른 (Local) · (Apple) 글꼴은 빼요) */
         function smFillFonts() {
             const L = fontList.filter(f => /\[/.test(f.name)), box = smq('smFonts'); if (!box) return;
@@ -277,5 +298,5 @@
         }
         /* 스티커 창의 다른 칸을 누르면 '내 스티커' 표시 지우기 */
         document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b && !b.classList.contains('sm-cat')) { const g = smq('stickerGrid'); if (g) delete g.dataset.mine; } }, true);
-        window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText;
+        window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText; window.smTextNext = smTextNext; window.smTextPrev = smTextPrev;
         window.loadMyStickers = loadMyStickers;
