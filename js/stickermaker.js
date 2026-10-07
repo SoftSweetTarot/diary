@@ -9,10 +9,10 @@
 
         const SM_FILE = '내스티커.json', SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260;
         const SM_SHAPES = [['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
-        const SM_FONTS = [["'Jua', sans-serif", '주아'], ["'Gaegu', cursive", '개구'], ["'Nanum Pen Script', cursive", '손글씨'], ["'Do Hyeon', sans-serif", '도현'], ["'Single Day', cursive", '싱글데이']];
+        const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
-            text: '', font: SM_FONTS[0][0], color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '' };
+            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '' };
         const smq = id => document.getElementById(id);
         const smSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
 
@@ -63,7 +63,7 @@
                   </div>
                   <div id="smTextOpts" hidden>
                     <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()">
-                    <div class="smk-chips" id="smFonts">${SM_FONTS.map(f => `<button type="button" data-f="${f[0]}" style="font-family:${f[0]}" onclick="smSetFont(this.dataset.f)">${f[1]}</button>`).join('')}</div>
+                    <select id="smFonts" class="btn smk-font" onchange="smSetFont(this.value)" aria-label="글꼴"></select>
                     <div class="smk-colors" id="smColors">${SM_COLORS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" onclick="smSetColor('${c}')" aria-label="색"></button>`).join('')}</div>
                   </div>
                   <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
@@ -170,11 +170,15 @@
         function smStartText() {
             smS.mode = 'text'; smq('smPhotoOpts').hidden = true; smq('smTextOpts').hidden = false;
             smq('smText').value = smS.text; smq('smHint').textContent = '글자를 쓰고 글꼴 · 색을 골라요';
+            fillFontSelect(smq('smFonts'));
             smShow(); smSetFont(smS.font); smSetColor(smS.color);
-            if (document.fonts && document.fonts.load) SM_FONTS.forEach(f => document.fonts.load(`40px ${f[0]}`).then(() => smDraw()).catch(() => {}));
             setTimeout(() => smq('smText').focus(), 50);
         }
-        function smSetFont(f) { smS.font = f; document.querySelectorAll('#smFonts button').forEach(b => b.classList.toggle('on', b.dataset.f === f)); smDraw(); }
+        function smSetFont(f) {
+            smS.font = f; const sel = smq('smFonts'); if (sel) sel.value = f;
+            smDraw();
+            if (document.fonts && document.fonts.load) document.fonts.load(`40px ${f}`).then(() => { if (smS.font === f) smDraw(); }).catch(() => {});   // 웹폰트가 늦게 오면 다시 그림
+        }
         function smSetColor(c) { smS.color = c; document.querySelectorAll('#smColors button').forEach(b => b.classList.toggle('on', b.dataset.c === c)); smDraw(); }
 
         /* ---------- 완성 ---------- */

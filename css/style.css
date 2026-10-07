@@ -1852,6 +1852,7 @@
         .smk-colors { display: flex; gap: 8px; justify-content: center; }
         .smk-colors button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; background: var(--c); box-shadow: 0 0 0 1.5px #ccc; cursor: pointer; padding: 0; }
         .smk-colors button.on { box-shadow: 0 0 0 3px #5aa8e0; }
+.smk-font { width: 100%; padding: 10px 12px; font-size: 15px; border-radius: 12px; }
         .smk-border { font-size: 14px; display: flex; align-items: center; gap: 6px; justify-content: center; }
         .smk-go { padding: 14px; border-radius: 14px; border: none; font: inherit; font-size: 16px; font-weight: bold; cursor: pointer; background: linear-gradient(#7cc8ff, #4aa8ef); color: #fff; box-shadow: 0 4px 0 #2f86c8; }
         .smk-go.smk-sub { background: #fff; color: #3d8fd6; box-shadow: 0 3px 0 #cfe3f0; border: 1.5px solid #cfe3f0; }
