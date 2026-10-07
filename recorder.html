@@ -8,6 +8,7 @@
 <!--
   🎬 말랑달콤 다이어리 - 시연 영상 녹화 도구 (recorder.html)
   - 여백이 있는 예쁜 바탕 위에, 기기(아이폰 · 갤럭시 · 아이패드 · 노트북 · 모니터) 안에 들어간 다이어리를 보여 주고 그대로 녹화해요.
+  - 📱 기기 칸의 '🖥 다이어리만' : 기기 · 바탕 없이 다이어리(바깥 배경지 포함)가 영상 화면 전체를 채워요.
   - 열기 : PC 크롬(또는 엣지)에서 https://softsweetdiary.com/recorder.html
            (다이어리와 같은 주소에서 열어야 마우스 커서 · 클릭 효과가 영상에 함께 찍혀요)
   - F2 : 녹화 시작 / 끝 → 끝날 때마다 mp4 파일로 저장 (저장 폴더를 골라 두면 그 폴더에 바로, 아니면 '다운로드' 폴더)
@@ -49,6 +50,12 @@
     .laptop-base::before { content: ''; position: absolute; left: 50%; top: 0; width: 140px; height: 8px; margin-left: -70px; border-radius: 0 0 10px 10px; background: rgba(0,0,0,.12); }
     .stand-neck { margin: 0 auto; width: 130px; height: 80px; background: linear-gradient(90deg, color-mix(in srgb, var(--frame) 80%, #000), var(--frame), color-mix(in srgb, var(--frame) 80%, #000)); clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%); }
     .stand-foot { margin: 0 auto; width: 300px; height: 16px; border-radius: 10px 10px 6px 6px; background: var(--frame); box-shadow: 0 20px 40px rgba(40,10,40,.3); }
+
+    /* 🖥 다이어리만 (기기 · 바탕 없이 화면 전체) */
+    #device.bare .dv-body { padding: 0; border-radius: 0; background: none; box-shadow: none; }
+    #device.bare .dv-body::after { display: none; }
+    #device.bare .dv-screen { border-radius: 0; }
+    body.bare .dv-only { display: none !important; }
 
     /* ---------- 커서 · 클릭 ---------- */
     #cursor { position: absolute; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; z-index: 50; display: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
@@ -117,15 +124,15 @@
         <div class="chips" id="ratios"></div>
     </div>
     <div class="sec">
-        <h2>📱 기기</h2>
+        <h2>📱 기기 · 화면</h2>
         <div class="chips" id="devices"></div>
-        <div class="row"><label>기기 색</label><div class="frames" id="frames"></div></div>
-        <div class="row"><label>크기</label><input type="range" id="size" min="30" max="100" step="1"><b id="sizeV"></b></div>
-        <div class="row"><label>좌우</label><input type="range" id="ox" min="-40" max="40" step="1"><b id="oxV"></b></div>
-        <div class="row"><label>위아래</label><input type="range" id="oy" min="-40" max="40" step="1"><b id="oyV"></b></div>
-        <div class="row"><label>기울기</label><input type="range" id="tilt" min="-12" max="12" step="1"><b id="tiltV"></b></div>
+        <div class="row dv-only"><label>기기 색</label><div class="frames" id="frames"></div></div>
+        <div class="row dv-only"><label>크기</label><input type="range" id="size" min="30" max="100" step="1"><b id="sizeV"></b></div>
+        <div class="row dv-only"><label>좌우</label><input type="range" id="ox" min="-40" max="40" step="1"><b id="oxV"></b></div>
+        <div class="row dv-only"><label>위아래</label><input type="range" id="oy" min="-40" max="40" step="1"><b id="oyV"></b></div>
+        <div class="row dv-only"><label>기울기</label><input type="range" id="tilt" min="-12" max="12" step="1"><b id="tiltV"></b></div>
     </div>
-    <div class="sec">
+    <div class="sec dv-only">
         <h2>🎨 바탕</h2>
         <div class="swatches" id="presets"></div>
         <div class="colors">직접 <input type="color" id="c1"><input type="color" id="c2"><div class="chips" id="kinds"></div></div>
@@ -156,6 +163,7 @@
 
     /* ---------- 기기 (w·h = 다이어리가 보이는 화면 크기 · top = 위쪽 상태 표시줄) ---------- */
     const DEVICES = {
+        bare:    { name: '🖥 다이어리만', w: 1280, h: 720, b: 0, edge: 0, r: 0, sr: 0, top: 0, kind: 'bare' },   // w·h 는 영상 비율에 맞춰 dims() 가 바꿈
         iphone:  { name: '아이폰',        w: 390,  h: 844,  b: 12, edge: 4, r: 58, sr: 46, top: 50, kind: 'phone', notch: 'island' },
         galaxy:  { name: '갤럭시',        w: 412,  h: 915,  b: 9,  edge: 3, r: 44, sr: 36, top: 34, kind: 'phone', notch: 'punch' },
         ipad:    { name: '아이패드 세로', w: 820,  h: 1180, b: 24, edge: 4, r: 42, sr: 20, top: 30, kind: 'tablet', cam: 'top' },
@@ -171,6 +179,7 @@
         ['linear', '#dcf7ea', '#fff4d6'], ['radial', '#fff7fb', '#ffc9dc'], ['radial', '#fffaf0', '#ffd9b3'], ['linear', '#2d2550', '#7a4f9e'],
         ['solid', '#ffe6f0', '#ffe6f0'], ['solid', '#f4efe9', '#f4efe9'], ['solid', '#e8f1ff', '#e8f1ff'], ['linear', '#fbe3e8', '#e3f0fb']
     ];
+    const BARE = { '16:9': [1280, 720], '9:16': [720, 1280], '1:1': [900, 900], '4:5': [800, 1000] };   // 다이어리만 : 다이어리가 보는 화면 크기
     const PATTERNS = [['none', '무늬 없음'], ['dot', '도트'], ['check', '체크'], ['stripe', '줄무늬'], ['heart', '하트'], ['star', '별']];
     const KINDS = [['solid', '단색'], ['linear', '그라데이션'], ['radial', '동그란 빛']];
 
@@ -193,9 +202,17 @@
     }
 
     /* ---------- 기기 그리기 ---------- */
+    const isBare = () => DEVICES[S.dev].kind === 'bare';
+    function dims() {                                          // 지금 기기의 화면 크기 (다이어리만은 영상 비율을 따라감)
+        const d = DEVICES[S.dev];
+        if (d.kind !== 'bare') return d;
+        const [w, h] = BARE[S.ratio] || BARE['16:9'];
+        return Object.assign({}, d, { w, h });
+    }
     let built = '', devScale = 1;
     function buildDevice() {
-        const d = DEVICES[S.dev], el = $('device');
+        const d = dims(), el = $('device');
+        el.classList.toggle('bare', d.kind === 'bare'); document.body.classList.toggle('bare', d.kind === 'bare');
         const light = ['#fbfbfb', '#d9dbe0', '#f6d3dc', '#d8cdf2', '#cfe6dd'].includes(S.frame);
         const bezel = d.kind === 'tablet' && S.frame === '#fbfbfb' ? '#fbfbfb' : '#0b0b0e';
         el.style.setProperty('--frame', S.frame); el.style.setProperty('--bezel', bezel);
@@ -217,7 +234,7 @@
         $('app').addEventListener('load', hookApp);
     }
     function deviceBox() {                                     // 기기 전체 크기 (받침대까지)
-        const d = DEVICES[S.dev], w = d.w + d.b * 2 + d.edge * 2;
+        const d = dims(), w = d.w + d.b * 2 + d.edge * 2;
         let h = d.h + d.b * 2 + d.edge * 2;
         if (d.kind === 'laptop') return [w * 1.14, h + 22];
         if (d.kind === 'monitor') return [w, h + 96];
@@ -226,9 +243,14 @@
     function placeDevice() {
         buildDevice();
         const st = $('stage').getBoundingClientRect(), [w, h] = deviceBox();
-        const k = devScale = Math.min(st.width * .94 / w, st.height * .94 / h) * S.size / 100;
-        const el = $('device');
+        const bare = isBare(), el = $('device');
+        if (bare) {                                            // 다이어리만 : 무대를 빈틈없이 채움 (비율이 같아 다이어리를 다시 불러오지 않고 크기만 바꿈)
+            const sc = el.querySelector('.dv-screen');
+            if (sc) { sc.style.width = w + 'px'; sc.style.height = h + 'px'; }
+        }
+        const k = devScale = bare ? Math.max(st.width / w, st.height / h) : Math.min(st.width * .94 / w, st.height * .94 / h) * S.size / 100;
         el.style.width = w + 'px'; el.style.marginLeft = (-w / 2) + 'px'; el.style.marginTop = (-h / 2) + 'px';
+        if (bare) { el.style.transform = `scale(${k})`; return; }
         el.style.transform = `translate(${S.ox * st.width / 100}px, ${S.oy * st.height / 100}px) rotate(${S.tilt}deg) scale(${k})`;
     }
 
@@ -319,8 +341,9 @@
         const dev = $('device'); let x = e.clientX, y = e.clientY, el = f;
         while (el && el !== dev) { x += el.offsetLeft + el.clientLeft; y += el.offsetTop + el.clientTop; el = el.offsetParent; }
         const st = $('stage').getBoundingClientRect(), w = dev.offsetWidth, h = dev.offsetHeight, [w2, h2] = [w / 2, h / 2];
-        const a = S.tilt * Math.PI / 180, k = devScale, dx = (x - w2) * k, dy = (y - h2) * k;
-        return [dev.offsetLeft + w2 + S.ox * st.width / 100 + dx * Math.cos(a) - dy * Math.sin(a), dev.offsetTop + h2 + S.oy * st.height / 100 + dx * Math.sin(a) + dy * Math.cos(a)];
+        const bare = isBare(), tl = bare ? 0 : S.tilt, ox = bare ? 0 : S.ox, oy = bare ? 0 : S.oy;
+        const a = tl * Math.PI / 180, k = devScale, dx = (x - w2) * k, dy = (y - h2) * k;
+        return [dev.offsetLeft + w2 + ox * st.width / 100 + dx * Math.cos(a) - dy * Math.sin(a), dev.offsetTop + h2 + oy * st.height / 100 + dx * Math.sin(a) + dy * Math.cos(a)];
     }
     function hookApp() {
         const f = $('app');
