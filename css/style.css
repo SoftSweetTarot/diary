@@ -2503,3 +2503,6 @@
 
 /* 📱 아이패드 : 버튼을 한 번에 누르게 (두 번 탭 확대 대기 · 눌림 취소 없애기) */
 button, .btn, .tb-btn, .service-btn, .smk-room label { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+/* 🔤 글씨 스티커 버튼 숨김 (코드는 그대로 · index.html 의 그 버튼에서 hidden 을 지우면 다시 보임) */
+.service-btn[hidden] { display: none !important; }
