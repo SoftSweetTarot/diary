@@ -1852,8 +1852,8 @@
         .smk-colors { display: flex; gap: 8px; justify-content: center; }
         .smk-colors button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; background: var(--c); box-shadow: 0 0 0 1.5px #ccc; cursor: pointer; padding: 0; }
         .smk-colors button.on { box-shadow: 0 0 0 3px #5aa8e0; }
-.smk-font { display: block; box-sizing: border-box; width: 100%; height: 46px; padding: 0 12px; font-size: 16px; border-radius: 12px; background: #fff; color: #444; transition: none; touch-action: manipulation; }   /* 16px 미만이면 아이폰이 화면을 확대해서 터치 위치가 어긋나요 · display:flex(.btn)는 select에서 터치 영역이 틀어져서 block */
-        .smk-font:hover { background: #fff; color: #444; }
+.smk-fonts { max-height: 168px; overflow-y: auto; padding: 4px; border-radius: 12px; background: rgba(255,255,255,.6); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+        .smk-fonts button { font-size: 15px; }
         .smk-border { font-size: 14px; display: flex; align-items: center; gap: 6px; justify-content: center; }
         .smk-go { padding: 14px; border-radius: 14px; border: none; font: inherit; font-size: 16px; font-weight: bold; cursor: pointer; background: linear-gradient(#7cc8ff, #4aa8ef); color: #fff; box-shadow: 0 4px 0 #2f86c8; }
         .smk-go.smk-sub { background: #fff; color: #3d8fd6; box-shadow: 0 3px 0 #cfe3f0; border: 1.5px solid #cfe3f0; }

@@ -63,7 +63,7 @@
                   </div>
                   <div id="smTextOpts" hidden>
                     <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()">
-                    <select id="smFonts" class="btn smk-font" onchange="smSetFont(this.value)" aria-label="글꼴"></select>
+                    <div class="smk-chips smk-fonts" id="smFonts"></div>
                     <div class="smk-colors" id="smColors">${SM_COLORS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" onclick="smSetColor('${c}')" aria-label="색"></button>`).join('')}</div>
                   </div>
                   <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
@@ -170,12 +170,22 @@
         function smStartText() {
             smS.mode = 'text'; smq('smPhotoOpts').hidden = true; smq('smTextOpts').hidden = false;
             smq('smText').value = smS.text; smq('smHint').textContent = '글자를 쓰고 글꼴 · 색을 골라요';
-            fillFontSelect(smq('smFonts'));
+            smFillFonts();
             smShow(); smSetFont(smS.font); smSetColor(smS.color);
             setTimeout(() => smq('smText').focus(), 50);
         }
+        /* 글꼴 후보 : 설정창 글꼴 목록(fontList · js/app.js) 중 웹폰트 전부 (기기마다 다른 (Local) · (Apple) 글꼴은 빼요) */
+        function smFillFonts() {
+            const L = fontList.filter(f => /\[/.test(f.name)), box = smq('smFonts'); if (!box) return;
+            box.innerHTML = '';
+            L.forEach(f => {
+                const b = document.createElement('button');
+                b.type = 'button'; b.dataset.f = f.css; b.style.fontFamily = f.css; b.textContent = f.name.replace(/\s*\[.*\]\s*/, '');
+                b.onclick = () => smSetFont(f.css); box.appendChild(b);
+            });
+        }
         function smSetFont(f) {
-            smS.font = f; const sel = smq('smFonts'); if (sel) sel.value = f;
+            smS.font = f; document.querySelectorAll('#smFonts button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
             smDraw();
             if (document.fonts && document.fonts.load) document.fonts.load(`40px ${f}`).then(() => { if (smS.font === f) smDraw(); }).catch(() => {});   // 웹폰트가 늦게 오면 다시 그림
         }
