@@ -253,7 +253,7 @@
             });
         })();
 
-        /* ☕ 라이브러리 목록 미리 받아 두기 : 다이어리를 열고 잠시 뒤 조용히 받아 둬요 → 📚 그림모음을 누르면 바로 보여요 */
+        /* ☕ 라이브러리 목록 미리 받아 두기 : 다이어리를 열고 잠시 뒤 조용히 받아 둬요 → 🧩 조각스티커를 누르면 바로 보여요 */
         window.addEventListener('load', () => setTimeout(() => { if (!libItems && !libLoading) loadLibrary(false); }, 2500));
 
         function openLibrary() { applyLibLayoutStyle(); updateLibPager(); openModal('libraryModal'); loadLibrary(false); }
@@ -276,7 +276,7 @@
             } catch (err) {
                 libItems = null;
                 updateLibPager();
-                st.innerHTML = err && err.message === 'setup' ? '📚 그림모음을 준비하고 있어요. 조금만 기다려 주세요!'
+                st.innerHTML = err && err.message === 'setup' ? '🧩 조각스티커를 준비하고 있어요. 조금만 기다려 주세요!'
                     : '⚠ 이미지 목록을 불러오지 못했어요.<br>인터넷 연결을 확인한 뒤 다시 열어 주세요.';
             }
             libLoading = false;

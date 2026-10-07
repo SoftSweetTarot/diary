@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/page.js
-   글꼴 적용 · 메모지 패널 · 이모지 목록 · 날짜/페이지 넘기기 · 페이지 크기
+   글꼴 적용 · 글씨체 패널 · 이모지 목록 · 날짜/페이지 넘기기 · 페이지 크기
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → service (index.html 참고) */
         function fillFontSelect(select) {
             if (!select) return;
@@ -63,7 +63,7 @@
             return /^data:image\/svg/i.test(img.dataset.src || '') ? null : img;
         }
 
-        /* 📦 메모지 · 사진 꾸미기 창은 늘 접힌 채로 나와요 (▾ 를 눌러 펼침) · 다른 그림을 고르거나 선택을 풀었다가 다시 고르면 또 접힘 */
+        /* 📦 글씨체 · 사진 꾸미기 창은 늘 접힌 채로 나와요 (▾ 를 눌러 펼침) · 다른 그림을 고르거나 선택을 풀었다가 다시 고르면 또 접힘 */
         let panelFor = null;
         function setPanelFold(f) {
             const panel = document.getElementById('textPanel'), b = document.getElementById('textPanelFold');
@@ -87,7 +87,7 @@
             }
             if (!ta) { panel.style.display = 'none'; return; }
             panel.dataset.mode = 'text';
-            document.getElementById('textPanelTitle').textContent = '✥ 메모지';
+            document.getElementById('textPanelTitle').textContent = '✥ 글씨체';
 
             const fontSel = document.getElementById('textFontSelect');
             const font = ta.dataset.font || DEFAULT_TEXT_FONT;
@@ -98,7 +98,6 @@
             }
             document.getElementById('textColorInput').value = ta.dataset.color || DEFAULT_TEXT_COLOR;
             document.getElementById('textSizeInput').value = ta.dataset.size || DEFAULT_TEXT_SIZE;
-            if (typeof updatePaperChips === 'function') updatePaperChips();
             panel.style.display = 'flex';
             positionTextPanel();
         }
