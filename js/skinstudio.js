@@ -154,6 +154,7 @@
             e.dataset.idx = idx;
             e.style.cssText = `left:${d.x}%;top:${d.y}%;width:${d.s}px;height:${d.s}px;transform:translate(-50%,-50%) rotate(${d.r || 0}deg)${d.f ? ' scaleX(-1)' : ''}`;
             e.innerHTML = stuImgHtml(d.i);
+            if (idx === stuSel) ['tl', 'tr', 'bl', 'br'].forEach(c => { const z = document.createElement('div'); z.className = 'rot-zone rot-' + c; e.appendChild(z); });   // 기존 그림과 같은 네 꼭짓점 회전 칸
             return e;
         }
         /* 한 곳(host)에 그 곳의 꾸밈 다시 놓기 */
@@ -261,11 +262,12 @@
 
         /* ---------- 🎀 스킨꾸미기 창 ---------- */
         const stuIsOpen = () => { const m = document.getElementById('stuModal'); return !!m && m.style.display === 'flex'; };
-        let stuTab = 'deco', stuCat = 0;
+        let stuTab = 'deco', stuCat = 0, stuWheelT = 0;
 
         function openStudio() {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('다이어리 표지를 열어 둔 상태에서<br>페이지꾸미기를 할 수 있어요.'); return; }
             closeModal('skinModal');
+            if (typeof selectedElement !== 'undefined' && selectedElement) { selectedElement.classList.remove('selected'); selectedElement = null; if (typeof updateTextPanel === 'function') updateTextPanel(); }   // 다이어리 위 그림 · 글 선택 풀기 (만드는 동안은 안 보이고 안 눌려요)
             document.body.classList.add('stu-edit');
             stuShowFakePop();
             openModal('stuModal');
@@ -306,7 +308,7 @@
         const stuEl = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
         function stuBuildDeco(w) {
-            w.appendChild(stuEl('div', 'stu-hint', '고른 곳에 꾸밈이 놓여요. <b>다이어리 위에서 끌어서</b> 위치를 바꿔요.'));
+            w.appendChild(stuEl('div', 'stu-hint', '고른 곳에 꾸밈이 놓여요. <b>다이어리 위에서 끌어서</b> 위치를 바꾸고, 네 모서리를 잡고 돌려요 · 손가락 두 개로 벌리면 크기 · 비틀면 회전이에요.'));
             const row = stuEl('div', 'stu-chips');
             STU_ANCHORS.forEach(([k, t]) => {
                 const b = stuEl('button', 'stu-chip' + (stuTarget === k ? ' on' : ''), t); b.type = 'button';
@@ -469,31 +471,82 @@
 
         /* ---------- 다이어리 위에서 끌기 ---------- */
         (function stuSetupDrag() {
-            let drag = null;
+            let drag = null, pinch = null;
             const hostOf = (el, d) => d.a === 'pop' ? document.getElementById('stuFakePop') : stuHost(d.a);
+            const elOf = (host, idx) => host.querySelector(`:scope > .stu-deco[data-idx="${idx}"]`);
+            const paint = (d, el) => {
+                el.style.width = el.style.height = d.s + 'px';
+                el.style.transform = `translate(-50%,-50%) rotate(${d.r || 0}deg)${d.f ? ' scaleX(-1)' : ''}`;
+            };
+            const norm = a => { a = ((a + 180) % 360 + 360) % 360 - 180; return Math.round(a); };
+            const ang = (x, y, c) => Math.atan2(y - c.y, x - c.x) * 180 / Math.PI;
+            const center = el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+            const finish = () => { const had = drag && (drag.moved || drag.mode !== 'move'); drag = null; pinch = null; if (had) stuRefreshWin(); };
             document.addEventListener('pointerdown', e => {
                 if (!document.body.classList.contains('stu-edit')) return;
+                /* ✌️ 손가락 두 개 : 고른 꾸밈을 벌리면 크기 · 비틀면 회전 (기존 그림과 같은 방식) */
+                if (drag && e.pointerId !== drag.id && !pinch) {
+                    const d = stuCur.deco[drag.idx], el = elOf(drag.host, drag.idx);
+                    if (d && el) {
+                        const dx = e.clientX - drag.lx, dy = e.clientY - drag.ly;
+                        pinch = { idx: drag.idx, host: drag.host, p: { [drag.id]: [drag.lx, drag.ly], [e.pointerId]: [e.clientX, e.clientY] }, d0: Math.hypot(dx, dy) || 1, a0: Math.atan2(dy, dx) * 180 / Math.PI, s0: d.s, r0: d.r || 0 };
+                        drag.mode = 'pinch'; e.preventDefault(); e.stopPropagation();
+                    }
+                    return;
+                }
                 const el = e.target.closest && e.target.closest('.stu-deco');
                 if (!el) return;
                 const idx = +el.dataset.idx, d = stuCur.deco[idx], host = d && hostOf(el, d);
                 if (!d || !host) return;
                 e.preventDefault(); e.stopPropagation();
-                const r = host.getBoundingClientRect();
-                drag = { id: e.pointerId, idx, host, ox: d.x - (e.clientX - r.left) / r.width * 100, oy: d.y - (e.clientY - r.top) / r.height * 100, moved: false };
+                const zone = e.target.classList && e.target.classList.contains('rot-zone');
                 if (stuSel !== idx) { stuSel = idx; stuRenderDeco(); stuTab = 'deco'; stuRefreshWin(); }
+                const cur = elOf(host, idx) || el, r = host.getBoundingClientRect();
+                drag = { id: e.pointerId, idx, host, mode: zone ? 'rotate' : 'move', lx: e.clientX, ly: e.clientY, moved: false,
+                    ox: d.x - (e.clientX - r.left) / r.width * 100, oy: d.y - (e.clientY - r.top) / r.height * 100 };
+                if (zone) drag.a0 = ang(e.clientX, e.clientY, center(cur)) - (d.r || 0);   // 네 꼭짓점을 잡고 돌리면 회전
             }, true);
             window.addEventListener('pointermove', e => {
-                if (!drag || drag.id !== e.pointerId) return;
+                if (pinch && pinch.p[e.pointerId]) {
+                    pinch.p[e.pointerId] = [e.clientX, e.clientY];
+                    const k = Object.keys(pinch.p); if (k.length < 2) return;
+                    const A = pinch.p[k[0]], B = pinch.p[k[1]], dx = B[0] - A[0], dy = B[1] - A[1];
+                    const d = stuCur.deco[pinch.idx], el = d && elOf(pinch.host, pinch.idx); if (!d || !el) return;
+                    d.s = Math.round(stuNum(pinch.s0 * (Math.hypot(dx, dy) / pinch.d0), 12, 200, d.s));
+                    d.r = norm(pinch.r0 + (Math.atan2(dy, dx) * 180 / Math.PI - pinch.a0));
+                    paint(d, el); drag.moved = true;
+                    return;
+                }
+                if (!drag || drag.id !== e.pointerId || pinch) return;
+                drag.lx = e.clientX; drag.ly = e.clientY;
                 const d = stuCur.deco[drag.idx]; if (!d) return;
+                const el = elOf(drag.host, drag.idx);
+                if (drag.mode === 'rotate') {
+                    if (!el) return;
+                    d.r = norm(ang(e.clientX, e.clientY, center(el)) - drag.a0);
+                    paint(d, el); drag.moved = true; return;
+                }
                 const r = drag.host.getBoundingClientRect();
                 d.x = Math.round(stuNum((e.clientX - r.left) / r.width * 100 + drag.ox, -60, 160, d.x) * 10) / 10;
                 d.y = Math.round(stuNum((e.clientY - r.top) / r.height * 100 + drag.oy, -60, 160, d.y) * 10) / 10;
                 drag.moved = true;
-                const el = drag.host.querySelector(`:scope > .stu-deco[data-idx="${drag.idx}"]`);
                 if (el) { el.style.left = d.x + '%'; el.style.top = d.y + '%'; }
             });
-            const end = e => { if (drag && (!e || drag.id === e.pointerId)) drag = null; };
+            const end = e => {
+                if (pinch && pinch.p[e.pointerId]) { finish(); return; }
+                if (drag && drag.id === e.pointerId && !pinch) finish();
+                else if (drag && drag.id === e.pointerId) finish();
+            };
             window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+            /* 🖱 마우스 휠 : 고른 꾸밈 크기 조절 (기존 그림과 같음) */
+            document.addEventListener('wheel', e => {
+                if (!document.body.classList.contains('stu-edit')) return;
+                const el = e.target.closest && e.target.closest('.stu-deco'); if (!el) return;
+                const idx = +el.dataset.idx, d = stuCur.deco[idx]; if (!d) return;
+                e.preventDefault();
+                d.s = Math.round(stuNum(d.s * (e.deltaY < 0 ? 1.06 : .94), 12, 200, d.s));
+                paint(d, el); clearTimeout(stuWheelT); stuWheelT = setTimeout(stuRefreshWin, 200);
+            }, { passive: false });
             /* 만드는 동안은 다이어리 · 하단 버튼이 눌려서 열리지 않게 */
             document.addEventListener('click', e => {
                 if (!document.body.classList.contains('stu-edit')) return;

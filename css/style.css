@@ -2506,3 +2506,11 @@ button, .btn, .tb-btn, .service-btn, .smk-room label { touch-action: manipulatio
 
 /* 🔤 글씨 스티커 버튼 숨김 (코드는 그대로 · index.html 의 그 버튼에서 hidden 을 지우면 다시 보임) */
 .service-btn[hidden] { display: none !important; }
+
+/* 🎀 페이지 꾸미기 창이 열려 있는 동안 : 이미 놓인 그림 · 글은 안 보이고 안 눌려요 (꾸밈이 대신 눌리도록) */
+body.stu-edit #canvasArea .element-box { visibility: hidden !important; pointer-events: none !important; }
+/* 고른 꾸밈의 네 꼭짓점 회전 칸 (기존 그림과 같은 방식 · 눈에 안 보임) */
+.stu-deco .rot-zone { width: 30px; height: 30px; }
+.stu-deco .rot-tl { left: -15px; top: -15px; } .stu-deco .rot-tr { right: -15px; top: -15px; }
+.stu-deco .rot-bl { left: -15px; bottom: -15px; } .stu-deco .rot-br { right: -15px; bottom: -15px; }
+body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; touch-action: none; }
