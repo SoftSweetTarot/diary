@@ -1058,6 +1058,7 @@
         .mt-btn.mt-none { visibility: hidden; pointer-events: none; }
         .mt-moved { display: none !important; }
         .svc-extra { padding: 12px 8px; }
+        .svc-shop { grid-column: 1 / -1; background: linear-gradient(160deg, #fffaf0, #ffeccf); border-color: #ffd29a !important; }
         .fc-x.fc-left, .tj-x.tj-back { right: auto; left: 12px; }
         /* 말풍선은 위, 할머니는 아래 (할머니가 말하는 모습) */
         .tj-scene { flex-direction: column; align-items: center; gap: 0; }

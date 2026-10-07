@@ -128,6 +128,7 @@
             window.open(CAFE_URL, '_blank', 'noopener');
         }
         function comingSoon(name) { showMsg(name + ' 기능은 준비 중이에요.<br>조금만 기다려 주세요!'); }
+        function openShop() { window.open('shop/', '_blank', 'noopener'); }
         function openPet() { comingSoon('🐾 펫 키우기'); }
         function openPuppetShow() { comingSoon('🎭 인형극'); }
         function openSweetVideo() { comingSoon('🎬 달콤영상'); }
