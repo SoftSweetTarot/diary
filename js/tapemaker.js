@@ -89,8 +89,8 @@
                     <button type="button" class="smk-go smk-sub" onclick="tpmq('tpmFile').click()">🖼️ 사진 고르기</button>
                     <p class="smk-hint">사진 가운데를 네모로 잘라서 테이프에 쭉 이어 붙여요</p>
                   </div>
-                  <button type="button" class="smk-go" onclick="tpmFinish(true)">📌 다이어리에 붙이기</button>
-                  <button type="button" class="smk-go smk-sub" onclick="tpmFinish(false)">💾 내 마스킹테이프에 저장만</button>
+                  <button type="button" class="smk-go" onclick="tpmFinish(true,this)">📌 다이어리에 붙이기</button>
+                  <button type="button" class="smk-go smk-sub" onclick="tpmFinish(false,this)">💾 내 마스킹테이프에 저장만</button>
                 </section>
               </div>`;
             document.body.appendChild(el);
@@ -180,7 +180,8 @@
         }
 
         /* ---------- 완성 ---------- */
-        async function tpmFinish(stick) {
+        function tpmFinish(stick, btn) { return smkRun(btn, stick ? '📌 붙이는 중…' : '💾 저장하는 중…', () => tpmDoFinish(stick)); }
+        async function tpmDoFinish(stick) {
             if (tpmS.m === 'i' && !tpmS.img) { showMsg('🖼️ 사진을 먼저 골라 주세요.'); return; }
             if (tpmS.m === 'd') { tpmExport(); if (!tpmS.dimg) { showMsg('✏️ 먼저 네모 칸에 그려 주세요.'); return; } }
             const o = tpmCur();

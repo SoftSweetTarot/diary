@@ -71,8 +71,8 @@
                   </div>
                   <div id="smFinal" class="smk-col">
                     <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
-                    <button type="button" class="smk-go" onclick="smFinish(true)">📌 다이어리에 붙이기</button>
-                    <button type="button" class="smk-go smk-sub" onclick="smFinish(false)">💾 내 스티커에 저장만</button>
+                    <button type="button" class="smk-go" onclick="smFinish(true,this)">📌 다이어리에 붙이기</button>
+                    <button type="button" class="smk-go smk-sub" onclick="smFinish(false,this)">💾 내 스티커에 저장만</button>
                     <button type="button" class="smk-go smk-sub" id="smTextBack" onclick="smTextPrev()" hidden>◀ 이전 단계</button>
                   </div>
                 </section>
@@ -230,7 +230,19 @@
             o.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, o.width, o.height);
             return (smS.out = o.toDataURL('image/png'));
         }
-        async function smFinish(stick) {
+        /* 💾/📌 버튼을 누르면 '저장하는 중…'으로 바뀌고 끝날 때까지 다시 못 눌러요 (눌렸는지 바로 보이고 두 번 저장도 막음) */
+        let smkLock = false;
+        async function smkRun(btn, label, fn) {
+            if (smkLock) return;
+            smkLock = true;
+            const all = [...document.querySelectorAll('.smk-room .smk-go')], old = btn ? btn.textContent : '';
+            all.forEach(b => { b.disabled = true; });
+            if (btn) { btn.classList.add('busy'); btn.textContent = label; }
+            try { await fn(); }
+            finally { smkLock = false; all.forEach(b => { b.disabled = false; }); if (btn) { btn.classList.remove('busy'); btn.textContent = old; } }
+        }
+        function smFinish(stick, btn) { return smkRun(btn, stick ? '📌 붙이는 중…' : '💾 저장하는 중…', () => smDoFinish(stick)); }
+        async function smDoFinish(stick) {
             const src = smMake();
             if (!src) { showMsg(smS.shape === 'free' ? '✂️ 오리고 싶은 모양을 먼저 그려 주세요.' : '스티커를 만들지 못했어요.'); return; }
             try {

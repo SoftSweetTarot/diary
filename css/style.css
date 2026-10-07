@@ -2520,3 +2520,16 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .text-panel.folded > :not(.text-panel-handle) { display: none !important; }
 .panel-fold { margin-left: auto; margin-right: 10px; font-size: 15px; line-height: 1; color: inherit; pointer-events: none; }
 .text-panel-handle { cursor: pointer; }
+
+/* ===== 👆 버튼 누름 반응 (js/press.js 가 .pressing 을 붙여요 · css :active 도 같이) ===== */
+.pressing { scale: .95; filter: brightness(.93); transition: scale .07s ease-out, filter .07s ease-out; }
+.pressing:is(.tb-btn, .page-arrow, .lib-cat, .stu-cell) { scale: 1; }               /* 이미 자기 누름 모양이 있는 것은 그것만 */
+.smk-go { transition: transform .07s, box-shadow .07s, filter .07s; }
+.smk-go:active, .smk-go.pressing { scale: 1; transform: translateY(3px); box-shadow: 0 1px 0 #2f86c8; filter: brightness(.95); }
+.smk-go.smk-sub:active, .smk-go.smk-sub.pressing { box-shadow: 0 0 0 #cfe3f0; background: #eaf5ff; }
+.smk-go:disabled { cursor: default; }
+.smk-go.busy { opacity: .75; transform: translateY(3px); box-shadow: 0 1px 0 #2f86c8; }
+.smk-go.smk-sub.busy { box-shadow: 0 0 0 #cfe3f0; background: #eaf5ff; }
+.smk-chips button:active, .smk-chips button.pressing { background: #eaf5ff; }
+.smk-chips button.on:active { background: #4a95cc; }
+.smk-colors button:active { scale: .85; }
