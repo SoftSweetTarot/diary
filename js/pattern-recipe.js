@@ -1,15 +1,15 @@
 /* 말랑달콤 다이어리 - js/pattern-recipe.js
-   🧾 사용자가 만든 패턴의 "레시피" (다이어리 · 패턴 등록 도구 공용)
-   - 사용자가 만든 패턴은 CSS 코드가 아니라 짧은 설정값(레시피)으로 저장·전송해요.
+   🧾 사용자가 만든 배경지의 "레시피" (다이어리 · 배경지 등록 도구 공용)
+   - 사용자가 만든 배경지는 CSS 코드가 아니라 짧은 설정값(레시피)으로 저장·전송해요.
        무늬 메이커 : {"v":1,"kind":"stripe","bg":"#fff0f5","c1":"#f7c3d1","a":1,"w":14,"g":14,"angle":45}
        이미지/그림 : {"v":1,"kind":"tile","src":"data:image/png;base64,...","w":80,"h":80,"bg":"#ffffff","from":"draw"}
-                     (등록된 패턴은 이미지를 patterns 폴더 파일로 떼어 내서 "src":"patterns/12.webp" 처럼 저장)
+                     (등록된 배경지는 이미지를 patterns 폴더 파일로 떼어 내서 "src":"patterns/12.webp" 처럼 저장)
    - 다이어리는 레시피를 받을 때마다 sanitizeRecipe()로 검사한 뒤 recipeToCss()로 그려요.
      정해진 항목만 통과하므로 이상한 코드가 들어와도 화면을 망가뜨릴 수 없어요.
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → pattern-recipe → skins → pattern-maker → service */
 
         const RECIPE_KINDS = ['stripe', 'dot', 'check', 'grid', 'scallop', 'tile'];
-        const RECIPE_MAX_SRC = 40000;          // 이미지 레시피 최대 글자 수 (내 패턴 저장 용량을 지키기 위해)
+        const RECIPE_MAX_SRC = 40000;          // 이미지 레시피 최대 글자 수 (내 배경지 저장 용량을 지키기 위해)
         const RECIPE_MAX_LEN = 45000;          // 레시피 전체 최대 글자 수
 
         const RECIPE_LIMITS = {
@@ -43,7 +43,7 @@
             if (kind === 'tile') {
                 const src = typeof r.src === 'string' ? r.src : '';
                 const isData = src.length <= RECIPE_MAX_SRC && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(src);
-                const isFile = /^patterns\/[A-Za-z0-9_-]{1,40}\.(png|webp|jpg)$/.test(src);      // 등록된 패턴의 이미지 파일
+                const isFile = /^patterns\/[A-Za-z0-9_-]{1,40}\.(png|webp|jpg)$/.test(src);      // 등록된 배경지의 이미지 파일
                 if (!isData && !isFile) return null;
                 return {
                     v: 1, kind, src,

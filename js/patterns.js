@@ -1,8 +1,8 @@
 /* 말랑달콤 다이어리 - js/patterns.js
-   🎨 전체 배경에 까는 패턴 목록 (☁️ 말랑패턴 · 🍬 달콤패턴)
-   - tier : 'free' = 말랑패턴(심플한 줄무늬·도트 · 누구나) / 'paid' = 달콤패턴(그림이 들어간 패턴 · 저금해 준 사람만)
+   🎨 전체 배경에 까는 배경지 목록 (☁️ 말랑배경지 · 🍬 달콤배경지)
+   - tier : 'free' = 말랑배경지(심플한 줄무늬·도트 · 누구나) / 'paid' = 달콤배경지(그림이 들어간 배경지 · 저금해 준 사람만)
    - css  : 배경에 그대로 들어가는 CSS 값 (이미지 파일 없이 동작)
-   - 새 패턴 추가 : 아래 목록에 { id, tier, name, css } 한 줄 추가. id는 저장에 쓰이므로 한 번 정하면 바꾸지 마세요.
+   - 새 배경지 추가 : 아래 목록에 { id, tier, name, css } 한 줄 추가. id는 저장에 쓰이므로 한 번 정하면 바꾸지 마세요.
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → skins → service (index.html 참고) */
 const BG_PATTERNS = (() => {
     const svg = s => `url("data:image/svg+xml,${encodeURIComponent(s.replace(/\s{2,}/g, ' ').trim())}")`;

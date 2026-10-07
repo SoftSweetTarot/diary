@@ -1,20 +1,20 @@
 /* 말랑달콤 다이어리 - js/pattern-maker.js
-   ✏️ 패턴 만들기 3종 · 📂 내 패턴 · 💾 패턴 파일 저장 · 🌟 카페에서 받아 등록한 사용자 패턴
+   ✏️ 배경지 만들기 3종 · 📂 내 배경지 · 💾 배경지 파일 저장 · 🌟 카페에서 받아 등록한 사용자 배경지
    - 🧵 무늬 메이커     : 줄무늬 · 도트 · 깅엄 체크 · 격자 · 물결 (색 · 굵기 · 간격 · 기울기)
-   - 🖼 이미지 패턴     : 내 사진/그림을 바둑판 · 엇갈림으로 반복
+   - 🖼 이미지 배경지     : 내 사진/그림을 바둑판 · 엇갈림으로 반복
    - 🖌 그려서 만들기   : 한 칸을 그리면 이어 붙인 모습이 바로 보임 (이어그리기로 경계가 자연스럽게 연결)
-   - 내 패턴은 설정값 'diary_my_patterns' 로 저장 → 구글 드라이브 settings.json 에 함께 저장
+   - 내 배경지는 설정값 'diary_my_patterns' 로 저장 → 구글 드라이브 settings.json 에 함께 저장
        [{"uid":"k3x9","name":"딸기 사선","r":{레시피},"at":1759300000000}, ...]
-   - 💾 파일로 저장 : 'malang_pattern_날짜_시간.malang.txt' 파일 하나(이미지 포함, 패턴 이름·닉네임은 파일 안에)를 내려받아 → 사용자가 카페 글에 첨부
-     → 관리자가 pattern-tool.html(패턴 등록 도구)에 넣어 js/community-patterns.js + patterns 폴더를 만들어 깃허브에 올림
+   - 💾 파일로 저장 : 'malang_pattern_날짜_시간.malang.txt' 파일 하나(이미지 포함, 배경지 이름·닉네임은 파일 안에)를 내려받아 → 사용자가 카페 글에 첨부
+     → 관리자가 pattern-tool.html(배경지 등록 도구)에 넣어 js/community-patterns.js + patterns 폴더를 만들어 깃허브에 올림
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → pattern-recipe → skins → pattern-maker → service */
 
         /* =====================================================================
-           📂 내 패턴 (저장 · 불러오기 · 삭제)
+           📂 내 배경지 (저장 · 불러오기 · 삭제)
            ===================================================================== */
         const MY_PATTERN_KEY = 'diary_my_patterns';
         const MY_PATTERN_MAX = 30;                 // 최대 개수
-        const MY_PATTERN_MAX_CHARS = 400000;       // 내 패턴 전체 최대 글자 수 (settings.json 이 너무 커지지 않도록)
+        const MY_PATTERN_MAX_CHARS = 400000;       // 내 배경지 전체 최대 글자 수 (settings.json 이 너무 커지지 않도록)
         let myPatterns = [];
 
         function loadMyPatterns() {
@@ -27,7 +27,7 @@
                 const r = sanitizeRecipe(it.r);
                 const uid = typeof it.uid === 'string' && /^[a-z0-9]{1,24}$/.test(it.uid) ? it.uid : null;
                 if (r && uid && !myPatterns.some(m => m.uid === uid)) {
-                    myPatterns.push({ uid, name: recipeText(it.name, 20) || '내 패턴', r, at: +it.at || 0 });
+                    myPatterns.push({ uid, name: recipeText(it.name, 20) || '내 배경지', r, at: +it.at || 0 });
                 }
             });
         }
@@ -44,13 +44,13 @@
 
         function addMyPattern(name, r) {
             const clean = sanitizeRecipe(r);
-            if (!clean) { showMsg('⚠ 패턴을 저장하지 못했어요.<br>다시 만들어 주세요.'); return null; }
-            const nm = recipeText(name, 20) || '내 패턴';
+            if (!clean) { showMsg('⚠ 배경지를 저장하지 못했어요.<br>다시 만들어 주세요.'); return null; }
+            const nm = recipeText(name, 20) || '내 배경지';
             const same = myPatterns.find(m => m.name === nm && JSON.stringify(m.r) === JSON.stringify(clean));
-            if (same) return same.uid;                                   // 같은 패턴을 두 번 누르면 하나만
-            if (myPatterns.length >= MY_PATTERN_MAX) { showMsg(`📂 내 패턴은 최대 ${MY_PATTERN_MAX}개까지 저장할 수 있어요.<br>안 쓰는 패턴을 지운 뒤 다시 저장해 주세요.`); return null; }
+            if (same) return same.uid;                                   // 같은 배경지를 두 번 누르면 하나만
+            if (myPatterns.length >= MY_PATTERN_MAX) { showMsg(`📂 내 배경지는 최대 ${MY_PATTERN_MAX}개까지 저장할 수 있어요.<br>안 쓰는 배경지를 지운 뒤 다시 저장해 주세요.`); return null; }
             const total = JSON.stringify(myPatterns).length + JSON.stringify(clean).length;
-            if (total > MY_PATTERN_MAX_CHARS) { showMsg('📂 내 패턴 저장 공간이 가득 찼어요.<br>이미지·그림 패턴을 몇 개 지운 뒤 다시 저장해 주세요.'); return null; }
+            if (total > MY_PATTERN_MAX_CHARS) { showMsg('📂 내 배경지 저장 공간이 가득 찼어요.<br>이미지·그림 배경지를 몇 개 지운 뒤 다시 저장해 주세요.'); return null; }
             const uid = (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).slice(0, 24);
             myPatterns.push({ uid, name: nm, r: clean, at: Date.now() });
             saveMyPatterns();
@@ -60,7 +60,7 @@
         async function deleteMyPattern(uid) {
             const m = myPatterns.find(x => x.uid === uid);
             if (!m) return;
-            if (!(await showMsg(`'${m.name}' 패턴을 내 패턴에서 지울까요?`, true))) return;
+            if (!(await showMsg(`'${m.name}' 배경지를 내 배경지에서 지울까요?`, true))) return;
             myPatterns = myPatterns.filter(x => x.uid !== uid);
             saveMyPatterns();
             if (bgPattern && bgPattern.id === 'my:' + uid) clearBgPattern();
@@ -68,7 +68,7 @@
         }
 
         /* =====================================================================
-           🌟 등록된 사용자 패턴 (js/community-patterns.js 의 COMMUNITY_PATTERNS)
+           🌟 등록된 사용자 배경지 (js/community-patterns.js 의 COMMUNITY_PATTERNS)
            - 이 파일이 없거나 깨져 있어도 다이어리는 그대로 동작 (목록에만 안 보임)
            ===================================================================== */
         let communityItems = null;
@@ -84,7 +84,7 @@
                 if (!no || !css || communityItems.some(x => x.id === 'cm:' + no)) return;
                 communityItems.push({
                     id: 'cm:' + no, tier: 'free',
-                    name: recipeText(row.name, 20) || '사용자 패턴', by: recipeText(row.by, 12), css, recipe: r
+                    name: recipeText(row.name, 20) || '사용자 배경지', by: recipeText(row.by, 12), css, recipe: r
                 });
             });
             return communityItems;
@@ -97,8 +97,8 @@
         let makerRecipe = null;          // 지금 미리보기 중인 레시피 (이미지·그림은 미리보기용 큰 이미지)
         let makerTimer = null;
 
-        const MAKER_TITLES = { weave: '🧵 무늬 메이커', image: '🖼 내 이미지로 패턴', draw: '🖌 그려서 만들기' };
-        const MAKER_DEFAULT_NAMES = { weave: '나의 무늬', image: '나의 이미지 패턴', draw: '나의 그림 패턴' };
+        const MAKER_TITLES = { weave: '🧵 무늬 메이커', image: '🖼 내 이미지로 배경지', draw: '🖌 그려서 만들기' };
+        const MAKER_DEFAULT_NAMES = { weave: '나의 무늬', image: '나의 이미지 배경지', draw: '나의 그림 배경지' };
 
         function openMaker(mode) {
             makerMode = ['weave', 'image', 'draw'].includes(mode) ? mode : 'weave';
@@ -181,13 +181,13 @@
         }
 
         function patternFileText(name, r, nickFrom) {
-            return JSON.stringify({ malang_pattern: 1, name: recipeText(name, 20) || '내 패턴', by: patternNick(nickFrom), recipe: r });
+            return JSON.stringify({ malang_pattern: 1, name: recipeText(name, 20) || '내 배경지', by: patternNick(nickFrom), recipe: r });
         }
 
         function downloadPatternFile(name, r, nickFrom) {
-            const nm = recipeText(name, 20) || '내 패턴';
+            const nm = recipeText(name, 20) || '내 배경지';
             if (!patternNick(nickFrom)) {
-                showMsg('💾 "만든 사람(닉네임)"을 적어 주세요.<br>등록되면 패턴 아래에 이름이 표시돼요.');
+                showMsg('💾 "만든 사람(닉네임)"을 적어 주세요.<br>등록되면 배경지 아래에 이름이 표시돼요.');
                 return;
             }
             const blob = new Blob([patternFileText(nm, r, nickFrom)], { type: 'text/plain;charset=utf-8' });
@@ -199,7 +199,7 @@
             document.body.appendChild(a);
             a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            showMsg('💾 패턴 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 패턴 목록에 나타나요 💕<br><span style="font-size:12px;color:#777;">파일이 안 받아지면 📋 코드 복사 후 카페 글에 붙여 넣어도 돼요.</span>');
+            showMsg('💾 배경지 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 배경지 목록에 나타나요 💕<br><span style="font-size:12px;color:#777;">파일이 안 받아지면 📋 코드 복사 후 카페 글에 붙여 넣어도 돼요.</span>');
         }
 
         function downloadMyPattern(uid) {
@@ -332,7 +332,7 @@
         }
 
         /* =====================================================================
-           🖼 내 이미지로 패턴 : 크기 · 간격 · 배치(바둑판/엇갈림) · 투명도 · 바탕색
+           🖼 내 이미지로 배경지 : 크기 · 간격 · 배치(바둑판/엇갈림) · 투명도 · 바탕색
            ===================================================================== */
         const imgState = { img: null, size: 70, gap: 24, layout: 'brick', alpha: 1, bg: '#fff8fb' };
 

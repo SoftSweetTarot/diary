@@ -17,7 +17,7 @@
      - 확실하게 : 요청마다 번호를 붙여 보내요 → 인터넷이 끊겨 다시 보내도 한 번만 처리
                   처리된 뒤 시트를 다시 읽어서 🎀 · 🍬 전체 끝나는 날 · 저금 횟수가 맞는지 확인 → 맞으면 '저금 확인 완료' 창
      - 맨 위 탭 3개 : 💗 저금 확인 · 🎁 아이템 주기 · 🖼️ 배경화면 주기 (같은 저금 코드 검색을 쓰고, 탭마다 그 일만 보여요)
-     - 🎁 아이템 주기 : 🪙 코인 · 🎀 마스킹테이프 · 🍬 달콤패턴(전체 또는 디자인 하나하나 + 기간) · 🎁 캡슐 스티커(여러 개 + 기간) (admin_give · 확인 창 → 보내기 → 결과 창)
+     - 🎁 아이템 주기 : 🪙 코인 · 🎀 마스킹테이프 · 🍬 달콤배경지(전체 또는 디자인 하나하나 + 기간) · 🎁 캡슐 스티커(여러 개 + 기간) (admin_give · 확인 창 → 보내기 → 결과 창)
      - 🖼️ 배경화면 주기 : 번호로 골라서 · 드라이브 폴더 링크가 자동으로 전해져요 (admin_give · walls)
      - 기간은 '원래 남은 기간 + 새 기간'으로 더해져요 · 결과 창에 '원래 D-15 + 30일 = D-45' 로 보여 줘요
      - 놓치지 않게 : 보내기 전에 이 휴대폰에 '보내는 중'을 적어 두고 · 결과 창이 뜰 때까지 지우지 않아요 (앱이 닫혀도 다시 열면 '이어서 확인하기' 창이 떠요 · 같은 요청 번호라 두 번 들어가지 않아요)
@@ -240,7 +240,7 @@
               <dt>🖼️ 배경화면</dt><dd class="${(m.walls || []).length ? 'on' : ''}">${(m.walls || []).length ? m.walls.map(n => esc(wallLabel(n))).join('<br>') : '없음'}</dd>${wait(m)}
               <dt>마지막 접속</dt><dd>${esc(m.last || '-')} ${esc(m.dev || '')}</dd>` : `
               <dt>🎀 테이프</dt><dd class="${passRows(m.tape, m.tp, TAPES) ? 'on' : ''}">${passRows(m.tape, m.tp, TAPES) || '없음'}</dd>
-              <dt>🍬 패턴</dt><dd class="${passRows(m.pat, m.pp, PATS) ? 'on' : ''}">${passRows(m.pat, m.pp, PATS) || '없음'}</dd>${wait(m)}
+              <dt>🍬 배경지</dt><dd class="${passRows(m.pat, m.pp, PATS) ? 'on' : ''}">${passRows(m.pat, m.pp, PATS) || '없음'}</dd>${wait(m)}
               ${tab === 'save' ? `<dt>저금</dt><dd>${m.count}번</dd>` : ''}
               <dt>마지막 접속</dt><dd>${esc(m.last || '-')} ${esc(m.dev || '')}</dd>`;
         const btns = (m, i) => st.tab === 'save' ? (m.done ? `<button class="btn done" type="button" disabled>✅ 방금 저금 확인했어요</button>` : `<button class="btn" type="button" id="sv${i}" onclick="save(${i})">💗 저금 확인</button>`)
@@ -287,7 +287,7 @@
         pop(`<div class="pop-ic">✓</div>
           <div class="pop-t">저금 확인 완료!</div>
           <div class="pop-s">시트에 잘 적힌 것까지 확인했어요 💕</div>
-          <div class="pop-d"><b>${esc(r.code)}</b><br>🎀 마스킹테이프 전체 <b>${md(r.tape)}</b>까지 (${dLeft(r.tape)})${addLine(r.tfrom, r.add, r.tape)}<br>🍬 달콤패턴 전체 <b>${md(r.pat)}</b>까지 (${dLeft(r.pat)})${addLine(r.pfrom, r.add, r.pat)}<br>${r.count}번째 저금</div>
+          <div class="pop-d"><b>${esc(r.code)}</b><br>🎀 마스킹테이프 전체 <b>${md(r.tape)}</b>까지 (${dLeft(r.tape)})${addLine(r.tfrom, r.add, r.tape)}<br>🍬 달콤배경지 전체 <b>${md(r.pat)}</b>까지 (${dLeft(r.pat)})${addLine(r.pfrom, r.add, r.pat)}<br>${r.count}번째 저금</div>
           <div class="pop-s" style="font-size:12.5px">${SENT}</div>
           <div class="pop-btns"><button class="btn" type="button" onclick="unpop()">닫기</button></div>`);
     }
@@ -324,7 +324,7 @@
     const STICKERS = [['s3', '튤립 속 아기 토끼'], ['s7', '벚꽃 고양이'], ['s15', '꽃바구니 곰돌이'], ['s30', '딸기모자 햄스터'], ['s50', '꽃 양'],
         ['s100', '꽃 화관 토끼 공주'], ['c7', '방긋 해바라기'], ['c14', '무지개 구름이'], ['c21', '하트 풍선 병아리'], ['cfull', '딸기 케이크']];
     const TAPES = [['dot', '딸기우유 도트'], ['mint', '민트 사선'], ['gingham', '라벤더 깅엄'], ['heart', '레몬 하트'], ['cloud', '하늘 구름'], ['flower', '복숭아 꽃'], ['star', '밤하늘 별'], ['cherry', '체리 체리'], ['wave', '바다 물결'], ['rainbow', '무지개 줄무늬'], ['stripe', '캔디 줄무늬'], ['kraft', '크라프트 바느질'], ['grid', '모눈 투명'], ['lace', '화이트 레이스'], ['love', '러블리 글씨'], ['coral', '코랄 단색']];      // js/tape.js 의 TAPES (id · 이름)
-    const PATS = [['flower-gingham', '블루 플라워 깅엄'], ['tomato', '토마토 피크닉'], ['tea-quilt', '찻잔 퀼트'], ['meadow', '물망초 들판']];      // js/patterns.js 의 달콤패턴(tier 'paid') (id · 이름)
+    const PATS = [['flower-gingham', '블루 플라워 깅엄'], ['tomato', '토마토 피크닉'], ['tea-quilt', '찻잔 퀼트'], ['meadow', '물망초 들판']];      // js/patterns.js 의 달콤배경지(tier 'paid') (id · 이름)
     const DAY_CHIPS = [7, 14, 30, 60, 90];
     const gv = { i: -1, code: '', mode: 'item', coins: 0, tsel: [], tdays: 30, psel: [], pdays: 30, sdays: 30, sel: [], wsel: [], rid: '', busy: false };
     let WALLS = null;                                          // 🖼️ 배경화면 목록 [{ no, name, kind }] (다이어리에 보이는 것 · 서버 ?action=walls)
@@ -353,7 +353,7 @@
             <div class="g-num"><input id="gCoins" type="number" inputmode="numeric" min="0" max="99" value="${gv.coins || ''}" placeholder="0" oninput="gRead()"><span>개</span></div></div>
           <div class="g-row"><h4>🎀 마스킹테이프 <small>전체 또는 골라서 · 안 줄 거면 비워 두세요</small></h4>
             <div class="chips">${pick('tsel', TAPES)}</div>${days('tdays', 'gTd', 'chipsT')}</div>
-          <div class="g-row"><h4>🍬 달콤패턴 <small>전체 또는 골라서 · 안 줄 거면 비워 두세요</small></h4>
+          <div class="g-row"><h4>🍬 달콤배경지 <small>전체 또는 골라서 · 안 줄 거면 비워 두세요</small></h4>
             <div class="chips">${pick('psel', PATS)}</div>${days('pdays', 'gPd', 'chipsP')}</div>
           <div class="g-row"><h4>🎁 캡슐 스티커 <small>여러 개 골라도 돼요</small></h4>
             <div class="chips">${STICKERS.map(([id, nm]) => `<button type="button" class="chip st ${gv.sel.includes(id) ? 'on' : ''}" onclick="gPick('sel', '${id}')">${esc(nm)}</button>`).join('')}</div>
@@ -396,7 +396,7 @@
         }
         if (gv.coins) rows.push(`🪙 코인 <b>${gv.coins}개</b>`);
         if (gv.tsel.length) rows.push(`🎀 마스킹테이프 <b>${gv.tsel[0] === 'all' ? '전체' : gv.tsel.length + '개'}</b> · <b>${gv.tdays}일</b>${gv.tsel[0] === 'all' ? '' : `<br><small>${gNames(gv.tsel, TAPES)}</small>`}`);
-        if (gv.psel.length) rows.push(`🍬 달콤패턴 <b>${gv.psel[0] === 'all' ? '전체' : gv.psel.length + '개'}</b> · <b>${gv.pdays}일</b>${gv.psel[0] === 'all' ? '' : `<br><small>${gNames(gv.psel, PATS)}</small>`}`);
+        if (gv.psel.length) rows.push(`🍬 달콤배경지 <b>${gv.psel[0] === 'all' ? '전체' : gv.psel.length + '개'}</b> · <b>${gv.pdays}일</b>${gv.psel[0] === 'all' ? '' : `<br><small>${gNames(gv.psel, PATS)}</small>`}`);
         if (gv.sel.length) rows.push(`🎁 캡슐 스티커 <b>${gv.sel.length}개</b> · 각 <b>${gv.sdays}일</b><br><small>${gv.sel.map(id => esc(STICKERS.find(x => x[0] === id)[1])).join(' · ')}</small>`);
         return rows;
     }
@@ -406,7 +406,7 @@
         const bad = wall ? (!gv.wsel.length ? '줄 배경화면을 하나 이상 골라 주세요' : '')
             : (!gv.coins && !gv.tsel.length && !gv.psel.length && !gv.sel.length) ? '줄 아이템을 하나 이상 골라 주세요'
             : (gv.tsel.length && gv.tdays < 1) ? '마스킹테이프 기간(일)을 적어 주세요'
-            : (gv.psel.length && gv.pdays < 1) ? '달콤패턴 기간(일)을 적어 주세요'
+            : (gv.psel.length && gv.pdays < 1) ? '달콤배경지 기간(일)을 적어 주세요'
             : (gv.sel.length && gv.sdays < 1) ? '스티커 기간(일)을 적어 주세요' : '';
         if (bad) { $('gErr').textContent = bad; $('gErr').hidden = false; return; }
         gv.rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);       // 이 선물의 요청 번호 (다시 보내도 한 번만)

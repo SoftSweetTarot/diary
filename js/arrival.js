@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/arrival.js
-   🎁 선물 도착 : 🪙 코인 · 🎀 마스킹테이프 · 🍬 달콤패턴 · 🎁 캡슐 스티커 · 🖼️ 배경화면 을 '알림 창 하나'로 보여 줘요 + 메뉴에 NEW 표시
+   🎁 선물 도착 : 🪙 코인 · 🎀 마스킹테이프 · 🍬 달콤배경지 · 🎁 캡슐 스티커 · 🖼️ 배경화면 을 '알림 창 하나'로 보여 줘요 + 메뉴에 NEW 표시
    - 서버(말랑달콤 사람들)가 도착 신호 한 장을 남겨요 (js/presence.js 가 로그인할 때 · 1분마다 받아 와요)
        { t: 🎀 · p: 🍬 · s: 🎁 → { all 또는 이름: [끝나는 날, 늘어남(1=원래 있던 것에 이어 붙음), 더한 일수] } , c: 🪙 [더한 개수, 지금 코인] , w: 🖼️ { 번호: [이름, 링크] } , n: 신호 번호 }
    - 놓치지 않게 (알림이 안 뜨는 일이 없게)
@@ -112,7 +112,7 @@
         const AR_WHERE = {
             coin: ['🪙', '코인', '☕ 카페 → 🌱 매일 → 🎁 랜덤박스'],
             tape: ['🎀', '마스킹테이프', '🎨 스티커 → 🎀 마스킹테이프'],
-            pat: ['🍬', '달콤패턴', '🎨 페이지 → 🍬 달콤패턴'],
+            pat: ['🍬', '달콤배경지', '🎨 페이지 → 🍬 달콤배경지'],
             caps: ['🎁', '캡슐 스티커', '🎨 스티커 → 🎁 캡슐 스티커'],
             wall: ['🖼️', '배경화면', '☕ 카페 → 📱 말랑달콤 배경화면']
         };
@@ -121,7 +121,7 @@
             const lib = kind === 'tape' ? (typeof TAPES !== 'undefined' ? TAPES : [])
                 : kind === 'pat' ? (typeof BG_PATTERNS !== 'undefined' ? BG_PATTERNS : [])
                 : (typeof capsList === 'function' ? capsList() : []);
-            const whole = kind === 'tape' ? '마스킹테이프 전체' : '달콤패턴 전체';
+            const whole = kind === 'tape' ? '마스킹테이프 전체' : '달콤배경지 전체';
             const groups = {};
             Object.keys(sig || {}).sort((x, y) => (x === 'all' ? -1 : y === 'all' ? 1 : 0)).forEach(id => {
                 const v = sig[id]; if (!Array.isArray(v)) return;

@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/tapemaker.js
-   🎀 마스킹테이프 만들기 : 내가 직접 그린 그림, 또는 내 사진으로 나만의 마스킹테이프를 만들어요 (하단메뉴 ✨ 스티커 → 🎀 마스킹테이프)
+   🎀 마스킹테이프 만들기 : 내가 직접 그린 그림, 또는 내 사진으로 나만의 마스킹테이프를 만들어요 (하단메뉴 ✨ 공방 → 🎀 마스킹테이프)
    - ✏️ 그리기 : 네모 한 칸에 펜 · 지우개로 직접 그리면 테이프에 쭉 이어 붙어요 (🔁 이어지게 그리기 · 되돌리기 · 바탕색 · 크기)
    - 🖼️ 내 사진으로 : 사진 가운데를 네모로 잘라 테이프에 이어 붙여요 (사진은 이 기기에서만 줄여서, 완성된 테이프만 저장돼요)
    - 📌 바로 붙이거나 💾 내 마스킹테이프에 저장 → ✏️ 스티커 창 → 🎀 내 마스킹테이프 칸에서 언제든 다시 붙여요 (최대 30개 · 선물 받은 🎀 마스킹테이프와는 다른 칸)
@@ -201,7 +201,7 @@
         /* ---------- ✏️ 스티커 창 → 🎀 내 마스킹테이프 ---------- */
         function tpmGrid() {
             const L = tpmS.list || [];
-            if (!L.length) return '<div class="cs-empty">🎀 아직 만든 마스킹테이프가 없어요.<br>하단메뉴 ✨ 스티커 → 🎀 마스킹테이프에서 만들어 보세요!</div>';
+            if (!L.length) return '<div class="cs-empty">🎀 아직 만든 마스킹테이프가 없어요.<br>하단메뉴 ✨ 공방 → 🎀 마스킹테이프에서 만들어 보세요!</div>';
             return '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>'
                 + L.map((o, i) => `<div class="tpm-it"><button type="button" class="tp-item" onclick="tpmUse(${i})"><span style="background-image:url(&quot;${tpmUrl(o)}&quot;)"></span></button><i onclick="tpmDel(${i})" title="지우기">✕</i></div>`).join('');
         }

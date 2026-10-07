@@ -1,18 +1,18 @@
 /* 말랑달콤 다이어리 - js/skins.js
-   🎨 페이지 메뉴 (기본페이지 · 말랑패턴 · 달콤패턴) · 전체 배경 패턴 적용/저장/불러오기
-   - 고른 패턴은 설정값 'diary_bg_pattern' 으로 저장 → 구글 드라이브 settings.json 에 함께 저장돼요
+   🎨 페이지 메뉴 (기본페이지 · 말랑배경지 · 달콤배경지) · 전체 배경지 적용/저장/불러오기
+   - 고른 배경지는 설정값 'diary_bg_pattern' 으로 저장 → 구글 드라이브 settings.json 에 함께 저장돼요
        예) "diary_bg_pattern": {"id":"tomato","scale":1}
-   - 패턴 해제 시 이 값을 지워요 (settings.json 에서도 빠짐)
+   - 배경지 해제 시 이 값을 지워요 (settings.json 에서도 빠짐)
    - 목록 배치(한 줄에 몇 개·몇 줄·크기)는 기기마다 화면이 달라서 이 기기(localStorage)에만 기억
-   - 패턴 출처 : 기본 제공(js/patterns.js) · 내 패턴('my:번호') · 등록된 사용자 패턴('cm:번호', 관리자가 승인한 것)
-       등록된 사용자 패턴은 레시피를 함께 저장해서 {"id":"cm:3","scale":1,"r":{...}} 처럼 기록 → 목록에서 빠져도 배경은 유지
+   - 배경지 출처 : 기본 제공(js/patterns.js) · 내 배경지('my:번호') · 등록된 사용자 배경지('cm:번호', 관리자가 승인한 것)
+       등록된 사용자 배경지는 레시피를 함께 저장해서 {"id":"cm:3","scale":1,"r":{...}} 처럼 기록 → 목록에서 빠져도 배경은 유지
    - 🌟 모두의 페이지(js/community-skins.js) 목록도 여기서 읽어요. 페이지 고르기·저장은 js/settings.js
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → community-skins → pattern-recipe → skins → pattern-maker → service */
 
         const BG_PATTERN_KEY = 'diary_bg_pattern';
         const PATTERN_SCALE_MIN = 0.5, PATTERN_SCALE_MAX = 2;
 
-        let bgPattern = null;              // 지금 적용된 패턴 { id, scale, r? } (없으면 null)
+        let bgPattern = null;              // 지금 적용된 배경지 { id, scale, r? } (없으면 null)
 
         /* id로 패턴 찾기 → { id, tier, name, css, by? } */
         function findBgPattern(id, inlineRecipe) {
@@ -24,7 +24,7 @@
                 const hit = (typeof getCommunityItems === 'function' ? getCommunityItems() : []).find(p => p.id === id);
                 if (hit) return hit;
                 const css = inlineRecipe ? recipeToCss(inlineRecipe) : null;   // 목록을 아직 못 받았으면 저장된 레시피로 그리기
-                return css ? { id, tier: 'free', name: '사용자 패턴', css } : null;
+                return css ? { id, tier: 'free', name: '사용자 배경지', css } : null;
             }
             return BG_PATTERNS.find(p => p.id === id) || null;
         }
@@ -62,9 +62,9 @@
         }
 
         /* ---------- 불러오기 : 드라이브 설정을 읽은 뒤 / PC 백업 불러온 뒤 호출 ----------
-           값이 없거나, 깨졌거나, 목록에 없는 패턴이면 패턴 없이 표시 (저장된 값은 건드리지 않음) */
+           값이 없거나, 깨졌거나, 목록에 없는 배경지가면 배경지 없이 표시 (저장된 값은 건드리지 않음) */
         function loadBgPattern() {
-            if (typeof loadMyPatterns === 'function') loadMyPatterns();      // 내 패턴 목록 먼저 (js/pattern-maker.js)
+            if (typeof loadMyPatterns === 'function') loadMyPatterns();      // 내 배경지 목록 먼저 (js/pattern-maker.js)
             let v = null;
             try { v = JSON.parse(store.getItem(BG_PATTERN_KEY)); } catch (e) { v = null; }
             const r = v && v.r ? sanitizeRecipe(v.r) : null;
@@ -77,9 +77,9 @@
         function selectBgPattern(id) {
             const p = findBgPattern(id);
             if (!p) return;
-            if (p.tier === 'paid' && !patHas(id)) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 패턴이에요 💕'); return; }
+            if (p.tier === 'paid' && !patHas(id)) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 배경지예요 💕'); return; }
             bgPattern = { id, scale: bgPattern ? bgPattern.scale : 1 };
-            if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 패턴은 레시피도 같이 저장
+            if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 배경지는 레시피도 같이 저장
             renderBgPattern();
             saveBgPattern();
             renderPatternList();
@@ -209,7 +209,7 @@
         function patItems() {
             if (patTier === 'my') return typeof getMyPatternItems === 'function' ? getMyPatternItems() : [];
             const cm = typeof getCommunityItems === 'function' ? getCommunityItems() : [];
-            return BG_PATTERNS.filter(p => p.tier === patTier).concat(cm.filter(p => p.tier === patTier)).filter(p => p.tier !== 'paid' || patHas(p.id));   // 달콤패턴은 선물 받은 것만
+            return BG_PATTERNS.filter(p => p.tier === patTier).concat(cm.filter(p => p.tier === patTier)).filter(p => p.tier !== 'paid' || patHas(p.id));   // 달콤배경지는 선물 받은 것만
         }
         function patPerPage() { return patLayout.rows * patLayout.cols; }
         function patPageCount() { const n = patItems().length; return n ? Math.ceil(n / patPerPage()) : 0; }
@@ -219,7 +219,7 @@
             /* 지금 쓰는 패턴이 이 목록에 있으면 그 페이지부터 보여 주기 */
             const idx = bgPattern ? patItems().findIndex(p => p.id === bgPattern.id) : -1;
             patPage = idx >= 0 ? Math.floor(idx / patPerPage()) : 0;
-            document.getElementById('patTitle').textContent = { free: '☁️ 말랑패턴', paid: '🍬 달콤패턴', my: '📂 내 패턴' }[patTier];
+            document.getElementById('patTitle').textContent = { free: '☁️ 말랑배경지', paid: '🍬 달콤배경지', my: '📂 내 배경지' }[patTier];
             closeModal('skinModal');
             renderPatternList();
             openModal('patternModal');
@@ -262,8 +262,8 @@
                 if (patTier === 'my' && typeof loadPatternNick === 'function') loadPatternNick();
             }
             document.getElementById('patStatus').textContent = items.length
-                ? `패턴 ${items.length}개 · 누르면 전체 배경에 적용돼요`
-                : (patTier === 'my' ? '아직 만든 패턴이 없어요. 페이지 메뉴의 ✏️ 만들기에서 만들어 보세요!' : patTier === 'paid' ? '선물 받은 달콤패턴이 아직 없어요.' : '아직 준비된 패턴이 없어요.');
+                ? `배경지 ${items.length}개 · 누르면 전체 배경에 적용돼요`
+                : (patTier === 'my' ? '아직 만든 배경지가 없어요. 페이지 메뉴의 ✏️ 만들기에서 만들어 보세요!' : patTier === 'paid' ? '선물 받은 달콤배경지가 아직 없어요.' : '아직 준비된 배경지가 없어요.');
             patPage = pages ? Math.max(0, Math.min(pages - 1, patPage)) : 0;
             const start = patPage * per;
             const frag = document.createDocumentFragment();
@@ -283,14 +283,14 @@
                 name.className = 'pat-name';
                 name.textContent = p.name;
                 card.append(sw, name);
-                if (p.by) {                                                    // 등록된 사용자 패턴 : 만든 사람
+                if (p.by) {                                                    // 등록된 사용자 배경지 : 만든 사람
                     const by = document.createElement('span');
                     by.className = 'pat-by';
                     by.textContent = 'by ' + p.by;
                     card.appendChild(by);
                 }
                 card.onclick = () => { if (!patSwiped) selectBgPattern(p.id); };
-                if (patTier === 'my') {                                        // 내 패턴 : 파일 저장 · 삭제
+                if (patTier === 'my') {                                        // 내 배경지 : 파일 저장 · 삭제
                     const wrap = document.createElement('div');
                     wrap.className = 'pat-item-wrap';
                     const acts = document.createElement('div');
