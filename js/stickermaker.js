@@ -81,18 +81,6 @@
             /* 📱 글을 쓰는 중에 버튼을 누르면 입력칸이 포커스를 잃으면서 키보드가 접히고 화면이 움직여서(아이패드) 누른 버튼 밑의 버튼이 눌렸어요
                → 버튼을 눌러도 입력칸이 포커스를 그대로 가지게 해서 화면이 안 움직이게 해요 (눌림 자체는 그대로 동작) */
             el.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button')) e.preventDefault(); });
-            /* 📱 손가락으로 누르면 '누르기 시작한 버튼'을 직접 눌러 줘요 (키보드가 접히며 화면이 움직여도 옆 · 아래 버튼이 눌리지 않게)
-               브라우저가 따로 보내는 터치 클릭은 막고, 아래 button.click() 이 보내는 클릭만 통과시켜요 */
-            let tdown = null, tlast = 0;
-            el.addEventListener('pointerdown', e => { const b = e.pointerType !== 'mouse' && e.target.closest && e.target.closest('button'); tdown = b ? { b, x: e.clientX, y: e.clientY } : null; });
-            el.addEventListener('pointerup', e => {
-                const d = tdown; tdown = null; if (!d || e.pointerType === 'mouse') return;
-                if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10) return;          // 끌었으면(스크롤) 누른 게 아니에요
-                tlast = Date.now(); d.b.click();
-            });
-            el.addEventListener('click', e => {
-                if (e.isTrusted && e.detail > 0 && Date.now() - tlast < 800 && e.target.closest && e.target.closest('button')) { e.stopPropagation(); e.preventDefault(); }
-            }, true);
             const cv = smq('smCanvas');
             cv.addEventListener('pointerdown', smDown); cv.addEventListener('pointermove', smMove);
             cv.addEventListener('pointerup', smUp); cv.addEventListener('pointercancel', smUp);
@@ -191,9 +179,8 @@
         function smStartText() {
             smS.mode = 'text'; smS.step = 1; smPhase();
             smq('smText').value = smS.text;
-            smFillFonts();
             smShow(); smSetFont(smS.font); smSetColor(smS.color);
-            setTimeout(() => smq('smText').focus(), 50);
+            if (window.matchMedia && matchMedia('(pointer: fine)').matches) setTimeout(() => smq('smText').focus(), 50);   // 📱 터치 기기는 키보드가 저절로 올라와 화면이 움직이지 않게 직접 눌러서 써요
         }
         /* 글씨 스티커는 두 단계 : 1) 글만 쓰기 → 2) 글꼴 · 색 · 테두리 고르고 붙이기 (사진 스티커는 한 화면 그대로) */
         function smPhase() {
@@ -207,9 +194,10 @@
         }
         function smTextNext() {
             if (!(smS.text || '').trim()) { showMsg('스티커에 쓸 글씨를 먼저 써 주세요.'); return; }
+            if (!smS.fontsBuilt) { smS.fontsBuilt = true; smFillFonts(); smSetFont(smS.font); }   // 글꼴 목록은 2단계에 들어갈 때 만들어요 (처음 화면이 가볍게)
             smS.step = 2; smPhase(); smq('smText').blur(); smq('smRoom').scrollTop = 0;
         }
-        function smTextPrev() { smS.step = 1; smPhase(); smq('smRoom').scrollTop = 0; setTimeout(() => smq('smText').focus(), 50); }
+        function smTextPrev() { smS.step = 1; smPhase(); smq('smRoom').scrollTop = 0; if (window.matchMedia && matchMedia('(pointer: fine)').matches) setTimeout(() => smq('smText').focus(), 50); }
         /* 글꼴 후보 : 설정창 글꼴 목록(fontList · js/app.js) 중 웹폰트 전부 (기기마다 다른 (Local) · (Apple) 글꼴은 빼요) */
         function smFillFonts() {
             const L = fontList.filter(f => /\[/.test(f.name)), box = smq('smFonts'); if (!box) return;

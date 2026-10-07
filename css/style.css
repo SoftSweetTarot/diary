@@ -2500,3 +2500,6 @@
 .sticker-grid .tpm-it { grid-column: span 3; position: relative; }
 .sticker-grid .tpm-it .tp-item { width: 100%; }
 .sticker-grid .tpm-it i { position: absolute; top: 2px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); font-style: normal; font-size: 11px; display: grid; place-items: center; cursor: pointer; color: #888; }
+
+/* 📱 아이패드 : 버튼을 한 번에 누르게 (두 번 탭 확대 대기 · 눌림 취소 없애기) */
+button, .btn, .tb-btn, .service-btn, .smk-room label { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }

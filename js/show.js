@@ -41,6 +41,7 @@
         document.addEventListener('touchmove', e => {
             const t = e.target; if (!t || !t.closest) return;
             const mc = t.closest('.modal-content'); if (!mc) return;
+            if (t.closest('button, input, textarea, select, label')) return;      // 버튼 · 입력칸을 살짝 흔들며 눌러도 '누름'이 취소되지 않게
             for (let n = t; n && n !== mc.parentNode; n = n.parentNode) {
                 if (n.nodeType !== 1) continue;
                 const cs = getComputedStyle(n);
