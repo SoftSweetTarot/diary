@@ -60,7 +60,7 @@
             items.forEach(it => {
                 const b = document.createElement('button');
                 b.type = 'button'; b.className = 'tap-menu-btn';
-                b.innerHTML = `<i class="tm-ic">${(window.stuIcon && it.key && stuIcon(it.key)) || it.icon}</i><span>${it.label}</span>`;   // 🎀 스킨에서 바꾼 아이콘이 있으면 그것으로
+                b.innerHTML = `<i class="tm-ic">${(window.stuIcon && it.key && stuIcon(it.key)) || it.icon}</i><span>${it.label}</span>`;   // 🎀 페이지에서 바꾼 아이콘이 있으면 그것으로
                 if (it.nw) { b.dataset.nwAny = it.nw; if (window.nwOn && it.nw.split(',').some(nwOn)) b.classList.add('nw-on'); }
                 b.onclick = (ev) => {
                     ev.stopPropagation();
@@ -71,7 +71,7 @@
                 m.appendChild(b);
             });
             document.body.appendChild(m);
-            if (window.stuMount) stuMount('pop', m);        // 🎀 스킨에서 놓은 팝업메뉴 꾸밈
+            if (window.stuMount) stuMount('pop', m);        // 🎀 페이지에서 놓은 팝업메뉴 꾸밈
             const w = m.offsetWidth, h = m.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
             let x, y;
             if (pos.above) {

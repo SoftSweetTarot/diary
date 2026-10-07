@@ -1,12 +1,12 @@
 /* 말랑달콤 다이어리 - js/skins.js
-   🎨 스킨 메뉴 (기본스킨 · 말랑패턴 · 달콤패턴) · 전체 배경 패턴 적용/저장/불러오기
+   🎨 페이지 메뉴 (기본페이지 · 말랑패턴 · 달콤패턴) · 전체 배경 패턴 적용/저장/불러오기
    - 고른 패턴은 설정값 'diary_bg_pattern' 으로 저장 → 구글 드라이브 settings.json 에 함께 저장돼요
        예) "diary_bg_pattern": {"id":"tomato","scale":1}
    - 패턴 해제 시 이 값을 지워요 (settings.json 에서도 빠짐)
    - 목록 배치(한 줄에 몇 개·몇 줄·크기)는 기기마다 화면이 달라서 이 기기(localStorage)에만 기억
    - 패턴 출처 : 기본 제공(js/patterns.js) · 내 패턴('my:번호') · 등록된 사용자 패턴('cm:번호', 관리자가 승인한 것)
        등록된 사용자 패턴은 레시피를 함께 저장해서 {"id":"cm:3","scale":1,"r":{...}} 처럼 기록 → 목록에서 빠져도 배경은 유지
-   - 🌟 모두의 스킨(js/community-skins.js) 목록도 여기서 읽어요. 스킨 고르기·저장은 js/settings.js
+   - 🌟 모두의 페이지(js/community-skins.js) 목록도 여기서 읽어요. 페이지 고르기·저장은 js/settings.js
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → community-skins → pattern-recipe → skins → pattern-maker → service */
 
         const BG_PATTERN_KEY = 'diary_bg_pattern';
@@ -112,7 +112,7 @@
 
         /* ---------- 🌟 모두의 스킨 (카페에서 받아 관리자가 등록 : js/community-skins.js) ----------
            목록 한 줄 : {"no":1,"name":"봄날","by":"닉네임","skin":{색 5개}}  →  id 'cs:번호'
-           파일이 없거나 깨져도 다이어리는 정상 동작 (모두의 스킨만 안 보임) */
+           파일이 없거나 깨져도 다이어리는 정상 동작 (모두의 페이지만 안 보임) */
         let communitySkinItems = null;
         function getCommunitySkins() {
             if (communitySkinItems) return communitySkinItems;
@@ -124,14 +124,14 @@
                 if (!no || !skin || communitySkinItems.some(x => x.id === 'cs:' + no)) return;
                 communitySkinItems.push({
                     id: 'cs:' + no, no,
-                    name: recipeText(row.name, 20) || '모두의 스킨', by: recipeText(row.by, 12), skin
+                    name: recipeText(row.name, 20) || '모두의 페이지', by: recipeText(row.by, 12), skin
                 });
             });
             return communitySkinItems;
         }
 
         /* ---------- 스킨 창 : 제목을 끌어서 옮기기 · 👀 꾹 눌러 다이어리 보기 ----------
-           스킨 색을 바꾸면서 뒤의 다이어리가 어떻게 바뀌는지 볼 수 있게 */
+           페이지 색을 바꾸면서 뒤의 다이어리가 어떻게 바뀌는지 볼 수 있게 */
         (function setupSkinWindows() {
             const posOf = {};
             const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -263,7 +263,7 @@
             }
             document.getElementById('patStatus').textContent = items.length
                 ? `패턴 ${items.length}개 · 누르면 전체 배경에 적용돼요`
-                : (patTier === 'my' ? '아직 만든 패턴이 없어요. 스킨 메뉴의 ✏️ 만들기에서 만들어 보세요!' : patTier === 'paid' ? '선물 받은 달콤패턴이 아직 없어요.' : '아직 준비된 패턴이 없어요.');
+                : (patTier === 'my' ? '아직 만든 패턴이 없어요. 페이지 메뉴의 ✏️ 만들기에서 만들어 보세요!' : patTier === 'paid' ? '선물 받은 달콤패턴이 아직 없어요.' : '아직 준비된 패턴이 없어요.');
             patPage = pages ? Math.max(0, Math.min(pages - 1, patPage)) : 0;
             const start = patPage * per;
             const frag = document.createDocumentFragment();
@@ -353,7 +353,7 @@
         function updatePatternUI() {
             const p = currentBgPattern();
             const cur = document.getElementById('patCurrent');
-            if (cur) cur.textContent = p ? p.name : '없음 (기본스킨 배경색)';
+            if (cur) cur.textContent = p ? p.name : '없음 (기본페이지 배경색)';
             const sc = document.getElementById('patScaleInput');
             if (sc) {
                 sc.disabled = !p;

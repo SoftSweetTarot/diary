@@ -18,7 +18,7 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261006-208">
+    <link rel="stylesheet" href="css/style.css?v=20261006-209">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -66,7 +66,7 @@
     <div class="toolbar">
         <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
         <button type="button" class="tb-btn tb-sticker" aria-label="스티커" onclick="openModal('stickerMakeModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 3.2h13a2.6 2.6 0 0 1 2.6 2.6v8.6L14.4 21H5.5a2.6 2.6 0 0 1-2.6-2.6V5.8a2.6 2.6 0 0 1 2.6-2.6z" fill="#f2a12a"/><path d="M21.1 14.4h-4.3a2.4 2.4 0 0 0-2.4 2.4V21z" fill="#fff" fill-opacity=".72"/><path d="M12 6.6l1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z" fill="#fff"/></svg><span>스티커</span></button>
-        <button type="button" class="tb-btn tb-skin" data-nw-any="pat" aria-label="스킨" onclick="openModal('skinModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8C6.6 2.8 2.5 6.8 2.5 11.8c0 5 4.1 9.2 8.8 9.2 1.7 0 2.4-1 2.4-2.1 0-1.6-1.4-1.8-1.4-3.1 0-1.2 1-2.1 2.3-2.1h2.6c2.6 0 4.7-1.9 4.7-4.6C21.9 6.5 17.6 2.8 12 2.8z" fill="#ee7f9f"/><circle cx="7.4" cy="10.6" r="1.7" fill="#ffe38a"/><circle cx="10.2" cy="6.9" r="1.7" fill="#8fd3a2"/><circle cx="15" cy="6.9" r="1.7" fill="#8bbcf0"/><circle cx="18" cy="10.4" r="1.7" fill="#fff"/></svg><span>스킨</span></button>
+        <button type="button" class="tb-btn tb-skin" data-nw-any="pat" aria-label="페이지" onclick="openModal('skinModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8C6.6 2.8 2.5 6.8 2.5 11.8c0 5 4.1 9.2 8.8 9.2 1.7 0 2.4-1 2.4-2.1 0-1.6-1.4-1.8-1.4-3.1 0-1.2 1-2.1 2.3-2.1h2.6c2.6 0 4.7-1.9 4.7-4.6C21.9 6.5 17.6 2.8 12 2.8z" fill="#ee7f9f"/><circle cx="7.4" cy="10.6" r="1.7" fill="#ffe38a"/><circle cx="10.2" cy="6.9" r="1.7" fill="#8fd3a2"/><circle cx="15" cy="6.9" r="1.7" fill="#8bbcf0"/><circle cx="18" cy="10.4" r="1.7" fill="#fff"/></svg><span>페이지</span></button>
         <button type="button" class="tb-btn tb-cafe" data-nw-any="coin,wall" aria-label="카페" onclick="openModal('serviceModal')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h14v3.8a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6z" fill="#4fa860"/><path d="M18 11h1.4a2.6 2.6 0 0 1 0 5.2H17.6" fill="none" stroke="#4fa860" stroke-width="2"/><ellipse cx="11" cy="9.5" rx="7" ry="2" fill="#8a5a3a"/><path d="M8.5 6.6c-1-1.4 0-2.4 0-3.6M13 6.6c-1-1.4 0-2.4 0-3.6" fill="none" stroke="#4fa860" stroke-width="1.6" stroke-linecap="round"/></svg><span>카페</span></button>
         <button type="button" class="tb-btn tb-set" aria-label="설정" onclick="openSettingsMenu()"><svg viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(12 12)" fill="#8e6fd6"><rect x="-2" y="-10.5" width="4" height="21" rx="1.2"/><rect x="-2" y="-10.5" width="4" height="21" rx="1.2" transform="rotate(45)"/><rect x="-2" y="-10.5" width="4" height="21" rx="1.2" transform="rotate(90)"/><rect x="-2" y="-10.5" width="4" height="21" rx="1.2" transform="rotate(135)"/><circle r="7"/><circle r="2.9" fill="#dccdf5"/></g></svg><span>설정</span></button>
     </div>
@@ -196,12 +196,12 @@
     <!-- 🎨 스킨 메뉴 모달 (기본스킨 · 말랑패턴 · 달콤패턴) -->
     <div class="modal" id="skinModal">
         <div class="modal-content">
-            <div class="modal-title">🎨 스킨</div>
+            <div class="modal-title">🎨 페이지</div>
             <div class="skin-section-title">🎀 다이어리 꾸미기</div>
             <div class="service-grid">
-                <button class="btn service-btn" onclick="openSkinBasic()"><span class="service-icon">🎨</span>기본스킨<small>다이어리 색</small></button>
-                <button class="btn service-btn" onclick="openStudio()"><span class="service-icon">🎀</span>스킨꾸미기<small>꽃 · 캐릭터 · 아이콘</small></button>
-                <button class="btn service-btn" id="themeBoxBtn" hidden onclick="openThemeBox()"><span class="service-icon">🎁</span>테마 보관함<small>받은 테마 스킨</small></button>
+                <button class="btn service-btn" onclick="openSkinBasic()"><span class="service-icon">🎨</span>기본페이지<small>다이어리 색</small></button>
+                <button class="btn service-btn" onclick="openStudio()"><span class="service-icon">🎀</span>페이지꾸미기<small>꽃 · 캐릭터 · 아이콘</small></button>
+                <button class="btn service-btn" id="themeBoxBtn" hidden onclick="openThemeBox()"><span class="service-icon">🎁</span>테마 보관함<small>받은 테마 페이지</small></button>
             </div>
 
             <div id="seasonSkin" hidden>
@@ -229,7 +229,7 @@
     <!-- 🎀 스킨꾸미기 창 (js/skinstudio.js · 창 밖은 눌려서 다이어리 위에서 꾸밈을 끌 수 있어요) -->
     <div class="modal skin-float" id="stuModal">
         <div class="modal-content stu-win">
-            <div class="modal-title">🎀 스킨꾸미기</div>
+            <div class="modal-title">🎀 페이지꾸미기</div>
             <div class="skin-float-hint">
                 <span>✋ 제목을 끌면 창이 옮겨져요</span>
                 <button class="btn skin-peek-btn" type="button" title="누르고 있는 동안 창이 투명해져요">👀 꾹 눌러 보기</button>
@@ -243,7 +243,7 @@
             <div class="stu-body" id="stuBody"></div>
             <input type="file" id="stuFile" accept="image/*" style="display:none" onchange="stuUpload(event)">
             <div class="sub-modal-btns">
-                <button class="btn" onclick="stuBackToMenu()">← 스킨 메뉴</button>
+                <button class="btn" onclick="stuBackToMenu()">← 페이지 메뉴</button>
                 <button class="btn" onclick="closeStudio()">닫기</button>
             </div>
         </div>
@@ -253,10 +253,10 @@
     <div class="modal" id="themeBoxModal">
         <div class="modal-content">
             <div class="modal-title">🎁 테마 보관함</div>
-            <div class="th-note">구매하거나 보상으로 받은 테마 스킨이 여기에 모여요. 눌러서 바로 적용해요.</div>
+            <div class="th-note">구매하거나 보상으로 받은 테마 페이지가 여기에 모여요. 눌러서 바로 적용해요.</div>
             <div class="th-list" id="themeBoxList"></div>
             <div class="sub-modal-btns">
-                <button class="btn" onclick="backToSkinMenu('themeBoxModal')">← 스킨 메뉴</button>
+                <button class="btn" onclick="backToSkinMenu('themeBoxModal')">← 페이지 메뉴</button>
                 <button class="btn" onclick="closeModal('themeBoxModal')">닫기</button>
             </div>
         </div>
@@ -265,7 +265,7 @@
     <!-- 🎨 기본스킨 모달 (다이어리 스킨 설정) -->
     <div class="modal skin-float" id="skinBasicModal">
         <div class="modal-content skin-compact">
-            <div class="modal-title">🎨 다이어리 스킨 설정</div>
+            <div class="modal-title">🎨 다이어리 페이지 설정</div>
             <div class="skin-float-hint">
                 <span>✋ 제목을 끌면 창이 옮겨져요</span>
                 <button class="btn skin-peek-btn" type="button" title="누르고 있는 동안 창이 투명해져요">👀 꾹 눌러 보기</button>
@@ -274,7 +274,7 @@
                 <span>🎨 지금 전체 배경에 <b id="skinPatternName"></b> 패턴을 쓰고 있어서, 전체 배경색 대신 패턴이 보여요.</span>
                 <button class="btn" onclick="clearBgPattern()">패턴 해제</button>
             </div>
-            <label class="skin-label">스킨 목록 선택:</label>
+            <label class="skin-label">페이지 목록 선택:</label>
             <div class="skin-select-row">
                 <select id="skinSelect" class="btn" onchange="applySkinPreset(this.value)">
                     <option value="pink">🌸 러블리 핑크</option>
@@ -282,12 +282,12 @@
                     <option value="purple">💜 파스텔 퍼플</option>
                     <option value="yellow">⭐ 따뜻한 옐로우</option>
                 </select>
-                <button class="btn skin-del-btn" onclick="deleteSelectedSkin()" title="선택한 내 스킨 삭제">🗑️</button>
+                <button class="btn skin-del-btn" onclick="deleteSelectedSkin()" title="선택한 내 페이지 삭제">🗑️</button>
             </div>
 
             <hr class="skin-hr">
 
-            <div class="modal-title skin-sub-title">🎨 맘대로 커스텀 스킨 (실시간 적용)</div>
+            <div class="modal-title skin-sub-title">🎨 맘대로 커스텀 페이지 (실시간 적용)</div>
             <details class="skin-grp" open>
                 <summary>🎨 기본 색</summary>
                 <div class="color-picker-row"><label>전체 배경색:</label><input type="color" id="customBg" value="#ffe6f0" oninput="previewCustomColor()"></div>
@@ -301,7 +301,7 @@
                 <summary>🔘 하단메뉴</summary>
                 <div class="color-picker-row"><label>테두리 색:</label><input type="color" id="customMenu" value="#ffb6c1" oninput="customOptInput('menu')"></div>
                 <div class="color-picker-row"><label>스티커 버튼 안쪽:</label><input type="color" id="customMenuFill1" value="#fde9a8" oninput="customOptInput('mf1')"></div>
-                <div class="color-picker-row"><label>스킨 버튼 안쪽:</label><input type="color" id="customMenuFill2" value="#fbd3dd" oninput="customOptInput('mf2')"></div>
+                <div class="color-picker-row"><label>페이지 버튼 안쪽:</label><input type="color" id="customMenuFill2" value="#fbd3dd" oninput="customOptInput('mf2')"></div>
                 <div class="color-picker-row"><label>카페 버튼 안쪽:</label><input type="color" id="customMenuFill3" value="#cdebc3" oninput="customOptInput('mf3')"></div>
                 <div class="color-picker-row"><label>설정 버튼 안쪽:</label><input type="color" id="customMenuFill4" value="#dccdf5" oninput="customOptInput('mf4')"></div>
                 <div class="skin-grp-note">안 고르면 버튼마다 다른 파스텔색이에요. 글자색은 저절로 맞춰져요.</div>
@@ -319,12 +319,12 @@
                 <div class="skin-grp-note">모든 창에 같은 색이 적용돼요. 너무 어두우면 일부 글자가 안 보일 수 있어요.</div>
             </details>
 
-            <input type="text" id="customSkinName" placeholder="스킨 이름 입력" maxlength="20" class="btn skin-name-input">
-            <button class="btn skin-save-btn" onclick="saveCustomSkin()">➕ 이 스타일로 스킨 등록하기</button>
+            <input type="text" id="customSkinName" placeholder="페이지 이름 입력" maxlength="20" class="btn skin-name-input">
+            <button class="btn skin-save-btn" onclick="saveCustomSkin()">➕ 이 스타일로 페이지 등록하기</button>
 
             <!-- 📤 카페에 스킨 공유 · 📥 받은 스킨 넣기 -->
             <details class="skin-share">
-                <summary>📤 카페에 스킨 공유 · 📥 받은 스킨 넣기</summary>
+                <summary>📤 카페에 페이지 공유 · 📥 받은 페이지 넣기</summary>
                 <div class="skin-share-body">
                     <div class="skin-share-target" id="skinShareTarget"></div>
                     <label class="skin-share-nick">만든 사람 <input type="text" id="skinNick" class="btn" maxlength="12" placeholder="닉네임"></label>
@@ -332,18 +332,18 @@
                         <button class="btn" id="skinShareSaveBtn" onclick="downloadSkinFile()">💾 파일로 저장</button>
                         <button class="btn" id="skinShareCopyBtn" onclick="copySkinCode()">📋 코드 복사</button>
                     </div>
-                    <p class="skin-share-note">저장한 파일을 <b>말랑달콤 카페</b>에 첨부해 올리면, 확인 후 모든 사용자의 스킨 목록(🌟 모두의 스킨)에 닉네임과 함께 등록될 수 있어요.</p>
+                    <p class="skin-share-note">저장한 파일을 <b>말랑달콤 카페</b>에 첨부해 올리면, 확인 후 모든 사용자의 페이지 목록(🌟 모두의 페이지)에 닉네임과 함께 등록될 수 있어요.</p>
                     <div class="skin-share-btns">
-                        <button class="btn" onclick="document.getElementById('skinFileInput').click()">📥 스킨 파일 넣기</button>
+                        <button class="btn" onclick="document.getElementById('skinFileInput').click()">📥 페이지 파일 넣기</button>
                         <button class="btn" onclick="pasteSkinCode()">📋 코드로 넣기</button>
                     </div>
                     <input type="file" id="skinFileInput" accept=".txt,.json,text/plain,application/json" style="display:none" onchange="importSkinFile(event)">
-                    <p class="skin-share-note">카페에서 받은 스킨 파일(또는 코드)을 넣으면 🎨 내 스킨에 추가돼요.</p>
+                    <p class="skin-share-note">카페에서 받은 페이지 파일(또는 코드)을 넣으면 🎨 내 페이지에 추가돼요.</p>
                 </div>
             </details>
 
             <div class="sub-modal-btns">
-                <button class="btn" onclick="backToSkinMenu('skinBasicModal')">← 스킨 메뉴</button>
+                <button class="btn" onclick="backToSkinMenu('skinBasicModal')">← 페이지 메뉴</button>
                 <button class="btn" onclick="closeModal('skinBasicModal')">닫기</button>
             </div>
         </div>
@@ -397,7 +397,7 @@
             <div class="pat-grid" id="patGrid"></div>
 
             <div class="sub-modal-btns">
-                <button class="btn" onclick="backToSkinMenu('patternModal')">← 스킨 메뉴</button>
+                <button class="btn" onclick="backToSkinMenu('patternModal')">← 페이지 메뉴</button>
                 <button class="btn" onclick="closeModal('patternModal')">닫기</button>
             </div>
         </div>
@@ -494,7 +494,7 @@
             </div>
 
             <div class="sub-modal-btns">
-                <button class="btn" onclick="backToSkinMenuFromMaker()">← 스킨 메뉴</button>
+                <button class="btn" onclick="backToSkinMenuFromMaker()">← 페이지 메뉴</button>
                 <button class="btn" onclick="closeModal('makerModal')">닫기</button>
             </div>
         </div>
@@ -762,72 +762,72 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261006-208"></script>
-    <script src="js/sound.js?v=20261006-208"></script>
-    <script src="js/app.js?v=20261006-208"></script>
-    <script src="js/page.js?v=20261006-208"></script>
-    <script src="js/elements.js?v=20261006-208"></script>
-    <script src="js/tapmenu.js?v=20261006-208"></script>
-    <script src="js/settings.js?v=20261006-208"></script>
-    <script src="js/patterns.js?v=20261006-208"></script>
+    <script src="js/drive.js?v=20261006-209"></script>
+    <script src="js/sound.js?v=20261006-209"></script>
+    <script src="js/app.js?v=20261006-209"></script>
+    <script src="js/page.js?v=20261006-209"></script>
+    <script src="js/elements.js?v=20261006-209"></script>
+    <script src="js/tapmenu.js?v=20261006-209"></script>
+    <script src="js/settings.js?v=20261006-209"></script>
+    <script src="js/patterns.js?v=20261006-209"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261006-208"></script>
-    <script src="js/skins.js?v=20261006-208"></script>
-    <script src="js/pattern-maker.js?v=20261006-208"></script>
-    <script src="js/skinstudio.js?v=20261006-208"></script>
-    <script src="js/theme-skins.js?v=20261006-208"></script>
-    <script src="js/doll-render.js?v=20261006-208"></script>
-    <script src="js/doll-store.js?v=20261006-208"></script>
-    <script src="js/doll-room.js?v=20261006-208"></script>
-    <script src="js/service.js?v=20261006-208"></script>
+    <script src="js/pattern-recipe.js?v=20261006-209"></script>
+    <script src="js/skins.js?v=20261006-209"></script>
+    <script src="js/pattern-maker.js?v=20261006-209"></script>
+    <script src="js/skinstudio.js?v=20261006-209"></script>
+    <script src="js/theme-skins.js?v=20261006-209"></script>
+    <script src="js/doll-render.js?v=20261006-209"></script>
+    <script src="js/doll-store.js?v=20261006-209"></script>
+    <script src="js/doll-room.js?v=20261006-209"></script>
+    <script src="js/service.js?v=20261006-209"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261006-208"></script>
-    <script src="js/presence.js?v=20261006-208"></script>
+    <script src="js/gacha.js?v=20261006-209"></script>
+    <script src="js/presence.js?v=20261006-209"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261006-208"></script>
+    <script src="js/bgm.js?v=20261006-209"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261006-208"></script>
+    <script src="js/fortune.js?v=20261006-209"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261006-208"></script>
-    <script src="js/hof.js?v=20261006-208"></script>
+    <script src="js/arcade.js?v=20261006-209"></script>
+    <script src="js/hof.js?v=20261006-209"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/ritual.js?v=20261006-208"></script>
-    <script src="js/dream.js?v=20261006-208"></script>
+    <script src="js/ritual.js?v=20261006-209"></script>
+    <script src="js/dream.js?v=20261006-209"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261006-208"></script>
-    <script src="js/plant.js?v=20261006-208"></script>
-    <script src="js/capsule-stickers.js?v=20261006-208"></script>
-    <script src="js/attend.js?v=20261006-208"></script>
-    <script src="js/luck.js?v=20261006-208"></script>
-    <script src="js/question-data.js?v=20261006-208"></script>
-    <script src="js/question.js?v=20261006-208"></script>
-    <script src="js/tape.js?v=20261006-208"></script>
-    <script src="js/paper.js?v=20261006-208"></script>
-    <script src="js/draw.js?v=20261006-208"></script>
-    <script src="js/frame.js?v=20261006-208"></script>
-    <script src="js/season-data.js?v=20261006-208"></script>
-    <script src="js/season.js?v=20261006-208"></script>
-    <script src="js/lock.js?v=20261006-208"></script>
-    <script src="js/cycle.js?v=20261006-208"></script>
-    <script src="js/month.js?v=20261006-208"></script>
-    <script src="js/stamp.js?v=20261006-208"></script>
-    <script src="js/search.js?v=20261006-208"></script>
-    <script src="js/dday.js?v=20261006-208"></script>
-    <script src="js/show.js?v=20261006-208"></script>
-    <script src="js/photobooth.js?v=20261006-208"></script>
-    <script src="js/stickermaker.js?v=20261006-208"></script>
-    <script src="js/tapemaker.js?v=20261006-208"></script>
-    <script src="js/namematch.js?v=20261006-208"></script>
-    <script src="js/psytest-data.js?v=20261006-208"></script>
-    <script src="js/psytest.js?v=20261006-208"></script>
-    <script src="js/letter.js?v=20261006-208"></script>
-    <script src="js/install.js?v=20261006-208"></script>
-    <script src="js/piggy.js?v=20261006-208"></script>
-    <script src="js/wall.js?v=20261006-208"></script>
-    <script src="js/arrival.js?v=20261006-208"></script>
+    <script src="js/tojeong.js?v=20261006-209"></script>
+    <script src="js/plant.js?v=20261006-209"></script>
+    <script src="js/capsule-stickers.js?v=20261006-209"></script>
+    <script src="js/attend.js?v=20261006-209"></script>
+    <script src="js/luck.js?v=20261006-209"></script>
+    <script src="js/question-data.js?v=20261006-209"></script>
+    <script src="js/question.js?v=20261006-209"></script>
+    <script src="js/tape.js?v=20261006-209"></script>
+    <script src="js/paper.js?v=20261006-209"></script>
+    <script src="js/draw.js?v=20261006-209"></script>
+    <script src="js/frame.js?v=20261006-209"></script>
+    <script src="js/season-data.js?v=20261006-209"></script>
+    <script src="js/season.js?v=20261006-209"></script>
+    <script src="js/lock.js?v=20261006-209"></script>
+    <script src="js/cycle.js?v=20261006-209"></script>
+    <script src="js/month.js?v=20261006-209"></script>
+    <script src="js/stamp.js?v=20261006-209"></script>
+    <script src="js/search.js?v=20261006-209"></script>
+    <script src="js/dday.js?v=20261006-209"></script>
+    <script src="js/show.js?v=20261006-209"></script>
+    <script src="js/photobooth.js?v=20261006-209"></script>
+    <script src="js/stickermaker.js?v=20261006-209"></script>
+    <script src="js/tapemaker.js?v=20261006-209"></script>
+    <script src="js/namematch.js?v=20261006-209"></script>
+    <script src="js/psytest-data.js?v=20261006-209"></script>
+    <script src="js/psytest.js?v=20261006-209"></script>
+    <script src="js/letter.js?v=20261006-209"></script>
+    <script src="js/install.js?v=20261006-209"></script>
+    <script src="js/piggy.js?v=20261006-209"></script>
+    <script src="js/wall.js?v=20261006-209"></script>
+    <script src="js/arrival.js?v=20261006-209"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>

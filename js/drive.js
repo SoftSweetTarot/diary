@@ -12,7 +12,7 @@
         const ROOT_FOLDER_NAME = '다이어리';                  // 다이어리 루트 폴더 (말랑달콤 폴더 안)
         const ROOT_PATH = [TOP_FOLDER_NAME, ROOT_FOLDER_NAME]; // 드라이브 경로 : 말랑달콤 / 다이어리
         const ROOT_PATH_TEXT = ROOT_PATH.join(' / ');
-        const SETTINGS_FILE_NAME = 'settings.json';           // 스킨·글꼴 등 설정 (말랑달콤 폴더 바로 아래에 1개 : 말랑달콤 / settings.json)
+        const SETTINGS_FILE_NAME = 'settings.json';           // 페이지·글꼴 등 설정 (말랑달콤 폴더 바로 아래에 1개 : 말랑달콤 / settings.json)
         const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤 / 다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
         const DRIVE_SCOPE = USE_APP_DATA_FOLDER
             ? 'https://www.googleapis.com/auth/drive.appdata'

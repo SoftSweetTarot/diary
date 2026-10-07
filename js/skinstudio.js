@@ -1,25 +1,25 @@
 /* 말랑달콤 다이어리 - js/skinstudio.js
-   🎀 스킨꾸미기(스튜디오) + 🎁 테마 보관함
-   - 스킨에는 색 외에 두 가지가 더 담겨요
+   🎀 페이지꾸미기(스튜디오) + 🎁 테마 보관함
+   - 페이지에는 색 외에 두 가지가 더 담겨요
        deco  : 놓아 둔 꾸밈 [{ a:놓는 곳, i:그림, x:가로%, y:세로%, s:크기(px), r:회전(도), f:뒤집기(1), b:뒤로(1) }]
        icons : 바꾼 아이콘 { 자리: 그림 }   (자리 = STU_SLOTS 의 k)
        lay   : 크기·간격 { is:하단 아이콘 크기(px) · gap:하단 버튼 간격(px) · dw:날짜칸 길이(%) · dx:날짜칸 좌우(px) }  (기본값과 같으면 안 담김)
        imgs  : 내 이미지 { 이름: 'data:image/…' }   (그림 'u:이름' 이 가리킴)
    - 그림(i) 모양 : 's:이름' = 기본 제공 SVG(STU_SVG) · 'e:🌸' = 이모지 · 'u:이름' = 내 이미지
    - 놓는 곳(a) : pill 날짜 줄 · paper 종이 · pop 팝업메뉴 · bar 하단메뉴 전체 · b1~b4 하단 버튼 각각
-   - 스킨을 고르면 settings.js setSkinVars → stuApply(skin) 이 불러서 다이어리에 그려요
-   - 테마 스킨(js/theme-skins.js)은 id 'th:이름' · 보관함에 있는 것만 쓸 수 있어요 (diary_themes = 가진 테마 id 목록)
+   - 페이지를 고르면 settings.js setSkinVars → stuApply(skin) 이 불러서 다이어리에 그려요
+   - 테마 페이지(js/theme-skins.js)은 id 'th:이름' · 보관함에 있는 것만 쓸 수 있어요 (diary_themes = 가진 테마 id 목록)
    ※ 불러오는 순서: settings → … → skins → skinstudio → theme-skins */
 
         const STU_MAX_DECO = 60, STU_MAX_IMGS = 8, STU_IMG_PX = 112, STU_IMG_MAX_LEN = 24000;
         const STU_THEMES_KEY = 'diary_themes';
         const STU_ANCHORS = [
             ['pill', '📅 날짜 줄'], ['paper', '📄 종이'], ['pop', '📍 팝업메뉴'], ['bar', '🔘 하단메뉴'],
-            ['b1', '① 스티커 버튼'], ['b2', '② 스킨 버튼'], ['b3', '③ 카페 버튼'], ['b4', '④ 설정 버튼']
+            ['b1', '① 스티커 버튼'], ['b2', '② 페이지 버튼'], ['b3', '③ 카페 버튼'], ['b4', '④ 설정 버튼']
         ];
         /* 바꿀 수 있는 아이콘 자리 */
         const STU_SLOTS = [
-            { k: 'b1', t: '하단 · 스티커' }, { k: 'b2', t: '하단 · 스킨' }, { k: 'b3', t: '하단 · 카페' }, { k: 'b4', t: '하단 · 설정' },
+            { k: 'b1', t: '하단 · 스티커' }, { k: 'b2', t: '하단 · 페이지' }, { k: 'b3', t: '하단 · 카페' }, { k: 'b4', t: '하단 · 설정' },
             { k: 'p_sticker', t: '팝업 · 스티커' }, { k: 'p_write', t: '팝업 · 메모' }, { k: 'p_pen', t: '팝업 · 필통' }, { k: 'p_image', t: '팝업 · 이미지' },
             { k: 'p_lib', t: '팝업 · 그림모음' }, { k: 'p_save', t: '팝업 · 저장' }, { k: 'p_order', t: '팝업 · 순서' }, { k: 'p_trash', t: '팝업 · 삭제' },
             { k: 'h_prev', t: '날짜 · 이전 <' }, { k: 'h_next', t: '날짜 · 다음 >' }, { k: 'h_cal', t: '날짜 · 달력' }, { k: 'h_search', t: '날짜 · 검색' }
@@ -240,7 +240,7 @@
             const box = document.getElementById('themeBoxList');
             if (!box) return;
             const list = stuThemeList(), now = typeof currentSkinId !== 'undefined' ? currentSkinId : '';
-            if (!list.length) { box.innerHTML = '<div class="stu-empty">아직 테마 스킨이 없어요.</div>'; return; }
+            if (!list.length) { box.innerHTML = '<div class="stu-empty">아직 테마 페이지가 없어요.</div>'; return; }
             box.innerHTML = '';
             list.forEach(t => {
                 const own = stuHasTheme(t.id), on = now === 'th:' + t.id;
@@ -264,7 +264,7 @@
         let stuTab = 'deco', stuCat = 0;
 
         function openStudio() {
-            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('다이어리 표지를 열어 둔 상태에서<br>스킨꾸미기를 할 수 있어요.'); return; }
+            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('다이어리 표지를 열어 둔 상태에서<br>페이지꾸미기를 할 수 있어요.'); return; }
             closeModal('skinModal');
             document.body.classList.add('stu-edit');
             stuShowFakePop();
@@ -389,7 +389,7 @@
         function stuUpload(ev) {
             const f = ev.target.files && ev.target.files[0]; ev.target.value = '';
             if (!f || !/^image\//.test(f.type)) return;
-            if (Object.keys(stuCur.imgs).length >= STU_MAX_IMGS) { showMsg(`내 이미지는 스킨 하나에 ${STU_MAX_IMGS}개까지예요.<br>안 쓰는 이미지를 지우고 다시 넣어 주세요.`); return; }
+            if (Object.keys(stuCur.imgs).length >= STU_MAX_IMGS) { showMsg(`내 이미지는 페이지 하나에 ${STU_MAX_IMGS}개까지예요.<br>안 쓰는 이미지를 지우고 다시 넣어 주세요.`); return; }
             const url = URL.createObjectURL(f), im = new Image();
             im.onload = () => {
                 const sc = Math.min(1, STU_IMG_PX / Math.max(im.width, im.height)), cv = document.createElement('canvas');
@@ -447,24 +447,24 @@
         }
 
         function stuBuildSave(w) {
-            w.appendChild(stuEl('div', 'stu-hint', '지금 다이어리의 <b>색 + 꾸밈 + 아이콘</b>이 모두 내 스킨으로 저장돼요.<br>색은 🎨 기본스킨 창에서 고쳐요.'));
+            w.appendChild(stuEl('div', 'stu-hint', '지금 다이어리의 <b>색 + 꾸밈 + 아이콘</b>이 모두 내 페이지로 저장돼요.<br>색은 🎨 기본페이지 창에서 고쳐요.'));
             w.appendChild(stuEl('div', 'stu-sum', `꾸밈 ${stuCur.deco.length}개 · 바꾼 아이콘 ${Object.keys(stuCur.icons).length}개 · 내 이미지 ${Object.keys(stuCur.imgs).length}개`));
-            const inp = stuEl('input', 'btn skin-name-input'); inp.id = 'stuName'; inp.maxLength = 20; inp.placeholder = '스킨 이름 입력';
+            const inp = stuEl('input', 'btn skin-name-input'); inp.id = 'stuName'; inp.maxLength = 20; inp.placeholder = '페이지 이름 입력';
             w.appendChild(inp);
-            const sv = stuEl('button', 'btn skin-save-btn', '➕ 내 스킨으로 등록하기'); sv.type = 'button'; sv.onclick = stuSave; w.appendChild(sv);
-            const cl = stuEl('button', 'btn stu-clear', '🎨 색 바꾸러 가기 (기본스킨)'); cl.type = 'button'; cl.onclick = () => { closeStudio(); openSkinBasic(); }; w.appendChild(cl);
+            const sv = stuEl('button', 'btn skin-save-btn', '➕ 내 페이지로 등록하기'); sv.type = 'button'; sv.onclick = stuSave; w.appendChild(sv);
+            const cl = stuEl('button', 'btn stu-clear', '🎨 색 바꾸러 가기 (기본페이지)'); cl.type = 'button'; cl.onclick = () => { closeStudio(); openSkinBasic(); }; w.appendChild(cl);
         }
         async function stuSave() {
             const name = cleanSkinName(document.getElementById('stuName').value);
-            if (!name) { showMsg('스킨 이름을 입력해주세요!'); return; }
+            if (!name) { showMsg('페이지 이름을 입력해주세요!'); return; }
             if (hasOwn(skinPresets, name) || name.startsWith('cs:') || name.startsWith('th:')) { showMsg('그 이름은 쓸 수 없어요.<br>다른 이름을 적어 주세요.'); return; }
-            if (hasOwn(customSkins, name) && !(await showMsg(`'${name}' 스킨이 이미 있어요.<br>지금 모양으로 바꿀까요?`, true))) return;
+            if (hasOwn(customSkins, name) && !(await showMsg(`'${name}' 페이지가 이미 있어요.<br>지금 모양으로 바꿀까요?`, true))) return;
             const extra = stuExtra();
             customSkins[name] = Object.assign(skinFromPickers(), extra);
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             applySkinPreset(name);
             closeStudio();
-            showMsg(`'${name}' 스킨이 저장되었어요!<br><span style="font-size:12px;color:#777;">🎨 스킨 목록의 '내 스킨'에서 언제든 고를 수 있어요.</span>`);
+            showMsg(`'${name}' 페이지가 저장되었어요!<br><span style="font-size:12px;color:#777;">🎨 페이지 목록의 '내 페이지'에서 언제든 고를 수 있어요.</span>`);
         }
 
         /* ---------- 다이어리 위에서 끌기 ---------- */

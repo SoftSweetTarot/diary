@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/settings.js
-   PC 백업/불러오기 · PNG 저장 · 용량 확인 · 스킨 · 자동 저장 주기 · 창 열기/닫기
+   PC 백업/불러오기 · PNG 저장 · 용량 확인 · 페이지 · 자동 저장 주기 · 창 열기/닫기
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → service (index.html 참고) */
         async function exportJSON() {
             saveData(false);
@@ -191,23 +191,23 @@
         }
 
         /* =====================================================================
-           🎨 스킨 (다이어리 색 5개 : 전체 배경 · 겉표지 · 속지 · 테두리 · 포인트)
-           - 스킨 목록 : 기본 스킨 4종 + 🌟 모두의 스킨(카페에서 받아 등록, js/community-skins.js) + 🎨 내 스킨
-           - 내 스킨     : 'diary_custom_skins' → settings.json
-           - 지금 고른 스킨 : 'diary_skin' → settings.json  (다음에 열어도 · 다른 기기에서도 그대로)
+           🎨 페이지 (다이어리 색 5개 : 전체 배경 · 겉표지 · 속지 · 테두리 · 포인트)
+           - 페이지 목록 : 기본 페이지 4종 + 🌟 모두의 페이지(카페에서 받아 등록, js/community-skins.js) + 🎨 내 페이지
+           - 내 페이지     : 'diary_custom_skins' → settings.json
+           - 지금 고른 페이지 : 'diary_skin' → settings.json  (다음에 열어도 · 다른 기기에서도 그대로)
                예) {"id":"mint"} · {"id":"봄날","c":{색 5개}} · {"id":"cs:3","c":{색 5개}}
-               모두의 스킨·내 스킨은 색도 같이 적어 둬서, 목록에서 빠지거나 지워도 쓰던 색이 유지돼요.
+               모두의 페이지·내 페이지는 색도 같이 적어 둬서, 목록에서 빠지거나 지워도 쓰던 색이 유지돼요.
            ===================================================================== */
         const SKIN_KEY = 'diary_skin';
         const SKIN_PRESET_NAMES = { pink: '🌸 러블리 핑크', mint: '🌿 맑은 민트', purple: '💜 파스텔 퍼플', yellow: '⭐ 따뜻한 옐로우' };
         const SKIN_NAME_MAX = 20;
         let currentSkinId = 'pink';
-        let currentSkinInline = null;      // 목록에 없는 스킨을 쓰는 중일 때 그 색 (예: 내려간 모두의 스킨)
+        let currentSkinInline = null;      // 목록에 없는 페이지를 쓰는 중일 때 그 색 (예: 내려간 모두의 페이지)
 
         /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴)
            - 선물은 두 가지 : '전체'(저금 확인 때 · 그 종류 전부가 열려요) 와 '디자인 하나하나'(🎁 아이템 주기 · 캡슐 스티커처럼 디자인마다 따로 기간)
              한 디자인의 끝나는 날 = 전체와 그 디자인 중 더 늦은 날
-           - 사람들이 만들어 나눈 스킨 · 패턴(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
+           - 사람들이 만들어 나눈 페이지 · 패턴(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
            - 화면에서 class="tape-only" 는 🎀 이 하나라도 열린 사람에게만, class="pat-only" 는 🍬 이 하나라도 열린 사람에게만 보여요 (css : body.tape-on · body.pat-on)
            - 이미 다이어리에 붙인 테이프 · 깔아 둔 패턴은 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
            - 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setGift(전체🎀, 전체🍬, {테이프id: 날}, {패턴id: 날}) (js/presence.js)
@@ -251,7 +251,7 @@
         function findSkin(id, inline) {
             if (typeof id !== 'string' || !id) return null;
             if (hasOwn(skinPresets, id)) return { skin: skinPresets[id], kind: 'preset', name: SKIN_PRESET_NAMES[id] || id };
-            if (id.startsWith('th:')) {                                   // 🎁 테마 스킨 (보관함에 있는 것만 · js/skinstudio.js)
+            if (id.startsWith('th:')) {                                   // 🎁 테마 페이지 (보관함에 있는 것만 · js/skinstudio.js)
                 const th = typeof themeSkinOf === 'function' ? themeSkinOf(id.slice(3)) : null;
                 return th ? { skin: th.skin, kind: 'th', name: th.name } : null;
             }
@@ -262,7 +262,7 @@
                 return { skin: customSkins[id], kind: 'my', name: id };
             }
             const c = inline && typeof sanitizeSkin === 'function' ? sanitizeSkin(inline) : null;
-            return c ? { skin: c, kind: 'inline', name: '지금 쓰는 스킨' } : null;
+            return c ? { skin: c, kind: 'inline', name: '지금 쓰는 페이지' } : null;
         }
 
         function setSkinVars(skin) {
@@ -296,7 +296,7 @@
             const hit = findSkin(id, opts.inline || (id === currentSkinId ? currentSkinInline : null));
             const sel = document.getElementById('skinSelect');
             if (!hit) { if (sel) sel.value = currentSkinId; return false; }
-            if (opts.save !== false && typeof seasonStop === 'function') seasonStop();   // 다른 스킨을 고르면 계절 테마 끄기 (js/season.js)
+            if (opts.save !== false && typeof seasonStop === 'function') seasonStop();   // 다른 페이지를 고르면 계절 테마 끄기 (js/season.js)
             setSkinVars(hit.skin);
             syncSkinPickers(hit.skin);
             currentSkinId = id;
@@ -333,13 +333,13 @@
                 rows.forEach(([v, t]) => g.appendChild(new Option(t, v)));
                 sel.appendChild(g);
             };
-            group('기본 스킨', Object.keys(skinPresets).map(k => [k, SKIN_PRESET_NAMES[k] || k]));
-            group('🎁 테마 스킨 (보관함)', (typeof stuThemeList === 'function' ? stuThemeList() : []).filter(t => stuHasTheme(t.id)).map(t => ['th:' + t.id, '🎁 ' + t.name]));
-            group('🌟 모두의 스킨 (카페에서 등록)', skinCommunity().map(s =>
+            group('기본 페이지', Object.keys(skinPresets).map(k => [k, SKIN_PRESET_NAMES[k] || k]));
+            group('🎁 테마 페이지 (보관함)', (typeof stuThemeList === 'function' ? stuThemeList() : []).filter(t => stuHasTheme(t.id)).map(t => ['th:' + t.id, '🎁 ' + t.name]));
+            group('🌟 모두의 페이지 (카페에서 등록)', skinCommunity().map(s =>
                 [s.id, `${s.name}${s.by ? ' · by ' + s.by : ''}`]));
-            group('🎨 내 스킨', Object.keys(customSkins).map(n => [n, '🎨 ' + n]));
+            group('🎨 내 페이지', Object.keys(customSkins).map(n => [n, '🎨 ' + n]));
             if (!Array.from(sel.options).some(o => o.value === currentSkinId) && currentSkinInline) {
-                group('지금 쓰는 스킨', [[currentSkinId, '🎨 지금 쓰는 스킨 (목록에서 내려감)']]);
+                group('지금 쓰는 페이지', [[currentSkinId, '🎨 지금 쓰는 페이지 (목록에서 내려감)']]);
             }
             sel.value = currentSkinId;
             if (sel.value !== currentSkinId) sel.value = 'pink';
@@ -420,32 +420,32 @@
 
         async function saveCustomSkin() {
             const nameInput = cleanSkinName(document.getElementById('customSkinName').value);
-            if (!nameInput) { showMsg('스킨 이름을 입력해주세요!'); return; }
+            if (!nameInput) { showMsg('페이지 이름을 입력해주세요!'); return; }
             if (hasOwn(skinPresets, nameInput) || nameInput.startsWith('cs:')) { showMsg('그 이름은 쓸 수 없어요.<br>다른 이름을 적어 주세요.'); return; }
-            if (hasOwn(customSkins, nameInput) && !(await showMsg(`'${nameInput}' 스킨이 이미 있어요.<br>지금 색으로 바꿀까요?`, true))) return;
+            if (hasOwn(customSkins, nameInput) && !(await showMsg(`'${nameInput}' 페이지가 이미 있어요.<br>지금 색으로 바꿀까요?`, true))) return;
 
             const newSkin = skinFromPickers();
-            if (typeof stuExtra === 'function') Object.assign(newSkin, stuExtra());   // 🎀 스킨 만들기에서 놓은 꾸밈 · 아이콘도 함께
+            if (typeof stuExtra === 'function') Object.assign(newSkin, stuExtra());   // 🎀 페이지 만들기에서 놓은 꾸밈 · 아이콘도 함께
 
             customSkins[nameInput] = newSkin;
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             applySkinPreset(nameInput);
             document.getElementById('customSkinName').value = '';
-            showMsg(`'${nameInput}' 스킨이 새로 추가되었습니다!<br><span style="font-size:12px;color:#777;">아래 📤 카페에 스킨 공유하기에서 파일로 저장해 카페에 올릴 수 있어요.</span>`);
+            showMsg(`'${nameInput}' 페이지가 새로 추가되었습니다!<br><span style="font-size:12px;color:#777;">아래 📤 카페에 페이지 공유하기에서 파일로 저장해 카페에 올릴 수 있어요.</span>`);
         }
 
         async function deleteSelectedSkin() {
             const selectedVal = document.getElementById('skinSelect').value;
-            if (hasOwn(skinPresets, selectedVal)) { showMsg('기본 제공 프리셋 스킨은 삭제할 수 없습니다!'); return; }
-            if (!hasOwn(customSkins, selectedVal)) { showMsg('🌟 모두의 스킨은 지울 수 없어요.<br>다른 스킨을 고르면 돼요.'); return; }
+            if (hasOwn(skinPresets, selectedVal)) { showMsg('기본 제공 프리셋 페이지는 삭제할 수 없습니다!'); return; }
+            if (!hasOwn(customSkins, selectedVal)) { showMsg('🌟 모두의 페이지는 지울 수 없어요.<br>다른 페이지를 고르면 돼요.'); return; }
 
-            const confirmDelete = await showMsg(`'${selectedVal}' 커스텀 스킨을 정말 삭제하시겠습니까?`, true);
+            const confirmDelete = await showMsg(`'${selectedVal}' 커스텀 페이지를 정말 삭제하시겠습니까?`, true);
             if (confirmDelete) {
                 delete customSkins[selectedVal];
                 store.setItem('diary_custom_skins', JSON.stringify(customSkins));
                 if (currentSkinId === selectedVal) applySkinPreset('pink');
                 else renderSkinSelect();
-                showMsg('스킨이 삭제되었습니다.');
+                showMsg('페이지가 삭제되었습니다.');
             }
         }
 
@@ -456,7 +456,7 @@
                 try {
                     const obj = JSON.parse(saved);
                     if (obj && typeof obj === 'object') Object.keys(obj).forEach(n => { if (obj[n] && typeof obj[n] === 'object') customSkins[n] = obj[n]; });
-                } catch (e) { console.warn('내 스킨을 읽지 못했어요', e); }
+                } catch (e) { console.warn('내 페이지를 읽지 못했어요', e); }
             }
             restoreSkin();
             if (typeof loadBgPattern === 'function') loadBgPattern();   // 전체 배경 패턴 (js/skins.js)
@@ -470,8 +470,8 @@
             if (!info) return;
             const mine = hasOwn(customSkins, currentSkinId);
             info.innerHTML = mine
-                ? `공유할 스킨 : <b></b>`
-                : '<span style="color:#e57373;">🎨 내 스킨을 먼저 골라 주세요.</span> (내가 만든 스킨만 올릴 수 있어요)';
+                ? `공유할 페이지 : <b></b>`
+                : '<span style="color:#e57373;">🎨 내 페이지를 먼저 골라 주세요.</span> (내가 만든 페이지만 올릴 수 있어요)';
             if (mine) info.querySelector('b').textContent = '🎨 ' + currentSkinId;
             ['skinShareSaveBtn', 'skinShareCopyBtn'].forEach(id => { const b = document.getElementById(id); if (b) b.disabled = !mine; });
             const nick = document.getElementById('skinNick');
@@ -481,7 +481,7 @@
         function skinShareText() {
             if (!hasOwn(customSkins, currentSkinId)) return null;
             const c = sanitizeSkin(customSkins[currentSkinId]);
-            if (!c) { showMsg('⚠ 이 스킨의 색을 읽을 수 없어요.'); return null; }
+            if (!c) { showMsg('⚠ 이 페이지의 색을 읽을 수 없어요.'); return null; }
             const by = typeof patternNick === 'function' ? patternNick('skinNick') : cleanSkinName(document.getElementById('skinNick').value).slice(0, 12);
             return { by, text: JSON.stringify({ malang_skin: 1, name: currentSkinId, by, skin: c }) };
         }
@@ -489,14 +489,14 @@
         function downloadSkinFile() {
             const got = skinShareText();
             if (!got) return;
-            if (!got.by) { showMsg('💾 "만든 사람(닉네임)"을 적어 주세요.<br>등록되면 스킨 이름 옆에 표시돼요.'); return; }
+            if (!got.by) { showMsg('💾 "만든 사람(닉네임)"을 적어 주세요.<br>등록되면 페이지 이름 옆에 표시돼요.'); return; }
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([got.text], { type: 'text/plain;charset=utf-8' }));
             const d = new Date(), z = n => String(n).padStart(2, '0');
             a.download = `malang_skin_${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.malang.txt`;
             document.body.appendChild(a); a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            showMsg('💾 스킨 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 스킨 목록에 나타나요 💕');
+            showMsg('💾 페이지 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 페이지 목록에 나타나요 💕');
         }
 
         function copySkinCode() {
@@ -521,28 +521,28 @@
             try {
                 const o = JSON.parse(m[0]);
                 const c = sanitizeSkin(o && o.skin ? o.skin : o);
-                return c ? { name: cleanSkinName(o.name) || '받은 스킨', by: cleanSkinName(o.by).slice(0, 12), skin: c } : null;
+                return c ? { name: cleanSkinName(o.name) || '받은 페이지', by: cleanSkinName(o.by).slice(0, 12), skin: c } : null;
             } catch (e) { return null; }
         }
         function addReceivedSkin(p) {
-            if (!p) { showMsg('⚠ 스킨 파일이 아니거나 깨진 파일이에요.'); return; }
+            if (!p) { showMsg('⚠ 페이지 파일이 아니거나 깨진 파일이에요.'); return; }
             const same = Object.keys(customSkins).find(n => JSON.stringify(sanitizeSkin(customSkins[n])) === JSON.stringify(p.skin));
             if (same) { applySkinPreset(same); return; }
             const name = freeSkinName(p.name);
             customSkins[name] = p.skin;
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             applySkinPreset(name);
-            showMsg(`📥 '${name}' 스킨을 내 스킨에 넣고 적용했어요!` + (p.by ? `<br><span style="font-size:12px;color:#777;">만든 사람 : ${p.by}</span>` : ''));
+            showMsg(`📥 '${name}' 페이지를 내 페이지에 넣고 적용했어요!` + (p.by ? `<br><span style="font-size:12px;color:#777;">만든 사람 : ${p.by}</span>` : ''));
         }
         function importSkinFile(e) {
             const f = e.target.files && e.target.files[0];
             e.target.value = '';
             if (!f) return;
-            if (f.size > 400000) { showMsg('⚠ 스킨 파일이 아니에요. (파일이 너무 커요)'); return; }
+            if (f.size > 400000) { showMsg('⚠ 페이지 파일이 아니에요. (파일이 너무 커요)'); return; }
             f.text().then(t => addReceivedSkin(parseSkinText(t)));
         }
         function pasteSkinCode() {
-            const t = prompt('카페에서 복사한 스킨 코드를 붙여 넣어 주세요.');
+            const t = prompt('카페에서 복사한 페이지 코드를 붙여 넣어 주세요.');
             if (t) addReceivedSkin(parseSkinText(t));
         }
 
