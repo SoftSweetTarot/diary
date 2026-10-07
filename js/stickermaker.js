@@ -9,10 +9,10 @@
 
         const SM_FILE = '내스티커.json', SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260;
         const SM_SHAPES = [['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
-        const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
+        const SM_FONTS = [["'Jua', sans-serif", '주아'], ["'Gaegu', cursive", '개구'], ["'Nanum Pen Script', cursive", '손글씨'], ["'Do Hyeon', sans-serif", '도현'], ["'Single Day', cursive", '싱글데이']];
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
-            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '' };
+            text: '', font: SM_FONTS[0][0], color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '' };
         const smq = id => document.getElementById(id);
         const smSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
 
@@ -63,7 +63,7 @@
                   </div>
                   <div id="smTextOpts" hidden>
                     <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()">
-                    <div class="smk-chips smk-fonts" id="smFonts"></div>
+                    <div class="smk-chips" id="smFonts">${SM_FONTS.map(f => `<button type="button" data-f="${f[0]}" style="font-family:${f[0]}" onclick="smSetFont(this.dataset.f)">${f[1]}</button>`).join('')}</div>
                     <div class="smk-colors" id="smColors">${SM_COLORS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" onclick="smSetColor('${c}')" aria-label="색"></button>`).join('')}</div>
                   </div>
                   <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
@@ -72,21 +72,6 @@
                 </section>
               </div>`;
             document.body.appendChild(el);
-            /* 📱 글을 쓰는 중에 버튼을 누르면 입력칸이 포커스를 잃으면서 키보드가 접히고 화면이 움직여서(아이패드) 누른 버튼 밑의 버튼이 눌렸어요
-               → 버튼을 눌러도 입력칸이 포커스를 그대로 가지게 해서 화면이 안 움직이게 해요 (눌림 자체는 그대로 동작) */
-            el.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('button')) e.preventDefault(); });
-            /* 📱 손가락으로 누르면 '누르기 시작한 버튼'을 직접 눌러 줘요 (키보드가 접히며 화면이 움직여도 옆 · 아래 버튼이 눌리지 않게)
-               브라우저가 따로 보내는 터치 클릭은 막고, 아래 button.click() 이 보내는 클릭만 통과시켜요 */
-            let tdown = null, tlast = 0;
-            el.addEventListener('pointerdown', e => { const b = e.pointerType !== 'mouse' && e.target.closest && e.target.closest('button'); tdown = b ? { b, x: e.clientX, y: e.clientY } : null; });
-            el.addEventListener('pointerup', e => {
-                const d = tdown; tdown = null; if (!d || e.pointerType === 'mouse') return;
-                if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10) return;          // 끌었으면(스크롤) 누른 게 아니에요
-                tlast = Date.now(); d.b.click();
-            });
-            el.addEventListener('click', e => {
-                if (e.isTrusted && e.detail > 0 && Date.now() - tlast < 800 && e.target.closest && e.target.closest('button')) { e.stopPropagation(); e.preventDefault(); }
-            }, true);
             const cv = smq('smCanvas');
             cv.addEventListener('pointerdown', smDown); cv.addEventListener('pointermove', smMove);
             cv.addEventListener('pointerup', smUp); cv.addEventListener('pointercancel', smUp);
@@ -185,25 +170,11 @@
         function smStartText() {
             smS.mode = 'text'; smq('smPhotoOpts').hidden = true; smq('smTextOpts').hidden = false;
             smq('smText').value = smS.text; smq('smHint').textContent = '글자를 쓰고 글꼴 · 색을 골라요';
-            smFillFonts();
             smShow(); smSetFont(smS.font); smSetColor(smS.color);
+            if (document.fonts && document.fonts.load) SM_FONTS.forEach(f => document.fonts.load(`40px ${f[0]}`).then(() => smDraw()).catch(() => {}));
             setTimeout(() => smq('smText').focus(), 50);
         }
-        /* 글꼴 후보 : 설정창 글꼴 목록(fontList · js/app.js) 중 웹폰트 전부 (기기마다 다른 (Local) · (Apple) 글꼴은 빼요) */
-        function smFillFonts() {
-            const L = fontList.filter(f => /\[/.test(f.name)), box = smq('smFonts'); if (!box) return;
-            box.innerHTML = '';
-            L.forEach(f => {
-                const b = document.createElement('button');
-                b.type = 'button'; b.dataset.f = f.css; b.style.fontFamily = f.css; b.textContent = f.name.replace(/\s*\[.*\]\s*/, '');
-                b.onclick = () => smSetFont(f.css); box.appendChild(b);
-            });
-        }
-        function smSetFont(f) {
-            smS.font = f; document.querySelectorAll('#smFonts button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
-            smDraw();
-            if (document.fonts && document.fonts.load) document.fonts.load(`40px ${f}`).then(() => { if (smS.font === f) smDraw(); }).catch(() => {});   // 웹폰트가 늦게 오면 다시 그림
-        }
+        function smSetFont(f) { smS.font = f; document.querySelectorAll('#smFonts button').forEach(b => b.classList.toggle('on', b.dataset.f === f)); smDraw(); }
         function smSetColor(c) { smS.color = c; document.querySelectorAll('#smColors button').forEach(b => b.classList.toggle('on', b.dataset.c === c)); smDraw(); }
 
         /* ---------- 완성 ---------- */

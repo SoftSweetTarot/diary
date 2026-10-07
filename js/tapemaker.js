@@ -152,7 +152,7 @@
         }
         function tpmBindPad() {
             const pad = tpmq('tpmPad'); let last = null;
-            const pt = e => { const r = pad.getBoundingClientRect(); return [(e.clientX - r.left - pad.clientLeft) * TPM_PAD / pad.clientWidth, (e.clientY - r.top - pad.clientTop) * TPM_PAD / pad.clientHeight]; };   // 점선 테두리 안쪽 기준
+            const pt = e => { const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * TPM_PAD / r.width, (e.clientY - r.top) * TPM_PAD / r.height]; };
             pad.addEventListener('pointerdown', e => {
                 e.preventDefault(); pad.setPointerCapture(e.pointerId);
                 tpmS.undo.push(tpmCtx().getImageData(0, 0, TPM_PAD, TPM_PAD)); if (tpmS.undo.length > 20) tpmS.undo.shift();
