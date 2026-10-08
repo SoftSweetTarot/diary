@@ -73,7 +73,7 @@
             S.HOLD = { cx: PR.x + PR.w / 2, cy: PR.y + PR.h * .46 };
             const m = Math.max(1, ...S.assets.map(a => Math.max(a.w, a.h)));
             S.SL = Math.max(.24, Math.min(.6, Math.min(PR.w, PR.h) * .24 / m));
-            S.SH = Math.min(1.25, PR.w * .66 / m, PR.h * .5 / m);
+            S.SH = Math.max(S.SL * 1.25, Math.min(1, PR.w * .44 / m, PR.h * .3 / m));   // 집으면 살짝만 커져요 (벗기다 손가락이 화면 끝에 닿지 않게)
             S.SP = Math.min(1, Math.min(r.width, S.W) * .32 / m);
             for (const q of [S.BIG, S.SMALL]) { q.x += S.mv.x; q.y += S.mv.y; pcbClampR(q); }
         }
@@ -119,7 +119,7 @@
             S.pieces = []; S.fallers = []; S.drag = null; S.closing = 0; S.used = new Set(); S.mv = { x: 0, y: 0 }; S.opened = !!o.opened; S.onOpen = o.onOpen || null; S.on = true;
             pcbLayout();
             const n = S.assets.length;
-            S.bag = { state: S.opened ? 'open' : 'closed', tear: 0, wig: 0, move: null, strip: null, busy: false,
+            S.bag = { state: S.opened ? 'open' : 'closed', tear: 0, dir: 1, wig: 0, move: null, strip: null, busy: false,
                 preview: S.assets.map((a, k) => ({ k, u: .2 + Math.random() * .6, v: .42 + Math.random() * .42, rot: (Math.random() - .5) * 1.2 })) };
             pcbq('pcbRoom').classList.add('show'); document.body.classList.add('fc-lock');
             S.hint = '';
@@ -184,7 +184,9 @@
                 ctx.font = `700 ${Math.round(16 * k)}px ${FONT}`; ctx.fillText('말랑 조각스티커', r.x + r.w / 2, ly + lh * .5);
                 ctx.font = `${Math.round(12 * k)}px ${FONT}`; ctx.fillText('내가 만든 조각 · ' + S.assets.length + 'pcs', r.x + r.w / 2, ly + lh * .88); ctx.textAlign = 'left';
             }
-            if (!open) {                                                         // 뜯는 띠 (점선 위쪽)
+            if (!open) {                                                         // 뜯는 띠 (점선 위쪽) · 오른쪽부터 뜯으면 거울처럼 뒤집어 그려요
+                const flip = b.tear > 0 && b.dir < 0;
+                if (flip) { ctx.save(); ctx.translate(r.x + r.w / 2, 0); ctx.scale(-1, 1); ctx.translate(-r.x - r.w / 2, 0); }
                 const tx = r.x + r.w * b.tear;
                 ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(170,130,145,.7)'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(tx, cut); ctx.lineTo(r.x + r.w, cut); ctx.stroke(); ctx.setLineDash([]);
                 ctx.fillStyle = 'rgba(243,223,230,.95)'; for (const x of [r.x, r.x + r.w]) { ctx.beginPath(); ctx.moveTo(x, cut - 5); ctx.lineTo(x + (x === r.x ? 6 : -6), cut); ctx.lineTo(x, cut + 5); ctx.fill(); }
@@ -194,12 +196,13 @@
                     ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(r.x, r.y, r.w, cut - r.y); ctx.strokeStyle = BC; ctx.strokeRect(r.x, r.y, r.w, cut - r.y); ctx.restore();
                     ctx.strokeStyle = 'rgba(170,130,145,.8)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(r.x, cut);
                     for (let x = r.x, i = 0; x < tx; x += 5, i++) ctx.lineTo(x, cut + (i % 2 ? 2 : -1)); ctx.stroke();
-                } else { ctx.fillStyle = '#b98a9a'; ctx.font = `12px ${FONT}`; ctx.fillText('◀ 여기를 쭉 뜯어요', r.x + r.w * .3, cut - 5); }
+                } else { ctx.fillStyle = '#b98a9a'; ctx.font = `12px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('◀ 여기를 쭉 뜯어요 ▶', r.x + r.w / 2, cut - 5); ctx.textAlign = 'left'; }
+                if (flip) ctx.restore();
             }
             ctx.restore();
             if (b.strip) {                                                       // 날아가는 띠
                 const q = (t - b.strip.t0) / 700;
-                if (q < 1) { const s = b.strip; ctx.save(); ctx.globalAlpha = 1 - q; ctx.translate(s.x + s.w / 2 + q * 50, s.y - q * 40 + q * q * 160); ctx.rotate(-.4 - q * 1.2);
+                if (q < 1) { const s = b.strip; ctx.save(); ctx.globalAlpha = 1 - q; ctx.translate(s.x + s.w / 2 + q * 50 * b.dir, s.y - q * 40 + q * q * 160); ctx.rotate((-.4 - q * 1.2) * b.dir);
                     ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(-s.w / 2, -s.h / 2, s.w, s.h); ctx.strokeStyle = BC; ctx.strokeRect(-s.w / 2, -s.h / 2, s.w, s.h); ctx.restore(); }
                 else b.strip = null;
             }
@@ -327,7 +330,10 @@
             const P = [e.clientX, e.clientY], t = pcbNow();
             if (d.mode === 'tear') {
                 const sp = pcbDist(P, d.last) / Math.max(1, t - d.lt); d.lt = t;
-                if (Math.abs(P[1] - (S.BIG.y + S.BIG.h * .08)) < 90) { S.bag.tear = Math.min(1, S.bag.tear + Math.abs(P[0] - d.lastX) / (S.BIG.w * .85)); pcbNoise(Math.min(.4, sp * .35)); }
+                const b = S.bag, dx = P[0] - d.lastX;
+                if (!b.tear && Math.abs(dx) < 3) return;                         // 처음 민 쪽이 뜯는 방향 (왼→오 · 오→왼 다 돼요)
+                if (!b.tear) b.dir = dx > 0 ? 1 : -1;
+                if (Math.abs(P[1] - (S.BIG.y + S.BIG.h * .08)) < 90 && dx * b.dir > 0) { b.tear = Math.min(1, b.tear + Math.abs(dx) / (S.BIG.w * .85)); pcbNoise(Math.min(.4, sp * .35)); }
                 d.lastX = P[0]; d.last = P; if (S.bag.tear >= 1) pcbOpen(); return;
             }
             if (d.mode === 'bag') {
