@@ -118,6 +118,9 @@
             touch-action: none; user-select: none; -webkit-touch-callout: none;
         }
         .element-box.selected { border-color: #ff4757; }
+        /* 🪶 끌어 옮기는 동안 은은한 그림자 (js/elements.js makeTransformable · 액자는 액자째로) */
+        .element-box:not([class*="fr-"]) > :not(.handle):not(.rot-zone), .element-box[class*="fr-"] { transition: filter .16s ease-out; }
+        .element-box.lifting:not([class*="fr-"]) > :not(.handle):not(.rot-zone), .element-box.lifting[class*="fr-"] { filter: drop-shadow(3px 7px 6px rgba(120, 70, 90, .28)); }
         .element-box img { width: 100%; height: 100%; pointer-events: none; display: block; }
         .element-box textarea {
             background: transparent; border: none; resize: none; outline: none;

@@ -316,8 +316,22 @@
                 el.appendChild(stretchHandle);
             }
 
+            /* 🪶 끌어 옮기는 동안 살짝 떠오르기 : 6% 커지고 그림자 · 맨 위 레이어 (놓으면 제자리 크기로 · 레이어는 맨 위 그대로) */
+            let lift = 1, liftRaf = 0, lifted = false;
+            function liftTo(to) {
+                cancelAnimationFrame(liftRaf);
+                const from = lift, t0 = performance.now();
+                const step = now => {
+                    const k = Math.min(1, (now - t0) / 140);
+                    lift = from + (to - from) * (1 - (1 - k) * (1 - k));
+                    updateTransform();
+                    if (k < 1) liftRaf = requestAnimationFrame(step);
+                };
+                liftRaf = requestAnimationFrame(step);
+            }
+
             function updateTransform() {
-                el.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
+                el.style.transform = `translate(${posX}px, ${posY}px) scale(${scale * lift}) rotate(${rotation}deg)`;
                 el.style.setProperty('--inv', Math.min(5, 1 / (scale || 1)));
             }
             
@@ -384,6 +398,12 @@
                 const pos = getClientPos(e);
 
                 if (actionType === 'move') {
+                    if (!lifted && !el.querySelector('textarea') && Math.hypot(pos.x - startX, pos.y - startY) > 3) {
+                        lifted = true;
+                        el.style.zIndex = zIndexCounter++;
+                        el.classList.add('lifting');
+                        liftTo(1.06);
+                    }
                     posX = initialX + (pos.x - startX);
                     posY = initialY + (pos.y - startY);
                     el.dataset.posX = posX; el.dataset.posY = posY;
@@ -401,7 +421,10 @@
                 if (el === selectedElement) positionTextPanel();
             };
 
-            const onEnd = () => { actionType = null; pinch = null; };
+            const onEnd = () => {
+                actionType = null; pinch = null;
+                if (lifted) { lifted = false; el.classList.remove('lifting'); liftTo(1); }
+            };
 
             el.addEventListener('wheel', (e) => {
                 e.preventDefault();
