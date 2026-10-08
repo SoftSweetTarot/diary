@@ -4,7 +4,7 @@
    2) 조각을 톡 누르면 집어 올려요 → 가장자리를 손톱으로 밀어 뒷종이를 벗겨요 (가끔 반쯤에서 걸려요 · 놓으면 반쯤 벗겨진 채로 남아요)
    3) 벗긴 스티커는 손가락을 따라와요 → 페이지에 놓으면 붙어요 · 작은 봉투 위에 놓으면 봉투에 다시 쏙
    - 작은 봉투를 누르거나 ✕ 를 누르면 남은 조각은 봉투로 돌아가요 · 다 붙이면 저절로 닫혀요
-   - 봉투를 잡고 끌면 봉투가 화면 안에서 옮겨져요 (쏟아진 조각은 그 자리에) · 조각이 없는 빈 곳을 끌면 페이지가 옮겨져요 (js/page.js pgmBegin)
+   - 봉투를 잡고 끌면 봉투가 화면 안에서 옮겨져요 (쏟아진 조각은 그 자리에) · 날짜바를 끌면 페이지가 옮겨져요 (js/page.js pgmBegin)
    - 소리 : 봉투를 옆으로 뜯을 때 · 뒷종이를 벗길 때 '찌이익' (⚙ 설정의 '✨ 연출 소리' · js/sound.js)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (조각이 바로 붙어요 · js/stickermaker.js) */
 
@@ -316,8 +316,7 @@
                 const ei = pcbEdge(st, P); if (ei.inside || ei.d < 8) { pcbLift(st); return; }
             }
             if (h && !h.anim) { pcbPutBack(h); return; }                         // 4) 빈 곳 : 들고 있던 걸 내려놓기
-            const w = pcbq('diaryWrapper'), wr = w && w.getBoundingClientRect();  // 5) 빈 페이지 위 → 페이지 옮기기 (js/page.js)
-            if (wr && window.pgmBegin && P[0] >= wr.left && P[0] <= wr.right && P[1] >= wr.top && P[1] <= wr.bottom) pgmBegin(e);
+            if (window.pgmOnBar && pgmOnBar(P[0], P[1])) pgmBegin(e);           // 5) 날짜바 위 → 페이지 옮기기 (js/page.js)
         }
         function pcbMove(e) {
             const S = pcbS, d = S.drag; if (!d) return;

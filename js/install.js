@@ -3,7 +3,7 @@
    - 크롬 · 엣지 · 삼성 인터넷 : 버튼을 누르면 바로 '설치' 창이 떠요
    - 아이폰 · 아이패드 : 브라우저가 설치 창을 띄워 주지 않아서, 그림으로 따라 하는 방법을 보여 줘요
    - 카카오톡 · 네이버 · 인스타그램 앱 안에서 열었을 때 : 설치도 구글 로그인도 안 되니, 바깥 브라우저로 여는 방법을 안내해요
-   - 이미 설치한 앱으로 열었으면 버튼을 숨겨요
+   - 설치한 뒤에도 버튼은 늘 있어요 (앱 아이콘을 실수로 지웠을 때 다시 설치) · 설치한 앱 안에서 누르면 브라우저에서 다시 설치하는 방법을 알려 줘요
    필요한 파일 : manifest.json · sw.js · icons/ (index.html 과 같은 폴더)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (설치 버튼만 안 보여요) */
 
@@ -25,11 +25,9 @@
         }
         window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); ins.prompt = e; });
         window.addEventListener('appinstalled', () => {
-            ins.prompt = null; insShowBtn();
+            ins.prompt = null;
             if (typeof closeModal === 'function') closeModal('installModal');
         });
-        function insShowBtn() { const b = insQ('installBtn'); if (b) b.hidden = insStandalone(); }
-        insShowBtn();
 
         async function openInstall() {
             if (ins.prompt) {                                       // 크롬 · 엣지 · 삼성 인터넷 : 바로 설치 창
@@ -38,7 +36,7 @@
                 try { p.prompt(); await p.userChoice; } catch (e) {}
                 return;
             }
-            insQ('installGuide').innerHTML = insGuide(insPlatform());
+            insQ('installGuide').innerHTML = (insStandalone() ? '<p class="ins-note">지금은 설치한 말랑달콤 앱으로 열려 있어요.<br>앱 아이콘을 다시 만들려면 <b>사파리 · 크롬 같은 브라우저</b>에서 말랑달콤을 열고 아래처럼 해 주세요.</p>' : '') + insGuide(insPlatform());
             if (typeof closeModal === 'function') closeModal('settingsMenuModal');
             openModal('installModal');
         }
