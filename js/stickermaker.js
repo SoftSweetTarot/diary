@@ -2,7 +2,9 @@
    ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → ✂️ 스티커만들기 → 📷 사진찍기 · 🖼️ 사진고르기 · 🔤 글씨 스티커)
    - 사진 스티커 : 📷 찍기 · 🖼 고르기 → 모양(동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기
-   - 💾 내 스티커에 저장 : ✨ 스티커 창 → 🧩 조각스티커 → 내스티커 에서 언제든 다시 붙여요 (최대 40개)
+   - 🏷️ 씰스티커 만들기 · 🧩 조각스티커 만들기 : 사진 스티커와 같은 화면 (하얀 테두리는 늘 있어요) → 붙일 때는 떼어 붙여요 (js/stickerpeel.js)
+   - 💾 내 스티커에 저장 : ✨ 스티커 창 → 종류 → 내스티커 에서 언제든 다시 붙여요 (모든 종류 합쳐 최대 40개)
+     한 칸 : { id, src, t, k } · k = 'seal' 씰 · 'piece' 조각(👜 내 봉투) · 'paper' 모조지(js/papermaker.js) · 없으면 사진 · 글씨 스티커(🧩 내스티커)
      저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내스티커.json (게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
@@ -12,7 +14,8 @@
         const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
-            text: '', step: 1, font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '' };
+            text: '', step: 1, font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '', kind: '' };
+        const SM_KIND = { '': '✂️ 스티커 만들기', seal: '🏷️ 씰스티커 만들기', piece: '🧩 조각스티커 만들기' };
         const smq = id => document.getElementById(id);
         const smSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
 
@@ -50,7 +53,7 @@
             const el = document.createElement('div');
             el.id = 'smRoom'; el.className = 'smk-room';
             el.innerHTML = `
-              <div class="smk-bar"><span class="smk-x"></span><b>✂️ 스티커 만들기</b><button class="smk-x" type="button" onclick="closeStickerMaker()" aria-label="닫기">✕</button></div>
+              <div class="smk-bar"><span class="smk-x"></span><b id="smTitle">✂️ 스티커 만들기</b><button class="smk-x" type="button" onclick="closeStickerMaker()" aria-label="닫기">✕</button></div>
               <div class="smk-wrap">
                 <input type="file" id="smCam" accept="image/*" capture="environment" hidden onchange="smPickFile(this)">
                 <input type="file" id="smFile" accept="image/*" hidden onchange="smPickFile(this)">
@@ -70,7 +73,7 @@
                     <div class="smk-colors" id="smColors">${SM_COLORS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" onclick="smSetColor('${c}')" aria-label="색"></button>`).join('')}</div>
                   </div>
                   <div id="smFinal" class="smk-col">
-                    <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
+                    <label class="smk-border" id="smBorderRow"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
                     <button type="button" class="smk-go" onclick="smFinish(true,this)">📌 다이어리에 붙이기</button>
                     <button type="button" class="smk-go smk-sub" onclick="smFinish(false,this)">💾 내 스티커에 저장만</button>
                     <button type="button" class="smk-go smk-sub" id="smTextBack" onclick="smTextPrev()" hidden>◀ 이전 단계</button>
@@ -97,6 +100,7 @@
                 c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
                 c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(im.src);
                 smS.mode = 'photo'; smS.img = c; smS.zoom = 1; smS.ox = 0; smS.oy = 0; smS.path = [];
+                smq('smTitle').textContent = SM_KIND[smS.kind]; smq('smBorderRow').hidden = !!smS.kind;
                 smq('smZoom').value = 1; smS.step = 1; smPhase();
                 smShow(); smSetShape(smS.shape === 'free' ? 'circle' : smS.shape);
             };
@@ -139,7 +143,11 @@
                 return;
             }
             if (guide) { ctx.save(); ctx.globalAlpha = .22; ctx.drawImage(smS.img, R.x, R.y, R.w, R.h); ctx.restore(); }
-            if (smS.border) { ctx.save(); clip(); ctx.lineJoin = 'round'; ctx.lineWidth = 18; ctx.strokeStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,.22)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore(); }
+            if (smS.border || smS.kind) {                                   // 🏷️ 씰 · 🧩 조각은 하얀 칼선이 늘 있어요 (그림자 없이 · 떼는 화면이 그림자를 그려요)
+                ctx.save(); clip(); ctx.lineJoin = 'round'; ctx.lineWidth = 18; ctx.strokeStyle = '#fff';
+                if (!smS.kind) { ctx.shadowColor = 'rgba(0,0,0,.22)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3; }
+                ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+            }
             ctx.save(); clip(); ctx.clip(); ctx.drawImage(smS.img, R.x, R.y, R.w, R.h); ctx.restore();
         }
         function smRenderText(ctx) {
@@ -177,7 +185,7 @@
 
         /* ---------- 글씨 스티커 ---------- */
         function smStartText() {
-            smS.mode = 'text'; smS.step = 1; smPhase();
+            smS.mode = 'text'; smS.kind = ''; smq('smTitle').textContent = SM_KIND['']; smq('smBorderRow').hidden = false; smS.step = 1; smPhase();
             smq('smText').value = smS.text;
             smShow(); smSetFont(smS.font); smSetColor(smS.color);
             if (window.matchMedia && matchMedia('(pointer: fine)').matches) setTimeout(() => smq('smText').focus(), 50);   // 📱 터치 기기는 키보드가 저절로 올라와 화면이 움직이지 않게 직접 눌러서 써요
@@ -245,7 +253,7 @@
         window.openStickerList = openStickerList;
 
         /* ✨ 스티커 창 → 🎀 마스킹테이프 · 🧩 조각스티커 · 🏷️ 씰스티커 · 📄 모조지스티커 · 📃 속지 : 목록 창 위에 카테고리 4개, 소스는 그 아래
-           지금 있는 것 : 🎀 내스티커(만든 · 받은 테이프) / 🧩 내스티커(✂️ 사진 스티커) · 기본스티커(그림 모음 · 계절)
+           지금 있는 것 : 🎀 내스티커(만든 · 받은 테이프) / 🧩 내스티커(👜 내 봉투 · 사진 · 글씨) · 기본스티커(그림 모음 · 계절) / 🏷️ · 📄 내스티커(만든 것)
                           문구점스티커는 모든 종류가 🛍️ 문구점의 그 칸으로 / 나머지는 '준비 중' */
         const STK_KINDS = {
             tape: ['🎀', '마스킹테이프', ['스티커', '마스킹 테이프']],
@@ -274,7 +282,7 @@
             g.scrollTop = 0;
             const go = (ic, name, sub, fn) => `<button type="button" class="stk-go" onclick="${fn}"><span>${ic}</span><b>${name}</b><small>${sub}</small></button>`;
             if (tab === 'mine' && stkKind === 'tape') return loadMyTapes();
-            if (tab === 'mine' && stkKind === 'piece') return loadMyStickers();
+            if (tab === 'mine' && stkKind !== 'leaf') return loadMyStickers(stkKind);
             if (tab === 'free' && stkKind === 'piece') {
                 const ss = document.getElementById('seasonTab');
                 g.innerHTML = go('🧩', '말랑달콤 그림 모음', '카테고리별 조각스티커', "closeModal('stickerModal'); openLibrary()")
@@ -297,17 +305,32 @@
             finally { smkLock = false; all.forEach(b => { b.disabled = false; }); if (btn) { btn.classList.remove('busy'); btn.textContent = old; } }
         }
         function smFinish(stick, btn) { return smkRun(btn, stick ? '📌 붙이는 중…' : '💾 저장하는 중…', () => smDoFinish(stick)); }
+        /* 내 스티커에 한 장 넣기 (✂️ 모조지스티커 만들기도 이걸 써요) · 결과 : 'ok' · 'full' · 'fail' */
+        async function smAdd(src, k, t) {
+            try {
+                await smLoad();
+                if (smS.list.length >= SM_MAX) return 'full';
+                smS.list.unshift(Object.assign({ id: Date.now().toString(36), src, t: t || '' }, k ? { k } : {}));
+                await smSave();
+                return 'ok';
+            } catch (e) { return 'fail'; }
+        }
+        const SM_PATH = { '': '🧩 조각스티커 → 내스티커', piece: '🧩 조각스티커 → 내스티커(👜 내 봉투)', seal: '🏷️ 씰스티커 → 내스티커', paper: '📄 모조지스티커 → 내스티커' };
+        /* 저장 결과 안내 (stick : 붙이는 중이면 꽉 찼을 때 · 실패만 알려요) */
+        function smAddMsg(r, k, stick) {
+            if (r === 'full') { if (!stick) showMsg(`내 스티커는 ${SM_MAX}개까지 저장돼요.<br>안 쓰는 스티커를 지워 주세요.`); }
+            else if (r === 'fail') showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.');
+            else if (!stick) showMsg(`✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → ${SM_PATH[k || '']}에서 붙일 수 있어요.</span>`);
+        }
         async function smDoFinish(stick) {
             const src = smMake();
             if (!src) { showMsg(smS.shape === 'free' ? '✂️ 오리고 싶은 모양을 먼저 그려 주세요.' : '스티커를 만들지 못했어요.'); return; }
-            try {
-                await smLoad();
-                if (smS.list.length >= SM_MAX) { if (!stick) { showMsg(`내 스티커는 ${SM_MAX}개까지 저장돼요.<br>안 쓰는 스티커를 지워 주세요.`); return; } }
-                else { smS.list.unshift({ id: Date.now().toString(36), src, t: smS.mode === 'text' ? smS.text : '' }); await smSave(); }
-            } catch (e) { if (!stick) { showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
-            if (stick) { smStick(src); return; }
-            closeStickerMaker();
-            showMsg('✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → 🧩 조각스티커 → 내스티커에서 붙일 수 있어요.</span>');
+            const k = smS.mode === 'photo' ? smS.kind : '';
+            const r = await smAdd(src, k, smS.mode === 'text' ? smS.text : '');
+            if (!stick) { if (r === 'ok') closeStickerMaker(); smAddMsg(r, k, false); return; }
+            smAddMsg(r, k, true);
+            if (k && window.openStickerPeel) { closeStickerMaker(); openStickerPeel(src, k); return; }
+            smStick(src);
         }
         function smStick(src) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">스티커는 ✂️ 내 스티커에 저장돼 있어요.</span>'); return; }
@@ -317,29 +340,46 @@
             if (typeof closeModal === 'function') closeModal('stickerModal');
         }
 
-        /* ---------- 내 스티커 (✏️ 스티커 창 → ✂️ 내 스티커) ---------- */
-        function smGrid() {
-            const L = smS.list || [];
-            if (!L.length) return '<div class="smk-empty">✂️ 아직 만든 스티커가 없어요.<br>✂️ 스티커만들기의 📷 사진찍기 · 🖼️ 사진고르기로 만들어 보세요!</div>';
-            return L.map((s, i) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button><i onclick="smDel(${i})" title="지우기">✕</i></span>`).join('');
+        /* ---------- 내 스티커 (✨ 스티커 창 → 🧩 조각 · 🏷️ 씰 · 📄 모조지 → 내스티커) ---------- */
+        const smKindOf = s => s.k === 'seal' || s.k === 'paper' ? s.k : 'piece';
+        const SM_EMPTY = {
+            piece: '✂️ 아직 만든 조각스티커가 없어요.<br>✂️ 스티커만들기의 🧩 조각스티커 만들기 · 📷 사진찍기 · 🖼️ 사진고르기로 만들어 보세요!',
+            seal: '🏷️ 아직 만든 씰스티커가 없어요.<br>✂️ 스티커만들기의 🏷️ 씰스티커 만들기로 만들어 보세요!',
+            paper: '📄 아직 만든 모조지스티커가 없어요.<br>✂️ 스티커만들기의 📄 모조지스티커 만들기로 만들어 보세요!' };
+        function smGrid(kind) {
+            const L = (smS.list || []).map((s, i) => [s, i]).filter(([s]) => smKindOf(s) === kind);
+            const it = ([s, i]) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button><i onclick="smDel(${i})" title="지우기">✕</i></span>`;
+            if (kind === 'piece') {                                     // 🧩 내가 만든 조각은 👜 내 봉투에 (봉투 없이 한 장씩)
+                const bag = L.filter(([s]) => s.k === 'piece'), rest = L.filter(([s]) => !s.k);
+                if (!L.length) return `<div class="smk-empty">${SM_EMPTY.piece}</div>`;
+                return (bag.length ? '<div class="stk-head">👜 내 봉투</div>' + bag.map(it).join('') : '')
+                    + (rest.length ? '<div class="stk-head">✂️ 사진 · 글씨 스티커</div>' + rest.map(it).join('') : '');
+            }
+            if (!L.length) return `<div class="smk-empty">${SM_EMPTY[kind]}</div>`;
+            return L.map(it).join('');
         }
-        function smUse(i) { const s = smS.list && smS.list[i]; if (s) smStick(s.src); }
+        function smUse(i) {
+            const s = smS.list && smS.list[i]; if (!s) return;
+            if ((s.k === 'seal' || s.k === 'piece') && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.src, s.k); }
+            else smStick(s.src);
+        }
         async function smDel(i) {
             if (!(await showMsg('이 스티커를 내 스티커에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 일기에 붙인 스티커는 그대로 남아요.</span>', true))) return;
             smS.list.splice(i, 1);
             try { await smSave(); } catch (e) {}
-            const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers();
+            const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers(g.dataset.mine);
         }
-        async function loadMyStickers() {
-            const g = smq('stickerGrid'); g.dataset.mine = '1';
+        async function loadMyStickers(kind) {
+            const g = smq('stickerGrid'); g.dataset.mine = kind;
             g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
             await smLoad();
-            if (g.dataset.mine) g.innerHTML = `<div class="smk-mine smk-in-modal">${smGrid()}</div>`;
+            if (g.dataset.mine === kind) g.innerHTML = `<div class="smk-mine smk-in-modal">${smGrid(kind)}</div>`;
         }
 
-        /* 하단메뉴 ✨ 스티커 창의 📷 · 🖼️ · 🔤 버튼 (사진 고르는 창은 눌렀을 때 바로 열려야 해서 화면을 먼저 만들어 둬요) */
-        function smOpenCam() { smBuild(); smq('smCam').click(); }
-        function smOpenFile() { smBuild(); smq('smFile').click(); }
+        /* ✂️ 스티커만들기 창의 📷 · 🖼️ · 🔤 · 🏷️ · 🧩 버튼 (사진 고르는 창은 눌렀을 때 바로 열려야 해서 화면을 먼저 만들어 둬요) */
+        function smOpenCam() { smBuild(); smS.kind = ''; smq('smCam').click(); }
+        function smOpenFile() { smBuild(); smS.kind = ''; smq('smFile').click(); }
+        function smOpenKind(k) { smBuild(); smS.kind = k; smq('smFile').click(); }      // k : 'seal' · 'piece'
         function smOpenText() { smBuild(); smStartText(); }
         function smShow() {
             smBuild();
@@ -352,5 +392,5 @@
         }
         /* 스티커 창의 다른 칸을 누르면 '내 스티커' 표시 지우기 */
         document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b) { const g = smq('stickerGrid'); if (g) delete g.dataset.mine; } }, true);
-        window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText; window.smTextNext = smTextNext; window.smTextPrev = smTextPrev;
-        window.loadMyStickers = loadMyStickers;
+        window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenKind = smOpenKind; window.smOpenText = smOpenText; window.smTextNext = smTextNext; window.smTextPrev = smTextPrev;
+        window.loadMyStickers = loadMyStickers; window.smAdd = smAdd; window.smAddMsg = smAddMsg;

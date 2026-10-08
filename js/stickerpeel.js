@@ -1,0 +1,259 @@
+/* 말랑달콤 다이어리 - js/stickerpeel.js
+   🏷️ 씰스티커 · 🧩 조각스티커 떼어 붙이기 : 내스티커에서 고르거나 만들기에서 📌 붙이기를 누르면 페이지 앞에 스티커가 나와요
+   - 🏷️ 씰 : 하얀 네모(스티커 종이) 위에 씰이 있어요 → 가장자리를 잡고 떼면 하얀 네모는 사라지고, 씰을 원하는 곳에 놓으면 붙어요
+             소리 : 떼어 낼 때 '찌익' 소리만
+   - 🧩 조각 : 조각 하나에 뒷종이가 붙어 있어요 → 가장자리를 잡고 뒷종이를 벗기면 뒷종이는 팔랑 떨어지고, 원하는 곳에 놓으면 붙어요
+             소리 : 없어요 (조각스티커 소리는 봉투를 옆으로 뜯을 때만 · 내가 만든 조각은 봉투 없이 👜 내 봉투에 들어가요)
+   - 소리는 ⚙ 설정의 '✨ 연출 소리'를 따라요 (js/sound.js)
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (스티커가 바로 붙어요) */
+
+        const PEL_GRAB = 28, PEL_PAD = 16, PEL_LINER = 4;
+        const pelS = { on: false, kind: 'seal', cv: null, ctx: null, fl: null, a: null, st: null, drag: null, board: null, boardAt: null, gone: 0, fall: null, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '' };
+        const pelq = id => document.getElementById(id);
+        const pelMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+        const pelLoad = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
+        function pelTint(src, fill) { const c = pelMk(src.width, src.height), d = c.getContext('2d'); d.drawImage(src, 0, 0); d.globalCompositeOperation = 'source-in'; d.fillStyle = fill; d.fillRect(0, 0, c.width, c.height); return c; }
+        function pelGrow(src, r, step) { const c = pelMk(src.width, src.height), d = c.getContext('2d'); for (const k of [1, .66, .33]) for (let a = 0; a < 360; a += step) d.drawImage(src, Math.cos(a * Math.PI / 180) * r * k, Math.sin(a * Math.PI / 180) * r * k); d.drawImage(src, 0, 0); return c; }
+
+        /* ---------- 떼기용 그림 (앞면 · 뒷면 · 뒷종이 · 가장자리 점) ---------- */
+        function pelAsset(img) {
+            const m = PEL_LINER + 3, w = img.width + m * 2, h = img.height + m * 2;
+            const front = pelMk(w, h); front.getContext('2d').drawImage(img, m, m);
+            const back = pelTint(front, '#f4efe9'), bk = back.getContext('2d');
+            bk.globalCompositeOperation = 'source-atop'; bk.globalAlpha = .25;
+            for (let i = 0; i < w * h / 120; i++) { bk.fillStyle = Math.random() < .5 ? '#fff' : '#e4dcd3'; bk.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+            /* 🧩 뒷종이 : 스티커보다 살짝 크고 반짝이는 종이 + 칼선 자국 */
+            const shape = pelGrow(pelTint(front, '#fff'), PEL_LINER, 15), liner = pelMk(w, h), l = liner.getContext('2d');
+            l.drawImage(pelTint(pelGrow(shape, 1.2, 30), 'rgba(175,150,160,.75)'), 0, 0);
+            const lc = pelTint(shape, '#fff'), lx = lc.getContext('2d'); lx.globalCompositeOperation = 'source-atop';
+            const lg = lx.createLinearGradient(0, 0, w, h); lg.addColorStop(0, '#f3f6fb'); lg.addColorStop(.5, '#ffffff'); lg.addColorStop(1, '#e8edf5'); lx.fillStyle = lg; lx.fillRect(0, 0, w, h);
+            l.drawImage(lc, 0, 0);
+            const cut = pelTint(pelGrow(front, 1.5, 20), 'rgba(170,140,150,.45)'), cx = cut.getContext('2d'); cx.globalCompositeOperation = 'destination-out'; cx.drawImage(front, 0, 0);
+            l.drawImage(cut, 0, 0);
+            const data = front.getContext('2d').getImageData(0, 0, w, h).data, edge = [];
+            const A = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : data[(y * w + x) * 4 + 3];
+            const st = Math.max(2, Math.round(Math.max(w, h) / 160));
+            for (let y = 0; y < h; y += st) for (let x = 0; x < w; x += st)
+                if (A(x, y) > 128 && (A(x - st, y) <= 128 || A(x + st, y) <= 128 || A(x, y - st) <= 128 || A(x, y + st) <= 128)) edge.push([x - w / 2, y - h / 2]);
+            return { w, h, m, front, back, liner, edge, alpha: (lx, ly) => A(Math.round(lx + w / 2), Math.round(ly + h / 2)) };
+        }
+
+        /* ---------- 화면 ---------- */
+        function pelBuild() {
+            if (pelq('pelRoom')) return;
+            const el = document.createElement('div');
+            el.id = 'pelRoom'; el.className = 'pel-room';
+            el.innerHTML = `<canvas id="pelCv"></canvas><p class="pel-hint" id="pelHint"></p><button type="button" class="pel-x" onclick="closeStickerPeel()" aria-label="닫기">✕</button>`;
+            document.body.appendChild(el);
+            const cv = pelq('pelCv');
+            cv.addEventListener('pointerdown', pelDown); cv.addEventListener('pointermove', pelMove);
+            cv.addEventListener('pointerup', pelUp); cv.addEventListener('pointercancel', pelUp);
+            window.addEventListener('resize', () => { if (pelS.on) pelLayout(); });
+        }
+        const pelPage = () => document.getElementById('canvasArea');
+        function pelLayout() {
+            const S = pelS, cv = S.cv;
+            S.DPR = Math.min(window.devicePixelRatio || 1, 3); S.W = window.innerWidth; S.H = window.innerHeight;
+            cv.width = S.W * S.DPR; cv.height = S.H * S.DPR; S.fl = pelMk(cv.width, cv.height);
+            if (S.st && S.st.state === 'on') {                       // 페이지 가운데 (화면 밖으로 안 나가게)
+                const pg = pelPage(), r = pg ? pg.getBoundingClientRect() : { left: 0, top: 0, width: S.W, height: S.H };
+                const s = Math.min(Math.min(r.width, S.W) * .42 / S.a.w, S.H * .4 / S.a.h, 1);
+                const cx = Math.min(S.W - 30, Math.max(30, r.left + r.width / 2)), cy = Math.min(S.H - 30, Math.max(90, r.top + Math.min(r.height, S.H - r.top) / 2));
+                Object.assign(S.st, { cx, cy, s, rot: 0 });
+                S.board = { w: (S.a.w - S.a.m * 2) * s + PEL_PAD * 2, h: (S.a.h - S.a.m * 2) * s + PEL_PAD * 2 };
+            }
+        }
+
+        /* kind : 'seal' (하얀 네모에서 떼기) · 'piece' (뒷종이 벗기기) */
+        async function openStickerPeel(src, kind) {
+            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return false; }
+            let img;
+            try { img = await pelLoad(src); } catch (e) { showMsg('스티커를 열지 못했어요.'); return false; }
+            pelBuild();
+            const S = pelS;
+            S.cv = pelq('pelCv'); S.ctx = S.cv.getContext('2d'); S.src = src; S.kind = kind === 'piece' ? 'piece' : 'seal'; S.a = pelAsset(img);
+            S.st = { state: 'on' }; S.drag = null; S.gone = 0; S.boardAt = null; S.fall = null; S.on = true;
+            pelLayout();
+            pelq('pelRoom').classList.add('show'); document.body.classList.add('fc-lock');
+            S.hint = '';
+            pelSay(S.kind === 'piece' ? '<b>가장자리</b>를 손톱으로 밀어 뒷종이를 벗겨 보세요' : '스티커 <b>가장자리</b>를 손톱으로 집듯이 잡고 천천히 떼어 보세요');
+            cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(pelFrame);
+            return true;
+        }
+        function closeStickerPeel() {
+            const S = pelS; S.on = false; S.drag = null; pelNoise(0); cancelAnimationFrame(S.raf);
+            const r = pelq('pelRoom'); if (r) r.classList.remove('show');
+            document.body.classList.remove('fc-lock');
+        }
+        function pelSay(h) { const e = pelq('pelHint'); if (!e || pelS.hint === h) return; pelS.hint = h; e.innerHTML = h; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); }
+
+        /* ---------- 좌표 ---------- */
+        const pelToStage = (st, lx, ly) => { const c = Math.cos(st.rot), s = Math.sin(st.rot); return [st.cx + (lx * c - ly * s) * st.s, st.cy + (lx * s + ly * c) * st.s]; };
+        const pelToLocal = (st, x, y) => { const dx = (x - st.cx) / st.s, dy = (y - st.cy) / st.s, c = Math.cos(-st.rot), s = Math.sin(-st.rot); return [dx * c - dy * s, dx * s + dy * c]; };
+
+        /* ---------- 그리기 ---------- */
+        function pelDraw(ctx, img, st, extra = 1, flip = 1, sh = null) {
+            const a = pelS.a;
+            ctx.save();
+            if (sh) { ctx.shadowColor = sh.c; ctx.shadowBlur = sh.b; ctx.shadowOffsetY = sh.y; ctx.shadowOffsetX = sh.x || 0; }
+            ctx.translate(st.cx, st.cy); ctx.rotate(st.rot); ctx.scale(st.s * extra * flip, st.s * extra);
+            ctx.drawImage(img, -a.w / 2, -a.h / 2, a.w, a.h); ctx.restore();
+        }
+        function pelHalf(c, M, n, sign) {
+            const p = [-n[1], n[0]], L = 4000; c.beginPath();
+            c.moveTo(M[0] + p[0] * L, M[1] + p[1] * L); c.lineTo(M[0] - p[0] * L, M[1] - p[1] * L);
+            c.lineTo(M[0] - p[0] * L + n[0] * L * sign, M[1] - p[1] * L + n[1] * L * sign); c.lineTo(M[0] + p[0] * L + n[0] * L * sign, M[1] + p[1] * L + n[1] * L * sign); c.closePath();
+        }
+        const PEL_FLAT = { c: 'rgba(90,60,70,.12)', b: 2, y: 1 }, PEL_UP = { c: 'rgba(80,50,60,.25)', b: 18, y: 12 };
+        /* 잡은 점(C)과 손가락(F) 사이를 접는 선으로, 들린 쪽은 뒤집어 뒷면을 그려요 (씰스티커 R&D 와 같은 방법) */
+        function pelDrawPeel(ctx, st, C, F) {
+            const S = pelS, a = S.a, base = S.kind === 'piece' ? null : PEL_FLAT;
+            const dx = F[0] - C[0], dy = F[1] - C[1], len = Math.hypot(dx, dy);
+            if (len < .5) { pelDraw(ctx, a.front, st, 1, 1, base); return; }
+            const n = [dx / len, dy / len], M = [(C[0] + F[0]) / 2, (C[1] + F[1]) / 2];
+            ctx.save(); pelHalf(ctx, M, n, 1); ctx.clip(); pelDraw(ctx, a.front, st, 1, 1, base); ctx.restore();
+            const md = M[0] * n[0] + M[1] * n[1];
+            const A = 1 - 2 * n[0] * n[0], B = -2 * n[0] * n[1], D = 1 - 2 * n[1] * n[1], E = 2 * md * n[0], Fv = 2 * md * n[1], R = S.DPR;
+            const L = S.fl.getContext('2d'); L.setTransform(1, 0, 0, 1, 0, 0); L.clearRect(0, 0, S.fl.width, S.fl.height);
+            L.setTransform(R * A, R * B, R * B, R * D, R * E, R * Fv);
+            L.save(); pelHalf(L, M, n, -1); L.clip();
+            L.translate(st.cx, st.cy); L.rotate(st.rot); L.scale(st.s, st.s); L.drawImage(a.back, -a.w / 2, -a.h / 2, a.w, a.h); L.restore();
+            L.setTransform(R, 0, 0, R, 0, 0); L.globalCompositeOperation = 'source-atop';                               // 말린 느낌 음영
+            const span = Math.max(20, len / 2), g = L.createLinearGradient(M[0], M[1], M[0] + n[0] * span, M[1] + n[1] * span);
+            g.addColorStop(0, 'rgba(110,80,90,.35)'); g.addColorStop(.18, 'rgba(255,255,255,.25)'); g.addColorStop(.45, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(150,120,130,.15)');
+            L.fillStyle = g; L.fillRect(0, 0, S.W, S.H); L.globalCompositeOperation = 'source-over';
+            ctx.save(); ctx.shadowColor = 'rgba(80,50,60,.28)'; ctx.shadowBlur = 10 + Math.min(14, len / 12); ctx.shadowOffsetX = n[0] * 4; ctx.shadowOffsetY = 4 + n[1] * 3;
+            ctx.drawImage(S.fl, 0, 0, S.W, S.H); ctx.restore();
+        }
+        function pelRR(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+        function pelFrame(t) {
+            const S = pelS; if (!S.on) return;
+            const ctx = S.ctx, st = S.st, a = S.a, at = S.boardAt || st;
+            ctx.setTransform(S.DPR, 0, 0, S.DPR, 0, 0); ctx.clearRect(0, 0, S.W, S.H);
+            const bo = S.gone ? Math.max(0, 1 - (t - S.gone) / 260) : 1;        // 떼어 내면 스르르 사라져요
+            if (bo > 0) { ctx.save(); ctx.globalAlpha = bo; ctx.fillStyle = 'rgba(90,60,70,.10)'; ctx.fillRect(0, 0, S.W, S.H); ctx.restore(); }
+            if (S.kind === 'seal' && bo > 0) {                                   // 🏷️ 하얀 네모 (스티커 종이)
+                const B = S.board, bx = at.cx - B.w / 2, by = at.cy - B.h / 2;
+                ctx.save(); ctx.globalAlpha = bo; ctx.shadowColor = 'rgba(120,80,95,.25)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 4;
+                pelRR(ctx, bx, by, B.w, B.h, 14); const g = ctx.createLinearGradient(bx, by, bx + B.w, by + B.h);
+                g.addColorStop(0, '#fdfdff'); g.addColorStop(.5, '#f4f6fb'); g.addColorStop(1, '#fbfcff'); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+            }
+            if (S.kind === 'piece' && st.state === 'on') pelDraw(ctx, a.liner, st, 1, 1, PEL_UP);   // 🧩 뒷종이
+            if (S.fall) {                                                        // 벗긴 뒷종이가 팔랑 떨어져요
+                const f = S.fall, q = (t - f.t0) / 1100;
+                if (q >= 1) S.fall = null;
+                else { ctx.save(); ctx.globalAlpha = 1 - q * q; ctx.translate(f.cx + f.vx * q * 120 + Math.sin(q * 7) * 10, f.cy + q * q * 260); ctx.rotate(f.rot + f.vr * q * 10);
+                    ctx.scale(f.s * Math.cos(q * 5) * (1 - q * .3), f.s * (1 - q * .3)); ctx.drawImage(a.liner, -a.w / 2, -a.h / 2, a.w, a.h); ctx.restore(); }
+            }
+            const d = S.drag;
+            if (d && d.mode === 'peel') pelDrawPeel(ctx, st, d.C, d.F);
+            else if (st.snap) {
+                const q = Math.min(1, (t - st.snap.t0) / 260), e = 1 - Math.pow(1 - q, 3);
+                pelDrawPeel(ctx, st, st.snap.C, [st.snap.F[0] + (st.snap.C[0] - st.snap.F[0]) * e, st.snap.F[1] + (st.snap.C[1] - st.snap.F[1]) * e]);
+                if (q >= 1) st.snap = null;
+            } else if (st.state === 'free') {
+                const fp = Math.min(1, (t - st.t0) / 220), flip = Math.cos(Math.PI * (1 - fp));                // 뒷면 → 앞면으로 뒤집혀요
+                pelDraw(ctx, flip < 0 ? a.back : a.front, st, 1.07, Math.max(.05, Math.abs(flip)) * (flip < 0 ? -1 : 1), PEL_UP);
+            } else pelDraw(ctx, a.front, st, 1, 1, S.kind === 'piece' ? null : PEL_FLAT);
+            S.raf = requestAnimationFrame(pelFrame);
+        }
+
+        /* ---------- 손가락 ---------- */
+        function pelPeeled(st, C, F) {
+            const dx = F[0] - C[0], dy = F[1] - C[1], len = Math.hypot(dx, dy); if (len < 1) return 0;
+            const n = [dx / len, dy / len], M = [(C[0] + F[0]) / 2, (C[1] + F[1]) / 2]; let off = 0;
+            for (const [lx, ly] of pelS.a.edge) { const [x, y] = pelToStage(st, lx, ly); if ((x - M[0]) * n[0] + (y - M[1]) * n[1] < 0) off++; }
+            return off / pelS.a.edge.length;
+        }
+        function pelDown(e) {
+            const S = pelS, st = S.st; if (!S.on || st.state !== 'on') return;
+            e.preventDefault(); const P = [e.clientX, e.clientY];
+            const [lx, ly] = pelToLocal(st, P[0], P[1]);
+            let best = 1e12, bp = null;
+            for (const q of S.a.edge) { const dd = (q[0] - lx) ** 2 + (q[1] - ly) ** 2; if (dd < best) { best = dd; bp = q; } }
+            if (bp && Math.sqrt(best) * st.s < PEL_GRAB) {
+                const C = pelToStage(st, bp[0], bp[1]); st.snap = null;
+                S.drag = { mode: 'peel', C, F: C.slice(), start: P, last: P, lt: performance.now() };
+                try { S.cv.setPointerCapture(e.pointerId); } catch (er) {}
+                pelSay(S.kind === 'piece' ? '살살… 뒷종이에서 떼어 내는 중' : '살살… 천천히 당겨요'); return;
+            }
+            if (S.a.alpha(lx, ly) > 128) { pelSay('가운데 말고 <b>가장자리</b>를 집어야 떨어져요'); pelWiggle(st); }
+        }
+        function pelMove(e) {
+            const S = pelS, d = S.drag; if (!d) return;
+            const P = [e.clientX, e.clientY], now = performance.now();
+            const sp = Math.hypot(P[0] - d.last[0], P[1] - d.last[1]) / Math.max(1, now - d.lt); d.last = P; d.lt = now;
+            if (d.mode === 'peel') {
+                const dx = P[0] - d.start[0], dy = P[1] - d.start[1], k = Math.min(1, .45 + Math.hypot(dx, dy) / 220);   // 끈적임
+                d.F = [d.C[0] + dx * k, d.C[1] + dy * k];
+                if (S.kind === 'seal') pelNoise(Math.min(.35, sp * .25));
+                const fr = pelPeeled(S.st, d.C, d.F);
+                if (fr > .55 && !d.half) { d.half = 1; pelSay('거의 다 됐어요… 조금만 더!'); }
+                if (fr >= .78) pelDetach(P);
+            } else {
+                const st = S.st, nx = P[0] - d.off[0], ny = P[1] - d.off[1];
+                st.rot = Math.max(-.35, Math.min(.35, st.rot + (nx - st.cx) * .004 - (st.rot - d.baseRot) * .08)); st.cx = nx; st.cy = ny;
+            }
+        }
+        function pelDetach(P) {
+            const S = pelS, st = S.st, d = S.drag, [lx, ly] = pelToLocal(st, d.C[0], d.C[1]);
+            S.boardAt = { cx: st.cx, cy: st.cy };
+            if (S.kind === 'piece') S.fall = { cx: st.cx, cy: st.cy, rot: st.rot, s: st.s, vx: Math.random() < .5 ? -1 : 1, vr: (Math.random() - .5) * .1, t0: performance.now() };
+            st.state = 'free'; st.t0 = performance.now(); S.gone = performance.now();
+            const [gx, gy] = pelToStage(st, lx, ly);
+            S.drag = { mode: 'free', off: [gx - st.cx, gy - st.cy], baseRot: st.rot, last: P, lt: performance.now() };
+            st.cx = P[0] - S.drag.off[0]; st.cy = P[1] - S.drag.off[1];
+            pelNoise(0); if (navigator.vibrate) navigator.vibrate(15);
+            pelSay(S.kind === 'piece' ? '톡! 뒷종이가 벗겨졌어요 ✨ 원하는 곳에 놓아 보세요' : '톡! 떼어졌어요 ✨ 원하는 곳에 놓아 보세요');
+        }
+        function pelUp() {
+            const S = pelS, d = S.drag; if (!d) return;
+            const st = S.st; pelNoise(0); S.drag = null;
+            if (d.mode === 'peel') {
+                st.snap = { C: d.C, F: d.F, t0: performance.now() };
+                if (Math.hypot(d.F[0] - d.C[0], d.F[1] - d.C[1]) > 20) pelSay('앗, 다시 붙어버렸어요 🫣 가장자리를 잡고 다시 떼어 보세요');
+                return;
+            }
+            if (navigator.vibrate) navigator.vibrate(8);
+            pelStick();
+        }
+        function pelWiggle(st) { const r = st.rot, t0 = performance.now(); (function w() { const q = (performance.now() - t0) / 300; st.rot = r + Math.sin(q * Math.PI * 4) * .04 * (1 - q); if (q < 1) requestAnimationFrame(w); else st.rot = r; })(); }
+
+        /* 놓은 자리에 붙이기 : 화면에 보이던 크기 · 기울기 그대로 페이지에 붙어요 */
+        function pelStick() {
+            const S = pelS, st = S.st, a = S.a, pg = pelPage();
+            const r = pg.getBoundingClientRect(), k = r.width / (pg.offsetWidth || r.width) || 1;
+            const cx = Math.min(r.right, Math.max(r.left, st.cx)), cy = Math.min(r.bottom, Math.max(r.top, st.cy));
+            if (!addImage(S.src)) { closeStickerPeel(); return; }
+            const el = pg.querySelector('.element-box:last-child');
+            if (el) {
+                const w = (a.w - a.m * 2) * st.s / k, h = (a.h - a.m * 2) * st.s / k, PADB = 14;     // .element-box 안쪽 여백 6px · 테두리 1px (양쪽)
+                const deg = Math.round(st.rot * 180 / Math.PI * 10) / 10;
+                const put = (px, py) => { el.dataset.posX = px; el.dataset.posY = py; el.style.transform = `translate(${px}px, ${py}px) scale(1) rotate(${deg}deg)`; };
+                el.style.width = w + 'px'; el.style.height = h + 'px'; el.dataset.rotation = deg;
+                const x = Math.round((cx - r.left) / k - (w + PADB) / 2), y = Math.round((cy - r.top) / k - (h + PADB) / 2);
+                put(x, y);
+                const b = el.getBoundingClientRect();                                  // 페이지 안 다른 것들 때문에 생기는 차이까지 맞춰요
+                put(Math.round(x + (cx - (b.left + b.width / 2)) / k), Math.round(y + (cy - (b.top + b.height / 2)) / k));
+            }
+            closeStickerPeel();
+            if (typeof saveData === 'function') saveData(false);
+        }
+
+        /* ---------- 소리 : 🏷️ 씰을 떼어 낼 때 '찌익'만 ---------- */
+        let pelGain = null;
+        function pelNoise(v) {
+            if (!pelGain && !v) return;
+            const ac = typeof sndFx === 'function' ? sndFx() : null;
+            if (!ac) { if (pelGain) pelGain.gain.value = 0; return; }
+            if (!pelGain) {
+                const buf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate), d = buf.getChannelData(0);
+                for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < .3 ? 1 : .3);
+                const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+                const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3200; bp.Q.value = .7;
+                pelGain = ac.createGain(); pelGain.gain.value = 0; src.connect(bp).connect(pelGain).connect(sndOut()); src.start();
+            }
+            pelGain.gain.setTargetAtTime(v, ac.currentTime, .03);
+        }
+
+        window.openStickerPeel = openStickerPeel; window.closeStickerPeel = closeStickerPeel;
