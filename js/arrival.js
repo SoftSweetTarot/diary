@@ -51,6 +51,15 @@
             const el = e.target.closest && e.target.closest('[data-nw]');
             if (el && nwOn(el.dataset.nw)) setTimeout(() => nwClear(el.dataset.nw), 0);
         }, true);
+        /* 하단메뉴 ✨ 스티커의 NEW : 안쪽 버튼을 눌러야 사라지는데, 그 버튼이 안 보이는 종류(기간이 끝나 🎀 마스킹테이프 버튼이 숨은 경우 등)는
+           지울 방법이 없어서 계속 남았어요 → 스티커 창을 열 때 '눈에 안 보이는 버튼의 NEW'는 같이 지워요 */
+        document.addEventListener('click', e => {
+            const tb = e.target.closest && e.target.closest('.tb-sticker[data-nw-any]'); if (!tb) return;
+            setTimeout(() => tb.dataset.nwAny.split(',').forEach(k => {
+                const seen = [...document.querySelectorAll('#stickerMakeModal [data-nw="' + k + '"]')].some(b => b.offsetParent);
+                if (!seen && nwOn(k)) nwClear(k);
+            }), 0);
+        }, true);
         document.addEventListener('DOMContentLoaded', nwRefresh);
         window.addEventListener('load', () => setTimeout(nwRefresh, 800));
 
