@@ -24,7 +24,7 @@
             '@keyframes env{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg) translateY(-3px)}}' +
             '</style>' +
             '</defs>' +
-            '<rect x="3" y="3" width="354" height="194" rx="22" fill="url(#bg)" stroke="#ffc2d6" stroke-width="3"/>' +
+            '<rect x="3" y="3" width="354" height="194" rx="22" fill="url(#bg)" stroke="#ffc2d6" stroke-opacity=".45" stroke-width="3"/>' +
             '<rect x="11" y="11" width="338" height="178" rx="16" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="7 6"/>' +
             '<g fill="#fff" opacity=".85"><circle cx="318" cy="182" r="10"/><circle cx="334" cy="176" r="13"/><circle cx="348" cy="186" r="9"/><circle cx="14" cy="186" r="9"/><circle cx="28" cy="178" r="12"/><circle cx="44" cy="186" r="9"/></g>' +
             '<g class="fl"><path d="M38 52 C 30 44 34 34 42 38 C 50 34 54 44 46 52 L 42 56Z" fill="#ffb3c8"/></g>' +
