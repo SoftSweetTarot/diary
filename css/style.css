@@ -2589,3 +2589,26 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .paper-pick .pp-pick-btn { flex-direction: column; gap: 4px; padding: 14px 4px 8px; font-size: 12px; justify-content: center; }
 .paper-pick .pp-pick-btn small { font-size: 11.5px; color: inherit; line-height: 1.2; }
 .paper-pick .pp-chip { transform: scale(1.5); margin: 8px 0 10px; }
+
+/* 🔤 스티커팩 (js/stickerpack.js) : 😀 이모지 창 위쪽 두 칸 · 팩 고르기 · 하얀 판 · 떠오른 스티커 */
+.stk-tabs.two { grid-template-columns: repeat(2, 1fr); }
+.spk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 4px 2px; }
+.spk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border: 1.5px solid var(--border-color); border-radius: 18px; background: #fff; font: inherit; color: #6b4f5a; cursor: pointer; box-shadow: 0 2px 0 var(--border-color); }
+.spk-card:active { transform: translateY(1px); box-shadow: none; }
+.spk-prev { display: flex; gap: 2px; height: 44px; align-items: center; }
+.spk-prev img { height: 34px; max-width: 34px; object-fit: contain; }
+.spk-card b { font-size: 14px; } .spk-card small { font-size: 11.5px; color: #a98a96; }
+.spk-room { position: fixed; inset: 0; z-index: 95; display: none; pointer-events: none; }   /* 판 바깥은 페이지가 그대로 받아요 · 꾸미기 도구(.toolbar)는 그 위 */
+.spk-room.show { display: block; }
+.spk-board { position: absolute; width: min(330px, calc(100vw - 24px)); padding: 26px 12px 12px; border: 1.5px solid var(--border-color); border-radius: 18px; background: #fff; box-shadow: 0 6px 18px rgba(120,80,95,.16); pointer-events: auto; touch-action: none; }
+.spk-tape { position: absolute; left: 50%; top: -13px; transform: translateX(-50%) rotate(-2deg); padding: 4px 16px; background: repeating-linear-gradient(90deg, rgba(255,198,214,.92) 0 9px, rgba(255,222,232,.92) 9px 14px); color: #9b5a6e; font-size: 12px; font-weight: bold; white-space: nowrap; cursor: grab; touch-action: none; clip-path: polygon(0 0, 100% 0, 97% 25%, 100% 50%, 97% 75%, 100% 100%, 0 100%, 3% 75%, 0 50%, 3% 25%); }
+.spk-x { right: 4px; top: 2px; }
+.spk-title { display: block; margin: -16px 0 6px; font-size: 13px; color: #a07a88; text-align: left; padding-left: 4px; }
+.spk-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.spk-it { display: flex; align-items: center; justify-content: center; height: 44px; cursor: pointer; touch-action: none; }
+.spk-it img { max-width: 40px; max-height: 40px; pointer-events: none; -webkit-user-drag: none; user-select: none; }
+.spk-it.out img { opacity: .18; }
+.spk-fly { position: fixed; left: 0; top: 0; z-index: 96; pointer-events: auto; touch-action: none; transform-origin: center; filter: drop-shadow(0 8px 10px rgba(90,60,70,.28)); transition: transform .16s cubic-bezier(.3,1.5,.6,1); cursor: grab; user-select: none; -webkit-user-drag: none; }
+.spk-fly.drag { transition: none; }
+.spk-fly.back { transition: transform .16s ease-out; filter: drop-shadow(0 2px 2px rgba(90,60,70,.2)); pointer-events: none; }
+@media (min-width: 700px) { .spk-board { width: 400px; } .spk-it { height: 54px; } .spk-it img { max-width: 48px; max-height: 48px; } }

@@ -342,7 +342,7 @@
             o.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, o.width, o.height);
             return (smS[key] = o.toDataURL('image/png'));
         }
-        /* ✨ 스티커 창(하단메뉴) → 목록 창 : 😀 이모지 · 🎁 캡슐스티커 · 🌸 계절 스티커 (🎀 마스킹테이프는 종류 창의 내스티커로)
+        /* ✨ 스티커 창(하단메뉴) → 목록 창 : 😀 이모지(위쪽 😀 이모지 · 🔤 스티커팩 두 칸) · 🎁 캡슐스티커 · 🌸 계절 스티커 (🎀 마스킹테이프는 종류 창의 내스티커로)
            목록을 불러오는 코드(loadXxx)는 stickerModal 안의 눈에 안 보이는 카테고리 버튼(.cat-btn)이 불러요 → 그 버튼을 대신 눌러 줘요 */
         const SL_KINDS = { emoji: ['😀 이모지', 'em-cat'], caps: ['🎁 캡슐스티커', 'cs-cat'], season: ['🌸 계절 스티커', 'ss-cat'] };
         function openStickerList(kind) {
@@ -350,8 +350,9 @@
             const k = SL_KINDS[kind]; if (!k) return;
             closeModal('stickerMakeModal');
             openModal('stickerModal');
-            smq('stickerKindTabs').hidden = true;
+            const bar = smq('stickerKindTabs'); bar.hidden = true; bar.classList.remove('two');
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0];
+            if (kind === 'emoji' && window.spkTabs) { spkTabs(); spkTab('emoji'); return; }   // 😀 이모지 · 🔤 스티커팩 두 칸 (js/stickerpack.js)
             const b = document.querySelector('#stickerCategories .' + k[1]); if (b) b.click();
         }
         window.openStickerList = openStickerList;
@@ -375,6 +376,7 @@
             openModal('stickerModal');
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0] + ' ' + k[1];
             const bar = smq('stickerKindTabs');
+            bar.classList.remove('two');
             bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
             bar.hidden = false;
             stkTab(tab || 'mine');
