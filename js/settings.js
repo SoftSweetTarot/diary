@@ -594,6 +594,15 @@
             document.getElementById(id).style.display = 'flex';
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        /* 창 밖(배경 · 페이지)을 누르면 닫혀요 : 그 창의 ✕ 를 눌러 준 것과 같아요 (창마다 닫을 때 하는 일을 그대로)
+           - 알림 · 확인 창은 대답해야 해서 안 닫혀요 · 🎀 페이지꾸미기 창은 창 밖에서 다이어리를 꾸며야 해서 그대로 (창 밖이 눌려요) */
+        let mdDown = null;
+        document.addEventListener('pointerdown', e => { mdDown = e.target; }, true);
+        document.addEventListener('click', e => {
+            const m = e.target;
+            if (!m.classList || !m.classList.contains('modal') || mdDown !== m || m.id === 'customAlertModal') return;
+            const x = m.querySelector('.mt-x'); if (x) x.click(); else closeModal(m.id);
+        });
 
         /* ---------- ⚙ 설정 메뉴 : 📐 페이지 크기 · ⚙️ 설정 · 💌 건의함 · 🔒 잠금 · 📲 앱 설치 ---------- */
         function openSettingsMenu() { openModal('settingsMenuModal'); }

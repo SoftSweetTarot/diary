@@ -459,7 +459,7 @@
 
         /* 📖 페이지 넘기기 : 다이어리를 연 뒤에는 페이지 양쪽 끝(가장자리)을 잡고 밀 때만 넘어가요
            - 오른쪽 끝 → 왼쪽으로 밀면 다음 날 · 왼쪽 끝 → 오른쪽으로 밀면 전날 (가운데에서 그림 · 글을 만질 때는 안 넘어가요)
-           - 겉표지는 어디를 잡아도 열려요 */
+           - 겉표지는 톡 누르거나 오른쪽 끝을 밀면 열려요 (가운데를 끌면 옮겨져요) */
         const CURL_EDGE = { ratio: 0.15, min: 36, max: 80 };      // 끝 영역 너비 : 페이지 너비의 15% (36~80px)
         function curlEdgeAt(x, book) {
             const r = book.getBoundingClientRect(), z = clampNum(r.width * CURL_EDGE.ratio, CURL_EDGE.min, CURL_EDGE.max);
@@ -473,9 +473,10 @@
                 if (turn) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
                 if (e.target.closest('.element-box, button, textarea, input, select')) return;
-                const edge = isCoverOpen ? curlEdgeAt(e.clientX, book) : 0;
+                const edge = curlEdgeAt(e.clientX, book);
                 if (isCoverOpen && !edge) return;
-                drag = { id: e.pointerId, x: e.clientX, y: e.clientY, started: false, dir: 0, edge };
+                const hold = !isCoverOpen && edge !== 1;                          // 겉표지 가운데 : 끌면 옮기기 (js setupPageMove) · 톡 누르면 열기
+                drag = { id: e.pointerId, x: e.clientX, y: e.clientY, started: false, dir: 0, edge, hold };
             });
 
             window.addEventListener('pointermove', (e) => {
@@ -484,6 +485,7 @@
                 const dy = e.clientY - drag.y;
 
                 if (!drag.started) {
+                    if (drag.hold) return;
                     if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
                     const dir = dx < 0 ? 1 : -1;
                     if (!isCoverOpen && dir === -1) { drag = null; return; }
@@ -512,7 +514,7 @@
                 if (d.started && turn) {
                     const complete = turn.d > turn.W * 0.35;
                     animateCurlTo(complete ? turn.W : 0, complete);
-                } else if (!d.started && !isCoverOpen && e.target.closest && e.target.closest('#coverPage')) {
+                } else if (!d.started && !isCoverOpen && performance.now() - pgmAt > 400 && !(pgmDrag && pgmDrag.on) && e.target.closest && e.target.closest('#coverPage')) {
                     openCoverAnimated();
                 }
             };
@@ -520,7 +522,8 @@
             window.addEventListener('pointercancel', endDrag);
         }
 
-        /* ✋ 페이지 옮기기 : 다이어리를 연 뒤 페이지(날짜바 포함)의 빈 곳을 누른 채 끌면 배경 안에서 마음대로 옮겨져요
+        /* ✋ 페이지 옮기기 : 겉표지 · 페이지(날짜바 포함)의 빈 곳을 누른 채 끌면 배경 안에서 마음대로 옮겨져요
+           - 겉표지 : 가운데를 끌면 옮기기 · 톡 누르면 열기 · 오른쪽 끝을 옆으로 밀면 넘겨 열기
            - 살짝 누르기(탭)는 그대로 팝업메뉴 (PGM_MIN px 넘게 끌어야 옮겨져요) · 양쪽 끝은 그대로 페이지 넘기기
            - 그림 · 글 · 버튼 위, 필기구로 그리는 중(js/draw.js 가 막아요), 글상자에 글을 쓰는 중에는 안 옮겨져요
            - 옮긴 자리는 이 기기에 기억 (PGM_KEY) · 화면 크기가 바뀌어도 배경 밖으로 안 나가게 맞춰요
@@ -535,7 +538,7 @@
             w.style.left = pgmPos.x + 'px'; w.style.top = pgmPos.y + 'px';
         }
         function pgmBegin(e) {
-            if (!isCoverOpen || turn || pgmDrag) return false;
+            if (turn || pgmDrag) return false;
             pgmDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: pgmPos.x, oy: pgmPos.y, on: false };
             return true;
         }
@@ -544,11 +547,12 @@
             try { const v = JSON.parse(localStorage.getItem(PGM_KEY)); if (v && isFinite(v.x) && isFinite(v.y)) pgmPos = { x: v.x, y: v.y }; } catch (err) {}
             pgmApply();
             wrapper.addEventListener('pointerdown', (e) => {
-                if (!isCoverOpen || turn || pgmDrag) return;
+                if (turn || pgmDrag) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
                 if (e.target.closest('.element-box, textarea, input, select, .tap-menu, #driveBadge')) return;
                 if (e.target.closest('button') && !e.target.closest('#pageHeader')) return;   // 날짜바는 버튼 위에서 끌어도 옮겨져요 (살짝 누르면 그대로 버튼)
-                if (curlEdgeAt(e.clientX, book)) return;
+                const edge = curlEdgeAt(e.clientX, book);
+                if (isCoverOpen ? edge : edge === 1) return;                 // 겉표지는 오른쪽 끝만 넘기기
                 const a = document.activeElement;
                 if (a && a.tagName === 'TEXTAREA' && a.closest('#canvasArea')) return;
                 pgmBegin(e);

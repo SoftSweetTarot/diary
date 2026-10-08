@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/piecebag.js
    🧩 조각스티커 봉투 : 내스티커(👜 내 봉투)에서 봉투를 누르면 배경(화면) 한가운데에 봉투가 나와요 (조각스티커 R&D 와 같은 연출)
-   1) 봉투 윗부분 점선을 옆으로 쓱 밀어 뜯어요 → 조각들이 와르르 쏟아져요 (한 번 뜯은 봉투는 다음부터 뜯긴 채로 나와요)
+   1) 봉투 윗부분 점선을 옆으로 쓱 밀어 뜯어요 → 조각들이 와르르 쏟아져요 (내스티커에서 꺼낼 때도 늘 새 봉투로 나와요)
    2) 조각을 톡 누르면 집어 올려요 → 가장자리를 손톱으로 밀어 뒷종이를 벗겨요 (가끔 반쯤에서 걸려요 · 놓으면 반쯤 벗겨진 채로 남아요)
    3) 벗긴 스티커는 손가락을 따라와요 → 페이지에 놓으면 붙어요 · 작은 봉투 위에 놓으면 봉투에 다시 쏙
    - 작은 봉투를 누르거나 ✕ 를 누르면 남은 조각은 봉투로 돌아가요 · 다 붙이면 저절로 닫혀요
@@ -10,7 +10,7 @@
 
         const PCB_PAD = 6, PCB_LINER = 3, PCB_GRAB = 30;
         const pcbS = { on: false, cv: null, ctx: null, fl: null, W: 0, H: 0, DPR: 1, raf: 0, hint: '', assets: [], pieces: [], fallers: [], drag: null, z: 10, bag: null,
-            PR: null, BIG: null, SMALL: null, HOLD: null, SL: .5, SH: 1, SP: .5, opened: false, onOpen: null, closing: 0, used: null, mv: { x: 0, y: 0 } };   // mv : 봉투를 옮긴 만큼   // used : 이번에 붙인 조각 (봉투 속에 안 그려요)
+            PR: null, BIG: null, SMALL: null, HOLD: null, SL: .5, SH: 1, SP: .5, closing: 0, used: null, mv: { x: 0, y: 0 } };   // mv : 봉투를 옮긴 만큼   // used : 이번에 붙인 조각 (봉투 속에 안 그려요)
         const pcbq = id => document.getElementById(id);
         const pcbMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
         const pcbLoad = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -106,8 +106,8 @@
             for (const q of [S.BIG, S.SMALL]) { q.x += dx; q.y += dy; pcbClampR(q); }
             S.mv.x += dx; S.mv.y += dy;
         }
-        /* srcs : 봉투에 든 조각 그림들 · o.opened : 전에 뜯은 봉투 · o.onOpen : 처음 뜯었을 때 (내스티커에 '뜯음' 표시) */
-        async function openPieceBag(srcs, o = {}) {
+        /* srcs : 봉투에 든 조각 그림들 */
+        async function openPieceBag(srcs) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return false; }
             let imgs;
             try { imgs = await Promise.all(srcs.map(pcbLoad)); } catch (e) { showMsg('조각스티커를 열지 못했어요.'); return false; }
@@ -116,15 +116,13 @@
             const S = pcbS;
             S.cv = pcbq('pcbCv'); S.ctx = S.cv.getContext('2d');
             S.assets = imgs.map((im, i) => Object.assign(pcbAsset(im), { src: srcs[i] }));
-            S.pieces = []; S.fallers = []; S.drag = null; S.closing = 0; S.used = new Set(); S.mv = { x: 0, y: 0 }; S.opened = !!o.opened; S.onOpen = o.onOpen || null; S.on = true;
+            S.pieces = []; S.fallers = []; S.drag = null; S.closing = 0; S.used = new Set(); S.mv = { x: 0, y: 0 }; S.on = true;
             pcbLayout();
-            const n = S.assets.length;
-            S.bag = { state: S.opened ? 'open' : 'closed', tear: 0, dir: 1, wig: 0, move: null, strip: null, busy: false,
+            S.bag = { state: 'closed', tear: 0, dir: 1, wig: 0, move: null, strip: null, busy: false,
                 preview: S.assets.map((a, k) => ({ k, u: .2 + Math.random() * .6, v: .42 + Math.random() * .42, rot: (Math.random() - .5) * 1.2 })) };
             pcbq('pcbRoom').classList.add('show'); document.body.classList.add('fc-lock');
             S.hint = '';
-            if (S.opened) { S.bag.move = { t0: pcbNow() - 1000, dur: 1 }; pcbSpill([...Array(n).keys()], [S.SMALL.x + S.SMALL.w / 2, S.SMALL.y + S.SMALL.h * .6], 0); pcbSay('조각이 쏟아졌어요! 하나 <b>톡</b> 눌러서 집어 보세요'); }
-            else pcbSay('봉투 윗부분 <b>점선</b>을 옆으로 쓱 밀어서 뜯어 보세요 ✂️');
+            pcbSay('봉투 윗부분 <b>점선</b>을 옆으로 쓱 밀어서 뜯어 보세요 ✂️');
             cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(pcbFrame);
             return true;
         }
@@ -399,7 +397,6 @@
             b.strip = { x: r.x, y: r.y, w: r.w, h: hh * .34, t0: pcbNow() };
             pcbSpill(S.assets.map((a, k) => k), [r.x + r.w / 2, r.y + r.h * .45], 150);
             const t0 = pcbNow() + 150 + S.assets.length * 70 + 250; b.move = { t0, dur: 480 }; setTimeout(() => { b.busy = false; }, t0 - pcbNow() + 500);
-            if (!S.opened) { S.opened = true; if (S.onOpen) S.onOpen(); }
             pcbSay('와르르~ 하나 <b>톡</b> 눌러서 집어 보세요');
         }
         function pcbSpill(ks, from, delay) {
