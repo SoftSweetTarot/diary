@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/stickermaker.js
-   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → 📷 사진찍기 · 🖼️ 사진고르기 · 🔤 글씨 스티커(숨김))
+   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → ✂️ 스티커만들기 → 📷 사진찍기 · 🖼️ 사진고르기 · 🔤 글씨 스티커)
    - 사진 스티커 : 📷 찍기 · 🖼 고르기 → 모양(동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기
    - 💾 내 스티커에 저장 : ✨ 스티커 창 → 🧩 조각스티커 → 내스티커 에서 언제든 다시 붙여요 (최대 40개)
@@ -244,8 +244,8 @@
         }
         window.openStickerList = openStickerList;
 
-        /* ✨ 스티커 창 → 🎀 마스킹테이프 · 🧩 조각스티커 · 🏷️ 씰스티커 · 📄 모조지스티커 · 📃 속지 : 목록 창 위에 카테고리 5개, 소스는 그 아래
-           지금 있는 것 : 🎀 내스티커(만든 · 받은 테이프) · 스티커만들기(마스킹테이프 만들기) / 🧩 내스티커(✂️ 사진 스티커) · 기본스티커(그림 모음 · 계절)
+        /* ✨ 스티커 창 → 🎀 마스킹테이프 · 🧩 조각스티커 · 🏷️ 씰스티커 · 📄 모조지스티커 · 📃 속지 : 목록 창 위에 카테고리 4개, 소스는 그 아래
+           지금 있는 것 : 🎀 내스티커(만든 · 받은 테이프) / 🧩 내스티커(✂️ 사진 스티커) · 기본스티커(그림 모음 · 계절)
                           문구점스티커는 모든 종류가 🛍️ 문구점의 그 칸으로 / 나머지는 '준비 중' */
         const STK_KINDS = {
             tape: ['🎀', '마스킹테이프', ['스티커', '마스킹 테이프']],
@@ -254,7 +254,7 @@
             paper: ['📄', '모조지스티커', ['스티커']],
             leaf: ['📃', '속지', []],
         };
-        const STK_TABS = [['mine', '내스티커'], ['share', '공유스티커'], ['free', '기본스티커'], ['shop', '문구점스티커'], ['make', '스티커만들기']];
+        const STK_TABS = [['mine', '내스티커'], ['share', '공유스티커'], ['free', '기본스티커'], ['shop', '문구점스티커']];
         let stkKind = 'tape';
         function openStickerKind(kind, tab) {
             const k = STK_KINDS[kind]; if (!k) return;
@@ -280,7 +280,6 @@
                 g.innerHTML = go('🧩', '말랑달콤 그림 모음', '카테고리별 조각스티커', "closeModal('stickerModal'); openLibrary()")
                     + (ss && !ss.hidden ? go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')") : '');
             } else if (tab === 'shop') g.innerHTML = go('🛍️', '문구점에서 ' + k[1] + ' 보기', '새 창으로 열려요', 'stkShop()');
-            else if (tab === 'make' && stkKind === 'tape') g.innerHTML = go('🎀', '마스킹테이프 만들기', '직접 그리거나 내 사진으로', "closeModal('stickerModal'); window.openTapeMaker && openTapeMaker()");
             else g.innerHTML = `<div class="cs-empty">🛠️ ${k[1]} ${STK_TABS.find(x => x[0] === tab)[1]}는 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }
         function stkShop() { openShop('#/' + (STK_KINDS[stkKind][2].length ? 'c/' + STK_KINDS[stkKind][2].map(encodeURIComponent).join('/') : '')); }
@@ -321,7 +320,7 @@
         /* ---------- 내 스티커 (✏️ 스티커 창 → ✂️ 내 스티커) ---------- */
         function smGrid() {
             const L = smS.list || [];
-            if (!L.length) return '<div class="smk-empty">✂️ 아직 만든 스티커가 없어요.<br>✨ 스티커 창의 📷 사진찍기 · 🖼️ 사진고르기로 만들어 보세요!</div>';
+            if (!L.length) return '<div class="smk-empty">✂️ 아직 만든 스티커가 없어요.<br>✂️ 스티커만들기의 📷 사진찍기 · 🖼️ 사진고르기로 만들어 보세요!</div>';
             return L.map((s, i) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button><i onclick="smDel(${i})" title="지우기">✕</i></span>`).join('');
         }
         function smUse(i) { const s = smS.list && smS.list[i]; if (s) smStick(s.src); }

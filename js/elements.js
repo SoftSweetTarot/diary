@@ -26,8 +26,6 @@
             selectElement(el);
         }
 
-        function triggerImageUpload() { document.getElementById('imgInput').click(); }
-
         function resolveSrc(p) {
             return /^(https?:|data:|blob:)/i.test(p) ? p : p.split('/').map(encodeURIComponent).join('/');
         }
@@ -53,65 +51,6 @@
             if (window.tmPlace) tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
             return true;
-        }
-
-        /* 🖼 이미지 : 어느 폴더의 이미지든 가져올 수 있도록 파일 내용 자체를 다이어리에 담아 저장 (data URL)
-           - GIF(움직이는 이미지)·SVG는 원본 그대로 보관
-           - 그 외 큰 사진은 저장 용량을 줄이려고 긴 변 IMG_MAX_SIDE px 이하로 줄여서 보관 (투명 배경 유지) */
-        const IMG_MAX_SIDE = 1200;
-        const IMG_KEEP_ORIGINAL_BYTES = 300 * 1024;   // 이보다 작고 크기도 작으면 원본 그대로
-
-        function readFileAsDataURL(file) {
-            return new Promise((resolve, reject) => {
-                const fr = new FileReader();
-                fr.onload = () => resolve(fr.result);
-                fr.onerror = () => reject(fr.error);
-                fr.readAsDataURL(file);
-            });
-        }
-
-        function loadImageEl(src) {
-            return new Promise((resolve, reject) => {
-                const im = new Image();
-                im.onload = () => resolve(im);
-                im.onerror = reject;
-                im.src = src;
-            });
-        }
-
-        async function fileToDiaryImage(file) {
-            const original = await readFileAsDataURL(file);
-            const type = (file.type || '').toLowerCase();
-            if (type === 'image/gif' || type === 'image/svg+xml') return original;     // 움직이는 GIF 등은 원본 유지
-            let im;
-            try { im = await loadImageEl(original); } catch (e) { return original; }
-            const w = im.naturalWidth, h = im.naturalHeight;
-            const scale = Math.min(1, IMG_MAX_SIDE / Math.max(w, h || 1));
-            if (scale === 1 && file.size <= IMG_KEEP_ORIGINAL_BYTES) return original;
-            const cv = document.createElement('canvas');
-            cv.width = Math.max(1, Math.round(w * scale));
-            cv.height = Math.max(1, Math.round(h * scale));
-            cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
-            let out = cv.toDataURL('image/webp', 0.85);
-            if (!out.startsWith('data:image/webp')) out = cv.toDataURL(type === 'image/jpeg' ? 'image/jpeg' : 'image/png', 0.85);
-            return out.length < original.length ? out : original;
-        }
-
-        async function handleImageUpload(e) {
-            const file = e.target.files[0];
-            e.target.value = '';
-            if (!file) return;
-            if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return; }
-            if (file.type && !file.type.startsWith('image/')) { showMsg('이미지 파일만 가져올 수 있어요.'); return; }
-            try {
-                const src = await fileToDiaryImage(file);
-                if (addImage(src)) {
-                    saveData(false);
-                }
-            } catch (err) {
-                console.error('이미지 불러오기 오류:', err);
-                showMsg('이미지를 불러오지 못했어요.<br>다른 이미지로 다시 시도해 주세요.');
-            }
         }
 
         /* 📚 그림모음 : 그림모음 서버(라이브러리_앱스크립트.gs)가 드라이브 '그림모음' 폴더를 읽어 목록을 보내 줘요

@@ -2501,7 +2501,7 @@
 /* 📱 아이패드 : 버튼을 한 번에 누르게 (두 번 탭 확대 대기 · 눌림 취소 없애기) */
 button, .btn, .tb-btn, .service-btn, .smk-room label { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
-/* 🔤 글씨 스티커 버튼 숨김 (코드는 그대로 · index.html 의 그 버튼에서 hidden 을 지우면 다시 보임) */
+/* 숨겨 둔 버튼 (코드는 그대로 · index.html 의 그 버튼에서 hidden 을 지우면 다시 보임) */
 .service-btn[hidden] { display: none !important; }
 
 /* 🎀 페이지 꾸미기 창이 열려 있는 동안 : 이미 놓인 그림 · 글은 안 보이고 안 눌려요 (꾸밈이 대신 눌리도록) */
@@ -2533,13 +2533,13 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 /* ===== ✨ 스티커 창 모으기 (20261007-07) ===== */
 #stickerCategories { display: none; }                         /* 목록 창의 카테고리 줄은 연결용으로만 남김 (버튼은 ✨ 스티커 창에 있어요) */
 #stickerMakeModal .service-btn { position: relative; }
-/* ===== ✨ 스티커 창 3×4 메뉴 + 종류 창 카테고리 5개 (20261008-228) ===== */
+/* ===== ✨ 스티커 창 · ✂️ 스티커만들기 창 3×3 메뉴 + 종류 창 카테고리 4개 ===== */
 .stk-menu { gap: 10px; }
 .stk-menu .service-btn { padding: 14px 4px 12px; font-size: 13.5px; word-break: keep-all; }
 .stk-menu .service-icon { font-size: 1.9rem; }
-.stk-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 2px 0 8px; }
+.stk-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 2px 0 8px; }
 .stk-tabs[hidden] { display: none; }
-.stk-tab { padding: 6px 1px; border: 1.5px solid var(--border-color); border-radius: 12px; background: #fff; font: inherit; font-size: 11.5px; font-weight: bold; line-height: 1.2; color: #7a5a66; cursor: pointer; word-break: keep-all; letter-spacing: -.02em; }
+.stk-tab { padding: 6px 1px; border: 1.5px solid var(--border-color); border-radius: 12px; background: #fff; font: inherit; font-size: 12px; font-weight: bold; line-height: 1.2; color: #7a5a66; cursor: pointer; word-break: keep-all; letter-spacing: -.02em; }
 .stk-tab.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
 .sticker-grid .stk-head { grid-column: 1 / -1; font-size: 12.5px; font-weight: bold; color: #7a5a66; padding: 6px 2px 0; }
 .sticker-grid .stk-go { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: inherit; cursor: pointer; }
