@@ -18,8 +18,8 @@
     <!-- html2canvas (PNG 저장용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261008-254">
-    <link rel="stylesheet" href="css/dakku.css?v=20261008-254">
+    <link rel="stylesheet" href="css/style.css?v=20261008-255">
+    <link rel="stylesheet" href="css/dakku.css?v=20261008-255">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -42,12 +42,15 @@
         <div class="diary-book" id="diaryBook">
             
             <!-- 겉표지 -->
+            <!-- 🎀 D 깅엄 표지 : 체크무늬 + 위아래 레이스 · 진분홍 제목(하얀 다이컷 테두리) + 꽃 · 딸기 (색은 스킨의 --primary-accent 를 따라가요) -->
             <div class="page cover-page" id="coverPage">
-                <div class="cover-title">Soft Sweet Diary 🌸</div>
+                <div class="cv-lace top"></div><div class="cv-lace bot"></div>
+                <div class="cover-title"><span class="cv-tx">Soft Sweet Diary</span><span class="cv-fl"><svg viewBox="0 0 48 48" aria-hidden="true"><g style="fill:color-mix(in srgb,var(--primary-accent) 55%,#fff)" stroke="#7b5a63" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="24" cy="12.5" rx="7.5" ry="10" transform="rotate(0 24 24)"/><ellipse cx="24" cy="12.5" rx="7.5" ry="10" transform="rotate(72 24 24)"/><ellipse cx="24" cy="12.5" rx="7.5" ry="10" transform="rotate(144 24 24)"/><ellipse cx="24" cy="12.5" rx="7.5" ry="10" transform="rotate(216 24 24)"/><ellipse cx="24" cy="12.5" rx="7.5" ry="10" transform="rotate(288 24 24)"/></g><circle cx="24" cy="24" r="6" fill="#ffe08f" stroke="#7b5a63" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><g style="fill:var(--primary-accent)"><circle cx="22" cy="22.5" r="1.2"/><circle cx="26" cy="23" r="1.2"/><circle cx="24" cy="26" r="1.2"/></g></svg></span></div>
                 <div class="cover-subtitle">나만의 말랑달콤 다이어리</div>
                 <!-- 📢 공지 이미지 : 스크립트의 NOTICE_IMAGE_SRC 에 이미지 경로/주소를 넣으면 여기에 표시 -->
                 <div class="cover-notice" id="coverNotice"><img id="coverNoticeImg" alt="공지사항"></div>
-                <div class="drag-hint">◀ 오른쪽에서 왼쪽으로 드래그하여 열기</div>
+                <span class="cv-berry"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 14c10 0 17 5 15 14-2 9-9 15-15 16-6-1-13-7-15-16-2-9 5-14 15-14z" fill="#ff7f9c" stroke="#7b5a63" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path d="M24 14c-4-4-9-4-12-2 4 1 7 3 8 6M24 14c4-4 9-4 12-2-4 1-7 3-8 6M24 14V8" stroke="#5fb98e" stroke-width="2.6" fill="#9ed7c0" stroke-linecap="round" stroke-linejoin="round"/><g fill="#fff"><ellipse cx="18" cy="26" rx="1.2" ry="1.8"/><ellipse cx="28" cy="24" rx="1.2" ry="1.8"/><ellipse cx="24" cy="32" rx="1.2" ry="1.8"/><ellipse cx="31" cy="31" rx="1.2" ry="1.8"/><ellipse cx="17" cy="33" rx="1.2" ry="1.8"/></g></svg></span>
+                <div class="drag-hint">◀ 밀어서 열기</div>
             </div>
 
             <!-- 속페이지 -->
@@ -796,79 +799,79 @@
     </div>
 
     <!-- 📦 코드 파일 (순서 중요 · 업데이트할 때 ?v= 뒤 숫자를 바꾸면 모든 사용자가 새 파일을 받아요) -->
-    <script src="js/drive.js?v=20261008-254"></script>
-    <script src="js/sound.js?v=20261008-254"></script>
-    <script src="js/app.js?v=20261008-254"></script>
-    <script src="js/page.js?v=20261008-254"></script>
-    <script src="js/elements.js?v=20261008-254"></script>
-    <script src="js/tapmenu.js?v=20261008-254"></script>
-    <script src="js/settings.js?v=20261008-254"></script>
-    <script src="js/patterns.js?v=20261008-254"></script>
+    <script src="js/drive.js?v=20261008-255"></script>
+    <script src="js/sound.js?v=20261008-255"></script>
+    <script src="js/app.js?v=20261008-255"></script>
+    <script src="js/page.js?v=20261008-255"></script>
+    <script src="js/elements.js?v=20261008-255"></script>
+    <script src="js/tapmenu.js?v=20261008-255"></script>
+    <script src="js/settings.js?v=20261008-255"></script>
+    <script src="js/patterns.js?v=20261008-255"></script>
     <!-- 🌟 카페에서 받아 등록한 사용자 패턴 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-patterns.js"></script>
     <!-- 🌟 카페에서 받아 등록한 모두의 스킨 (pattern-tool.html 로 만들어요 · 없거나 깨져도 다이어리는 정상 동작) -->
     <script src="js/community-skins.js"></script>
-    <script src="js/pattern-recipe.js?v=20261008-254"></script>
-    <script src="js/skins.js?v=20261008-254"></script>
-    <script src="js/pattern-maker.js?v=20261008-254"></script>
-    <script src="js/skinstudio.js?v=20261008-254"></script>
-    <script src="js/theme-skins.js?v=20261008-254"></script>
-    <script src="js/doll-render.js?v=20261008-254"></script>
-    <script src="js/doll-store.js?v=20261008-254"></script>
-    <script src="js/doll-room.js?v=20261008-254"></script>
-    <script src="js/service.js?v=20261008-254"></script>
+    <script src="js/pattern-recipe.js?v=20261008-255"></script>
+    <script src="js/skins.js?v=20261008-255"></script>
+    <script src="js/pattern-maker.js?v=20261008-255"></script>
+    <script src="js/skinstudio.js?v=20261008-255"></script>
+    <script src="js/theme-skins.js?v=20261008-255"></script>
+    <script src="js/doll-render.js?v=20261008-255"></script>
+    <script src="js/doll-store.js?v=20261008-255"></script>
+    <script src="js/doll-room.js?v=20261008-255"></script>
+    <script src="js/service.js?v=20261008-255"></script>
     <!-- 🎁 랜덤박스 (없어도 다이어리는 정상 동작) -->
-    <script src="js/gacha.js?v=20261008-254"></script>
-    <script src="js/presence.js?v=20261008-254"></script>
+    <script src="js/gacha.js?v=20261008-255"></script>
+    <script src="js/presence.js?v=20261008-255"></script>
     <!-- 🎵 배경음악 (없어도 다이어리는 정상 동작) -->
-    <script src="js/bgm.js?v=20261008-254"></script>
+    <script src="js/bgm.js?v=20261008-255"></script>
     <!-- 🔮 포춘카드 (없어도 다이어리는 정상 동작) -->
-    <script src="js/fortune.js?v=20261008-254"></script>
+    <script src="js/fortune.js?v=20261008-255"></script>
     <!-- 🕹️ 오락실 (없어도 다이어리는 정상 동작) -->
-    <script src="js/arcade.js?v=20261008-254"></script>
-    <script src="js/hof.js?v=20261008-254"></script>
+    <script src="js/arcade.js?v=20261008-255"></script>
+    <script src="js/hof.js?v=20261008-255"></script>
     <!-- 🌙 꿈해몽 (상징 사전 js/dream-data.js 는 꿈해몽을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/ritual.js?v=20261008-254"></script>
-    <script src="js/dream.js?v=20261008-254"></script>
+    <script src="js/ritual.js?v=20261008-255"></script>
+    <script src="js/dream.js?v=20261008-255"></script>
     <!-- 🎍 토정비결 (음력 계산 js/lib/korean-lunar-calendar.min.js 는 토정비결을 열 때 불러와요 · 없어도 다이어리는 정상 동작) -->
-    <script src="js/tojeong.js?v=20261008-254"></script>
-    <script src="js/plant.js?v=20261008-254"></script>
-    <script src="js/capsule-stickers.js?v=20261008-254"></script>
-    <script src="js/attend.js?v=20261008-254"></script>
-    <script src="js/luck.js?v=20261008-254"></script>
-    <script src="js/question-data.js?v=20261008-254"></script>
-    <script src="js/question.js?v=20261008-254"></script>
-    <script src="js/tape.js?v=20261008-254"></script>
-    <script src="js/paper.js?v=20261008-254"></script>
-    <script src="js/draw.js?v=20261008-254"></script>
-    <script src="js/frame.js?v=20261008-254"></script>
-    <script src="js/season-data.js?v=20261008-254"></script>
-    <script src="js/season.js?v=20261008-254"></script>
-    <script src="js/lock.js?v=20261008-254"></script>
-    <script src="js/cycle.js?v=20261008-254"></script>
-    <script src="js/month.js?v=20261008-254"></script>
-    <script src="js/stamp.js?v=20261008-254"></script>
-    <script src="js/search.js?v=20261008-254"></script>
-    <script src="js/dday.js?v=20261008-254"></script>
-    <script src="js/show.js?v=20261008-254"></script>
-    <script src="js/press.js?v=20261008-254"></script>
-    <script src="js/photobooth.js?v=20261008-254"></script>
-    <script src="js/stickermaker.js?v=20261008-254"></script>
-    <script src="js/stickerpeel.js?v=20261008-254"></script>
-    <script src="js/piecebag.js?v=20261008-254"></script>
-    <script src="js/dakku.js?v=20261008-254"></script>
-    <script src="js/papermaker.js?v=20261008-254"></script>
-    <script src="js/stickerpack.js?v=20261008-254"></script>
-    <script src="js/peelfx.js?v=20261008-254"></script>
-    <script src="js/tapemaker.js?v=20261008-254"></script>
-    <script src="js/namematch.js?v=20261008-254"></script>
-    <script src="js/psytest-data.js?v=20261008-254"></script>
-    <script src="js/psytest.js?v=20261008-254"></script>
-    <script src="js/letter.js?v=20261008-254"></script>
-    <script src="js/install.js?v=20261008-254"></script>
-    <script src="js/piggy.js?v=20261008-254"></script>
-    <script src="js/wall.js?v=20261008-254"></script>
-    <script src="js/arrival.js?v=20261008-254"></script>
+    <script src="js/tojeong.js?v=20261008-255"></script>
+    <script src="js/plant.js?v=20261008-255"></script>
+    <script src="js/capsule-stickers.js?v=20261008-255"></script>
+    <script src="js/attend.js?v=20261008-255"></script>
+    <script src="js/luck.js?v=20261008-255"></script>
+    <script src="js/question-data.js?v=20261008-255"></script>
+    <script src="js/question.js?v=20261008-255"></script>
+    <script src="js/tape.js?v=20261008-255"></script>
+    <script src="js/paper.js?v=20261008-255"></script>
+    <script src="js/draw.js?v=20261008-255"></script>
+    <script src="js/frame.js?v=20261008-255"></script>
+    <script src="js/season-data.js?v=20261008-255"></script>
+    <script src="js/season.js?v=20261008-255"></script>
+    <script src="js/lock.js?v=20261008-255"></script>
+    <script src="js/cycle.js?v=20261008-255"></script>
+    <script src="js/month.js?v=20261008-255"></script>
+    <script src="js/stamp.js?v=20261008-255"></script>
+    <script src="js/search.js?v=20261008-255"></script>
+    <script src="js/dday.js?v=20261008-255"></script>
+    <script src="js/show.js?v=20261008-255"></script>
+    <script src="js/press.js?v=20261008-255"></script>
+    <script src="js/photobooth.js?v=20261008-255"></script>
+    <script src="js/stickermaker.js?v=20261008-255"></script>
+    <script src="js/stickerpeel.js?v=20261008-255"></script>
+    <script src="js/piecebag.js?v=20261008-255"></script>
+    <script src="js/dakku.js?v=20261008-255"></script>
+    <script src="js/papermaker.js?v=20261008-255"></script>
+    <script src="js/stickerpack.js?v=20261008-255"></script>
+    <script src="js/peelfx.js?v=20261008-255"></script>
+    <script src="js/tapemaker.js?v=20261008-255"></script>
+    <script src="js/namematch.js?v=20261008-255"></script>
+    <script src="js/psytest-data.js?v=20261008-255"></script>
+    <script src="js/psytest.js?v=20261008-255"></script>
+    <script src="js/letter.js?v=20261008-255"></script>
+    <script src="js/install.js?v=20261008-255"></script>
+    <script src="js/piggy.js?v=20261008-255"></script>
+    <script src="js/wall.js?v=20261008-255"></script>
+    <script src="js/arrival.js?v=20261008-255"></script>
 
     <!-- 🛡 파일 누락 확인 : 하나라도 못 읽었으면 다이어리를 시작하지 않아서 잘못된 저장을 막아요 -->
     <script>
