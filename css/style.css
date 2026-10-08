@@ -1177,7 +1177,7 @@
         .at-go:disabled { background: #f0e2da; color: #8a6a58; box-shadow: none; cursor: default; font-size: 15px; }
 
         /* ===== 📲 앱으로 설치 (js/install.js) ===== */
-        .settings-grid .install-btn { grid-column: 1 / -1; background: linear-gradient(#fff0f5, #ffe1ec); border-color: #ff9ab3; }
+        .settings-grid .install-btn { background: linear-gradient(#fff0f5, #ffe1ec); border-color: #ff9ab3; }   /* 배경음악 옆 한 칸 */
         .modal-content.ins-content { max-width: 360px; }
         .ins-lead { margin: 4px 0 12px; font-size: 15px; line-height: 1.6; text-align: center; color: #5a3d4a; }
         .ins-steps { margin: 0; padding: 0; list-style: none; counter-reset: ins; display: flex; flex-direction: column; gap: 8px; }
