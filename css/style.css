@@ -2630,8 +2630,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
     --cv-die: drop-shadow(.5cqw 0 0 #fff) drop-shadow(-.5cqw 0 0 #fff) drop-shadow(0 .5cqw 0 #fff) drop-shadow(0 -.5cqw 0 #fff);
     justify-content: flex-start; padding-top: 15cqw; color: var(--cv-ink);
     background:
-        linear-gradient(90deg, color-mix(in srgb, var(--primary-accent) 22%, transparent) 50%, transparent 0) 0 0 / 9cqw 9cqw,
-        linear-gradient(color-mix(in srgb, var(--primary-accent) 22%, transparent) 50%, transparent 0) 0 0 / 9cqw 9cqw, #fff9fb; }
+        linear-gradient(90deg, color-mix(in srgb, var(--primary-accent) 30%, transparent) 50%, transparent 0) 0 0 / 9cqw 9cqw,
+        linear-gradient(color-mix(in srgb, var(--primary-accent) 30%, transparent) 50%, transparent 0) 0 0 / 9cqw 9cqw, color-mix(in srgb, var(--primary-accent) 7%, #fff); }
 .cover-page::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6cqw; pointer-events: none;
     background: linear-gradient(90deg, rgba(0,0,0,.12), rgba(255,255,255,.18) 60%, rgba(0,0,0,.05)); }
 .cv-lace { position: absolute; left: 0; right: 0; height: 5cqw; pointer-events: none; background: radial-gradient(circle at 50% 0, #fff 2.2cqw, transparent 2.4cqw) 0 0 / 5cqw 5cqw; filter: drop-shadow(0 .4cqw 0 rgba(0,0,0,.05)); }
@@ -2642,6 +2642,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .cv-fl svg, .cv-berry svg { display: block; width: 100%; height: 100%; }
 .cover-page .cover-subtitle { position: relative; font-size: 4cqw; font-weight: 600; opacity: 1; margin-top: 1.4cqw; }
 .cover-page .cover-notice { position: relative; margin-top: 5cqw; }
+.cover-page .cover-notice img { box-shadow: none; }
 .cv-berry { position: absolute; right: 6cqw; bottom: 18%; width: 20cqw; height: 20cqw; transform: rotate(12deg); pointer-events: none;
     filter: drop-shadow(.5cqw 0 0 #fff) drop-shadow(-.5cqw 0 0 #fff) drop-shadow(0 .5cqw 0 #fff) drop-shadow(0 -.5cqw 0 #fff) drop-shadow(0 .9cqw .8cqw rgba(150,90,110,.3)); }
 .cover-page .drag-hint { position: absolute; bottom: 8cqw; left: 50%; margin: 0; font-size: 3cqw; font-weight: 700; white-space: nowrap; color: #7b5a63; animation: cvNudge 1.5s infinite; }
