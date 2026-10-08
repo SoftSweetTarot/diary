@@ -316,14 +316,16 @@
                 el.appendChild(stretchHandle);
             }
 
-            /* 🪶 끌어 옮기는 동안 살짝 떠오르기 : 6% 커지고 그림자 · 맨 위 레이어 (놓으면 제자리 크기로 · 레이어는 맨 위 그대로) */
-            let lift = 1, liftRaf = 0, lifted = false;
+            /* 🪶 끌어 옮기기 : 🏷️ 씰스티커처럼 떼어진 뒤(js/peelfx.js) 6% 커지고 그림자를 단 채 떠서 따라와요 · 맨 위 레이어 (놓으면 제자리 크기로 붙고 · 레이어는 맨 위 그대로)
+               lag : 떼어지는 동안은 제자리에 있다가 다 떼어지면 손가락 자리로 스르륵 따라붙어요 */
+            let lift = 1, liftRaf = 0, lifted = false, peeling = null, lag = [0, 0];
             function liftTo(to) {
                 cancelAnimationFrame(liftRaf);
-                const from = lift, t0 = performance.now();
+                const from = lift, lag0 = lag.slice(), t0 = performance.now();
                 const step = now => {
-                    const k = Math.min(1, (now - t0) / 140);
-                    lift = from + (to - from) * (1 - (1 - k) * (1 - k));
+                    const k = Math.min(1, (now - t0) / 140), e = 1 - (1 - k) * (1 - k);
+                    lift = from + (to - from) * e;
+                    if (!peeling) lag = [lag0[0] * (1 - e), lag0[1] * (1 - e)];
                     updateTransform();
                     if (k < 1) liftRaf = requestAnimationFrame(step);
                 };
@@ -331,7 +333,7 @@
             }
 
             function updateTransform() {
-                el.style.transform = `translate(${posX}px, ${posY}px) scale(${scale * lift}) rotate(${rotation}deg)`;
+                el.style.transform = `translate(${posX - lag[0]}px, ${posY - lag[1]}px) scale(${scale * lift}) rotate(${rotation}deg)`;
                 el.style.setProperty('--inv', Math.min(5, 1 / (scale || 1)));
             }
             
@@ -398,14 +400,16 @@
                 const pos = getClientPos(e);
 
                 if (actionType === 'move') {
-                    if (!lifted && !el.querySelector('textarea') && Math.hypot(pos.x - startX, pos.y - startY) > 3) {
+                    const ddx = pos.x - startX, ddy = pos.y - startY;
+                    if (!lifted && !el.querySelector('textarea') && Math.hypot(ddx, ddy) > 6) {
                         lifted = true;
                         el.style.zIndex = zIndexCounter++;
-                        el.classList.add('lifting');
-                        liftTo(1.06);
+                        const up = () => { peeling = null; el.classList.add('lifting'); liftTo(1.06); };
+                        if (window.pfxPeel) { peeling = true; const stop = pfxPeel(el, startX, startY, ddx, ddy, rotation, up); if (peeling) peeling = stop; } else up();
                     }
-                    posX = initialX + (pos.x - startX);
-                    posY = initialY + (pos.y - startY);
+                    posX = initialX + ddx;
+                    posY = initialY + ddy;
+                    if (peeling) lag = [ddx, ddy];
                     el.dataset.posX = posX; el.dataset.posY = posY;
                 } else if (actionType === 'rotate') {
                     const rect = el.getBoundingClientRect();
@@ -423,7 +427,10 @@
 
             const onEnd = () => {
                 actionType = null; pinch = null;
-                if (lifted) { lifted = false; el.classList.remove('lifting'); liftTo(1); }
+                if (lifted) {
+                    if (peeling) { const stop = peeling; peeling = null; stop(); }
+                    lifted = false; el.classList.remove('lifting'); liftTo(1);
+                }
             };
 
             el.addEventListener('wheel', (e) => {

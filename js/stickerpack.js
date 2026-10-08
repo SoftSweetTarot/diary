@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/stickerpack.js
-   🔤 스티커팩 : ✨ 스티커 창 → 😀 이모지 → 위쪽 '🔤 스티커팩' 칸 (이모지와 따로)
+   🍭 미니시트 : ✨ 스티커 창 → 🍭 미니시트 → 위쪽 '🍭 미니시트' 칸 (첫 칸 · 😀 이모지는 둘째 칸)
    - 비슷한 것끼리 묶은 작은 스티커 모음 : 🔤 말랑 알파벳 A~Z · 🔢 말랑 숫자 0~9 · 💗 하트 모음
      그림 파일 없이 코드로 그려요 (말랑 버블 글씨 + 하얀 다이컷 테두리 · spkDraw) → 한 번 그린 건 기억해 둬요
    - 팩을 고르면 하얀 판에 스티커가 올려진 채 페이지 옆(자리가 없으면 아래쪽)에 떠 있어요
@@ -7,7 +7,7 @@
      2) 그대로 끌어서 페이지에 놓으면 작아지며 꾹 붙어요 → 빨간 점선이 생겨 옮기기 · 돌리기 · 크기 조절 (다른 스티커와 같아요)
         페이지 밖이나 판 위에 놓으면 제자리로 돌아가요 · 떠 있을 때 다른 곳을 누르면 제자리로
    - 판 위쪽 테이프(✋)를 끌면 판이 옮겨져요 · 오른쪽 위 끝 ✕ 로 닫아요 · 판 바깥은 그대로 페이지라 붙인 스티커를 바로 고칠 수 있어요
-   ※ 이 파일이 없어도 다이어리는 정상 동작 (스티커팩 칸만 '준비 중') */
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (미니시트 칸만 '준비 중') */
 
         const SPK_FONT = "'Fredoka', 'Jua', 'Arial Rounded MT Bold', sans-serif";
         const SPK_COLORS = [['#ff9ec1', '#e0628f'], ['#ffd36b', '#d9a12a'], ['#9fd3ff', '#4f9fd8'], ['#a8e3a0', '#5aa863'], ['#c7a8ff', '#8a63d9'], ['#ffb48a', '#e07a45'], ['#8fe0d2', '#3fae9c']];
@@ -100,10 +100,10 @@
             return (spkS.cache[pack.id] = pack.items.map((it, i) => pack.id === 'heart' ? spkHeart(i) : spkGlyph(it, i)));
         }
 
-        /* ---------- 😀 이모지 창 : 위쪽 '😀 이모지 · 🔤 스티커팩' 두 칸 (js/stickermaker.js openStickerList) ---------- */
+        /* ---------- 🍭 미니시트 창 : 위쪽 '🍭 미니시트 · 😀 이모지' 두 칸 (js/stickermaker.js openStickerList) ---------- */
         function spkTabs() {
             const bar = spkq('stickerKindTabs'); if (!bar) return;
-            bar.innerHTML = [['emoji', '😀 이모지'], ['pack', '🔤 스티커팩']].map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="spkTab('${v}')">${n}</button>`).join('');
+            bar.innerHTML = [['pack', '🍭 미니시트'], ['emoji', '😀 이모지']].map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="spkTab('${v}')">${n}</button>`).join('');
             bar.classList.add('two'); bar.hidden = false;
         }
         async function spkTab(tab) {
@@ -157,15 +157,23 @@
         }
         function closeStickerPack() { spkPutBack(); const r = spkq('spkRoom'); if (r) r.classList.remove('show'); }
 
-        /* ---------- 톡 → 떠오르기 · 끌기 → 붙이기 ---------- */
+        /* ---------- 누르면 🏷️ 씰스티커처럼 떼어져서(js/peelfx.js) 떠오르기 · 끌기 → 붙이기 ---------- */
         function spkDown(e) {
             const it = e.target.closest('.spk-it'); if (!it) return;
             e.preventDefault(); spkPutBack();
             const img = it.querySelector('img'), r = img.getBoundingClientRect();
             const f = img.cloneNode(); f.className = 'spk-fly'; f.style.width = r.width + 'px'; f.style.height = r.height + 'px';
-            f.style.transform = `translate(${r.left}px, ${r.top}px)`; document.body.appendChild(f); void f.offsetWidth; it.classList.add('out');
-            const L = spkS.lift = { f, it, src: img.src, w: r.width, h: r.height, home: [r.left + r.width / 2, r.top + r.height / 2], off: [e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)], moved: false, start: [e.clientX, e.clientY] };
-            spkFly(L.home[0], L.home[1], 1.3, (Math.random() - .5) * .2);
+            f.style.transform = `translate(${r.left}px, ${r.top}px)`; f.classList.add('flat'); document.body.appendChild(f); void f.offsetWidth; it.classList.add('out');
+            const L = spkS.lift = { f, it, src: img.src, w: r.width, h: r.height, home: [r.left + r.width / 2, r.top + r.height / 2], off: [e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)], moved: false, start: [e.clientX, e.clientY], last: [e.clientX, e.clientY], s: 1, rot: 0 };
+            L.cx = L.home[0]; L.cy = L.home[1];
+            const up = () => {                                                        // 다 떼어지면 커지며 떠올라 손가락 자리로
+                L.peel = null; if (spkS.lift !== L) return;
+                f.classList.remove('flat', 'drag');
+                const [x, y] = L.moved ? [L.last[0] - L.off[0], L.last[1] - L.off[1]] : L.home;
+                spkFly(x, y, 1.3, (Math.random() - .5) * .2);
+                if (L.upLater) setTimeout(() => { if (spkS.lift === L) spkDrop(L); }, 170);
+            };
+            if (window.pfxPeel) { L.peel = true; const stop = pfxPeel(f, e.clientX, e.clientY, .35, -1, 0, up); if (L.peel) L.peel = stop; } else up();
             f.addEventListener('pointermove', spkMove); f.addEventListener('pointerup', spkUp); f.addEventListener('pointercancel', spkUp);
             f.addEventListener('pointerdown', ev => { ev.preventDefault(); const q = spkS.lift; if (!q) return; q.off = [ev.clientX - q.cx, ev.clientY - q.cy]; q.start = [ev.clientX, ev.clientY]; q.moved = false; q.down = true; try { f.setPointerCapture(ev.pointerId); } catch (er) {} });
             L.down = true; try { f.setPointerCapture(e.pointerId); } catch (er) {}
@@ -179,12 +187,18 @@
         function spkMove(e) {
             const L = spkS.lift; if (!L || !L.down) return;
             if (!L.moved && Math.hypot(e.clientX - L.start[0], e.clientY - L.start[1]) < 5) return;
-            L.moved = true; L.f.classList.add('drag'); spkFly(e.clientX - L.off[0], e.clientY - L.off[1]);
+            L.moved = true; L.last = [e.clientX, e.clientY];
+            if (L.peel) return;                                                       // 떼어지는 동안은 제자리
+            L.f.classList.add('drag'); spkFly(e.clientX - L.off[0], e.clientY - L.off[1]);
         }
         function spkUp() {
             const L = spkS.lift; if (!L || !L.down) return;
             L.down = false; L.f.classList.remove('drag');
             if (!L.moved) return;                                                     // 톡 : 떠 있는 채로 (다시 끌거나 다른 곳을 누르면 제자리)
+            if (L.peel) { L.upLater = true; return; }                                 // 아직 떼어지는 중 → 다 떼어진 뒤 놓기
+            spkDrop(L);
+        }
+        function spkDrop(L) {
             const pg = spkq('canvasArea'), r = pg && pg.getBoundingClientRect(), b = spkq('spkBoard').getBoundingClientRect();
             const onBoard = L.cx > b.left && L.cx < b.right && L.cy > b.top && L.cy < b.bottom;
             if (r && !onBoard && L.cx > r.left && L.cx < r.right && L.cy > r.top && L.cy < r.bottom) spkStick(L); else spkPutBack();
@@ -192,7 +206,8 @@
         /* 제자리로 */
         function spkPutBack() {
             const L = spkS.lift; if (!L) return; spkS.lift = null;
-            L.f.classList.add('back'); L.s = 1; L.rot = 0; L.f.style.transform = `translate(${L.home[0] - L.w / 2}px, ${L.home[1] - L.h / 2}px) scale(1)`;
+            if (typeof L.peel === 'function') L.peel(); L.peel = null;
+            L.f.classList.remove('flat'); L.f.classList.add('back'); L.s = 1; L.rot = 0; L.f.style.transform = `translate(${L.home[0] - L.w / 2}px, ${L.home[1] - L.h / 2}px) scale(1)`;
             setTimeout(() => { L.f.remove(); L.it.classList.remove('out'); }, 200);
         }
         /* 붙이기 : 작아지며 꾹 → 페이지 스티커가 돼요 (빨간 점선으로 골라 둬요) */
