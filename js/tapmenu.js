@@ -104,12 +104,13 @@
         }
 
         /* 메뉴에서 고른 걸 눌렀던 자리에 놓기 (스티커 · 글 · 이미지를 넣는 함수가 불러요) */
-        function tmPlace(el) {
+        function tmPlace(el) {                                         // 놓았으면 true
             const a = tmAnchor; tmAnchor = null;
-            if (!a || Date.now() - a.t > TM_ANCHOR_MS) return;
+            if (!a || Date.now() - a.t > TM_ANCHOR_MS) return false;
             const x = Math.round(a.x - 24), y = Math.round(a.y - 24);
             el.dataset.posX = x; el.dataset.posY = y;
             el.style.transform = `translate(${x}px, ${y}px) scale(1) rotate(0deg)`;
+            return true;
         }
 
         /* 위 도구 줄을 직접 누르면 예전 자리는 잊기 · 메뉴 바깥을 누르거나 스크롤 · 키 입력 · 창 크기 변경이면 닫기 */

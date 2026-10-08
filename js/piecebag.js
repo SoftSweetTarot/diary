@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/piecebag.js
-   🧩 조각스티커 봉투 : 내스티커(👜 내 봉투)에서 봉투를 누르면 페이지 앞에 봉투가 나와요 (조각스티커 R&D 와 같은 연출)
+   🧩 조각스티커 봉투 : 내스티커(👜 내 봉투)에서 봉투를 누르면 배경(화면) 한가운데에 봉투가 나와요 (조각스티커 R&D 와 같은 연출)
    1) 봉투 윗부분 점선을 옆으로 쓱 밀어 뜯어요 → 조각들이 와르르 쏟아져요 (한 번 뜯은 봉투는 다음부터 뜯긴 채로 나와요)
    2) 조각을 톡 누르면 집어 올려요 → 가장자리를 손톱으로 밀어 뒷종이를 벗겨요 (가끔 반쯤에서 걸려요 · 놓으면 반쯤 벗겨진 채로 남아요)
    3) 벗긴 스티커는 손가락을 따라와요 → 페이지에 놓으면 붙어요 · 작은 봉투 위에 놓으면 봉투에 다시 쏙
@@ -64,8 +64,9 @@
             const S = pcbS, cv = S.cv;
             S.DPR = Math.min(window.devicePixelRatio || 1, 3); S.W = window.innerWidth; S.H = window.innerHeight;
             cv.width = S.W * S.DPR; cv.height = S.H * S.DPR; S.fl = pcbMk(cv.width, cv.height);
+            /* 봉투는 배경(화면) 한가운데 · 조각은 그 둘레(PR)에 쏟아져요 · 붙일 크기(SP)는 페이지에 맞춰요 */
             const pg = pcbq('canvasArea'), r = pg ? pg.getBoundingClientRect() : { left: 0, top: 0, width: S.W, height: S.H };
-            const x = Math.max(0, r.left), y = Math.max(60, r.top), PR = S.PR = { x, y, w: Math.min(S.W, r.left + r.width) - x, h: Math.min(S.H, r.top + r.height) - y };
+            const pw = Math.min(S.W - 24, 520), ph = Math.min(S.H - 84, 720), PR = S.PR = { x: (S.W - pw) / 2, y: Math.max(70, (S.H - ph) / 2), w: pw, h: ph };
             const bw = Math.min(PR.w - 60, 230), bh = Math.min(PR.h - 40, bw * 1.13);
             S.BIG = { x: PR.x + PR.w / 2 - bw / 2, y: PR.y + (PR.h - bh) / 2, w: bw, h: bh };
             S.SMALL = { x: PR.x + PR.w - 14 - 62, y: PR.y + PR.h - 14 - 76, w: 62, h: 76 };
@@ -73,7 +74,7 @@
             const m = Math.max(1, ...S.assets.map(a => Math.max(a.w, a.h)));
             S.SL = Math.max(.24, Math.min(.6, Math.min(PR.w, PR.h) * .24 / m));
             S.SH = Math.min(1.25, PR.w * .66 / m, PR.h * .5 / m);
-            S.SP = Math.min(1, PR.w * .32 / m);
+            S.SP = Math.min(1, Math.min(r.width, S.W) * .32 / m);
         }
         /* srcs : 봉투에 든 조각 그림들 · o.opened : 전에 뜯은 봉투 · o.onOpen : 처음 뜯었을 때 (내스티커에 '뜯음' 표시) */
         async function openPieceBag(srcs, o = {}) {

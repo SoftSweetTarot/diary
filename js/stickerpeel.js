@@ -1,7 +1,7 @@
 /* 말랑달콤 다이어리 - js/stickerpeel.js
    🏷️ 씰스티커 떼어 붙이기 : 내스티커에서 고르거나 만들기에서 📌 붙이기를 누르면 페이지 앞에 스티커가 나와요 (🧩 조각스티커는 봉투 연출 js/piecebag.js)
    - 🏷️ 씰 : 하얀 네모(스티커 종이) 위에 씰이 있어요 → 가장자리를 잡고 떼어 원하는 곳에 놓으면 붙어요
-             사진고르기로 여러 장을 고르면 한 장의 종이에 씰이 여러 개 붙어 나와요 → 마지막 씰을 떼면 하얀 종이가 사라져요
+             종이는 배경(화면) 한가운데에 나와요 · 사진고르기로 여러 장을 고르면 한 장의 종이에 씰이 여러 개 붙어 나와요 → 마지막 씰을 떼면 하얀 종이가 사라져요
              하얀 종이의 빈 곳을 누른 채 끌면 종이째 화면 안에서 옮겨져요 · 종이 바깥 페이지를 끌면 페이지가 옮겨져요
              소리 : 떼어 낼 때 '찌익' 소리만
    - pelBake(src) : 📸 포토부스 사진처럼 네모난 그림 둘레에 하얀 칼선 테두리를 둘러요 (긴 변 PEL_MAX 이하 PNG)
@@ -60,9 +60,9 @@
             const S = pelS, cv = S.cv;
             S.DPR = Math.min(window.devicePixelRatio || 1, 3); S.W = window.innerWidth; S.H = window.innerHeight;
             cv.width = S.W * S.DPR; cv.height = S.H * S.DPR; S.fl = pelMk(cv.width, cv.height);
-            /* 페이지 가운데 하얀 종이 한 장 (화면 밖으로 안 나가게) : 한 장이면 그 크기, 여러 장이면 칸을 나눠 나란히 */
+            /* 배경(화면) 가운데 하얀 종이 한 장 (크기는 페이지에 맞춰요) : 한 장이면 그 크기, 여러 장이면 칸을 나눠 나란히 */
             const pg = pelPage(), r = pg ? pg.getBoundingClientRect() : { left: 0, top: 0, width: S.W, height: S.H };
-            let cx = Math.min(S.W - 30, Math.max(30, r.left + r.width / 2)), cy = Math.min(S.H - 30, Math.max(90, r.top + Math.min(r.height, S.H - r.top) / 2));
+            let cx = S.W / 2, cy = S.H / 2;
             cx += S.mv.x; cy += S.mv.y;                                          // 종이를 옮긴 만큼
             const it = S.items, n = it.length, pw = Math.min(r.width, S.W);
             if (n === 1) {

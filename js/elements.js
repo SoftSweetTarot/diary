@@ -6,8 +6,9 @@
             el.className = 'element-box';
             el.innerHTML = `<span style="font-size:45px; display:inline-block;">${emoji}</span>`;
             makeTransformable(el);
-            if (window.tmPlace) tmPlace(el);
+            const at = window.tmPlace && tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
+            if (!at) elCenter(el);
             closeModal('stickerModal');
         }
 
@@ -48,9 +49,29 @@
             bindImage(img, src, fallback);
             el.appendChild(img);
             makeTransformable(el);
-            if (window.tmPlace) tmPlace(el);
+            const at = window.tmPlace && tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
+            if (!at) elCenter(el);
             return true;
+        }
+        /* 📍 꺼낸 스티커는 배경(화면) 한가운데에 놓여요 (화면 가운데가 페이지 밖이면 페이지 안에서 가장 가까운 곳)
+           - 처음 자리(100, 100) 그대로일 때만 : 떼어 붙이기 · 필기구처럼 부른 곳에서 자리를 정했으면 그대로 둬요
+           - 그림은 다 불러온 뒤 크기를 재서 맞춰요 */
+        function elCenter(el) {
+            const go = () => {
+                if (!el.isConnected || el.dataset.posX !== '100' || el.dataset.posY !== '100') return;
+                const pg = document.getElementById('canvasArea'), r = pg.getBoundingClientRect(), k = r.width / (pg.offsetWidth || r.width) || 1;
+                const put = (x, y) => { el.dataset.posX = x; el.dataset.posY = y; el.style.transform = `translate(${x}px, ${y}px) scale(${el.dataset.scale || 1}) rotate(${el.dataset.rotation || 0}deg)`; };
+                put(0, 0);
+                const b = el.getBoundingClientRect(), hw = Math.min(b.width, r.width) / 2, hh = Math.min(b.height, r.height) / 2;
+                const cx = Math.min(r.right - hw, Math.max(r.left + hw, window.innerWidth / 2)), cy = Math.min(r.bottom - hh, Math.max(r.top + hh, window.innerHeight / 2));
+                put(Math.round((cx - (b.left + b.width / 2)) / k), Math.round((cy - (b.top + b.height / 2)) / k));
+                if (selectedElement === el && typeof positionTextPanel === 'function') positionTextPanel();
+                if (typeof saveData === 'function') saveData(false);
+            };
+            const img = el.querySelector('img');
+            if (img && !img.complete) { img.addEventListener('load', () => requestAnimationFrame(go), { once: true }); img.addEventListener('error', () => requestAnimationFrame(go), { once: true }); }
+            else requestAnimationFrame(go);
         }
 
         /* 📚 그림모음 : 그림모음 서버(라이브러리_앱스크립트.gs)가 드라이브 '그림모음' 폴더를 읽어 목록을 보내 줘요
