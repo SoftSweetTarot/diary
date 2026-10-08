@@ -398,7 +398,7 @@
                 if (t.isCover) {
                     t.pageEl.style.display = 'none';
                     document.getElementById('innerPage').style.display = 'flex';
-                    isCoverOpen = true; pgmApply();
+                    isCoverOpen = true; pgmPos = { x: 0, y: 0 }; pgmApply();   // 다이어리를 열면 늘 가운데에서 시작
                 } else {
                     currentDate.setDate(currentDate.getDate() + t.dir);
                 }
@@ -523,10 +523,10 @@
         /* ✋ 페이지 옮기기 : 다이어리를 연 뒤 페이지(날짜바 포함)의 빈 곳을 누른 채 끌면 배경 안에서 마음대로 옮겨져요 (겉표지는 가운데 고정)
            - 살짝 누르기(탭)는 그대로 팝업메뉴 (PGM_MIN px 넘게 끌어야 옮겨져요) · 양쪽 끝은 그대로 페이지 넘기기
            - 그림 · 글 · 버튼 위, 필기구로 그리는 중(js/draw.js 가 막아요), 글상자에 글을 쓰는 중에는 안 옮겨져요
-           - 옮긴 자리는 이 기기에 기억 (PGM_KEY) · 화면 크기가 바뀌어도 배경 밖으로 안 나가게 맞춰요
+           - 옮긴 자리는 기억하지 않아요 : 앱을 켜거나 로그인해서 다이어리를 열면 늘 가운데에서 시작 · 화면 크기가 바뀌어도 배경 밖으로 안 나가게 맞춰요
            - #diaryWrapper 의 left · top 만 바꿔요 (페이지 안 좌표 posX · posY 는 그대로라 스티커 자리는 안 바뀌어요)
            - 🏷️ 씰 종이가 떠 있을 때는 js/stickerpeel.js 가 종이 바깥에서 누른 손가락을 pgmBegin 으로 넘겨줘요 */
-        const PGM_KEY = 'malang_page_pos', PGM_MIN = 8;
+        const PGM_MIN = 8;
         let pgmPos = { x: 0, y: 0 }, pgmDrag = null, pgmAt = 0;
         function pgmApply() {
             const w = document.getElementById('diaryWrapper');
@@ -543,7 +543,6 @@
         }
         function setupPageMove() {
             const wrapper = document.getElementById('diaryWrapper'), book = document.getElementById('diaryBook');
-            try { const v = JSON.parse(localStorage.getItem(PGM_KEY)); if (v && isFinite(v.x) && isFinite(v.y)) pgmPos = { x: v.x, y: v.y }; } catch (err) {}
             pgmApply();
             wrapper.addEventListener('pointerdown', (e) => {
                 if (!isCoverOpen || turn || pgmDrag) return;
@@ -570,7 +569,6 @@
                 const d = pgmDrag; if (!d || d.id !== e.pointerId) return;
                 pgmDrag = null; if (!d.on) return;
                 wrapper.classList.remove('pgm-on'); pgmAt = performance.now();
-                try { localStorage.setItem(PGM_KEY, JSON.stringify(pgmPos)); } catch (err) {}
             };
             window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
             wrapper.addEventListener('click', (e) => {                // 끌고 난 뒤의 클릭은 팝업메뉴 · 날짜 버튼으로 안 가요
