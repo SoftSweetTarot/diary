@@ -2636,11 +2636,18 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
     background: linear-gradient(90deg, rgba(0,0,0,.12), rgba(255,255,255,.18) 60%, rgba(0,0,0,.05)); }
 .cv-lace { position: absolute; left: 0; right: 0; height: 5cqw; pointer-events: none; background: radial-gradient(circle at 50% 0, #fff 2.2cqw, transparent 2.4cqw) 0 0 / 5cqw 5cqw; filter: drop-shadow(0 .4cqw 0 rgba(0,0,0,.05)); }
 .cv-lace.top { top: 0; } .cv-lace.bot { bottom: 0; transform: scaleY(-1); }
-.cover-page .cover-title { position: relative; margin: 0; font-weight: 500; line-height: 1.2; font-size: 8.6cqw; text-shadow: none; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 2cqw; }
-.cover-page .cv-tx, .cover-page .cover-subtitle { filter: var(--cv-die); }
-.cv-fl { width: 9cqw; height: 9cqw; flex: none; filter: var(--cv-die); }
-.cv-fl svg, .cv-berry svg { display: block; width: 100%; height: 100%; }
-.cover-page .cover-subtitle { position: relative; font-size: 4cqw; font-weight: 600; opacity: 1; margin-top: 1.4cqw; }
+.cover-page .cover-title { position: relative; margin: 0; padding-top: 2.4cqw; text-shadow: none; }
+.cover-page .cover-subtitle { position: relative; opacity: 1; margin-top: 1.4cqw; }
+.cv-berry svg { display: block; width: 100%; height: 100%; }
+/* 표지 제목 레터링 (⑤ 다꾸 손글씨) : 진분홍 · 연분홍 번갈아 + 하얀 테두리 · 색은 스킨을 따라가요 */
+.cv-lt { display: block; height: auto; overflow: visible; margin: 0 auto; }
+.cover-title .cv-lt { width: 76cqw; } .cover-subtitle .cv-lt { width: 50cqw; }
+.cv-lt .o path { fill: #fff; stroke: #fff; stroke-linejoin: round; stroke-linecap: round; }
+.cv-lt .f path { fill: var(--cv-ink); }
+.cv-lt .f2 path { fill: color-mix(in srgb, var(--primary-accent) 62%, #fff); }
+.cv-lt .dp path { fill: var(--cv-ink); stroke: var(--cv-ink); stroke-linejoin: round; }
+.cv-lt .hrt { fill: var(--primary-accent); stroke: #fff; stroke-width: 5; paint-order: stroke; }
+.cv-lt .spk { fill: #ffd36e; stroke: #fff; stroke-width: 5; paint-order: stroke; }
 .cover-page .cover-notice { position: relative; margin-top: 5cqw; }
 .cover-page .cover-notice img { box-shadow: none; }
 .cv-berry { position: absolute; right: 6cqw; bottom: 18%; width: 20cqw; height: 20cqw; transform: rotate(12deg); pointer-events: none;
@@ -2663,3 +2670,4 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
     background: color-mix(in srgb, var(--primary-accent) 45%, #fff); opacity: .75; border-radius: .3cqw; pointer-events: none; }
 .inner-page.png-mode .page-header::before { display: none; }
 .inner-page .page-header .page-cal-btn, .inner-page .page-header .page-search-btn { color: inherit; }
+.pfx-stage { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 120; pointer-events: none; }
