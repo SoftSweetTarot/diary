@@ -2638,13 +2638,13 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .cv-lace.top { top: 0; } .cv-lace.bot { bottom: 0; transform: scaleY(-1); }
 .cover-page .cover-title { position: relative; margin: 0; font-weight: 500; line-height: 1.2; font-size: 8.6cqw; text-shadow: none; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 2cqw; }
 .cover-page .cv-tx, .cover-page .cover-subtitle { filter: var(--cv-die); }
-.cv-fl { width: 9cqw; height: 9cqw; flex: none; filter: var(--cv-die) drop-shadow(0 .9cqw .8cqw rgba(150,90,110,.3)); }
+.cv-fl { width: 9cqw; height: 9cqw; flex: none; filter: var(--cv-die); }
 .cv-fl svg, .cv-berry svg { display: block; width: 100%; height: 100%; }
 .cover-page .cover-subtitle { position: relative; font-size: 4cqw; font-weight: 600; opacity: 1; margin-top: 1.4cqw; }
 .cover-page .cover-notice { position: relative; margin-top: 5cqw; }
 .cover-page .cover-notice img { box-shadow: none; }
 .cv-berry { position: absolute; right: 6cqw; bottom: 18%; width: 20cqw; height: 20cqw; transform: rotate(12deg); pointer-events: none;
-    filter: drop-shadow(.5cqw 0 0 #fff) drop-shadow(-.5cqw 0 0 #fff) drop-shadow(0 .5cqw 0 #fff) drop-shadow(0 -.5cqw 0 #fff) drop-shadow(0 .9cqw .8cqw rgba(150,90,110,.3)); }
+    filter: var(--cv-die); }
 .cover-page .drag-hint { position: absolute; bottom: 8cqw; left: 50%; margin: 0; font-size: 3cqw; font-weight: 700; white-space: nowrap; color: #7b5a63; animation: cvNudge 1.5s infinite; }
 @keyframes cvNudge { 0%, 100% { transform: translateX(-50%); } 50% { transform: translateX(calc(-50% - 1.6cqw)); } }
 
