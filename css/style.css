@@ -1392,7 +1392,6 @@
         .qa-tip { margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.7); border: 1px dashed #d4c6f2; font-size: 13px; line-height: 1.6; color: #6a5a86; word-break: keep-all; }
 
         /* ===== 🎀 마스킹테이프 (js/tape.js) ===== */
-        .cat-btn.tp-cat:not(.active) { background: #fff7e6; border-color: #ffc46b; }
         .sticker-grid .tp-note { grid-column: 1 / -1; font-size: 12.5px; color: #a07888; text-align: center; padding: 4px 0; }
         .sticker-grid .tp-item { grid-column: span 3; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border: none; background: none;
             border-radius: 12px; cursor: pointer; font-family: inherit; }
@@ -1860,7 +1859,6 @@
         .smk-border { font-size: 14px; display: flex; align-items: center; gap: 6px; justify-content: center; }
         .smk-go { padding: 14px; border-radius: 14px; border: none; font: inherit; font-size: 16px; font-weight: bold; cursor: pointer; background: linear-gradient(#7cc8ff, #4aa8ef); color: #fff; box-shadow: 0 4px 0 #2f86c8; }
         .smk-go.smk-sub { background: #fff; color: #3d8fd6; box-shadow: 0 3px 0 #cfe3f0; border: 1.5px solid #cfe3f0; }
-        .cat-btn.sm-cat:not(.active) { background: #eef7ff; border-color: #8cc8f0; }
         .sticker-grid .smk-in-modal { grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); }
 
 
@@ -2484,9 +2482,7 @@
 #settingsModal .modal-content > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
 #settingsModal input[type="range"] { touch-action: none; }
 #themeBoxBtn[hidden] { display: none; }
-.sm-grid { grid-template-columns: repeat(2, 1fr); }
 .svc-cat[hidden] { display: none; }
-.cat-btn.mtp-cat:not(.active) { background: #fff7e6; border-color: #ffc46b; }
 /* ===== 🎀 마스킹테이프 만들기 (js/tapemaker.js · 화면 모양은 .smk-* 를 같이 써요) ===== */
 .tpm-top { position: sticky; top: calc(max(10px, env(safe-area-inset-top)) + 48px); z-index: 2; display: flex; flex-direction: column; gap: 6px; padding: 4px 0 8px; background: #f6fbff; box-shadow: 0 6px 8px -6px rgba(0,0,0,.12); }
 .tpm-zoom { margin-top: 0; } .tpm-zoom small { font-size: 12px; color: #6a8aa0; }
@@ -2537,7 +2533,19 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 /* ===== ✨ 스티커 창 모으기 (20261007-07) ===== */
 #stickerCategories { display: none; }                         /* 목록 창의 카테고리 줄은 연결용으로만 남김 (버튼은 ✨ 스티커 창에 있어요) */
 #stickerMakeModal .service-btn { position: relative; }
-#stickerMakeModal .skin-section-title:first-of-type { margin-top: 0; }
+/* ===== ✨ 스티커 창 3×4 메뉴 + 종류 창 카테고리 5개 (20261008-228) ===== */
+.stk-menu { gap: 10px; }
+.stk-menu .service-btn { padding: 14px 4px 12px; font-size: 13.5px; word-break: keep-all; }
+.stk-menu .service-icon { font-size: 1.9rem; }
+.stk-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 2px 0 8px; }
+.stk-tabs[hidden] { display: none; }
+.stk-tab { padding: 6px 1px; border: 1.5px solid var(--border-color); border-radius: 12px; background: #fff; font: inherit; font-size: 11.5px; font-weight: bold; line-height: 1.2; color: #7a5a66; cursor: pointer; word-break: keep-all; letter-spacing: -.02em; }
+.stk-tab.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
+.sticker-grid .stk-head { grid-column: 1 / -1; font-size: 12.5px; font-weight: bold; color: #7a5a66; padding: 6px 2px 0; }
+.sticker-grid .stk-go { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: inherit; cursor: pointer; }
+.sticker-grid .stk-go span { font-size: 2rem; line-height: 1; }
+.sticker-grid .stk-go b { font-size: 14px; }
+.sticker-grid .stk-go small { font-size: 11.5px; color: #a08890; }
 .paper-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .paper-pick .pp-pick-btn { flex-direction: column; gap: 4px; padding: 14px 4px 8px; font-size: 12px; justify-content: center; }
 .paper-pick .pp-pick-btn small { font-size: 11.5px; color: inherit; line-height: 1.2; }

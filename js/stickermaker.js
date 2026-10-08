@@ -1,8 +1,8 @@
 /* 말랑달콤 다이어리 - js/stickermaker.js
-   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → 📷 사진 찍기 · 🖼️ 사진 고르기 · 🔤 글씨 스티커)
+   ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → 📷 사진찍기 · 🖼️ 사진고르기 · 🔤 글씨 스티커(숨김))
    - 사진 스티커 : 📷 찍기 · 🖼 고르기 → 모양(동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기
-   - 💾 내 스티커에 저장 : ✏️ 스티커 창 → ✂️ 내 스티커 에서 언제든 다시 붙여요 (최대 40개)
+   - 💾 내 스티커에 저장 : ✨ 스티커 창 → 🧩 조각스티커 → 내스티커 에서 언제든 다시 붙여요 (최대 40개)
      저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내스티커.json (게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
@@ -230,17 +230,61 @@
             o.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, o.width, o.height);
             return (smS.out = o.toDataURL('image/png'));
         }
-        /* ✨ 스티커 창(하단메뉴) → 목록 창 : 😀 이모지 · 🎁 캡슐 스티커 · ✂️ 내 스티커 · 🎀 내 마스킹테이프 · 🎀 마스킹테이프 · 🌸 계절 스티커
+        /* ✨ 스티커 창(하단메뉴) → 목록 창 : 😀 이모지 · 🎁 캡슐스티커 · 🌸 계절 스티커 (🎀 마스킹테이프는 종류 창의 내스티커로)
            목록을 불러오는 코드(loadXxx)는 stickerModal 안의 눈에 안 보이는 카테고리 버튼(.cat-btn)이 불러요 → 그 버튼을 대신 눌러 줘요 */
-        const SL_KINDS = { emoji: ['😀 이모지', 'em-cat'], caps: ['🎁 캡슐 스티커', 'cs-cat'], mine: ['✂️ 내 스티커', 'sm-cat'], mytape: ['🎀 내 마스킹테이프', 'mtp-cat'], tape: ['🎀 마스킹테이프', 'tp-cat'], season: ['🌸 계절 스티커', 'ss-cat'] };
+        const SL_KINDS = { emoji: ['😀 이모지', 'em-cat'], caps: ['🎁 캡슐스티커', 'cs-cat'], season: ['🌸 계절 스티커', 'ss-cat'] };
         function openStickerList(kind) {
+            if (kind === 'tape') return openStickerKind('tape');
             const k = SL_KINDS[kind]; if (!k) return;
             closeModal('stickerMakeModal');
             openModal('stickerModal');
+            smq('stickerKindTabs').hidden = true;
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0];
             const b = document.querySelector('#stickerCategories .' + k[1]); if (b) b.click();
         }
         window.openStickerList = openStickerList;
+
+        /* ✨ 스티커 창 → 🎀 마스킹테이프 · 🧩 조각스티커 · 🏷️ 씰스티커 · 📄 모조지스티커 · 📃 속지 : 목록 창 위에 카테고리 5개, 소스는 그 아래
+           지금 있는 것 : 🎀 내스티커(만든 · 받은 테이프) · 스티커만들기(마스킹테이프 만들기) / 🧩 내스티커(✂️ 사진 스티커) · 기본스티커(그림 모음 · 계절)
+                          문구점스티커는 모든 종류가 🛍️ 문구점의 그 칸으로 / 나머지는 '준비 중' */
+        const STK_KINDS = {
+            tape: ['🎀', '마스킹테이프', ['스티커', '마스킹 테이프']],
+            piece: ['🧩', '조각스티커', ['스티커', '이미지 스티커팩']],
+            seal: ['🏷️', '씰스티커', ['스티커']],
+            paper: ['📄', '모조지스티커', ['스티커']],
+            leaf: ['📃', '속지', []],
+        };
+        const STK_TABS = [['mine', '내스티커'], ['share', '공유스티커'], ['free', '기본스티커'], ['shop', '문구점스티커'], ['make', '스티커만들기']];
+        let stkKind = 'tape';
+        function openStickerKind(kind, tab) {
+            const k = STK_KINDS[kind]; if (!k) return;
+            stkKind = kind;
+            closeModal('stickerMakeModal');
+            openModal('stickerModal');
+            const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0] + ' ' + k[1];
+            const bar = smq('stickerKindTabs');
+            bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
+            bar.hidden = false;
+            stkTab(tab || 'mine');
+        }
+        function stkTab(tab) {
+            document.querySelectorAll('#stickerKindTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+            const g = smq('stickerGrid'), k = STK_KINDS[stkKind];
+            delete g.dataset.mine; delete g.dataset.mytape;
+            g.scrollTop = 0;
+            const go = (ic, name, sub, fn) => `<button type="button" class="stk-go" onclick="${fn}"><span>${ic}</span><b>${name}</b><small>${sub}</small></button>`;
+            if (tab === 'mine' && stkKind === 'tape') return loadMyTapes();
+            if (tab === 'mine' && stkKind === 'piece') return loadMyStickers();
+            if (tab === 'free' && stkKind === 'piece') {
+                const ss = document.getElementById('seasonTab');
+                g.innerHTML = go('🧩', '말랑달콤 그림 모음', '카테고리별 조각스티커', "closeModal('stickerModal'); openLibrary()")
+                    + (ss && !ss.hidden ? go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')") : '');
+            } else if (tab === 'shop') g.innerHTML = go('🛍️', '문구점에서 ' + k[1] + ' 보기', '새 창으로 열려요', 'stkShop()');
+            else if (tab === 'make' && stkKind === 'tape') g.innerHTML = go('🎀', '마스킹테이프 만들기', '직접 그리거나 내 사진으로', "closeModal('stickerModal'); window.openTapeMaker && openTapeMaker()");
+            else g.innerHTML = `<div class="cs-empty">🛠️ ${k[1]} ${STK_TABS.find(x => x[0] === tab)[1]}는 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
+        }
+        function stkShop() { openShop('#/' + (STK_KINDS[stkKind][2].length ? 'c/' + STK_KINDS[stkKind][2].map(encodeURIComponent).join('/') : '')); }
+        window.openStickerKind = openStickerKind; window.stkTab = stkTab; window.stkShop = stkShop;
 
         /* 💾/📌 버튼을 누르면 '저장하는 중…'으로 바뀌고 끝날 때까지 다시 못 눌러요 (눌렸는지 바로 보이고 두 번 저장도 막음) */
         let smkLock = false;
@@ -264,7 +308,7 @@
             } catch (e) { if (!stick) { showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
             if (stick) { smStick(src); return; }
             closeStickerMaker();
-            showMsg('✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → ✂️ 내 스티커에서 붙일 수 있어요.</span>');
+            showMsg('✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → 🧩 조각스티커 → 내스티커에서 붙일 수 있어요.</span>');
         }
         function smStick(src) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">스티커는 ✂️ 내 스티커에 저장돼 있어요.</span>'); return; }
@@ -277,7 +321,7 @@
         /* ---------- 내 스티커 (✏️ 스티커 창 → ✂️ 내 스티커) ---------- */
         function smGrid() {
             const L = smS.list || [];
-            if (!L.length) return '<div class="smk-empty">✂️ 아직 만든 스티커가 없어요.<br>하단메뉴 ✨ 스티커에서 만들어 보세요!</div>';
+            if (!L.length) return '<div class="smk-empty">✂️ 아직 만든 스티커가 없어요.<br>✨ 스티커 창의 📷 사진찍기 · 🖼️ 사진고르기로 만들어 보세요!</div>';
             return L.map((s, i) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button><i onclick="smDel(${i})" title="지우기">✕</i></span>`).join('');
         }
         function smUse(i) { const s = smS.list && smS.list[i]; if (s) smStick(s.src); }
@@ -287,15 +331,14 @@
             try { await smSave(); } catch (e) {}
             const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers();
         }
-        async function loadMyStickers(btn) {
-            if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+        async function loadMyStickers() {
             const g = smq('stickerGrid'); g.dataset.mine = '1';
             g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
             await smLoad();
-            g.innerHTML = `<div class="smk-mine smk-in-modal">${smGrid()}</div>`;
+            if (g.dataset.mine) g.innerHTML = `<div class="smk-mine smk-in-modal">${smGrid()}</div>`;
         }
 
-        /* 하단메뉴 ✨ 스티커 창의 세 버튼 (사진 고르는 창은 눌렀을 때 바로 열려야 해서 화면을 먼저 만들어 둬요) */
+        /* 하단메뉴 ✨ 스티커 창의 📷 · 🖼️ · 🔤 버튼 (사진 고르는 창은 눌렀을 때 바로 열려야 해서 화면을 먼저 만들어 둬요) */
         function smOpenCam() { smBuild(); smq('smCam').click(); }
         function smOpenFile() { smBuild(); smq('smFile').click(); }
         function smOpenText() { smBuild(); smStartText(); }
@@ -309,6 +352,6 @@
             document.body.classList.remove('fc-lock');
         }
         /* 스티커 창의 다른 칸을 누르면 '내 스티커' 표시 지우기 */
-        document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b && !b.classList.contains('sm-cat')) { const g = smq('stickerGrid'); if (g) delete g.dataset.mine; } }, true);
+        document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b) { const g = smq('stickerGrid'); if (g) delete g.dataset.mine; } }, true);
         window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText; window.smTextNext = smTextNext; window.smTextPrev = smTextPrev;
         window.loadMyStickers = loadMyStickers;

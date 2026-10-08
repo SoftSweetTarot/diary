@@ -57,14 +57,10 @@
         }
 
         /* ✏️ 스티커 창 → 🎀 마스킹테이프 칸 : 선물 받은 테이프만 · 디자인마다 남은 날 (캡슐 스티커 칸처럼) */
-        function loadTapes(btn) {
-            if (btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
-            const mine = TAPES.filter(t => tapeHas(t.id));
-            document.getElementById('stickerGrid').innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>'
-                + (mine.length
-                    ? mine.map(t => `<button type="button" class="tp-item" onclick="addTape('${t.id}')">${typeof nwChip === 'function' ? nwChip('tape', t.id) : ''}<span style="background-image:url(&quot;${tapeUrl(t)}&quot;)"></span><small>${t.name}</small><i>${dLabel(tapeLeft(t.id))}</i></button>`).join('')
-                    : '<div class="cs-empty">🎀 선물 받은 마스킹테이프가 아직 없어요</div>');
+        /* 🎀 마스킹테이프 → 내스티커의 '받은 테이프' 칸 (js/tapemaker.js loadMyTapes 가 내가 만든 테이프와 같이 그려요) */
+        function tapeRecvHtml() {
+            return TAPES.filter(t => tapeHas(t.id)).map(t => `<button type="button" class="tp-item" onclick="addTape('${t.id}')">${typeof nwChip === 'function' ? nwChip('tape', t.id) : ''}<span style="background-image:url(&quot;${tapeUrl(t)}&quot;)"></span><small>${t.name}</small><i>${dLabel(tapeLeft(t.id))}</i></button>`).join('');
         }
-        window.loadTapes = loadTapes;
+        window.tapeRecvHtml = tapeRecvHtml;
         window.isTapeSrc = isTapeSrc;
         window.placeTape = placeTape;
