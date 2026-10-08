@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/papermaker.js
-   📄 모조지스티커 만들기 (하단메뉴 ✨ 스티커 → ✂️ 스티커만들기 → 📄 모조지스티커 만들기)
-   1) 사진 고르기 → 모조지(도톰한 종이)에 인쇄돼요 · 종이 결과 살짝 바랜 색
+   📄 모조지스티커 만들기 (📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과창 → 📄 모조지스티커 만들기)
+   1) 그 결과 그림이 모조지(도톰한 종이)에 인쇄돼요 · 종이 결과 살짝 바랜 색
    2) ✂️ 오리기 : 오리고 싶은 둘레를 손가락으로 한 바퀴 따라 그리면 싹둑 (처음 자리까지 돌아와야 오려져요)
    3) ✍️ 글씨 : 오린 스티커 위에 펜으로 글씨를 써요 (스티커 위에만 써져요)
    4) 📌 다이어리에 붙이기 · 💾 내 스티커에 저장만 → 📄 모조지스티커 → 내스티커
@@ -26,7 +26,6 @@
             el.innerHTML = `
               <div class="smk-bar"><span class="smk-x"></span><b>📄 모조지스티커 만들기</b><button class="smk-x" type="button" onclick="closePaperMaker()" aria-label="닫기">✕</button></div>
               <div class="smk-wrap">
-                <input type="file" id="pmFile" accept="image/*" hidden onchange="pmPickFile(this)">
                 <section class="smk-step">
                   <div class="smk-stage"><canvas id="pmCanvas"></canvas></div>
                   <p class="smk-hint" id="pmHint"></p>
@@ -44,28 +43,26 @@
             cv.addEventListener('pointerdown', pmDown); cv.addEventListener('pointermove', pmMove);
             cv.addEventListener('pointerup', pmUp); cv.addEventListener('pointercancel', pmUp);
         }
-        function openPaperMaker() { pmBuild(); pmq('pmFile').click(); }
+        function openPaperMaker(src) {
+            pmBuild();
+            const im = new Image();
+            im.onload = () => pmStart(im);
+            im.onerror = () => showMsg('그림을 열지 못했어요. 다시 해 주세요.');
+            im.src = src;
+        }
         function closePaperMaker() {
             cancelAnimationFrame(pmS.raf); pmS.drag = null;
             const r = pmq('pmRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }
 
-        /* ---------- 1. 사진 → 모조지에 인쇄 ---------- */
-        function pmPickFile(inp) {
-            const f = inp.files && inp.files[0]; inp.value = '';
-            if (!f || !/^image\//.test(f.type)) return;
-            const im = new Image();
-            im.onload = () => {
-                URL.revokeObjectURL(im.src);
-                pmS.photo = im; pmS.H = Math.round(PM_W * Math.max(.75, Math.min(1.35, im.height / im.width)));
-                const cv = pmq('pmCanvas'); cv.width = PM_W * PM_HR; cv.height = pmS.H * PM_HR; cv.style.aspectRatio = PM_W + ' / ' + pmS.H;
-                pmSheet(); pmCutStep();
-                pmq('pmRoom').classList.add('show'); pmq('pmRoom').scrollTop = 0; document.body.classList.add('fc-lock');
-                cancelAnimationFrame(pmS.raf); pmS.raf = requestAnimationFrame(pmFrame);
-            };
-            im.onerror = () => showMsg('사진을 열지 못했어요. 다른 사진을 골라 주세요.');
-            im.src = URL.createObjectURL(f);
+        /* ---------- 1. 그림 → 모조지에 인쇄 ---------- */
+        function pmStart(im) {
+            pmS.photo = im; pmS.H = Math.round(PM_W * Math.max(.75, Math.min(1.35, im.height / im.width)));
+            const cv = pmq('pmCanvas'); cv.width = PM_W * PM_HR; cv.height = pmS.H * PM_HR; cv.style.aspectRatio = PM_W + ' / ' + pmS.H;
+            pmSheet(); pmCutStep();
+            pmq('pmRoom').classList.add('show'); pmq('pmRoom').scrollTop = 0; document.body.classList.add('fc-lock');
+            cancelAnimationFrame(pmS.raf); pmS.raf = requestAnimationFrame(pmFrame);
         }
         /* 모조지 결 : 자잘한 알갱이 + 섬유 */
         function pmGrain(c, w, h) {
@@ -83,7 +80,7 @@
             const w = PM_W, h = pmS.H, im = pmS.photo;
             pmS.sheet = pmMk(w * PM_HR, h * PM_HR); const s = pmS.sheet.getContext('2d'); s.scale(PM_HR, PM_HR);
             pmRR(s, 0, 0, w, h, 6); s.fillStyle = '#fdfaf2'; s.fill();
-            const m = 14, k = Math.max((w - m * 2) / im.width, (h - m * 2) / im.height), dw = im.width * k, dh = im.height * k;
+            const m = 14, k = Math.min((w - m * 2) / im.width, (h - m * 2) / im.height), dw = im.width * k, dh = im.height * k;     // 그림 전체가 보이게
             s.save(); pmRR(s, m, m, w - m * 2, h - m * 2, 4); s.clip();
             s.globalAlpha = .88; s.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh); s.restore();                     // 살짝 바랜 인쇄
             s.save(); s.globalCompositeOperation = 'source-atop'; s.fillStyle = 'rgba(240,228,206,.16)'; s.fillRect(0, 0, w, h); s.restore();

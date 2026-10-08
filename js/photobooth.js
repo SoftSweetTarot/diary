@@ -1,9 +1,11 @@
 /* 말랑달콤 다이어리 - js/photobooth.js
-   📸 말랑 포토부스 : 네컷 사진처럼 찍고 꾸며서 다이어리에 붙여요 (카페 → 만들기·꾸미기 → 📸 포토부스)
+   📸 말랑 포토부스 : 네컷 사진처럼 찍고 꾸며서 다이어리에 붙여요 (하단메뉴 ✨ 스티커 → ✂️ 스티커만들기 → 📸 포토부스)
    1) 틀 고르기 : 네컷(세로) · 2×2 · 한 컷 + 프레임 색
    2) 찍기 : 카메라로 3 · 2 · 1 찰칵! (앞 카메라는 거울처럼) · 또는 갤러리의 사진 고르기
    3) 꾸미기 : 필터(뽀샤시 · 흑백 · 빈티지 · 쿨톤) · 아래 글씨 · 반짝이 꾸밈
-   4) 📌 다이어리에 붙이기 · 💾 내 기기에 저장
+   4) 📌 다이어리에 붙이기 (🏷️ 씰로 저장 → 하얀 네모에서 떼어 원하는 곳에 · js/stickerpeel.js)
+      🧩 조각스티커 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (js/papermaker.js 로 이어서)
+      💾 내 기기에 저장
    - 사진은 이 기기에서만 합쳐서, 다 만든 한 장만 일기에 담겨요 (카메라 영상은 어디에도 보내지 않아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (포토부스만 '준비 중') */
 
@@ -50,7 +52,12 @@
                   <div class="pb-row"><small>필터</small><div class="pb-chips" id="pbFilters">${PB_FILTERS.map(f => `<button type="button" data-v="${f[0]}" onclick="pbSetFilter('${f[0]}')">${f[1]}</button>`).join('')}</div></div>
                   <div class="pb-row"><small>글씨</small><input id="pbText" maxlength="18" placeholder="아래에 쓸 말 (예: 우리의 하루 💕)" oninput="pb.text=this.value;pbCompose()"></div>
                   <label class="pb-deco"><input type="checkbox" id="pbDeco" checked onchange="pb.deco=this.checked;pbCompose()"> ✨ 반짝이 꾸밈</label>
-                  <button type="button" class="pb-go" onclick="pbStick()">📌 다이어리에 붙이기</button>
+                  <button type="button" class="pb-go" onclick="pbKeep('stick')">📌 다이어리에 붙이기</button>
+                  <div class="pb-three">
+                    <button type="button" class="pb-go pb-sub" onclick="pbKeep('piece')">🧩<br>조각스티커<br>만들기</button>
+                    <button type="button" class="pb-go pb-sub" onclick="pbKeep('seal')">🏷️<br>씰스티커<br>만들기</button>
+                    <button type="button" class="pb-go pb-sub" onclick="pbKeep('paper')">📄<br>모조지스티커<br>만들기</button>
+                  </div>
                   <div class="pb-two"><button type="button" class="pb-go pb-sub" onclick="pbSave()">💾 내 기기에 저장</button><button type="button" class="pb-go pb-sub" onclick="pbRetake()">🔄 다시 찍기</button></div>
                 </section>
               </div>`;
@@ -188,12 +195,22 @@
             pb.out = '';
         }
         function pbOut() { if (!pb.out) pb.out = pbq('pbCanvas').toDataURL('image/jpeg', .86); return pb.out; }
-        function pbStick() {
-            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">💾 내 기기에 저장해 두었다가 붙여도 돼요.</span>'); return; }
-            if (!addImage(pbOut())) return;
-            const el = document.querySelector('#canvasArea .element-box:last-child');
-            if (el) el.style.width = pb.layout === 'strip' ? '110px' : '170px';
-            closeBooth();
+        /* act : 'stick' 붙이기(씰) · 'piece' · 'seal' 만들기(내스티커에 저장) · 'paper' 모조지스티커 만들기로 이어서 */
+        async function pbKeep(act) {
+            if (pb.busy) return;
+            if (act === 'stick' && typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">🏷️ 씰스티커 만들기로 저장해 두었다가 붙여도 돼요.</span>'); return; }
+            if (act === 'paper') { if (!window.openPaperMaker) { comingSoon('📄 모조지스티커 만들기'); return; } const src = pbOut(); closeBooth(); openPaperMaker(src); return; }
+            if (typeof pelBake !== 'function' || typeof smAdd !== 'function') { comingSoon('🏷️ 씰스티커'); return; }
+            pb.busy = true;
+            const all = [...document.querySelectorAll('#boothRoom .pb-go')]; all.forEach(b => { b.disabled = true; });
+            try {
+                let src = pbOut();
+                try { src = await pelBake(src); } catch (e) {}
+                const k = act === 'stick' ? 'seal' : act, r = await smAdd(src, k);
+                if (act === 'stick') { smAddMsg(r, k, true); closeBooth(); openStickerPeel(src, 'seal'); return; }
+                if (r === 'ok') closeBooth();
+                smAddMsg(r, k, false);
+            } finally { pb.busy = false; all.forEach(b => { b.disabled = false; }); }
         }
         function pbSave() {
             const a = document.createElement('a'), n = new Date();

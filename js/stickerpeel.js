@@ -4,16 +4,28 @@
              소리 : 떼어 낼 때 '찌익' 소리만
    - 🧩 조각 : 조각 하나에 뒷종이가 붙어 있어요 → 가장자리를 잡고 뒷종이를 벗기면 뒷종이는 팔랑 떨어지고, 원하는 곳에 놓으면 붙어요
              소리 : 없어요 (조각스티커 소리는 봉투를 옆으로 뜯을 때만 · 내가 만든 조각은 봉투 없이 👜 내 봉투에 들어가요)
+   - pelBake(src) : 📸 포토부스 사진처럼 네모난 그림 둘레에 하얀 칼선 테두리를 둘러요 (긴 변 PEL_MAX 이하 PNG)
    - 소리는 ⚙ 설정의 '✨ 연출 소리'를 따라요 (js/sound.js)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (스티커가 바로 붙어요) */
 
-        const PEL_GRAB = 28, PEL_PAD = 16, PEL_LINER = 4;
+        const PEL_GRAB = 28, PEL_PAD = 16, PEL_LINER = 4, PEL_EDGE = 6, PEL_MAX = 360;
         const pelS = { on: false, kind: 'seal', cv: null, ctx: null, fl: null, a: null, st: null, drag: null, board: null, boardAt: null, gone: 0, fall: null, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '' };
         const pelq = id => document.getElementById(id);
         const pelMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
         const pelLoad = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
         function pelTint(src, fill) { const c = pelMk(src.width, src.height), d = c.getContext('2d'); d.drawImage(src, 0, 0); d.globalCompositeOperation = 'source-in'; d.fillStyle = fill; d.fillRect(0, 0, c.width, c.height); return c; }
         function pelGrow(src, r, step) { const c = pelMk(src.width, src.height), d = c.getContext('2d'); for (const k of [1, .66, .33]) for (let a = 0; a < 360; a += step) d.drawImage(src, Math.cos(a * Math.PI / 180) * r * k, Math.sin(a * Math.PI / 180) * r * k); d.drawImage(src, 0, 0); return c; }
+
+        /* ---------- 하얀 칼선 테두리 두르기 ---------- */
+        async function pelBake(src) {
+            const im = await pelLoad(src);
+            const k = Math.min(1, PEL_MAX / Math.max(im.width, im.height)), iw = Math.round(im.width * k), ih = Math.round(im.height * k);
+            const b = PEL_EDGE, c = pelMk(iw + b * 2 + 4, ih + b * 2 + 4), x = c.getContext('2d');
+            const one = pelMk(c.width, c.height); one.getContext('2d').drawImage(im, b + 2, b + 2, iw, ih);
+            x.drawImage(pelTint(pelGrow(pelTint(one, '#fff'), b, 10), '#fff'), 0, 0);
+            x.drawImage(one, 0, 0);
+            return c.toDataURL('image/png');
+        }
 
         /* ---------- 떼기용 그림 (앞면 · 뒷면 · 뒷종이 · 가장자리 점) ---------- */
         function pelAsset(img) {
@@ -256,4 +268,4 @@
             pelGain.gain.setTargetAtTime(v, ac.currentTime, .03);
         }
 
-        window.openStickerPeel = openStickerPeel; window.closeStickerPeel = closeStickerPeel;
+        window.openStickerPeel = openStickerPeel; window.pelBake = pelBake; window.closeStickerPeel = closeStickerPeel;
