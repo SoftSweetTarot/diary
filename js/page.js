@@ -524,7 +524,8 @@
            - 살짝 누르기(탭)는 그대로 팝업메뉴 (PGM_MIN px 넘게 끌어야 옮겨져요) · 양쪽 끝은 그대로 페이지 넘기기
            - 그림 · 글 · 버튼 위, 필기구로 그리는 중(js/draw.js 가 막아요), 글상자에 글을 쓰는 중에는 안 옮겨져요
            - 옮긴 자리는 이 기기에 기억 (PGM_KEY) · 화면 크기가 바뀌어도 배경 밖으로 안 나가게 맞춰요
-           - #diaryWrapper 의 left · top 만 바꿔요 (페이지 안 좌표 posX · posY 는 그대로라 스티커 자리는 안 바뀌어요) */
+           - #diaryWrapper 의 left · top 만 바꿔요 (페이지 안 좌표 posX · posY 는 그대로라 스티커 자리는 안 바뀌어요)
+           - 🏷️ 씰 종이가 떠 있을 때는 js/stickerpeel.js 가 종이 바깥에서 누른 손가락을 pgmBegin 으로 넘겨줘요 */
         const PGM_KEY = 'malang_page_pos', PGM_MIN = 8;
         let pgmPos = { x: 0, y: 0 }, pgmDrag = null, pgmAt = 0;
         function pgmApply() {
@@ -532,6 +533,11 @@
             const l = r.left - (parseFloat(w.style.left) || 0), t = r.top - (parseFloat(w.style.top) || 0);   // 옮기기 전 자리
             pgmPos = { x: Math.round(clampNum(pgmPos.x, -l, window.innerWidth - l - r.width)), y: Math.round(clampNum(pgmPos.y, -t, window.innerHeight - t - r.height)) };
             w.style.left = pgmPos.x + 'px'; w.style.top = pgmPos.y + 'px';
+        }
+        function pgmBegin(e) {
+            if (!isCoverOpen || turn || pgmDrag) return false;
+            pgmDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: pgmPos.x, oy: pgmPos.y, on: false };
+            return true;
         }
         function setupPageMove() {
             const wrapper = document.getElementById('diaryWrapper'), book = document.getElementById('diaryBook');
@@ -545,7 +551,7 @@
                 if (curlEdgeAt(e.clientX, book)) return;
                 const a = document.activeElement;
                 if (a && a.tagName === 'TEXTAREA' && a.closest('#canvasArea')) return;
-                pgmDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: pgmPos.x, oy: pgmPos.y, on: false };
+                pgmBegin(e);
             });
             window.addEventListener('pointermove', (e) => {
                 const d = pgmDrag; if (!d || d.id !== e.pointerId) return;

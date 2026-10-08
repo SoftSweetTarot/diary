@@ -2,7 +2,7 @@
    🏷️ 씰스티커 · 🧩 조각스티커 떼어 붙이기 : 내스티커에서 고르거나 만들기에서 📌 붙이기를 누르면 페이지 앞에 스티커가 나와요
    - 🏷️ 씰 : 하얀 네모(스티커 종이) 위에 씰이 있어요 → 가장자리를 잡고 떼어 원하는 곳에 놓으면 붙어요
              사진고르기로 여러 장을 고르면 한 장의 종이에 씰이 여러 개 붙어 나와요 → 마지막 씰을 떼면 하얀 종이가 사라져요
-             하얀 종이의 빈 곳을 누른 채 끌면 종이째 화면 안에서 옮겨져요
+             하얀 종이의 빈 곳을 누른 채 끌면 종이째 화면 안에서 옮겨져요 · 종이 바깥 페이지를 끌면 페이지가 옮겨져요
              소리 : 떼어 낼 때 '찌익' 소리만
    - 🧩 조각 : 조각 하나에 뒷종이가 붙어 있어요 → 가장자리를 잡고 뒷종이를 벗기면 뒷종이는 팔랑 떨어지고, 원하는 곳에 놓으면 붙어요
              소리 : 없어요 (조각스티커 소리는 봉투를 옆으로 뜯을 때만 · 내가 만든 조각은 봉투 없이 👜 내 봉투에 들어가요)
@@ -237,7 +237,10 @@
             if (S.kind === 'seal' && B && Math.abs(P[0] - B.cx) <= B.w / 2 && Math.abs(P[1] - B.cy) <= B.h / 2) {
                 S.drag = { mode: 'board', last: P, lt: performance.now() };
                 try { S.cv.setPointerCapture(e.pointerId); } catch (er) {}
+                return;
             }
+            const w = document.getElementById('diaryWrapper'), wr = w && w.getBoundingClientRect();   // 종이 바깥 페이지 위 → 페이지 옮기기 (js/page.js)
+            if (wr && window.pgmBegin && P[0] >= wr.left && P[0] <= wr.right && P[1] >= wr.top && P[1] <= wr.bottom) pgmBegin(e);
         }
         function pelMove(e) {
             const S = pelS, d = S.drag; if (!d) return;
