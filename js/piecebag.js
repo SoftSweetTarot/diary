@@ -58,18 +58,18 @@
             const cv = pcbq('pcbCv');
             cv.addEventListener('pointerdown', pcbDown); cv.addEventListener('pointermove', pcbMove);
             cv.addEventListener('pointerup', pcbUp); cv.addEventListener('pointercancel', pcbUp);
-            window.addEventListener('resize', () => { if (pcbS.on) { const o = pcbS.PR; pcbLayout(); pcbReflow(o); } });
+            window.addEventListener('resize', () => { if (pcbS.on) { const o = [pcbS.W, pcbS.H]; pcbLayout(); pcbReflow(o); } });
         }
         function pcbLayout() {
             const S = pcbS, cv = S.cv;
             S.DPR = Math.min(window.devicePixelRatio || 1, 3); S.W = window.innerWidth; S.H = window.innerHeight;
             cv.width = S.W * S.DPR; cv.height = S.H * S.DPR; S.fl = pcbMk(cv.width, cv.height);
-            /* 봉투는 배경(화면) 한가운데 · 조각은 그 둘레(PR)에 쏟아져요 · 붙일 크기(SP)는 페이지에 맞춰요 */
+            /* 봉투는 배경(화면) 한가운데 (PR 가운데) · 조각은 봉투가 있는 곳 둘레에 쏟아져요 (pcbSpill) · 붙일 크기(SP)는 페이지에 맞춰요 */
             const pg = pcbq('canvasArea'), r = pg ? pg.getBoundingClientRect() : { left: 0, top: 0, width: S.W, height: S.H };
             const pw = Math.min(S.W - 24, 520), ph = Math.min(S.H - 84, 720), PR = S.PR = { x: (S.W - pw) / 2, y: Math.max(70, (S.H - ph) / 2), w: pw, h: ph };
             const bw = Math.min(PR.w - 60, 230), bh = Math.min(PR.h - 40, bw * 1.13);
             S.BIG = { x: PR.x + PR.w / 2 - bw / 2, y: PR.y + (PR.h - bh) / 2, w: bw, h: bh };
-            S.SMALL = { x: PR.x + PR.w - 14 - 62, y: PR.y + PR.h - 14 - 76, w: 62, h: 76 };
+            S.SMALL = { x: S.BIG.x + bw / 2 - 31, y: S.BIG.y + bh / 2 - 38, w: 62, h: 76 };   // 뜯으면 그 자리에서 작아져요
             S.HOLD = { cx: PR.x + PR.w / 2, cy: PR.y + PR.h * .46 };
             const m = Math.max(1, ...S.assets.map(a => Math.max(a.w, a.h)));
             S.SL = Math.max(.24, Math.min(.6, Math.min(PR.w, PR.h) * .24 / m));
@@ -77,23 +77,19 @@
             S.SP = Math.min(1, Math.min(r.width, S.W) * .32 / m);
             for (const q of [S.BIG, S.SMALL]) { q.x += S.mv.x; q.y += S.mv.y; pcbClampR(q); }
         }
-        /* 화면이 바뀌면 (아이패드 돌리기 등) 흩어진 조각도 새 화면 안으로 : 같은 비율 자리로 옮기고, 화면 밖이면 안쪽으로 */
+        /* 화면이 바뀌면 (아이패드 돌리기 등) 흩어진 조각도 새 화면 안으로 : 화면에서 같은 비율 자리로 옮기고, 화면 밖이면 안쪽으로 */
+        const pcbInScreen = (x, y, half) => { const S = pcbS, hx = Math.min(half, S.W / 2), hy = Math.min(half, (S.H - 78) / 2);
+            return [Math.max(8 + hx, Math.min(S.W - 8 - hx, x)), Math.max(70 + hy, Math.min(S.H - 8 - hy, y))]; };
         function pcbReflow(o) {
-            const S = pcbS, PR = S.PR; if (!o) return;
+            const S = pcbS, [ow, oh] = o;
             for (const st of S.pieces) {
                 if (st.state === 'free') continue;                                   // 손가락에 붙어 있는 건 그대로
                 const a = S.assets[st.k], g = st.anim ? st.anim.to : st, half = Math.max(a.w, a.h) * g.s / 2;
-                let nx, ny;
-                if (st.state === 'held') { nx = S.HOLD.cx; ny = S.HOLD.cy; }
-                else {
-                    nx = PR.x + (g.cx - o.x) / o.w * PR.w; ny = PR.y + (g.cy - o.y) / o.h * PR.h;
-                    nx = Math.max(PR.x + Math.min(half, PR.w / 2), Math.min(PR.x + PR.w - Math.min(half, PR.w / 2), nx));
-                    ny = Math.max(PR.y + Math.min(half, PR.h / 2), Math.min(PR.y + PR.h - Math.min(half, PR.h / 2), ny));
-                }
+                const [nx, ny] = st.state === 'held' ? [S.HOLD.cx, S.HOLD.cy] : pcbInScreen(g.cx / ow * S.W, g.cy / oh * S.H, half);
                 const dx = nx - g.cx, dy = ny - g.cy, mv = q => { if (q) { q[0] += dx; q[1] += dy; } };
                 st.cx += dx; st.cy += dy;
                 if (st.anim) { st.anim.from.cx += dx; st.anim.from.cy += dy; st.anim.to.cx += dx; st.anim.to.cy += dy; }
-                if (st.home) { st.home.cx = Math.max(PR.x, Math.min(PR.x + PR.w, PR.x + (st.home.cx - o.x) / o.w * PR.w)); st.home.cy = Math.max(PR.y, Math.min(PR.y + PR.h, PR.y + (st.home.cy - o.y) / o.h * PR.h)); }
+                if (st.home) [st.home.cx, st.home.cy] = pcbInScreen(st.home.cx / ow * S.W, st.home.cy / oh * S.H, Math.max(a.w, a.h) * S.SL / 2);
                 for (const h of [st.half, st.snap]) if (h) { mv(h.C); mv(h.F); }
             }
             const d = S.drag; if (d && d.mode === 'peel') S.drag = null;            // 벗기던 중이면 손을 뗀 것처럼
@@ -400,7 +396,9 @@
             pcbSay('와르르~ 하나 <b>톡</b> 눌러서 집어 보세요');
         }
         function pcbSpill(ks, from, delay) {
-            const S = pcbS, PR = S.PR, half = Math.max(...S.assets.map(a => Math.max(a.w, a.h))) * S.SL / 2, placed = [];
+            const S = pcbS, half = Math.max(...S.assets.map(a => Math.max(a.w, a.h))) * S.SL / 2, placed = [];
+            const B = S.BIG, sw = Math.min(S.W - 16, Math.max(300, B.w * 1.9)), sh = Math.min(S.H - 78, Math.max(320, B.h * 1.6));   // 봉투 둘레 (화면 안)
+            const PR = { x: Math.max(8, Math.min(S.W - 8 - sw, B.x + B.w / 2 - sw / 2)), y: Math.max(70, Math.min(S.H - 8 - sh, B.y + B.h / 2 - sh / 2)), w: sw, h: sh };
             ks.forEach((k, i) => {
                 let best = null, bs = -1;                                        // 살짝 겹치게 흩어지되, 한곳에 몰리지 않게
                 for (let j = 0; j < 10; j++) {
