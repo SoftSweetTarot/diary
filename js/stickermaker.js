@@ -5,7 +5,8 @@
      여러 장 한 칸 : { id, src : 종이 미리보기, ss : [스티커 그림들], k } → 누르면 종이째 다시 나와요 (11장부터는 알림 후 앞의 SM_MANY장만)
      🧩 · 🏷️ 만들기 → 모두 그 종류 내스티커에 저장 · 📄 모조지는 한 장씩만 (여러 장일 땐 버튼이 숨어요)
    - 사진 스티커 : 📷 찍기 · 🖼 고르기(한 장) → 모양(🖼 원본 그대로 · 동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
-     결과 버튼 : 📌 다이어리에 붙이기 (🏷️ 씰로 저장 → 하얀 네모에서 떼어 원하는 곳에 · js/stickerpeel.js)
+     결과 버튼 : 🏷️ 씰스티커로 다이어리에 붙이기 (씰로 저장 → 하얀 종이에서 떼어 원하는 곳에 · js/stickerpeel.js)
+               🧩 조각스티커로 다이어리에 붙이기 (조각 봉투로 저장 → 봉투를 뜯어 원하는 곳에 · js/piecebag.js)
                  🧩 조각스티커 만들기 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (js/papermaker.js 로 이어서)
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기 · 💾 저장만 → 🧩 내스티커
    - 내스티커 : ✨ 스티커 창 → 종류 → 내스티커 에서 언제든 다시 붙여요 (모든 종류 합쳐 최대 40개)
@@ -93,7 +94,10 @@
                   <div id="smFinal" class="smk-col">
                     <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
                     <div id="smPhotoGo" class="smk-col">
-                      <button type="button" class="smk-go" onclick="smFinish('stick',this)">📌 다이어리에 붙이기</button>
+                      <div class="smk-two">
+                        <button type="button" class="smk-go" onclick="smFinish('pstick',this)">🧩 조각스티커로<br>다이어리에 붙이기</button>
+                        <button type="button" class="smk-go" onclick="smFinish('stick',this)">🏷️ 씰스티커로<br>다이어리에 붙이기</button>
+                      </div>
                       <div class="smk-three">
                         <button type="button" class="smk-go smk-sub" onclick="smFinish('piece',this)">🧩<br>조각스티커<br>만들기</button>
                         <button type="button" class="smk-go smk-sub" onclick="smFinish('seal',this)">🏷️<br>씰스티커<br>만들기</button>
@@ -182,7 +186,7 @@
             smKeep(); smS.many.forEach(m => { m.shape = smS.shape; m.zoom = smS.zoom; m.path = []; });
             showMsg(`🔁 ${smS.many.length}장 모두 같은 모양 · 크기로 맞췄어요.<br><span style="font-size:12px;color:#777;">자리는 사진마다 그대로예요.</span>`);
         }
-        /* 여러 장 완성 : 'stick' 붙이기(씰 한 장 종이) · 'piece' · 'seal' 만들기 */
+        /* 여러 장 완성 : 'stick' 씰로 붙이기(한 장 종이) · 'pstick' 조각으로 붙이기(봉투 하나) · 'piece' · 'seal' 만들기 */
         async function smManyFinish(act) {
             smKeep();
             const back = smS.cur, out = [];
@@ -193,8 +197,8 @@
                 out.push(src);
             }
             smLoadPhoto(back); smS.out = ''; smS.outDie = '';
-            const k = act === 'stick' ? 'seal' : act, r = await smAdd(out, k);
-            if (act === 'stick') { smAddMsg(r, k, true); closeStickerMaker(); if (window.openStickerPeel) openStickerPeel(out); else out.forEach(smStick); return; }
+            const k = SM_STICK[act] || act, r = await smAdd(out, k);
+            if (SM_STICK[act]) return smStickAs(k, out, r);
             if (r === 'ok') closeStickerMaker();
             smAddMsg(r, k, false);
         }
@@ -400,7 +404,7 @@
             try { await fn(); }
             finally { smkLock = false; all.forEach(b => { b.disabled = false; }); if (btn) { btn.classList.remove('busy'); btn.textContent = old; } }
         }
-        function smFinish(act, btn) { return smkRun(btn, act === 'stick' || act === 'text' ? '📌 붙이는 중…' : '💾 저장하는 중…', () => smDoFinish(act)); }
+        function smFinish(act, btn) { return smkRun(btn, SM_STICK[act] || act === 'text' ? '📌 붙이는 중…' : '💾 저장하는 중…', () => smDoFinish(act)); }
         /* 내 스티커에 넣기 (📸 포토부스 · 📄 모조지스티커 만들기도 이걸 써요) · src 는 하나 또는 여러 개 [src, …] (자리가 남는 만큼)
            결과 : 'ok' · 'full' (다 못 넣음) · 'fail' */
         async function smAdd(src, k, t) {
@@ -435,15 +439,24 @@
             else if (r === 'fail') showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.');
             else if (!stick) showMsg(`✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → ${SM_PATH[k || '']}에서 붙일 수 있어요.</span>`);
         }
-        /* act : 'stick' 붙이기(씰) · 'piece' · 'seal' · 'paper' 만들기 / 글씨 스티커는 'text' 붙이기 · 'keep' 저장만 */
+        /* act : 'stick' 씰로 붙이기 · 'pstick' 조각으로 붙이기 · 'piece' · 'seal' · 'paper' 만들기 / 글씨 스티커는 'text' 붙이기 · 'keep' 저장만 */
+        const SM_STICK = { stick: 'seal', pstick: 'piece' };
+        /* 📌 붙이기 : 씰은 하얀 종이째 · 조각은 봉투째 꺼내요 (내스티커에도 저장돼요) */
+        function smStickAs(k, srcs, r) {
+            smAddMsg(r, k, true); closeStickerMaker();
+            const s = r === 'ok' ? smS.list[0] : null;
+            if (k === 'piece' && window.openPieceBag) openPieceBag(srcs, { onOpen: () => { if (s) { s.op = 1; smSave().catch(() => {}); } } });
+            else if (k === 'seal' && window.openStickerPeel) openStickerPeel(srcs.length > 1 ? srcs : srcs[0]);
+            else srcs.forEach(smStick);
+        }
         async function smDoFinish(act) {
             if (smS.many && smS.mode === 'photo') return smManyFinish(act);
-            const src = smMake(act === 'stick' || act === 'piece' || act === 'seal');
+            const src = smMake(!!SM_STICK[act] || act === 'piece' || act === 'seal');
             if (!src) { showMsg(smS.shape === 'free' ? '✂️ 오리고 싶은 모양을 먼저 그려 주세요.' : '스티커를 만들지 못했어요.'); return; }
             if (act === 'paper') { closeStickerMaker(); if (window.openPaperMaker) openPaperMaker(src); else comingSoon('📄 모조지스티커 만들기'); return; }
-            const k = act === 'stick' ? 'seal' : act === 'piece' || act === 'seal' ? act : '';
+            const k = SM_STICK[act] || (act === 'piece' || act === 'seal' ? act : '');
             const r = await smAdd(src, k, smS.mode === 'text' ? smS.text : '');
-            if (act === 'stick') { smAddMsg(r, k, true); closeStickerMaker(); if (window.openStickerPeel) openStickerPeel(src); else smStick(src); return; }
+            if (SM_STICK[act]) return smStickAs(k, [src], r);
             if (act === 'text') { smAddMsg(r, k, true); smStick(src); return; }
             if (r === 'ok') closeStickerMaker();
             smAddMsg(r, k, false);

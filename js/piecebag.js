@@ -4,13 +4,13 @@
    2) 조각을 톡 누르면 집어 올려요 → 가장자리를 손톱으로 밀어 뒷종이를 벗겨요 (가끔 반쯤에서 걸려요 · 놓으면 반쯤 벗겨진 채로 남아요)
    3) 벗긴 스티커는 손가락을 따라와요 → 페이지에 놓으면 붙어요 · 작은 봉투 위에 놓으면 봉투에 다시 쏙
    - 작은 봉투를 누르거나 ✕ 를 누르면 남은 조각은 봉투로 돌아가요 · 다 붙이면 저절로 닫혀요
-   - 조각이 없는 빈 곳을 끌면 페이지가 옮겨져요 (js/page.js pgmBegin)
-   - 소리 : 봉투를 옆으로 뜯을 때 '찌이익'만 (⚙ 설정의 '✨ 연출 소리' · js/sound.js)
+   - 봉투를 잡고 끌면 봉투가 화면 안에서 옮겨져요 (쏟아진 조각은 그 자리에) · 조각이 없는 빈 곳을 끌면 페이지가 옮겨져요 (js/page.js pgmBegin)
+   - 소리 : 봉투를 옆으로 뜯을 때 · 뒷종이를 벗길 때 '찌이익' (⚙ 설정의 '✨ 연출 소리' · js/sound.js)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (조각이 바로 붙어요 · js/stickermaker.js) */
 
         const PCB_PAD = 6, PCB_LINER = 3, PCB_GRAB = 30;
         const pcbS = { on: false, cv: null, ctx: null, fl: null, W: 0, H: 0, DPR: 1, raf: 0, hint: '', assets: [], pieces: [], fallers: [], drag: null, z: 10, bag: null,
-            PR: null, BIG: null, SMALL: null, HOLD: null, SL: .5, SH: 1, SP: .5, opened: false, onOpen: null, closing: 0, used: null };   // used : 이번에 붙인 조각 (봉투 속에 안 그려요)
+            PR: null, BIG: null, SMALL: null, HOLD: null, SL: .5, SH: 1, SP: .5, opened: false, onOpen: null, closing: 0, used: null, mv: { x: 0, y: 0 } };   // mv : 봉투를 옮긴 만큼   // used : 이번에 붙인 조각 (봉투 속에 안 그려요)
         const pcbq = id => document.getElementById(id);
         const pcbMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
         const pcbLoad = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -75,6 +75,15 @@
             S.SL = Math.max(.24, Math.min(.6, Math.min(PR.w, PR.h) * .24 / m));
             S.SH = Math.min(1.25, PR.w * .66 / m, PR.h * .5 / m);
             S.SP = Math.min(1, Math.min(r.width, S.W) * .32 / m);
+            for (const q of [S.BIG, S.SMALL]) { q.x += S.mv.x; q.y += S.mv.y; pcbClampR(q); }
+        }
+        /* 봉투 옮기기 : 큰 봉투 · 작은 봉투가 같이 움직여요 (지금 보이는 봉투가 화면 밖으로 안 나가게) */
+        function pcbClampR(q) { const M = 8; q.x = Math.max(M, Math.min(pcbS.W - M - q.w, q.x)); q.y = Math.max(M, Math.min(pcbS.H - M - q.h, q.y)); }
+        function pcbShift(dx, dy) {
+            const S = pcbS, r = S.bag.state === 'closed' ? S.BIG : S.SMALL, M = 8;
+            dx = Math.max(M - r.x, Math.min(S.W - M - r.w - r.x, dx)); dy = Math.max(M - r.y, Math.min(S.H - M - r.h - r.y, dy));
+            for (const q of [S.BIG, S.SMALL]) { q.x += dx; q.y += dy; pcbClampR(q); }
+            S.mv.x += dx; S.mv.y += dy;
         }
         /* srcs : 봉투에 든 조각 그림들 · o.opened : 전에 뜯은 봉투 · o.onOpen : 처음 뜯었을 때 (내스티커에 '뜯음' 표시) */
         async function openPieceBag(srcs, o = {}) {
@@ -86,7 +95,7 @@
             const S = pcbS;
             S.cv = pcbq('pcbCv'); S.ctx = S.cv.getContext('2d');
             S.assets = imgs.map((im, i) => Object.assign(pcbAsset(im), { src: srcs[i] }));
-            S.pieces = []; S.fallers = []; S.drag = null; S.closing = 0; S.used = new Set(); S.opened = !!o.opened; S.onOpen = o.onOpen || null; S.on = true;
+            S.pieces = []; S.fallers = []; S.drag = null; S.closing = 0; S.used = new Set(); S.mv = { x: 0, y: 0 }; S.opened = !!o.opened; S.onOpen = o.onOpen || null; S.on = true;
             pcbLayout();
             const n = S.assets.length;
             S.bag = { state: S.opened ? 'open' : 'closed', tear: 0, wig: 0, move: null, strip: null, busy: false,
@@ -267,7 +276,7 @@
             for (const [lx, ly] of e) { const [x, y] = pcbToStage(st, lx, ly); if ((x - M[0]) * n[0] + (y - M[1]) * n[1] < 0) off++; }
             return off / e.length;
         }
-        function pcbStartPeel(st, C, P, base, resumed) { const S = pcbS; st.z = ++S.z; st.snap = null; st.half = null; S.drag = { st, mode: 'peel', C, F: base.slice(), base, start: P, last: P, resumed }; }
+        function pcbStartPeel(st, C, P, base, resumed) { const S = pcbS; st.z = ++S.z; st.snap = null; st.half = null; S.drag = { st, mode: 'peel', C, F: base.slice(), base, start: P, last: P, lt: pcbNow(), resumed }; }
         function pcbDown(e) {
             const S = pcbS; if (!S.on || S.drag || S.closing) return;
             e.preventDefault(); const P = [e.clientX, e.clientY];
@@ -283,8 +292,8 @@
             if (b.state === 'closed') {
                 const B = S.BIG, cut = B.y + B.h * .24 * .34;
                 if (P[1] > B.y - 24 && P[1] < cut + 22 && P[0] > B.x - 24 && P[0] < B.x + B.w + 24) { cap(); S.drag = { mode: 'tear', lastX: P[0], last: P, lt: pcbNow() }; pcbSay('찌이익…'); return; }
-                if (pcbIn(P, B)) { pcbSay('윗부분 <b>점선</b>을 옆으로 쓱 밀어서 뜯어요 ✂️'); b.wig = pcbNow(); return; }
-            } else if (!b.busy && pcbIn(P, S.SMALL, 10)) { pcbShut('남은 조각은 봉투에 다시 넣었어요'); return; }
+                if (pcbIn(P, B)) { cap(); S.drag = { mode: 'bag', start: P, last: P }; return; }   // 누르면 안내 · 끌면 옮기기
+            } else if (!b.busy && pcbIn(P, S.SMALL, 10)) { cap(); S.drag = { mode: 'bag', start: P, last: P }; return; }
             for (const st of S.pieces.filter(p => p.state === 'loose' && !p.anim).sort((x, y) => y.z - x.z)) {   // 3) 조각 집기
                 const ei = pcbEdge(st, P); if (ei.inside || ei.d < 8) { pcbLift(st); return; }
             }
@@ -300,16 +309,21 @@
                 if (Math.abs(P[1] - (S.BIG.y + S.BIG.h * .08)) < 90) { S.bag.tear = Math.min(1, S.bag.tear + Math.abs(P[0] - d.lastX) / (S.BIG.w * .85)); pcbNoise(Math.min(.4, sp * .35)); }
                 d.lastX = P[0]; d.last = P; if (S.bag.tear >= 1) pcbOpen(); return;
             }
+            if (d.mode === 'bag') {
+                if (!d.moved && pcbDist(P, d.start) > 8) { d.moved = true; pcbSay('봉투를 옮겨요 ✉️'); }
+                if (d.moved) pcbShift(P[0] - d.last[0], P[1] - d.last[1]);
+                d.last = P; return;
+            }
             if (d.mode === 'free') { const st = d.st; st.rot += ((P[0] - d.last[0]) * .004 - (st.rot - d.baseRot) * .08); d.last = P; return; }
-            d.last = P;
+            const sp = pcbDist(P, d.last) / Math.max(1, t - d.lt); d.lt = t; d.last = P;
             const st = d.st, dx = P[0] - d.start[0], dy = P[1] - d.start[1], k = d.resumed ? 1 : Math.min(1, .45 + Math.hypot(dx, dy) / 220);   // 끈적임
             const Fr = [d.base[0] + dx * k, d.base[1] + dy * k];
             if (d.caught) {                                                      // 걸림 : 손가락은 가는데 스티커는 버텨요
-                d.F = [d.catchF[0] + (Fr[0] - d.catchFr[0]) * .1, d.catchF[1] + (Fr[1] - d.catchFr[1]) * .1];
+                d.F = [d.catchF[0] + (Fr[0] - d.catchFr[0]) * .1, d.catchF[1] + (Fr[1] - d.catchFr[1]) * .1]; pcbNoise(Math.min(.12, sp * .08));
                 if (pcbDist(Fr, d.catchFr) > 90) { d.caught = false; d.F = Fr; pcbBuzz(25); pcbSay('찌직! 넘어갔어요 ✨ 조금만 더!'); }
                 return;
             }
-            d.F = Fr;
+            d.F = Fr; pcbNoise(Math.min(.35, sp * .25));
             const fr = pcbPeeled(st, d.C, d.F);
             if (st.liner && fr >= st.catchAt) { st.catchAt = 2; d.caught = true; d.catchF = Fr.slice(); d.catchFr = Fr.slice(); pcbBuzz(35); pcbSay('어? 걸렸어요! 🫣 <b>힘줘서 한 번 더</b> 당겨요'); return; }
             if (fr > .6 && !d.half) { d.half = 1; pcbSay('거의 다 됐어요… 조금만 더!'); }
@@ -318,7 +332,7 @@
         function pcbDetach(P) {
             const S = pcbS, st = S.drag.st;
             if (st.liner) { S.fallers.push({ k: st.k, cx: st.cx, cy: st.cy, rot: st.rot, s: st.s, vx: Math.random() < .5 ? -1 : 1, vr: (Math.random() - .5) * .1, t0: pcbNow() }); st.liner = false; }
-            const local = pcbToLocal(st, S.drag.C[0], S.drag.C[1]);
+            const local = pcbToLocal(st, S.drag.C[0], S.drag.C[1]); pcbNoise(0);
             st.state = 'free'; st.t0 = pcbNow(); st.half = null; st.sGoal = S.SP; st.z = ++S.z;
             S.drag = { st, mode: 'free', local, baseRot: st.rot, last: P }; pcbAnchor(st, P);
             pcbBuzz(15); pcbSay('톡! 뒷종이가 벗겨졌어요 ✨ 원하는 곳에 붙여 보세요');
@@ -329,6 +343,12 @@
             S.drag = null; pcbNoise(0);
             const st = d.st;
             if (d.mode === 'tear') { if (S.bag.state === 'closed' && S.bag.tear > 0) pcbSay('조금만 더 쭉~ 끝까지 뜯어요'); return; }
+            if (d.mode === 'bag') {
+                if (d.moved) pcbSay(S.bag.state === 'closed' ? '윗부분 <b>점선</b>을 옆으로 쓱 밀어서 뜯어요 ✂️' : '조각을 <b>톡</b> 눌러서 집어 보세요');
+                else if (S.bag.state === 'closed') { pcbSay('윗부분 <b>점선</b>을 옆으로 쓱 밀어서 뜯어요 ✂️'); S.bag.wig = pcbNow(); }
+                else if (!S.bag.busy) pcbShut('남은 조각은 봉투에 다시 넣었어요');
+                return;
+            }
             if (d.mode === 'peel') {
                 const fr = pcbPeeled(st, d.C, d.F);
                 if (st.liner && fr >= .12) { st.half = { C: d.C, F: [d.F[0] + (d.C[0] - d.F[0]) * .15, d.F[1] + (d.C[1] - d.F[1]) * .15] }; pcbSay('반쯤 벗겨졌어요. 들린 끝을 잡고 <b>마저</b> 당겨요'); }
@@ -414,7 +434,7 @@
             else { pcbSay('꾹! 다 붙였어요 ✨'); pcbEnd(); }
         }
 
-        /* ---------- 소리 : 봉투를 옆으로 뜯을 때 '찌이익'만 ---------- */
+        /* ---------- 소리 : 봉투를 뜯을 때 · 뒷종이를 벗길 때 '찌이익' (js/stickerpeel.js 와 같은 소리) ---------- */
         let pcbGain = null;
         function pcbNoise(v) {
             if (!pcbGain && !v) return;
