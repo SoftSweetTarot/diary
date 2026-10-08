@@ -1,9 +1,10 @@
 /* 말랑달콤 다이어리 - js/stickermaker.js
    ✂️ 스티커 만들기 : 내 사진이나 글씨로 하얀 테두리 '다이컷 스티커'를 만들어요 (하단메뉴 ✨ 스티커 → ✂️ 스티커만들기 → 📷 사진찍기 · 🖼️ 사진고르기 · 🔤 글씨 스티커)
    - 🖼 사진고르기로 여러 장(최대 SM_MANY)을 고르면 : 위쪽 사진 줄에서 한 장씩 골라 모양 · 자리 · 크기를 따로 맞춰요 (🔁 버튼 = 지금 모양 · 크기를 모든 사진에)
-     📌 붙이기 → 모두 🏷️ 씰로 씰 내스티커에 저장 → 한 장의 하얀 종이에 씰이 여러 개 붙어 페이지 가운데 나와요 (js/stickerpeel.js)
+     📌 붙이기 → 🏷️ 씰 내스티커에 '한 칸'으로 저장 → 한 장의 하얀 종이에 씰이 여러 개 붙어 페이지 가운데 나와요 (js/stickerpeel.js)
+     여러 장 한 칸 : { id, src : 종이 미리보기, ss : [스티커 그림들], k } → 누르면 종이째 다시 나와요 (11장부터는 알림 후 앞의 SM_MANY장만)
      🧩 · 🏷️ 만들기 → 모두 그 종류 내스티커에 저장 · 📄 모조지는 한 장씩만 (여러 장일 땐 버튼이 숨어요)
-   - 사진 스티커 : 📷 찍기 · 🖼 고르기(한 장) → 모양(동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
+   - 사진 스티커 : 📷 찍기 · 🖼 고르기(한 장) → 모양(🖼 원본 그대로 · 동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
      결과 버튼 : 📌 다이어리에 붙이기 (🏷️ 씰로 저장 → 하얀 네모에서 떼어 원하는 곳에 · js/stickerpeel.js)
                  🧩 조각스티커 만들기 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (js/papermaker.js 로 이어서)
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기 · 💾 저장만 → 🧩 내스티커
@@ -13,8 +14,8 @@
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
 
-        const SM_FILE = '내스티커.json', SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 9;
-        const SM_SHAPES = [['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
+        const SM_FILE = '내스티커.json', SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 10;
+        const SM_SHAPES = [['orig', '🖼️ 원본 그대로'], ['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
         const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
@@ -35,7 +36,8 @@
                         if (rootId) { const f = (await driveList(`name='${SM_FILE}' and '${rootId}' in parents and trashed=false`, 'id,name'))[0]; if (f) { smS.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); arr = Array.isArray(o.s) ? o.s : []; } }
                     } else { const o = JSON.parse(localStorage.getItem(SM_LOCAL) || '{}'); arr = Array.isArray(o.s) ? o.s : []; }
                 } catch (e) {}
-                smS.list = arr.filter(x => x && /^data:image\/(png|webp|jpeg)/.test(x.src || ''));
+                const ok = u => /^data:image\/(png|webp|jpeg)/.test(u || '');
+                smS.list = arr.filter(x => x && ok(x.src) && (!x.ss || (Array.isArray(x.ss) && x.ss.length && x.ss.every(ok))));
                 smS.loading = null;
                 return smS.list;
             })();
@@ -136,7 +138,7 @@
             im.src = URL.createObjectURL(f);
         });
         async function smPickMany(fs) {
-            if (fs.length > SM_MANY) showMsg(`한 번에 ${SM_MANY}장까지 스티커로 만들어요.<br>앞의 ${SM_MANY}장만 가져올게요.`);
+            if (fs.length > SM_MANY) showMsg(`사진은 한 번에 <b>${SM_MANY}장까지</b> 고를 수 있어요.<br><span style="font-size:12px;color:#777;">고른 ${fs.length}장 중 앞의 ${SM_MANY}장만 가져올게요.</span>`);
             const imgs = (await Promise.all(fs.slice(0, SM_MANY).map(smImg))).filter(Boolean);
             if (!imgs.length) { showMsg('사진을 열지 못했어요. 다른 사진을 골라 주세요.'); return; }
             const shape = smS.shape === 'free' ? 'circle' : smS.shape;
@@ -189,7 +191,7 @@
         function smSetShape(s) {
             smS.shape = s; smS.path = [];
             document.querySelectorAll('#smShapes button').forEach(b => b.classList.toggle('on', b.dataset.s === s));
-            smq('smHint').textContent = s === 'free' ? '✂️ 손가락(마우스)으로 오리고 싶은 모양을 한 번에 빙 둘러 그려요' : '사진을 끌어서 자리를 맞추고, 🔍 막대로 크기를 바꿔요';
+            smq('smHint').textContent = s === 'free' ? '✂️ 손가락(마우스)으로 오리고 싶은 모양을 한 번에 빙 둘러 그려요' : s === 'orig' ? '🖼️ 사진 모양 그대로 스티커가 돼요 · 🔍 막대로 크기를 바꿔요' : '사진을 끌어서 자리를 맞추고, 🔍 막대로 크기를 바꿔요';
             smDraw();
         }
         /* 모양 길 (가운데 기준, 반지름 r) */
@@ -199,12 +201,13 @@
             else if (s === 'heart') { ctx.moveTo(cx, cy + r * .9); ctx.bezierCurveTo(cx - r * 1.35, cy + r * .05, cx - r * .95, cy - r * 1.05, cx, cy - r * .42); ctx.bezierCurveTo(cx + r * .95, cy - r * 1.05, cx + r * 1.35, cy + r * .05, cx, cy + r * .9); }
             else if (s === 'star') { for (let i = 0; i < 10; i++) { const rr = i % 2 ? r * .5 : r, a = -Math.PI / 2 + i * Math.PI / 5; ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } }
             else if (s === 'round') { const w = r * 1.7, h = r * 1.7, x = cx - w / 2, y = cy - h / 2, q = r * .35; ctx.moveTo(x + q, y); ctx.arcTo(x + w, y, x + w, y + h, q); ctx.arcTo(x + w, y + h, x, y + h, q); ctx.arcTo(x, y + h, x, y, q); ctx.arcTo(x, y, x + w, y, q); }
+            else if (s === 'orig') { const R = smPhotoRect(), q = Math.min(10, R.w / 4, R.h / 4); ctx.moveTo(R.x + q, R.y); ctx.arcTo(R.x + R.w, R.y, R.x + R.w, R.y + R.h, q); ctx.arcTo(R.x + R.w, R.y + R.h, R.x, R.y + R.h, q); ctx.arcTo(R.x, R.y + R.h, R.x, R.y, q); ctx.arcTo(R.x, R.y, R.x + R.w, R.y, q); }   // 🖼 원본 그대로 : 사진 네모 (모서리만 살짝 둥글게)
             else if (s === 'cloud') { [[-.5, .15, .45], [0, -.2, .58], [.5, .1, .48], [-.15, .35, .5], [.3, .38, .45]].forEach(([a, b, c]) => { ctx.moveTo(cx + a * r + c * r, cy + b * r); ctx.arc(cx + a * r, cy + b * r, c * r, 0, Math.PI * 2); }); }
             ctx.closePath();
         }
         function smFreePath(ctx, pts) { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); }
         function smPhotoRect() {
-            const im = smS.img, base = SM_SIZE / Math.min(im.width, im.height), k = base * smS.zoom;
+            const im = smS.img, base = smS.shape === 'orig' ? SM_SIZE * .86 / Math.max(im.width, im.height) : SM_SIZE / Math.min(im.width, im.height), k = base * smS.zoom;   // 원본 그대로는 사진 전체가 보이게
             const w = im.width * k, h = im.height * k;
             return { x: (SM_SIZE - w) / 2 + smS.ox, y: (SM_SIZE - h) / 2 + smS.oy, w, h };
         }
@@ -393,12 +396,27 @@
         async function smAdd(src, k, t) {
             try {
                 await smLoad();
-                const all = Array.isArray(src) ? src : [src], room = Math.max(0, SM_MAX - smS.list.length), id = Date.now();
-                if (!room) return 'full';
-                all.slice(0, room).forEach((x, i) => smS.list.unshift(Object.assign({ id: (id + i).toString(36), src: x, t: t || '' }, k ? { k } : {})));
+                if (smS.list.length >= SM_MAX) return 'full';
+                const many = Array.isArray(src) && src.length > 1, one = Array.isArray(src) ? src[0] : src;
+                smS.list.unshift(Object.assign({ id: Date.now().toString(36), src: many ? await smSheetPrev(src) : one, t: t || '' }, many ? { ss: src } : {}, k ? { k } : {}));
                 await smSave();
-                return all.length > room ? 'full' : 'ok';
+                return 'ok';
             } catch (e) { return 'fail'; }
+        }
+        /* 여러 장 한 칸의 미리보기 : 하얀 종이 위에 스티커들을 나란히 (내스티커 칸에 보여요) */
+        async function smSheetPrev(srcs) {
+            const ims = await Promise.all(srcs.map(u => new Promise(ok => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = u; })));
+            const n = ims.length, cols = Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols), C = 76, G = 6, P = 10;
+            const c = document.createElement('canvas'); c.width = cols * C + G * (cols - 1) + P * 2; c.height = rows * C + G * (rows - 1) + P * 2;
+            const x = c.getContext('2d'), q = 14;
+            x.beginPath(); x.moveTo(q, 0); x.arcTo(c.width, 0, c.width, c.height, q); x.arcTo(c.width, c.height, 0, c.height, q); x.arcTo(0, c.height, 0, 0, q); x.arcTo(0, 0, c.width, 0, q);
+            x.fillStyle = '#f7f8fc'; x.fill(); x.strokeStyle = '#e6e3ee'; x.lineWidth = 2; x.stroke();
+            ims.forEach((im, i) => {
+                if (!im) return;
+                const k = Math.min(C / im.width, C / im.height), w = im.width * k, h = im.height * k;
+                x.drawImage(im, P + (i % cols) * (C + G) + (C - w) / 2, P + Math.floor(i / cols) * (C + G) + (C - h) / 2, w, h);
+            });
+            return c.toDataURL('image/png');
         }
         const SM_PATH = { '': '🧩 조각스티커 → 내스티커', piece: '🧩 조각스티커 → 내스티커(👜 내 봉투)', seal: '🏷️ 씰스티커 → 내스티커', paper: '📄 모조지스티커 → 내스티커' };
         /* 저장 결과 안내 (stick : 붙이는 중이면 꽉 찼을 때 · 실패만 알려요) */
@@ -436,7 +454,7 @@
             paper: '📄 아직 만든 모조지스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>📄 모조지스티커 만들기를 눌러 보세요!' };
         function smGrid(kind) {
             const L = (smS.list || []).map((s, i) => [s, i]).filter(([s]) => smKindOf(s) === kind);
-            const it = ([s, i]) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button><i onclick="smDel(${i})" title="지우기">✕</i></span>`;
+            const it = ([s, i]) => `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button>${s.ss ? `<b class="smk-n">${s.ss.length}장</b>` : ''}<i onclick="smDel(${i})" title="지우기">✕</i></span>`;
             if (kind === 'piece') {                                     // 🧩 내가 만든 조각은 👜 내 봉투에 (봉투 없이 한 장씩)
                 const bag = L.filter(([s]) => s.k === 'piece'), rest = L.filter(([s]) => !s.k);
                 if (!L.length) return `<div class="smk-empty">${SM_EMPTY.piece}</div>`;
@@ -448,7 +466,7 @@
         }
         function smUse(i) {
             const s = smS.list && smS.list[i]; if (!s) return;
-            if ((s.k === 'seal' || s.k === 'piece') && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.src, s.k); }
+            if ((s.k === 'seal' || s.k === 'piece') && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.ss || s.src, s.k); }   // 여러 장 한 칸은 종이째
             else smStick(s.src);
         }
         async function smDel(i) {
