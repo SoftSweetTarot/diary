@@ -7,9 +7,10 @@
      2) 오린 스티커는 손가락을 따라와요 → 페이지에 놓으면 붙어요 · 모조지 위나 페이지 밖에 놓으면 그 자리에 놓여 있어요
      3) 놓여 있는 스티커 : 톡 = ✍️ 글씨 쓰기 (스티커 위에만 써져요) · 꾹 = 구김 · 끌기 = 옮기기
    - 모조지 위쪽 마스킹테이프(✋ 잡고 옮겨요)를 끌면 모조지가 화면 안에서 옮겨져요 (오려 둔 스티커는 그 자리에)
-   - 모조지 오른쪽 위 ✕ 를 누르면 닫혀요 (붙이지 않은 스티커는 사라져요 · 내스티커의 모조지는 늘 새 종이로 다시 나와요)
-   - 날짜바를 끌면 페이지가 옮겨져요 (js/page.js pgmBegin)
-   - 소리 : 커터칼 '드르륵(칼날 빼기) · 스윽(긋기) · 톡(떼기)' · 글씨 '슥슥' · 구김 '꾸깃' (⚙ 설정의 '✨ 연출 소리' · js/sound.js)
+   - 모조지 오른쪽 위 끝 ✕ 를 누르면 닫혀요 (붙이지 않은 스티커는 사라져요 · 내스티커의 모조지는 늘 새 종이로 다시 나와요)
+   - 모조지 · 오린 스티커 바깥은 그대로 페이지라서, 모조지를 띄운 채로 날짜바를 끌어 페이지를 옮기거나 붙인 스티커를 눌러 옮기기 · 돌리기 · 크기 바꾸기를 해요
+     (화면 전체를 덮지 않고 모조지 · 스티커 자리에만 손가락을 받는 칸(#pmHit .pm-z)을 둬요 · 글씨 쓰는 중에는 화면 전체)
+   - 소리는 없어요 (떨림만)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (모조지스티커만 '준비 중') */
 
         const PM_W = 360, PM_HR = 2, PM_OUT = 420;
@@ -57,14 +58,14 @@
         function pmBuild() {
             if (pmq('pmRoom')) return;
             const el = document.createElement('div');
-            el.id = 'pmRoom'; el.className = 'pel-room';
-            el.innerHTML = `<canvas id="pmCv"></canvas><p class="pel-hint" id="pmHint"></p><button type="button" class="pel-x pm-x" id="pmX" onclick="closePaperSheet()" aria-label="닫기">✕</button>
+            el.id = 'pmRoom'; el.className = 'pel-room pm-room';
+            el.innerHTML = `<canvas id="pmCv"></canvas><div id="pmHit"></div><p class="pel-hint" id="pmHint"></p><button type="button" class="pm-x" id="pmX" onclick="closePaperSheet()" aria-label="닫기">✕</button>
               <div class="pm-pens" id="pmPens" hidden>${PM_PENS.map(c => `<button type="button" data-c="${c}" style="--c:${c}" onclick="pmSetPen('${c}')" aria-label="펜 색"></button>`).join('')}
                 <button type="button" class="pm-undo" onclick="pmUndo()">↩️ 지우기</button><button type="button" class="pm-undo" onclick="pmExitEdit()">✅ 다 썼어요</button></div>`;
             document.body.appendChild(el);
-            const cv = pmq('pmCv');
-            cv.addEventListener('pointerdown', pmDown); cv.addEventListener('pointermove', pmMove);
-            cv.addEventListener('pointerup', pmUp); cv.addEventListener('pointercancel', pmUp);
+            const hit = pmq('pmHit');
+            hit.addEventListener('pointerdown', pmDown); hit.addEventListener('pointermove', pmMove);
+            hit.addEventListener('pointerup', pmUp); hit.addEventListener('pointercancel', pmUp);
             window.addEventListener('resize', () => { if (pmS.on) { pmLayout(); pmKeepIn(); } });
         }
         /* src : 내스티커의 모조지 한 장 */
@@ -88,7 +89,7 @@
             return true;
         }
         function closePaperSheet() {
-            const S = pmS; S.on = false; S.drag = null; S.edit = null; pmScratch(0); pmCut(0); cancelAnimationFrame(S.raf);
+            const S = pmS; S.on = false; S.drag = null; S.edit = null; cancelAnimationFrame(S.raf);
             const r = pmq('pmRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }
@@ -107,7 +108,22 @@
             const x = Math.max(8, Math.min(S.W - 8 - w, S.X + dx)), y = Math.max(64, Math.min(S.H - 8 - h, S.Y + dy));
             if (base) S.mv = { x: S.mv.x + x - S.X - dx, y: S.mv.y + y - S.Y - dy }; else { S.mv.x += x - S.X; S.mv.y += y - S.Y; }
             S.X = x; S.Y = y;
-            const b = pmq('pmX'); if (b) { b.style.left = Math.min(S.W - 44, S.X + w - 22) + 'px'; b.style.top = (S.Y - 18) + 'px'; }
+            const b = pmq('pmX'); if (b) { b.style.left = (S.X + w - 32) + 'px'; b.style.top = S.Y + 'px'; }   // 모조지 오른쪽 위 끝 (안쪽)
+        }
+        /* 손가락 받는 칸 : 모조지(테이프 포함) · 오린 스티커 자리만 (나머지는 페이지가 받아요) · 글씨 쓰는 중에는 화면 전체 */
+        function pmZones() {
+            const S = pmS, hit = pmq('pmHit'), m = 14, z = [];
+            if (S.drag) return;                                                          // 끄는 중에는 그대로 (손가락은 누른 칸이 끝까지 받아요)
+            if (S.edit) z.push([0, 0, S.W, S.H]);
+            else {
+                z.push([S.X - m, S.Y - 24, PM_W * S.SC + m * 2, S.SH * S.SC + 24 + m]);
+                for (const st of S.pieces) { const r = Math.max(st.w, st.h) * st.s / 2; z.push([st.cx - r, st.cy - r, r * 2, r * 2]); }
+            }
+            while (hit.children.length < z.length) { const d = document.createElement('div'); d.className = 'pm-z'; hit.appendChild(d); }
+            [...hit.children].forEach((d, i) => {
+                const q = z[i]; d.hidden = !q; if (!q) return;
+                const css = `left:${q[0]}px;top:${q[1]}px;width:${q[2]}px;height:${q[3]}px`; if (d.dataset.css !== css) { d.dataset.css = css; d.style.cssText = css; }
+            });
         }
         const pmTape = () => { const S = pmS; return { x: S.X + PM_W * S.SC / 2 - 58, y: S.Y - 15, w: 116, h: 28 }; };
         function pmKeepIn() {
@@ -219,7 +235,7 @@
         }
         function pmExitEdit() {
             const S = pmS; if (!S.edit || S.edit.closing) return;
-            S.edit.closing = true; S.edit.t0 = pmNow(); pmScratch(0);
+            S.edit.closing = true; S.edit.t0 = pmNow();
             setTimeout(() => { S.edit = null; }, 300);
             pmq('pmPens').hidden = true;
             pmSay('다 썼어요 📝 페이지로 끌어서 붙여요');
@@ -231,7 +247,7 @@
         function pmDown(e) {
             const S = pmS; if (!S.on || S.drag) return;
             e.preventDefault(); const P = [e.clientX, e.clientY];
-            const cap = () => { try { S.cv.setPointerCapture(e.pointerId); } catch (er) {} };
+            const cap = () => { try { e.target.setPointerCapture(e.pointerId); } catch (er) {} };
             if (S.edit) {                                                                  // 글씨 쓰는 중
                 if (S.edit.closing || pmNow() - S.edit.t0 < 280) return;
                 const st = S.edit.st, E = pmEditPose(st), L = [(P[0] - E.cx) / E.s, (P[1] - E.cy) / E.s]; cap();
@@ -242,13 +258,12 @@
             for (const st of [...S.pieces].sort((a, b) => b.z - a.z)) {                    // 오린 스티커 : 톡 = 글씨 · 끌기 = 옮기기 · 꾹 = 구김
                 if (!pmHit(st, P)) continue;
                 cap(); const d = { mode: 'piece', st, off: [P[0] - st.cx, P[1] - st.cy], start: P, last: P, t0: pmNow(), moved: false }; S.drag = d; st.z = ++S.z;
-                d.lp = setTimeout(() => { if (S.drag === d && !d.moved) { pmCrumple(st); d.crumpled = true; pmCrinkle(); pmBuzz(30); pmSay(st.lift >= 3 ? '구깃구깃… 가장자리가 많이 들떴어요 😵' : '꾸깃! 구겨진 자국이 남았어요'); } }, 520);
+                d.lp = setTimeout(() => { if (S.drag === d && !d.moved) { pmCrumple(st); d.crumpled = true; pmBuzz(30); pmSay(st.lift >= 3 ? '구깃구깃… 가장자리가 많이 들떴어요 😵' : '꾸깃! 구겨진 자국이 남았어요'); } }, 520);
                 return;
             }
             const tp = pmTape();                                                           // 위쪽 테이프 : 모조지 옮기기
             if (P[0] > tp.x - 8 && P[0] < tp.x + tp.w + 8 && P[1] > tp.y - 8 && P[1] < tp.y + tp.h + 8) { cap(); S.drag = { mode: 'sheet', last: P }; pmSay('모조지를 옮기는 중… ✋'); return; }
-            if (pmInSheet(P, 14)) { cap(); S.drag = { mode: 'cut', pts: [P], len: 0, acc: 0, ang: 0, lt: pmNow() }; pmClick(); pmSay('스윽스윽… <b>처음 자리</b>까지 한 바퀴 돌아와요'); return; }
-            if (window.pgmOnBar && pgmOnBar(P[0], P[1])) pgmBegin(e);                        // 날짜바 위 → 페이지 옮기기 (js/page.js)
+            if (pmInSheet(P, 14)) { cap(); S.drag = { mode: 'cut', pts: [P], len: 0, acc: 0, ang: 0, lt: pmNow() }; pmSay('스윽스윽… <b>처음 자리</b>까지 한 바퀴 돌아와요'); return; }
         }
         function pmMove(e) {
             const S = pmS, d = S.drag; if (!d) return;
@@ -256,17 +271,14 @@
             if (d.mode === 'sheet') { pmShift(P[0] - d.last[0], P[1] - d.last[1]); d.last = P; return; }
             if (d.mode === 'cut') {
                 const L = d.pts[d.pts.length - 1], l = pmDist(P, L); if (l < 2.5) return;
-                const t = pmNow(), v = l / Math.max(1, t - d.lt); d.lt = t;
                 d.pts.push(P); d.len += l; d.acc += l; d.ang = Math.atan2(P[1] - L[1], P[0] - L[0]);
-                pmCut(Math.min(.32, .06 + v * .22));                                            // 칼날이 종이를 긋는 '스윽'
-                if (d.acc > 9) { d.acc = 0; pmFiber(); }                                        // 종이 섬유가 끊기는 '틱'
                 if (d.len > 90 && d.pts.length > 14 && pmDist(P, d.pts[0]) < 20) pmFinishCut(P);
                 return;
             }
             if (d.mode === 'ink') {
                 const st = S.edit.st, E = pmEditPose(st), L = [(P[0] - E.cx) / E.s, (P[1] - E.cy) / E.s], t = pmNow(), l = pmDist(L, d.last);
                 if (l < .25) return;
-                const v = l / Math.max(1, t - d.lt); pmInk(st, d.last, L, v); pmScratch(Math.min(.12, v * E.s * .06));
+                const v = l / Math.max(1, t - d.lt); pmInk(st, d.last, L, v);
                 d.last = L; d.lt = t; return;
             }
             if (d.mode === 'piece') {
@@ -279,14 +291,14 @@
         function pmFinishCut(P) {
             const S = pmS, d = S.drag; S.drag = null;
             const st = pmCutOut(d.pts);
-            if (!st) { pmCut(0); S.fades.push({ pts: d.pts, len: d.len, t0: pmNow() }); pmSay('여긴 종이가 거의 없어요. 남은 그림을 오려 보세요'); pmPop(300, 200, .05); return; }
-            pmCut(0); S.pieces.push(st); pmLift(); setTimeout(() => pmPop(700, 260, .1), 60); pmBuzz(18);
+            if (!st) { S.fades.push({ pts: d.pts, len: d.len, t0: pmNow() }); pmSay('여긴 종이가 거의 없어요. 남은 그림을 오려 보세요'); return; }
+            S.pieces.push(st); pmBuzz(18);
             if (P) S.drag = { mode: 'piece', st, off: [P[0] - st.cx, P[1] - st.cy], start: P, last: P, t0: pmNow(), moved: true };   // 오린 스티커가 손가락을 따라와요
             pmSay('쏙! 오려졌어요 ✨ 페이지로 끌어서 붙여요');
         }
         function pmUp(e) {
             const S = pmS, d = S.drag; if (!d) return;
-            S.drag = null; pmScratch(0); pmCut(0);
+            S.drag = null;
             if (d.mode === 'sheet') { pmSay('오리고 싶은 그림 둘레를 손가락으로 <b>한 바퀴</b> 따라 그려요'); return; }
             if (d.mode === 'cut') {
                 if (d.len > 90 && pmDist(d.pts[d.pts.length - 1], d.pts[0]) < 44) { S.drag = d; pmFinishCut(null); return; }
@@ -300,7 +312,7 @@
                 if (!d.moved) { pmEnterEdit(st); return; }
                 const pg = pmq('canvasArea'), r = pg && pg.getBoundingClientRect(), P = [st.cx, st.cy];
                 if (r && !pmInSheet(P) && P[0] >= r.left && P[0] <= r.right && P[1] >= r.top && P[1] <= r.bottom) { pmStick(st); return; }
-                st.squish = pmNow(); pmPop(420, 140, .06);
+                st.squish = pmNow();
                 pmSay(pmInSheet(P) ? '모조지 위에 놓았어요. <b>페이지</b>로 끌어서 붙여요' : '톡 누르면 위에 <b>글씨</b>를 쓸 수 있어요 ✍️ 페이지로 끌면 붙어요');
             }
         }
@@ -324,7 +336,7 @@
                 put(Math.round(x + (st.cx - (b.left + b.width / 2)) / k), Math.round(y + (st.cy - (b.top + b.height / 2)) / k));
             }
             if (typeof saveData === 'function') saveData(false);
-            pmPop(420, 140, .1); pmBuzz(8);
+            pmBuzz(8);
             pmSay('꾹! 붙였어요 ✨ 다른 그림도 오려 보세요');
         }
 
@@ -385,65 +397,9 @@
             for (const st of [...S.pieces].sort((a, b) => a.z - b.z)) if (!S.edit || S.edit.st !== st) pmDrawPiece(c, st, t);
             S.fades = S.fades.filter(f => { const q = (t - f.t0) / 600; if (q >= 1) return false; pmDrawCut(c, f, 1 - q, t); return true; });
             if (S.drag && S.drag.mode === 'cut') pmDrawCut(c, S.drag, 1, t);
+            pmZones();
             if (S.edit) { const p = pmPoseAt(t); c.fillStyle = `rgba(80,50,62,${.32 * p.q})`; c.fillRect(0, 0, S.W, S.H); pmDrawPiece(c, S.edit.st, t, p); }
             S.raf = requestAnimationFrame(pmFrame);
-        }
-
-        /* ---------- 소리 : 커터칼 '드르륵 · 스윽 · 톡' · 글씨 '슥슥' · 구김 '꾸깃' (js/sound.js 연출 소리) ---------- */
-        let pmBuf = null, pmScr = null, pmCutG = null;
-        function pmAc() {
-            const ac = typeof sndFx === 'function' ? sndFx() : null; if (!ac) return null;
-            if (!pmBuf || pmBuf.sampleRate !== ac.sampleRate) { pmBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = pmBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < .25 ? 1 : .35); }
-            return ac;
-        }
-        function pmSnip(v, f) {
-            const ac = pmAc(); if (!ac) return;
-            const t = ac.currentTime, s = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
-            s.buffer = pmBuf; bp.type = 'bandpass'; bp.frequency.value = f || pmR(2600, 4200); bp.Q.value = 1.4;
-            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .004); g.gain.exponentialRampToValueAtTime(.001, t + .07);
-            s.connect(bp).connect(g).connect(sndOut()); s.start(t, Math.random() * .8, .08);
-            const o = ac.createOscillator(), og = ac.createGain(); o.frequency.setValueAtTime(2400, t); o.frequency.exponentialRampToValueAtTime(1300, t + .02);
-            og.gain.setValueAtTime(v * .12, t); og.gain.exponentialRampToValueAtTime(.001, t + .03); o.connect(og).connect(sndOut()); o.start(t); o.stop(t + .04);
-        }
-        /* 짧은 '틱' (금속 · 종이) */
-        function pmTick(v, f, q, len) {
-            const ac = pmAc(); if (!ac) return;
-            const t = ac.currentTime, s = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
-            s.buffer = pmBuf; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
-            g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + len);
-            s.connect(bp).connect(g).connect(sndOut()); s.start(t, Math.random() * .8, len + .02);
-        }
-        function pmClick() { for (let i = 0; i < 3; i++) setTimeout(() => pmTick(.22, 4200 + i * 300, 6, .018), i * 38); }   // 칼날을 드르륵 빼는 소리
-        function pmFiber() { pmTick(pmR(.04, .09), pmR(2600, 4800), 3, .012); }
-        function pmLift() { pmTick(.18, 1800, 4, .03); setTimeout(() => pmTick(.12, 5200, 8, .02), 40); }               // 칼을 떼고 오린 조각이 톡
-        /* 칼날이 종이를 긋는 '스윽' : 손이 빠를수록 크게 (0 이면 멈춤) */
-        function pmCut(v) {
-            if (!pmCutG && !v) return;
-            const ac = pmAc(); if (!ac) { if (pmCutG) pmCutG.gain.value = 0; return; }
-            if (!pmCutG) {
-                const src = ac.createBufferSource(); src.buffer = pmBuf; src.loop = true;
-                const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1400;
-                const bp = ac.createBiquadFilter(); bp.type = 'peaking'; bp.frequency.value = 3600; bp.Q.value = 1.2; bp.gain.value = 9;
-                pmCutG = ac.createGain(); pmCutG.gain.value = 0; src.connect(hp).connect(bp).connect(pmCutG).connect(sndOut()); src.start();
-            }
-            pmCutG.gain.setTargetAtTime(v, ac.currentTime, v ? .02 : .04);
-        }
-        function pmCrinkle() { for (let i = 0; i < 8; i++) setTimeout(() => pmSnip(pmR(.08, .22), pmR(1200, 2600)), i * pmR(25, 45)); }
-        function pmPop(f1, f2, v) {
-            const ac = pmAc(); if (!ac) return;
-            const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
-            o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + .09); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .12);
-            o.connect(g).connect(sndOut()); o.start(t); o.stop(t + .13);
-        }
-        function pmScratch(v) {
-            if (!pmScr && !v) return;
-            const ac = pmAc(); if (!ac) { if (pmScr) pmScr.gain.value = 0; return; }
-            if (!pmScr) {
-                const src = ac.createBufferSource(); src.buffer = pmBuf; src.loop = true;
-                const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 5200; bp.Q.value = .6;
-                pmScr = ac.createGain(); pmScr.gain.value = 0; src.connect(bp).connect(pmScr).connect(sndOut()); src.start();
-            }
-            pmScr.gain.setTargetAtTime(v, ac.currentTime, .03);
         }
 
         window.pmMakeSheet = pmMakeSheet; window.openPaperSheet = openPaperSheet; window.closePaperSheet = closePaperSheet;

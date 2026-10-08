@@ -1888,7 +1888,13 @@
         .smk-sticks .smk-go { padding: 10px 2px; font-size: 12.5px; line-height: 1.3; word-break: keep-all; }   /* 🧩 · 🏷️ · 📄 ~로 다이어리에 붙이기 */
         #pmPens { position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 3px 10px rgba(120,80,95,.14); }
         #pmPens[hidden] { display: none; }
-        .pel-x.pm-x { right: auto; width: 36px; height: 36px; box-shadow: 0 2px 8px rgba(120,80,95,.18); }   /* 📄 모조지 오른쪽 위 모서리에 붙어 다녀요 (js/papermaker.js) */
+        .pel-room.pm-room { z-index: 95; }   /* 페이지 위 · 붙인 스티커의 꾸미기 도구(.toolbar) · 팝업메뉴 · 창은 그 위에 */
+        .pm-room, .pm-room canvas { pointer-events: none; }   /* 📄 모조지 (js/papermaker.js) : 모조지 · 오린 스티커 자리(.pm-z)만 손가락을 받고 나머지는 페이지로 */
+        #pmHit { position: absolute; inset: 0; pointer-events: none; }
+        .pm-z { position: absolute; pointer-events: auto; touch-action: none; }
+        .pm-z[hidden] { display: none; }
+        #pmPens { pointer-events: auto; }
+        .pm-x { position: absolute; width: 32px; height: 32px; padding: 0; border: 0; background: none; color: #8a6a76; font-size: 19px; line-height: 32px; text-align: center; cursor: pointer; pointer-events: auto; text-shadow: 0 1px 0 #fff; }   /* 모조지 오른쪽 위 끝 ✕ (동그라미 없이) */
         .pm-pens { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
         .pm-pens button[data-c] { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; background: var(--c); box-shadow: 0 0 0 1.5px var(--border-color); cursor: pointer; padding: 0; }
         .pm-pens button[data-c].on { box-shadow: 0 0 0 3px #5aa8e0; }
