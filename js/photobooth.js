@@ -207,7 +207,7 @@
                 let src = pbOut();
                 try { src = await pelBake(src); } catch (e) {}
                 const k = act === 'stick' ? 'seal' : act, r = await smAdd(src, k);
-                if (act === 'stick') { smAddMsg(r, k, true); closeBooth(); openStickerPeel(src, 'seal'); return; }
+                if (act === 'stick') { smAddMsg(r, k, true); closeBooth(); openStickerPeel(src); return; }
                 if (r === 'ok') closeBooth();
                 smAddMsg(r, k, false);
             } finally { pb.busy = false; all.forEach(b => { b.disabled = false; }); }
