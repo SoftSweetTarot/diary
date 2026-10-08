@@ -4,7 +4,7 @@
    2) 찍기 : 카메라로 3 · 2 · 1 찰칵! (앞 카메라는 거울처럼) · 또는 갤러리의 사진 고르기
    3) 꾸미기 : 필터(뽀샤시 · 흑백 · 빈티지 · 쿨톤) · 아래 글씨 · 반짝이 꾸밈
    4) 📌 다이어리에 붙이기 (🏷️ 씰로 저장 → 하얀 네모에서 떼어 원하는 곳에 · js/stickerpeel.js)
-      🧩 조각스티커 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (js/papermaker.js 로 이어서)
+      🧩 조각스티커 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (사진이 모조지 한 장에 인쇄돼 내스티커에 저장 · js/papermaker.js)
       💾 내 기기에 저장
    - 사진은 이 기기에서만 합쳐서, 다 만든 한 장만 일기에 담겨요 (카메라 영상은 어디에도 보내지 않아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (포토부스만 '준비 중') */
@@ -195,17 +195,17 @@
             pb.out = '';
         }
         function pbOut() { if (!pb.out) pb.out = pbq('pbCanvas').toDataURL('image/jpeg', .86); return pb.out; }
-        /* act : 'stick' 붙이기(씰) · 'piece' · 'seal' 만들기(내스티커에 저장) · 'paper' 모조지스티커 만들기로 이어서 */
+        /* act : 'stick' 붙이기(씰) · 'piece' · 'seal' · 'paper' 만들기(내스티커에 저장 · 모조지는 모조지 한 장에 인쇄해서) */
         async function pbKeep(act) {
             if (pb.busy) return;
             if (act === 'stick' && typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">🏷️ 씰스티커 만들기로 저장해 두었다가 붙여도 돼요.</span>'); return; }
-            if (act === 'paper') { if (!window.openPaperMaker) { comingSoon('📄 모조지스티커 만들기'); return; } const src = pbOut(); closeBooth(); openPaperMaker(src); return; }
             if (typeof pelBake !== 'function' || typeof smAdd !== 'function') { comingSoon('🏷️ 씰스티커'); return; }
             pb.busy = true;
             const all = [...document.querySelectorAll('#boothRoom .pb-go')]; all.forEach(b => { b.disabled = true; });
             try {
                 let src = pbOut();
-                try { src = await pelBake(src); } catch (e) {}
+                if (act === 'paper') { if (!window.pmMakeSheet) { comingSoon('📄 모조지스티커'); return; } try { src = await pmMakeSheet([src]); } catch (e) { showMsg('모조지스티커를 만들지 못했어요.'); return; } }
+                else try { src = await pelBake(src); } catch (e) {}
                 const k = act === 'stick' ? 'seal' : act, r = await smAdd(src, k);
                 if (act === 'stick') { smAddMsg(r, k, true); closeBooth(); openStickerPeel(src); return; }
                 if (r === 'ok') closeBooth();

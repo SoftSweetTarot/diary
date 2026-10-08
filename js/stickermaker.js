@@ -3,14 +3,15 @@
    - 🖼 사진고르기로 여러 장(최대 SM_MANY)을 고르면 : 위쪽 사진 줄에서 한 장씩 골라 모양 · 자리 · 크기를 따로 맞춰요 (🔁 버튼 = 지금 모양 · 크기를 모든 사진에)
      📌 붙이기 → 🏷️ 씰 내스티커에 '한 칸'으로 저장 → 한 장의 하얀 종이에 씰이 여러 개 붙어 페이지 가운데 나와요 (js/stickerpeel.js)
      여러 장 한 칸 : { id, src : 종이 미리보기, ss : [스티커 그림들], k } → 누르면 종이째 다시 나와요 (11장부터는 알림 후 앞의 SM_MANY장만)
-     🧩 · 🏷️ 만들기 → 모두 그 종류 내스티커에 저장 · 📄 모조지는 한 장씩만 (여러 장일 땐 버튼이 숨어요)
+     🧩 · 🏷️ 만들기 → 모두 그 종류 내스티커에 저장 · 📄 모조지는 고른 사진들이 모조지 한 장에 나란히 인쇄돼요 (js/papermaker.js)
    - 사진 스티커 : 📷 찍기 · 🖼 고르기(한 장) → 모양(🖼 원본 그대로 · 동그라미 · 하트 · 별 · 둥근네모 · 구름) 또는 ✂️ 손으로 오리기 → 끌어서 자리 · 크기 조절
      결과 버튼 : 🏷️ 씰스티커로 다이어리에 붙이기 (씰로 저장 → 하얀 종이에서 떼어 원하는 곳에 · js/stickerpeel.js)
                🧩 조각스티커로 다이어리에 붙이기 (조각 봉투로 저장 → 봉투를 뜯어 원하는 곳에 · js/piecebag.js)
-                 🧩 조각스티커 만들기 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (js/papermaker.js 로 이어서)
+               📄 모조지스티커로 다이어리에 붙이기 (모조지 한 장으로 저장 → 가운데 나온 모조지에서 오려 원하는 곳에 · js/papermaker.js)
+                 🧩 조각스티커 만들기 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (모조지 한 장으로 저장)
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기 · 💾 저장만 → 🧩 내스티커
    - 내스티커 : ✨ 스티커 창 → 종류 → 내스티커 에서 언제든 다시 붙여요 (모든 종류 합쳐 최대 40개)
-     한 칸 : { id, src, t, k } · k = 'seal' 씰 · 'piece' 조각(👜 내 봉투 : 봉투 하나 · 누르면 늘 새 봉투로 나와서 뜯으면 조각이 쏟아져요 js/piecebag.js) · 'paper' 모조지(js/papermaker.js) · 없으면 사진 · 글씨 스티커(🧩 내스티커)
+     한 칸 : { id, src, t, k } · k = 'seal' 씰 · 'piece' 조각(👜 내 봉투 : 봉투 하나 · 누르면 늘 새 봉투로 나와서 뜯으면 조각이 쏟아져요 js/piecebag.js) · 'paper' 모조지(src = 모조지 한 장 · 누르면 늘 새 종이로 가운데 나와요 js/papermaker.js) · 없으면 사진 · 글씨 스티커(🧩 내스티커)
      저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내스티커.json (게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
@@ -94,14 +95,15 @@
                   <div id="smFinal" class="smk-col">
                     <label class="smk-border"><input type="checkbox" id="smBorder" checked onchange="smS.border=this.checked;smDraw()"> 하얀 테두리</label>
                     <div id="smPhotoGo" class="smk-col">
-                      <div class="smk-two">
-                        <button type="button" class="smk-go" onclick="smFinish('pstick',this)">🧩 조각스티커로<br>다이어리에 붙이기</button>
-                        <button type="button" class="smk-go" onclick="smFinish('stick',this)">🏷️ 씰스티커로<br>다이어리에 붙이기</button>
+                      <div class="smk-three smk-sticks">
+                        <button type="button" class="smk-go" onclick="smFinish('pstick',this)">🧩<br>조각스티커로<br>다이어리에 붙이기</button>
+                        <button type="button" class="smk-go" onclick="smFinish('stick',this)">🏷️<br>씰스티커로<br>다이어리에 붙이기</button>
+                        <button type="button" class="smk-go" onclick="smFinish('pastick',this)">📄<br>모조지스티커로<br>다이어리에 붙이기</button>
                       </div>
                       <div class="smk-three">
                         <button type="button" class="smk-go smk-sub" onclick="smFinish('piece',this)">🧩<br>조각스티커<br>만들기</button>
                         <button type="button" class="smk-go smk-sub" onclick="smFinish('seal',this)">🏷️<br>씰스티커<br>만들기</button>
-                        <button type="button" class="smk-go smk-sub" id="smPaperGo" onclick="smFinish('paper',this)">📄<br>모조지스티커<br>만들기</button>
+                        <button type="button" class="smk-go smk-sub" onclick="smFinish('paper',this)">📄<br>모조지스티커<br>만들기</button>
                       </div>
                     </div>
                     <div id="smTextGo" class="smk-col">
@@ -186,18 +188,20 @@
             smKeep(); smS.many.forEach(m => { m.shape = smS.shape; m.zoom = smS.zoom; m.path = []; });
             showMsg(`🔁 ${smS.many.length}장 모두 같은 모양 · 크기로 맞췄어요.<br><span style="font-size:12px;color:#777;">자리는 사진마다 그대로예요.</span>`);
         }
-        /* 여러 장 완성 : 'stick' 씰로 붙이기(한 장 종이) · 'pstick' 조각으로 붙이기(봉투 하나) · 'piece' · 'seal' 만들기 */
+        /* 여러 장 완성 : 'stick' 씰로 붙이기(한 장 종이) · 'pstick' 조각으로 붙이기(봉투 하나) · 'pastick' 모조지로 붙이기(모조지 한 장) · 'piece' · 'seal' · 'paper' 만들기 */
         async function smManyFinish(act) {
             smKeep();
-            const back = smS.cur, out = [];
+            const back = smS.cur, k = SM_STICK[act] || act;
+            let out = [];
             for (let i = 0; i < smS.many.length; i++) {
                 smLoadPhoto(i); smS.out = ''; smS.outDie = '';
-                const src = smMake(true);
+                const src = smMake(k === 'paper' ? smS.border : true);
                 if (!src) { smGo(i); showMsg(`✂️ ${i + 1}번째 사진의 모양을 먼저 그려 주세요.`); return; }
                 out.push(src);
             }
             smLoadPhoto(back); smS.out = ''; smS.outDie = '';
-            const k = SM_STICK[act] || act, r = await smAdd(out, k);
+            if (k === 'paper') out = await smPaperSheet(out); if (!out) return;
+            const r = await smAdd(out, k);
             if (SM_STICK[act]) return smStickAs(k, out, r);
             if (r === 'ok') closeStickerMaker();
             smAddMsg(r, k, false);
@@ -294,8 +298,8 @@
             smq('smTextB').hidden = !t || one;
             smq('smFinal').hidden = one;
             smq('smPhotoGo').hidden = t; smq('smTextGo').hidden = !t;
-            const many = !t && !!smS.many;                            // 여러 장 : 사진 줄 · 🔁 버튼 보이고, 📄 모조지는 숨겨요
-            smq('smStrip').hidden = !many; smq('smAll').hidden = !many; smq('smPaperGo').hidden = many; smq('smPaperGo').parentNode.classList.toggle('two', many);
+            const many = !t && !!smS.many;                            // 여러 장 : 사진 줄 · 🔁 버튼이 보여요
+            smq('smStrip').hidden = !many; smq('smAll').hidden = !many;
             smq('smTextBack').hidden = !t || one;
             if (t) smq('smHint').textContent = one ? '✏️ 스티커에 쓸 글자를 써요' : '글꼴 · 색 · 테두리를 골라요';
         }
@@ -440,20 +444,26 @@
             else if (!stick) showMsg(`✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → ${SM_PATH[k || '']}에서 붙일 수 있어요.</span>`);
         }
         /* act : 'stick' 씰로 붙이기 · 'pstick' 조각으로 붙이기 · 'piece' · 'seal' · 'paper' 만들기 / 글씨 스티커는 'text' 붙이기 · 'keep' 저장만 */
-        const SM_STICK = { stick: 'seal', pstick: 'piece' };
-        /* 📌 붙이기 : 씰은 하얀 종이째 · 조각은 봉투째 꺼내요 (내스티커에도 저장돼요) */
+        const SM_STICK = { stick: 'seal', pstick: 'piece', pastick: 'paper' };
+        /* 📄 모조지 : 오린 그림들 → 모조지 한 장 [src] (js/papermaker.js) */
+        async function smPaperSheet(srcs) {
+            if (!window.pmMakeSheet) { comingSoon('📄 모조지스티커'); return null; }
+            try { return [await pmMakeSheet(srcs)]; } catch (e) { showMsg('모조지스티커를 만들지 못했어요.'); return null; }
+        }
+        /* 📌 붙이기 : 씰은 하얀 종이째 · 조각은 봉투째 · 모조지는 모조지째 꺼내요 (내스티커에도 저장돼요) */
         function smStickAs(k, srcs, r) {
             smAddMsg(r, k, true); closeStickerMaker();
             if (k === 'piece' && window.openPieceBag) openPieceBag(srcs);
+            else if (k === 'paper' && window.openPaperSheet) openPaperSheet(srcs[0]);
             else if (k === 'seal' && window.openStickerPeel) openStickerPeel(srcs.length > 1 ? srcs : srcs[0]);
             else srcs.forEach(smStick);
         }
         async function smDoFinish(act) {
             if (smS.many && smS.mode === 'photo') return smManyFinish(act);
-            const src = smMake(!!SM_STICK[act] || act === 'piece' || act === 'seal');
+            const k = SM_STICK[act] || (act === 'piece' || act === 'seal' || act === 'paper' ? act : '');
+            let src = smMake(k === 'paper' ? smS.border : !!k);
             if (!src) { showMsg(smS.shape === 'free' ? '✂️ 오리고 싶은 모양을 먼저 그려 주세요.' : '스티커를 만들지 못했어요.'); return; }
-            if (act === 'paper') { closeStickerMaker(); if (window.openPaperMaker) openPaperMaker(src); else comingSoon('📄 모조지스티커 만들기'); return; }
-            const k = SM_STICK[act] || (act === 'piece' || act === 'seal' ? act : '');
+            if (k === 'paper') { const o = await smPaperSheet([src]); if (!o) return; src = o[0]; }
             const r = await smAdd(src, k, smS.mode === 'text' ? smS.text : '');
             if (SM_STICK[act]) return smStickAs(k, [src], r);
             if (act === 'text') { smAddMsg(r, k, true); smStick(src); return; }
@@ -473,7 +483,7 @@
         const SM_EMPTY = {
             piece: '✂️ 아직 만든 조각스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>🧩 조각스티커 만들기를 눌러 보세요!',
             seal: '🏷️ 아직 만든 씰스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>🏷️ 씰스티커 만들기나 📌 다이어리에 붙이기를 눌러 보세요!',
-            paper: '📄 아직 만든 모조지스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>📄 모조지스티커 만들기를 눌러 보세요!' };
+            paper: '📄 아직 만든 모조지스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>📄 모조지스티커 만들기나 다이어리에 붙이기를 눌러 보세요!' };
         function smGrid(kind) {
             const L = (smS.list || []).map((s, i) => [s, i]).filter(([s]) => smKindOf(s) === kind);
             const it = ([s, i]) => s.k === 'piece'
@@ -494,7 +504,8 @@
             else if (s.k === 'piece' && window.openPieceBag) {               // 🧩 봉투 : 늘 새 봉투로 나와요 (뜯어서 꺼내요)
                 closeModal('stickerModal');
                 openPieceBag(s.ss || [s.src]);
-            } else (s.ss || [s.src]).forEach(smStick);
+            } else if (s.k === 'paper' && window.openPaperSheet) { closeModal('stickerModal'); openPaperSheet(s.src); }   // 📄 모조지 : 늘 새 종이로 가운데 나와요 (오려서 붙여요)
+            else (s.ss || [s.src]).forEach(smStick);
         }
         async function smDel(i) {
             if (!(await showMsg('이 스티커를 내 스티커에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 일기에 붙인 스티커는 그대로 남아요.</span>', true))) return;

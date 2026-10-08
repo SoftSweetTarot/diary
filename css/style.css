@@ -1857,7 +1857,6 @@
         /* 🖼 여러 장 : 사진 줄 (js/stickermaker.js smStripDraw) */
         .smk-strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; margin: 0 auto 4px; max-width: min(340px, 88vw); scrollbar-width: thin; }
         .smk-strip[hidden], .smk-all[hidden] { display: none; }
-        .smk-three.two { grid-template-columns: repeat(2, 1fr); }   /* 여러 장일 땐 📄 모조지 버튼이 숨어서 두 칸 */
         .smk-strip button { position: relative; flex: 0 0 auto; width: 52px; height: 52px; padding: 0; border: 2px solid var(--border-color); border-radius: 14px; background: #fff; overflow: hidden; cursor: pointer; opacity: .7; transition: transform .15s, opacity .15s; }
         .smk-strip button img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .smk-strip button span { position: absolute; right: 3px; bottom: 2px; min-width: 15px; padding: 0 3px; border-radius: 8px; background: rgba(255,255,255,.9); color: #7a5a66; font-size: 10.5px; font-weight: bold; line-height: 15px; }
@@ -1887,9 +1886,9 @@
         .smk-three, .pb-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .smk-three .smk-go, .pb-three .pb-go { padding: 10px 2px; font-size: 13px; line-height: 1.3; word-break: keep-all; }
         /* 📌 붙이기 2개 : 🏷️ 씰스티커로 · 🧩 조각스티커로 */
-        .smk-two { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .smk-two .smk-go { padding: 11px 4px; font-size: 14px; line-height: 1.35; word-break: keep-all; }
-        .pm-room .smk-stage canvas { width: min(340px, 88vw); cursor: crosshair; }
+        .smk-sticks .smk-go { padding: 10px 2px; font-size: 12.5px; line-height: 1.3; word-break: keep-all; }   /* 🧩 · 🏷️ · 📄 ~로 다이어리에 붙이기 */
+        #pmPens { position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 3px 10px rgba(120,80,95,.14); }
+        #pmPens[hidden] { display: none; }
         .pm-pens { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
         .pm-pens button[data-c] { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; background: var(--c); box-shadow: 0 0 0 1.5px var(--border-color); cursor: pointer; padding: 0; }
         .pm-pens button[data-c].on { box-shadow: 0 0 0 3px #5aa8e0; }
