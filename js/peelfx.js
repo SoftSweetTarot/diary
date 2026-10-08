@@ -81,7 +81,7 @@
             if (edge.length < 8) for (let i = 0; i <= 40; i++) { const q = i / 40; edge.push([-w / 2 + w * q, -h / 2], [-w / 2 + w * q, h / 2], [-w / 2, -h / 2 + h * q], [w / 2, -h / 2 + h * q]); }
             return { w: aw, h: ah, front, back, edge };
         }
-        /* 찌익 · 톡 소리 (씰스티커 시트와 같은 소리 · 설정의 '연출 소리'를 따라요 · js/sound.js) */
+        /* 떼는 동안 찌익 소리 (씰스티커 시트와 같은 소리 · 설정의 '연출 소리'를 따라요 · js/sound.js) */
         const pfxSnd = { ac: null, g: null };
         function pfxNoise(v) {
             if (!v && !pfxSnd.g) return;
@@ -95,14 +95,6 @@
                     pfxSnd.g = ac.createGain(); pfxSnd.g.gain.value = 0; src.connect(bp).connect(pfxSnd.g).connect(sndOut() || ac.destination); src.start(); pfxSnd.ac = ac;
                 }
                 pfxSnd.g.gain.setTargetAtTime(v, ac.currentTime, .03);
-            } catch (e) {}
-        }
-        function pfxPop(f1, f2, v) {
-            const ac = typeof sndFx === 'function' ? sndFx() : null; if (!ac) return;
-            try {
-                const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
-                o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + .09); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .12);
-                o.connect(g).connect(sndOut() || ac.destination); o.start(t); o.stop(t + .13);
             } catch (e) {}
         }
         function pfxSeal(o) {
@@ -179,7 +171,7 @@
                 const [gx, gy] = toStage(lx, ly);                                                           // 손가락 끝에 잡은 지점이 오도록
                 drag = { mode: 'free', off: [gx - st.cx, gy - st.cy], baseRot: st.rot, last: P, lt: performance.now() };
                 st.cx = P[0] - drag.off[0]; st.cy = P[1] - drag.off[1];
-                pfxNoise(0); pfxPop(660, 180, .18);
+                pfxNoise(0);
                 try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
                 if (o.onDetach) o.onDetach();
             }
@@ -200,10 +192,9 @@
             }
             function up() {
                 if (!drag || dead) return; const d = drag; drag = null;
-                if (d.mode === 'peel') { pfxNoise(0); if (!d.C) { kill(); if (o.onCancel) o.onCancel(); return; } snap = { C: d.C, F: d.F, t0: performance.now() };
-                    if (Math.hypot(d.F[0] - d.C[0], d.F[1] - d.C[1]) > 20) pfxPop(300, 200, .06); return; }      // 덜 뗐으면 착 다시 붙어요
+                if (d.mode === 'peel') { pfxNoise(0); if (!d.C) { kill(); if (o.onCancel) o.onCancel(); return; } snap = { C: d.C, F: d.F, t0: performance.now() }; return; }      // 덜 뗐으면 착 다시 붙어요
                 const r = Math.max(-.5, Math.min(.5, st.rot));
-                pfxPop(420, 140, .12); try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {}
+                try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {}
                 kill(); if (o.onDrop) o.onDrop(st.cx, st.cy, r, d.baseRot);
             }
             function kill() { if (dead) return; dead = true; pfxNoise(0); cancelAnimationFrame(raf); cv.remove(); }
