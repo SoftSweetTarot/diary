@@ -148,6 +148,7 @@ let fontList = [
             loadUIFont();
             loadPageSize();
             setupLayout();
+            setupPageMove();
             startAutoSave();
             initDrive();
             loadCoverNotice();

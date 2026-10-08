@@ -2,6 +2,7 @@
    🏷️ 씰스티커 · 🧩 조각스티커 떼어 붙이기 : 내스티커에서 고르거나 만들기에서 📌 붙이기를 누르면 페이지 앞에 스티커가 나와요
    - 🏷️ 씰 : 하얀 네모(스티커 종이) 위에 씰이 있어요 → 가장자리를 잡고 떼어 원하는 곳에 놓으면 붙어요
              사진고르기로 여러 장을 고르면 한 장의 종이에 씰이 여러 개 붙어 나와요 → 마지막 씰을 떼면 하얀 종이가 사라져요
+             하얀 종이의 빈 곳을 누른 채 끌면 종이째 화면 안에서 옮겨져요
              소리 : 떼어 낼 때 '찌익' 소리만
    - 🧩 조각 : 조각 하나에 뒷종이가 붙어 있어요 → 가장자리를 잡고 뒷종이를 벗기면 뒷종이는 팔랑 떨어지고, 원하는 곳에 놓으면 붙어요
              소리 : 없어요 (조각스티커 소리는 봉투를 옆으로 뜯을 때만 · 내가 만든 조각은 봉투 없이 👜 내 봉투에 들어가요)
@@ -9,9 +10,9 @@
    - 소리는 ⚙ 설정의 '✨ 연출 소리'를 따라요 (js/sound.js)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (스티커가 바로 붙어요) */
 
-        const PEL_GRAB = 28, PEL_PAD = 16, PEL_LINER = 4, PEL_EDGE = 6, PEL_MAX = 360;
+        const PEL_GRAB = 28, PEL_GRAB_OUT = 10, PEL_PAD = 22, PEL_LINER = 4, PEL_EDGE = 6, PEL_MAX = 360;
         /* items : 종이 위 스티커들 [{ a, src, st }] · a · st · src 는 지금 손에 잡은 스티커 */
-        const pelS = { on: false, kind: 'seal', cv: null, ctx: null, fl: null, items: [], a: null, st: null, drag: null, board: null, gone: 0, fall: null, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '' };
+        const pelS = { on: false, kind: 'seal', cv: null, ctx: null, fl: null, items: [], a: null, st: null, drag: null, board: null, mv: { x: 0, y: 0 }, gone: 0, fall: null, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '' };
         const pelq = id => document.getElementById(id);
         const pelMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
         const pelLoad = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -71,13 +72,14 @@
             cv.width = S.W * S.DPR; cv.height = S.H * S.DPR; S.fl = pelMk(cv.width, cv.height);
             /* 페이지 가운데 하얀 종이 한 장 (화면 밖으로 안 나가게) : 한 장이면 그 크기, 여러 장이면 칸을 나눠 나란히 */
             const pg = pelPage(), r = pg ? pg.getBoundingClientRect() : { left: 0, top: 0, width: S.W, height: S.H };
-            const cx = Math.min(S.W - 30, Math.max(30, r.left + r.width / 2)), cy = Math.min(S.H - 30, Math.max(90, r.top + Math.min(r.height, S.H - r.top) / 2));
+            let cx = Math.min(S.W - 30, Math.max(30, r.left + r.width / 2)), cy = Math.min(S.H - 30, Math.max(90, r.top + Math.min(r.height, S.H - r.top) / 2));
+            cx += S.mv.x; cy += S.mv.y;                                          // 종이를 옮긴 만큼
             const it = S.items, n = it.length, pw = Math.min(r.width, S.W);
             if (n === 1) {
                 const a = it[0].a, s = Math.min(pw * .42 / a.w, S.H * .4 / a.h, 1);
                 if (it[0].st.state === 'on') Object.assign(it[0].st, { cx, cy, s, rot: 0 });
                 S.board = { cx, cy, w: (a.w - a.m * 2) * s + PEL_PAD * 2, h: (a.h - a.m * 2) * s + PEL_PAD * 2 };
-                return;
+                return pelKeep();
             }
             const cols = Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols), G = 12;
             const cs = Math.min(150, (pw * .86 - PEL_PAD * 2 - G * (cols - 1)) / cols, (S.H * .6 - PEL_PAD * 2 - G * (rows - 1)) / rows);
@@ -88,7 +90,17 @@
                 const inRow = Math.min(cols, n - Math.floor(i / cols) * cols), sx = (cols - inRow) * (cs + G) / 2;   // 마지막 줄은 가운데로
                 Object.assign(o.st, { cx: cx - S.board.w / 2 + PEL_PAD + sx + (i % cols) * (cs + G) + cs / 2, cy: cy - S.board.h / 2 + PEL_PAD + Math.floor(i / cols) * (cs + G) + cs / 2, s, rot: 0 });
             });
+            pelKeep();
         }
+        /* 하얀 종이 옮기기 : 종이와 종이 위 스티커를 같이 dx · dy 만큼 (화면 밖으로 안 나가게) */
+        function pelShift(dx, dy) {
+            const S = pelS, B = S.board;
+            dx = Math.max(B.w / 2 - B.cx, Math.min(S.W - B.w / 2 - B.cx, dx)); dy = Math.max(B.h / 2 - B.cy, Math.min(S.H - B.h / 2 - B.cy, dy));
+            if (B.w > S.W) dx = S.W / 2 - B.cx; if (B.h > S.H) dy = S.H / 2 - B.cy;
+            B.cx += dx; B.cy += dy; S.mv.x += dx; S.mv.y += dy;
+            for (const o of S.items) if (o.st.state === 'on') { o.st.cx += dx; o.st.cy += dy; }
+        }
+        const pelKeep = () => pelShift(0, 0);
         const pelLeft = () => pelS.items.filter(o => o.st.state === 'on').length;
         function pelPick(o) { const S = pelS; S.a = o.a; S.st = o.st; S.src = o.src; }
 
@@ -103,7 +115,7 @@
             const S = pelS;
             S.cv = pelq('pelCv'); S.ctx = S.cv.getContext('2d'); S.kind = kind === 'piece' ? 'piece' : 'seal';
             S.items = imgs.map((im, i) => ({ a: pelAsset(im), src: list[i], st: { state: 'on' } })); pelPick(S.items[0]);
-            S.drag = null; S.gone = 0; S.fall = null; S.on = true;
+            S.drag = null; S.gone = 0; S.fall = null; S.mv = { x: 0, y: 0 }; S.on = true;
             pelLayout();
             pelq('pelRoom').classList.add('show'); document.body.classList.add('fc-lock');
             S.hint = '';
@@ -172,7 +184,7 @@
             for (const o of S.items) {                                           // 종이 위에 남은 스티커들 (잡은 건 맨 위에)
                 if (o.st.state !== 'on') continue;
                 if (S.kind === 'piece') pelDraw(ctx, o.a.liner, o.st, 1, 1, PEL_UP);   // 🧩 뒷종이
-                if (o === cur && (d || o.st.snap)) continue;
+                if (o === cur && ((d && d.mode === 'peel') || o.st.snap)) continue;
                 if (o.st.snap) pelSnap(ctx, o, t); else pelDraw(ctx, o.a.front, o.st, 1, 1, S.kind === 'piece' ? null : PEL_FLAT);
             }
             if (S.fall) {                                                        // 벗긴 뒷종이가 팔랑 떨어져요
@@ -213,17 +225,24 @@
                 for (const q of o.a.edge) { const dd = ((q[0] - lx) ** 2 + (q[1] - ly) ** 2) * o.st.s * o.st.s; if (dd < best) { best = dd; bp = q; bo = o; } }
                 if (!hit && o.a.alpha(lx, ly) > 128) hit = o;
             }
-            if (bp && Math.sqrt(best) < PEL_GRAB) {
+            /* 스티커 안쪽 가장자리는 넉넉히(PEL_GRAB) · 바깥(종이 빈 곳)은 조금만(PEL_GRAB_OUT) → 나머지 빈 곳은 종이 옮기기 */
+            if (bp && Math.sqrt(best) < (hit === bo ? PEL_GRAB : PEL_GRAB_OUT)) {
                 pelPick(bo); const st = S.st, C = pelToStage(st, bp[0], bp[1]); st.snap = null;
                 S.drag = { mode: 'peel', C, F: C.slice(), start: P, last: P, lt: performance.now() };
                 try { S.cv.setPointerCapture(e.pointerId); } catch (er) {}
                 pelSay(S.kind === 'piece' ? '살살… 뒷종이에서 떼어 내는 중' : '살살… 천천히 당겨요'); return;
             }
-            if (hit) { pelSay('가운데 말고 <b>가장자리</b>를 집어야 떨어져요'); pelWiggle(hit.st); }
+            if (hit) { pelSay('가운데 말고 <b>가장자리</b>를 집어야 떨어져요'); pelWiggle(hit.st); return; }
+            const B = S.board;                                                   // 하얀 종이 빈 곳 → 종이 옮기기
+            if (S.kind === 'seal' && B && Math.abs(P[0] - B.cx) <= B.w / 2 && Math.abs(P[1] - B.cy) <= B.h / 2) {
+                S.drag = { mode: 'board', last: P, lt: performance.now() };
+                try { S.cv.setPointerCapture(e.pointerId); } catch (er) {}
+            }
         }
         function pelMove(e) {
             const S = pelS, d = S.drag; if (!d) return;
             const P = [e.clientX, e.clientY], now = performance.now();
+            if (d.mode === 'board') { pelShift(P[0] - d.last[0], P[1] - d.last[1]); d.last = P; return; }
             const sp = Math.hypot(P[0] - d.last[0], P[1] - d.last[1]) / Math.max(1, now - d.lt); d.last = P; d.lt = now;
             if (d.mode === 'peel') {
                 const dx = P[0] - d.start[0], dy = P[1] - d.start[1], k = Math.min(1, .45 + Math.hypot(dx, dy) / 220);   // 끈적임
@@ -251,6 +270,7 @@
         function pelUp() {
             const S = pelS, d = S.drag; if (!d) return;
             const st = S.st; pelNoise(0); S.drag = null;
+            if (d.mode === 'board') return;
             if (d.mode === 'peel') {
                 st.snap = { C: d.C, F: d.F, t0: performance.now() };
                 if (Math.hypot(d.F[0] - d.C[0], d.F[1] - d.C[1]) > 20) pelSay('앗, 다시 붙어버렸어요 🫣 가장자리를 잡고 다시 떼어 보세요');

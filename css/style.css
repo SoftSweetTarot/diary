@@ -61,6 +61,7 @@
         .diary-book {
             width: 100%; height: 100%; position: relative;
         }
+        .diary-wrapper.pgm-on { cursor: grabbing; }   /* ✋ 페이지 옮기는 중 (js/page.js setupPageMove) */
 
         .page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
