@@ -58,7 +58,7 @@
             const cv = pcbq('pcbCv');
             cv.addEventListener('pointerdown', pcbDown); cv.addEventListener('pointermove', pcbMove);
             cv.addEventListener('pointerup', pcbUp); cv.addEventListener('pointercancel', pcbUp);
-            window.addEventListener('resize', () => { if (pcbS.on) pcbLayout(); });
+            window.addEventListener('resize', () => { if (pcbS.on) { const o = pcbS.PR; pcbLayout(); pcbReflow(o); } });
         }
         function pcbLayout() {
             const S = pcbS, cv = S.cv;
@@ -76,6 +76,27 @@
             S.SH = Math.min(1.25, PR.w * .66 / m, PR.h * .5 / m);
             S.SP = Math.min(1, Math.min(r.width, S.W) * .32 / m);
             for (const q of [S.BIG, S.SMALL]) { q.x += S.mv.x; q.y += S.mv.y; pcbClampR(q); }
+        }
+        /* 화면이 바뀌면 (아이패드 돌리기 등) 흩어진 조각도 새 화면 안으로 : 같은 비율 자리로 옮기고, 화면 밖이면 안쪽으로 */
+        function pcbReflow(o) {
+            const S = pcbS, PR = S.PR; if (!o) return;
+            for (const st of S.pieces) {
+                if (st.state === 'free') continue;                                   // 손가락에 붙어 있는 건 그대로
+                const a = S.assets[st.k], g = st.anim ? st.anim.to : st, half = Math.max(a.w, a.h) * g.s / 2;
+                let nx, ny;
+                if (st.state === 'held') { nx = S.HOLD.cx; ny = S.HOLD.cy; }
+                else {
+                    nx = PR.x + (g.cx - o.x) / o.w * PR.w; ny = PR.y + (g.cy - o.y) / o.h * PR.h;
+                    nx = Math.max(PR.x + Math.min(half, PR.w / 2), Math.min(PR.x + PR.w - Math.min(half, PR.w / 2), nx));
+                    ny = Math.max(PR.y + Math.min(half, PR.h / 2), Math.min(PR.y + PR.h - Math.min(half, PR.h / 2), ny));
+                }
+                const dx = nx - g.cx, dy = ny - g.cy, mv = q => { if (q) { q[0] += dx; q[1] += dy; } };
+                st.cx += dx; st.cy += dy;
+                if (st.anim) { st.anim.from.cx += dx; st.anim.from.cy += dy; st.anim.to.cx += dx; st.anim.to.cy += dy; }
+                if (st.home) { st.home.cx = Math.max(PR.x, Math.min(PR.x + PR.w, PR.x + (st.home.cx - o.x) / o.w * PR.w)); st.home.cy = Math.max(PR.y, Math.min(PR.y + PR.h, PR.y + (st.home.cy - o.y) / o.h * PR.h)); }
+                for (const h of [st.half, st.snap]) if (h) { mv(h.C); mv(h.F); }
+            }
+            const d = S.drag; if (d && d.mode === 'peel') S.drag = null;            // 벗기던 중이면 손을 뗀 것처럼
         }
         /* 봉투 옮기기 : 큰 봉투 · 작은 봉투가 같이 움직여요 (지금 보이는 봉투가 화면 밖으로 안 나가게) */
         function pcbClampR(q) { const M = 8; q.x = Math.max(M, Math.min(pcbS.W - M - q.w, q.x)); q.y = Math.max(M, Math.min(pcbS.H - M - q.h, q.y)); }
