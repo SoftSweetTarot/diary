@@ -316,16 +316,16 @@
                 el.appendChild(stretchHandle);
             }
 
-            /* 🪶 끌어 옮기기 : 🏷️ 씰스티커처럼 떼어진 뒤(js/peelfx.js) 6% 커지고 그림자를 단 채 떠서 따라와요 · 맨 위 레이어 (놓으면 제자리 크기로 붙고 · 레이어는 맨 위 그대로)
-               lag : 떼어지는 동안은 제자리에 있다가 다 떼어지면 손가락 자리로 스르륵 따라붙어요 */
-            let lift = 1, liftRaf = 0, lifted = false, peeling = null, lag = [0, 0];
+            /* 🪶 끌어 옮기기 (맨 위 레이어로 · 놓은 뒤에도 맨 위)
+               - 그림 스티커 · 이모지 : 🏷️ 씰스티커처럼 손가락을 따라 가장자리부터 떼어져요 (js/peelfx.js pfxSeal) → 다 떼면 떠서 따라오고, 놓으면 작아지며 붙어요 · 덜 떼고 놓으면 제자리에 다시 붙어요
+               - 액자 사진 · 마스킹테이프 등 : 6% 커지고 그림자를 단 채 떠서 따라와요 */
+            let lift = 1, liftRaf = 0, lifted = false, seal = null;
             function liftTo(to) {
                 cancelAnimationFrame(liftRaf);
-                const from = lift, lag0 = lag.slice(), t0 = performance.now();
+                const from = lift, t0 = performance.now();
                 const step = now => {
                     const k = Math.min(1, (now - t0) / 140), e = 1 - (1 - k) * (1 - k);
                     lift = from + (to - from) * e;
-                    if (!peeling) lag = [lag0[0] * (1 - e), lag0[1] * (1 - e)];
                     updateTransform();
                     if (k < 1) liftRaf = requestAnimationFrame(step);
                 };
@@ -333,7 +333,7 @@
             }
 
             function updateTransform() {
-                el.style.transform = `translate(${posX - lag[0]}px, ${posY - lag[1]}px) scale(${scale * lift}) rotate(${rotation}deg)`;
+                el.style.transform = `translate(${posX}px, ${posY}px) scale(${scale * lift}) rotate(${rotation}deg)`;
                 el.style.setProperty('--inv', Math.min(5, 1 / (scale || 1)));
             }
             
@@ -401,15 +401,15 @@
 
                 if (actionType === 'move') {
                     const ddx = pos.x - startX, ddy = pos.y - startY;
+                    if (seal) { seal.move(pos.x, pos.y); return; }
                     if (!lifted && !el.querySelector('textarea') && Math.hypot(ddx, ddy) > 6) {
                         lifted = true;
                         el.style.zIndex = zIndexCounter++;
-                        const up = () => { peeling = null; el.classList.add('lifting'); liftTo(1.06); };
-                        if (window.pfxPeel) { peeling = true; const stop = pfxPeel(el, startX, startY, ddx, ddy, rotation, up); if (peeling) peeling = stop; } else up();
+                        if (!(seal = sealStart())) { el.classList.add('lifting'); liftTo(1.06); }
+                        else { seal.move(pos.x, pos.y); return; }
                     }
                     posX = initialX + ddx;
                     posY = initialY + ddy;
-                    if (peeling) lag = [ddx, ddy];
                     el.dataset.posX = posX; el.dataset.posY = posY;
                 } else if (actionType === 'rotate') {
                     const rect = el.getBoundingClientRect();
@@ -427,11 +427,39 @@
 
             const onEnd = () => {
                 actionType = null; pinch = null;
-                if (lifted) {
-                    if (peeling) { const stop = peeling; peeling = null; stop(); }
-                    lifted = false; el.classList.remove('lifting'); liftTo(1);
-                }
+                if (seal) { lifted = false; seal.up(); return; }
+                if (lifted) { lifted = false; el.classList.remove('lifting'); liftTo(1); }
             };
+
+            /* 🏷️ 씰스티커처럼 떼기 시작 : 지금 보이는 모습 그대로 맨 위 캔버스에 옮겨 그리고, 페이지의 스티커는 잠깐 숨겨요 */
+            function sealStart() {
+                if (!window.pfxSeal || el.className.indexOf('fr-') >= 0) return null;
+                const img = el.querySelector(':scope > img'), span = !img && el.querySelector(':scope > span');
+                if (img && (!img.complete || !img.naturalWidth || (typeof isTapeSrc === 'function' && isTapeSrc(img.dataset.src)))) return null;
+                if (!img && !span) return null;
+                const ca = document.getElementById('canvasArea'), k = (ca.getBoundingClientRect().width / (ca.offsetWidth || 1)) || 1, S = scale * k;
+                const node = img || span, w = node.offsetWidth * S, h = node.offsetHeight * S;
+                if (w < 4 || h < 4) return null;
+                let src = img;
+                if (!img) {                                                     // 이모지는 글자를 그림으로
+                    const R = 3, c = document.createElement('canvas'), fs = parseFloat(getComputedStyle(span).fontSize) || 45;
+                    c.width = Math.ceil(span.offsetWidth * R); c.height = Math.ceil(span.offsetHeight * R);
+                    const g = c.getContext('2d'); g.font = `${fs * R}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+                    g.fillText(span.textContent, c.width / 2, c.height / 2 + fs * R * .06); src = c;
+                }
+                const r = el.getBoundingClientRect(), cx0 = r.left + r.width / 2, cy0 = r.top + r.height / 2;
+                const x0 = initialX, y0 = initialY;
+                el.style.visibility = 'hidden';
+                return pfxSeal({ src, cx: cx0, cy: cy0, w, h, rot: rotation * Math.PI / 180, x: startX, y: startY,
+                    onCancel: () => { seal = null; el.style.visibility = ''; },
+                    onDrop: (cx, cy) => {                                       // 놓은 자리에 작아지며 붙어요
+                        seal = null;
+                        posX = x0 + (cx - cx0) / k; posY = y0 + (cy - cy0) / k;
+                        el.dataset.posX = posX; el.dataset.posY = posY;
+                        lift = 1.07; updateTransform(); el.style.visibility = ''; liftTo(1);
+                        if (el === selectedElement) positionTextPanel();
+                    } });
+            }
 
             el.addEventListener('wheel', (e) => {
                 e.preventDefault();

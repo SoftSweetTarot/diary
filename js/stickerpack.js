@@ -16,7 +16,7 @@
             { id: 'num', icon: '🔢', name: '말랑 숫자', sub: '0 ~ 9 · ! ?', items: '0123456789!?'.split('') },
             { id: 'heart', icon: '💗', name: '하트 모음', sub: '하트 16가지', items: Array.from({ length: 16 }, (_, i) => 'h' + i) },
         ];
-        const spkS = { cache: {}, pack: null, lift: null, mv: null, drag: null };
+        const spkS = { cache: {}, pack: null, lift: null, mv: null, drag: null, press: null };
         const spkq = id => document.getElementById(id);
         const spkMk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 
@@ -130,7 +130,9 @@
             });
             spkq('spkTape').addEventListener('pointermove', e => { if (spkS.drag) spkPlace(e.clientX - spkS.drag.dx, e.clientY - spkS.drag.dy); });
             const end = () => { spkS.drag = null; }; spkq('spkTape').addEventListener('pointerup', end); spkq('spkTape').addEventListener('pointercancel', end);
-            spkq('spkGrid').addEventListener('pointerdown', spkDown);
+            const g = spkq('spkGrid');
+            g.addEventListener('pointerdown', spkDown); g.addEventListener('pointermove', spkGridMove);
+            g.addEventListener('pointerup', spkGridUp); g.addEventListener('pointercancel', spkGridUp);
             spkq('spkBoard').addEventListener('pointerdown', e => { if (!e.target.closest('.spk-it, .spk-tape, .spk-x')) spkPutBack(); });
             window.addEventListener('resize', () => { const b = spkq('spkBoard'); if (spkq('spkRoom').classList.contains('show')) { const r = b.getBoundingClientRect(); spkPlace(r.left, r.top); } });
         }
@@ -158,9 +160,37 @@
         function closeStickerPack() { spkPutBack(); const r = spkq('spkRoom'); if (r) r.classList.remove('show'); }
 
         /* ---------- 누르면 🏷️ 씰스티커처럼 떼어져서(js/peelfx.js) 떠오르기 · 끌기 → 붙이기 ---------- */
+        /* 누른 채 끌면 🏷️ 씰스티커처럼 손가락을 따라 가장자리부터 떼어져요 (js/peelfx.js pfxSeal) · 톡 누르면 저절로 떼어져 떠올라요 */
         function spkDown(e) {
             const it = e.target.closest('.spk-it'); if (!it) return;
             e.preventDefault(); spkPutBack();
+            spkS.press = { it, x: e.clientX, y: e.clientY, seal: null };
+            try { spkq('spkGrid').setPointerCapture(e.pointerId); } catch (er) {}
+        }
+        function spkGridMove(e) {
+            const p = spkS.press; if (!p) return;
+            if (p.seal) { p.seal.move(e.clientX, e.clientY); return; }
+            if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < 5 || !window.pfxSeal) return;
+            const img = p.it.querySelector('img'), r = img.getBoundingClientRect(), it = p.it;
+            it.classList.add('out');
+            p.seal = pfxSeal({ src: img, cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height, rot: 0, x: p.x, y: p.y,
+                onCancel: () => it.classList.remove('out'),
+                onDrop: (cx, cy, rot) => {                                                  // 페이지 위면 붙이고 · 판 위나 바깥이면 제자리로
+                    const pg = spkq('canvasArea'), pr = pg && pg.getBoundingClientRect(), b = spkq('spkBoard').getBoundingClientRect();
+                    const onBoard = cx > b.left && cx < b.right && cy > b.top && cy < b.bottom;
+                    if (pr && !onBoard && cx > pr.left && cx < pr.right && cy > pr.top && cy < pr.bottom) spkStick({ it, src: img.src, w: r.width, h: r.height, cx, cy, rot });
+                    else it.classList.remove('out');
+                } });
+            p.seal.move(e.clientX, e.clientY);
+        }
+        function spkGridUp(e) {
+            const p = spkS.press; if (!p) return; spkS.press = null;
+            if (p.seal) { p.seal.up(); return; }
+            spkLift(p.it, p.x, p.y, e.pointerId);
+        }
+        /* 톡 : 저절로 떼어져서 떠 있어요 (다시 끌거나 다른 곳을 누르면 제자리) */
+        function spkLift(it, ex, ey, pid) {
+            const e = { clientX: ex, clientY: ey, pointerId: pid };
             const img = it.querySelector('img'), r = img.getBoundingClientRect();
             const f = img.cloneNode(); f.className = 'spk-fly'; f.style.width = r.width + 'px'; f.style.height = r.height + 'px';
             f.style.transform = `translate(${r.left}px, ${r.top}px)`; f.classList.add('flat'); document.body.appendChild(f); void f.offsetWidth; it.classList.add('out');
@@ -176,7 +206,7 @@
             if (window.pfxPeel) { L.peel = true; const stop = pfxPeel(f, e.clientX, e.clientY, .35, -1, 0, up); if (L.peel) L.peel = stop; } else up();
             f.addEventListener('pointermove', spkMove); f.addEventListener('pointerup', spkUp); f.addEventListener('pointercancel', spkUp);
             f.addEventListener('pointerdown', ev => { ev.preventDefault(); const q = spkS.lift; if (!q) return; q.off = [ev.clientX - q.cx, ev.clientY - q.cy]; q.start = [ev.clientX, ev.clientY]; q.moved = false; q.down = true; try { f.setPointerCapture(ev.pointerId); } catch (er) {} });
-            L.down = true; try { f.setPointerCapture(e.pointerId); } catch (er) {}
+            L.down = false;
             if (navigator.vibrate) try { navigator.vibrate(6); } catch (er) {}
         }
         function spkFly(cx, cy, s, rot) {
@@ -213,9 +243,9 @@
         /* 붙이기 : 작아지며 꾹 → 페이지 스티커가 돼요 (빨간 점선으로 골라 둬요) */
         function spkStick(L) {
             spkS.lift = null;
-            L.f.classList.add('back'); L.f.style.transform = `translate(${L.cx - L.w / 2}px, ${L.cy - L.h / 2}px) scale(1) rotate(${L.rot}rad)`;
+            if (L.f) { L.f.classList.add('back'); L.f.style.transform = `translate(${L.cx - L.w / 2}px, ${L.cy - L.h / 2}px) scale(1) rotate(${L.rot}rad)`; }
             setTimeout(() => {
-                L.f.remove(); L.it.classList.remove('out');
+                if (L.f) L.f.remove(); L.it.classList.remove('out');
                 if (!addImage(L.src)) return;
                 const pg = spkq('canvasArea'), r = pg.getBoundingClientRect(), k = r.width / (pg.offsetWidth || r.width) || 1, el = pg.querySelector('.element-box:last-child');
                 if (el) {
