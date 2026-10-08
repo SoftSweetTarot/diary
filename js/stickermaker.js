@@ -43,7 +43,17 @@
             })();
             return smS.loading;
         }
+        /* 저장은 한 번에 하나씩 : 저장 중에 또 바뀌면 끝난 뒤 '마지막 목록'만 한 번 더 올려요 (✕를 빨리 여러 번 눌러도 업로드가 쌓이지 않아요) */
+        let smQ = null, smDirty = false;
         async function smSave() {
+            smDirty = true;
+            while (smQ) await smQ.catch(() => {});
+            if (!smDirty) return;
+            smDirty = false;
+            smQ = smWrite();
+            try { await smQ; } catch (e) { smDirty = true; throw e; } finally { smQ = null; }
+        }
+        async function smWrite() {
             const body = JSON.stringify({ v: 1, s: smS.list });
             if (smSync()) {
                 const rootId = await getFolder(ROOT_PATH, true);
@@ -472,8 +482,8 @@
         async function smDel(i) {
             if (!(await showMsg('이 스티커를 내 스티커에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 일기에 붙인 스티커는 그대로 남아요.</span>', true))) return;
             smS.list.splice(i, 1);
-            try { await smSave(); } catch (e) {}
-            const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers(g.dataset.mine);
+            const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers(g.dataset.mine);   // 바로 사라지고, 저장은 뒤에서 (드라이브 업로드를 기다리지 않아요)
+            smSave().catch(() => showMsg('⚠ 지운 것을 드라이브에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 지워 주세요.</span>'));
         }
         async function loadMyStickers(kind) {
             const g = smq('stickerGrid'); g.dataset.mine = kind;
