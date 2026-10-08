@@ -552,7 +552,7 @@
             autoSaveTimer = setInterval(() => { if (!turn) saveData(false); }, autoSaveMinutes * 60 * 1000);
         }
 
-        /* ---------- 창 제목 줄 : 왼쪽 ← (앞 화면으로) · 가운데 제목 · 오른쪽 ✕ (닫기) ----------
+        /* ---------- 창 제목 줄 : 왼쪽 ‹ 앞 화면 이름 · 가운데 제목 리본 · 오른쪽 ✕ (닫기) · 모양은 css/dakku.css ----------
            창 아래에 있던 '닫기' · '← …' 버튼은 숨기고, 제목 줄 버튼이 그 버튼을 대신 눌러 줘요. (원래 버튼의 동작 · 막힘 상태를 그대로 따라요)
            나중에 만들어지는 창(배경음악 · 인형 등)도 처음 열 때 똑같이 바꿔요. */
         function mtDecorate(modal) {
@@ -564,7 +564,7 @@
             const btns = [...box.querySelectorAll('button')];
             const closeBtn = btns.filter(b => b.textContent.trim() === '닫기').pop();
             const backBtn = btns.find(b => /^←/.test(b.textContent.trim()));
-            const mk = (txt, label, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'mt-btn ' + cls; if (txt === '<') b.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'; else b.textContent = txt; b.setAttribute('aria-label', label); b.onclick = e => { e.stopPropagation(); fn(); }; return b; };
+            const mk = (txt, label, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'mt-btn ' + cls; b.textContent = txt === '<' ? '‹ ' + label.replace(/ 메뉴$/, '') : txt; b.setAttribute('aria-label', label); b.onclick = e => { e.stopPropagation(); fn(); }; return b; };
             const span = document.createElement('span'); span.className = 'mt-text';
             while (title.firstChild) span.appendChild(title.firstChild);
             if (title.id) { span.id = title.id; title.removeAttribute('id'); }

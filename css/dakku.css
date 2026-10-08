@@ -1,0 +1,144 @@
+/* 말랑달콤 다이어리 - css/dakku.css
+   🎀 다꾸 다이컷 : 모든 창을 모눈 종이 카드 + 마스킹테이프 + 다이컷 스티커 아이콘으로 (꾸미는 코드 js/dakku.js · 제목 줄 js/settings.js mtDecorate)
+   색은 다이어리 스킨을 따라가요 : --primary-accent(포인트) · --border-color(테두리) · --win-fill(창 안쪽) · --win-border(창 테두리) */
+:root {
+    --dk-accent: var(--primary-accent, #ff6b81);
+    --dk-ink: #7b5a63;
+    --dk-soft: #b48b97;
+    --dk-line: color-mix(in srgb, var(--border-color, #ffb6c1) 85%, #fff);
+    --dk-dot: color-mix(in srgb, var(--border-color, #ffb6c1) 32%, transparent);
+    --dk-ribbon: color-mix(in srgb, var(--primary-accent, #ff6b81) 24%, #fff);
+    --dk-ribbon-ink: color-mix(in srgb, var(--primary-accent, #ff6b81) 72%, #4a2030);
+    --dk-tape-a: color-mix(in srgb, var(--primary-accent, #ff6b81) 38%, #fff);
+    --dk-tape-b: color-mix(in srgb, var(--primary-accent, #ff6b81) 16%, #fff);
+    --dk-tape-c: #c9e8da; --dk-tape-d: #e6f6ee;
+    --dk-out: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 3px 3px rgba(150, 90, 110, .28));
+}
+
+/* ---------- 창 : 모눈 종이 카드 ---------- */
+.modal-content {
+    position: relative; color: var(--win-ink, var(--dk-ink));
+    background-color: var(--win-fill, #fffdf8);
+    background-image: radial-gradient(var(--dk-dot) 1.1px, transparent 1.3px); background-size: 15px 15px;
+    border: 1.5px solid var(--win-border, transparent); border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(160, 90, 110, .22), 0 2px 0 rgba(0, 0, 0, .04);
+    padding-top: 30px;
+}
+.modal-content:has(> .modal-title.mt-bar .mt-back:not(.mt-none)) { padding-top: 44px; }
+.dk-tape { position: absolute; top: -4px; width: 84px; height: 24px; opacity: .92; pointer-events: none; z-index: 1;
+    clip-path: polygon(0 8%,6% 0,12% 10%,18% 0,24% 8%,30% 0,36% 8%,42% 0,48% 8%,54% 0,60% 8%,66% 0,72% 8%,78% 0,84% 8%,90% 0,96% 10%,100% 0,100% 92%,94% 100%,88% 92%,82% 100%,76% 92%,70% 100%,64% 92%,58% 100%,52% 92%,46% 100%,40% 92%,34% 100%,28% 92%,22% 100%,16% 92%,10% 100%,4% 92%,0 100%); }
+.dk-tape.l { left: -16px; transform: rotate(-16deg); background: repeating-linear-gradient(90deg, var(--dk-tape-a) 0 7px, var(--dk-tape-b) 7px 14px); }
+.dk-tape.r { right: -16px; transform: rotate(14deg); background: repeating-linear-gradient(45deg, var(--dk-tape-c) 0 6px, var(--dk-tape-d) 6px 12px); }
+
+/* ---------- 제목 리본 · ‹ 뒤로 · ✕ ---------- */
+.modal-title.mt-bar { display: block; position: static; text-align: center; margin: -6px 0 14px; font-size: 15px; line-height: 1.3; }
+.modal-title.mt-bar .mt-text { display: inline-block; max-width: calc(100% - 64px); background: var(--dk-ribbon); color: var(--dk-ribbon-ink); font-weight: 800; padding: 6px 26px;
+    clip-path: polygon(0 0, 100% 0, 93% 50%, 100% 100%, 0 100%, 7% 50%); word-break: keep-all; }
+.modal-title.mt-bar .mt-btn { position: absolute; top: 10px; z-index: 2; width: auto; height: auto; display: inline-flex; align-items: center; justify-content: center; background: #fff; border: 1.5px dashed var(--dk-line); line-height: 1; }
+.modal-title.mt-bar .mt-x { right: 12px; width: 28px; height: 28px; border-radius: 50%; color: var(--dk-ribbon-ink); font-size: 13px; }
+.modal-title.mt-bar .mt-back { left: 12px; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: var(--dk-ribbon-ink); max-width: 46%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-title.mt-bar .mt-btn:active { transform: scale(.94); }
+@media (hover: hover) { .modal-title.mt-bar .mt-btn:hover { border-style: solid; border-color: var(--dk-accent); color: var(--dk-accent); } }
+.skin-float .modal-title.mt-bar { cursor: move; }
+
+/* ---------- 구역 제목 : 마스킹테이프 ---------- */
+.modal-content .dk-sec { display: table; align-self: flex-start; width: fit-content; max-width: calc(100% + 6px); margin: 16px 0 10px -6px; padding: 4px 14px; font-size: 12.5px; font-weight: 800; text-align: left; line-height: 1.35;
+    background: rgba(255, 232, 160, .92); color: #93652a; transform: rotate(-1.5deg);
+    clip-path: polygon(3% 0, 97% 0, 100% 20%, 97% 40%, 100% 60%, 97% 80%, 100% 100%, 3% 100%, 0 80%, 3% 60%, 0 40%, 3% 20%, 0 0); }
+.modal-content .dk-sec.pk { background: color-mix(in srgb, var(--dk-accent) 30%, #fff); color: var(--dk-ribbon-ink); }
+.modal-content .dk-sec.mt { background: rgba(190, 230, 212, .95); color: #2f7356; }
+.modal-content .form-group > label.dk-sec { margin-left: -6px; }
+
+/* ---------- 메뉴 칸 : 다이컷 스티커 + 점선 라벨 ---------- */
+.modal .service-grid { gap: 16px 4px; }
+.modal .service-btn, .modal .skin-compact .service-btn { background: none; border: 0; box-shadow: none; padding: 2px 2px 0; gap: 6px; color: var(--dk-ink); min-width: 0; }
+@media (hover: hover) { .modal .service-btn:hover { background: none; transform: none; } .modal .service-btn:hover .dk-die { transform: rotate(0) scale(1.06); } }
+.modal .service-btn:active .dk-die { transform: rotate(calc(var(--r, 0deg) * -1)) scale(1.1); }
+.dk-die { display: grid; place-items: center; width: 50px; height: 50px; font-size: 32px; line-height: 1; transform: rotate(var(--r, 0deg)); transition: transform .18s; filter: var(--dk-out); }
+.modal .skin-compact .service-icon.dk-die { width: 40px; height: 40px; font-size: 26px; }
+.dk-ico { display: block; width: 100%; height: 100%; overflow: visible; }
+.dk-ico .k { stroke: var(--dk-ink); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.dk-ico .t { stroke: var(--dk-ink); stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.dk-ico .s { fill: none; stroke: var(--dk-ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.service-btn .dk-lb { font-size: 11.5px; font-weight: 700; color: var(--dk-ink); background: #fff; border: 1px dashed var(--dk-line); border-radius: 7px; padding: 2px 6px;
+    max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.3px; }
+.modal .service-btn small { font-size: 10px; color: var(--dk-soft); margin-top: -2px; line-height: 1.25; }
+.modal .service-btn.soon { opacity: .5; }
+
+/* ⚙ 설정 메뉴 : 3칸 */
+.modal-content.settings-menu { max-width: 380px; }
+.page-size-label { white-space: nowrap; }
+.modal .settings-grid { grid-template-columns: repeat(3, 1fr); }
+
+/* ✨ 스티커 창 : 4×2 + 아래 '나만의 스티커 만들기' */
+#stickerMakeModal .stk-menu { grid-template-columns: repeat(4, 1fr); }
+.dk-cta { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 16px); height: 50px; margin: 22px auto 4px; border: 0; border-radius: 14px; flex: none;
+    background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dk-accent) 32%, #fff) 0 10px, color-mix(in srgb, var(--dk-accent) 22%, #fff) 10px 20px);
+    color: var(--dk-ribbon-ink); font: inherit; font-size: 15px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 0 0 3px #fff, 0 4px 10px rgba(200, 100, 130, .28); transform: rotate(-.8deg); transition: transform .15s; -webkit-tap-highlight-color: transparent; }
+.dk-cta::before { content: ''; position: absolute; inset: 4px; border: 1.6px dashed rgba(255, 255, 255, .95); border-radius: 10px; pointer-events: none; }
+.dk-cta::after { content: ''; position: absolute; top: -9px; left: 50%; width: 46px; height: 16px; transform: translateX(-50%) rotate(3deg); background: rgba(255, 236, 170, .92); }
+.dk-cta-ico { width: 30px; height: 30px; filter: drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff); }
+.dk-cta:active { transform: rotate(.8deg) scale(.97); }
+
+/* ---------- 버튼 · 입력 ---------- */
+.modal-content .btn { border: 1.5px dashed var(--dk-line); background: #fff; color: var(--dk-ink); border-radius: 12px; font-weight: 700; box-shadow: none; }
+.modal-content .btn.service-btn, .modal-content .btn.save-choice { border-style: solid; }
+.modal-content .btn.service-btn { border: 0; background: none; }
+.modal-content .btn-primary, .modal-content .btn.btn-primary { position: relative; background: var(--dk-accent); color: #fff; border: 0; }
+.modal-content .btn-primary::before { content: ''; position: absolute; inset: 3px; border: 1.4px dashed rgba(255, 255, 255, .75); border-radius: 9px; pointer-events: none; }
+.modal-content select.btn, .modal-content input.btn, .modal-content textarea { border: 1.5px dashed var(--dk-line); border-radius: 10px; background-color: #fff; color: var(--dk-ink); font-weight: 400; }
+.modal-content select.btn:focus, .modal-content input.btn:focus, .modal-content textarea:focus { outline: none; border-style: solid; border-color: var(--dk-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dk-accent) 15%, transparent); }
+.modal-content textarea { background-image: repeating-linear-gradient(transparent 0 25px, color-mix(in srgb, var(--dk-accent) 14%, #fff) 25px 26px); background-position: 0 7px; line-height: 26px; }
+.modal-content input[type="range"]:not(.no-dk) { -webkit-appearance: none; appearance: none; height: 9px; border-radius: 9px; outline: none; border: 1px solid var(--dk-line);
+    background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dk-accent) 22%, #fff) 0 6px, color-mix(in srgb, var(--dk-accent) 10%, #fff) 6px 12px); }
+.modal-content input[type="range"]:not(.no-dk)::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--dk-accent); box-shadow: 0 2px 4px rgba(200, 100, 130, .3); }
+.modal-content input[type="range"]:not(.no-dk)::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid var(--dk-accent); }
+.modal-content input[type="color"] { -webkit-appearance: none; appearance: none; width: 32px; height: 32px; border: 3px solid #fff; border-radius: 50%; padding: 0; background: none; cursor: pointer;
+    box-shadow: 0 0 0 1.5px var(--dk-line), 0 2px 4px rgba(0, 0, 0, .08); }
+.modal-content input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.modal-content input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+.modal-content input[type="color"]::-moz-color-swatch { border: 0; border-radius: 50%; }
+.modal-content hr, .modal-content .skin-hr { border: 0; border-top: 2px dashed var(--dk-line); }
+
+/* 접히는 묶음 · 스위치 줄 */
+.modal-content details { background: #fff; border-radius: 12px; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--dk-line) 55%, #fff); }
+.modal-content .form-group .show-row { background: #fff; border: 1px dashed var(--dk-line); }
+
+/* 안내 쪽지 (노란 메모지 + 분홍 테이프) */
+.modal-content .svc-tip { position: relative; background: #fff6c8; border: 0; border-radius: 3px 3px 12px 3px; margin: 16px 4px 2px; padding: 12px 12px 10px; color: #7a6440; transform: rotate(-.6deg); box-shadow: 0 2px 5px rgba(150, 120, 60, .12); }
+.modal-content .svc-tip::before { content: ''; position: absolute; top: -8px; left: 50%; width: 44px; height: 15px; transform: translateX(-50%) rotate(-3deg); background: color-mix(in srgb, var(--dk-accent) 35%, #fff); opacity: .85; }
+.modal-content .svc-tip b { color: var(--dk-ribbon-ink); }
+
+/* ---------- ☕ 카페 분류 : 스티커 라벨 목록 ---------- */
+.modal-content .svc-cats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.modal-content .svc-cat:not(.svc-extra) { grid-column: 1 / -1; display: grid; grid-template-columns: 48px minmax(0, 1fr) 14px; grid-template-rows: auto auto auto; column-gap: 12px; row-gap: 1px; align-items: center; text-align: left;
+    background: #fff; border: 0; border-radius: 14px; padding: 10px 12px; color: var(--dk-ink); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--dk-line) 55%, #fff), 0 3px 8px rgba(200, 120, 140, .1); }
+.modal-content .svc-cat:not(.svc-extra) .svc-cat-icon { grid-row: 1 / 4; width: 44px; height: 44px; font-size: 28px; }
+.modal-content .svc-cat:not(.svc-extra) b { font-size: 14px; }
+.modal-content .svc-cat:not(.svc-extra) small { font-size: 11.5px; color: var(--dk-soft); }
+.modal-content .svc-cat:not(.svc-extra) i { margin: 0; font-size: 10.5px; color: #c9a1ab; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; }
+.modal-content .svc-cat:not(.svc-extra)::before { content: '›'; grid-column: 3; grid-row: 1 / 4; font-size: 20px; font-weight: 700; color: color-mix(in srgb, var(--dk-accent) 45%, #fff); }
+.modal-content .svc-sec { grid-column: 1 / -1; margin: 8px 0 0 -6px; }
+.modal-content .svc-extra { background: #fff; border: 0 !important; border-radius: 14px; padding: 12px 6px; color: var(--dk-ink); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--dk-line) 55%, #fff), 0 3px 8px rgba(200, 120, 140, .1); }
+.modal-content .svc-extra .svc-cat-icon { width: 44px; height: 44px; font-size: 28px; }
+.modal-content .svc-extra small { color: var(--dk-soft); }
+.modal-content .svc-cat:active { transform: scale(.98); }
+
+/* 💾 저장 고르기 */
+.modal-content .btn.save-choice { background: #fff; border: 0; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--dk-line) 55%, #fff), 0 3px 8px rgba(200, 120, 140, .1); border-radius: 14px; }
+.modal-content .save-choice-icon.dk-die { width: 44px; height: 44px; font-size: 28px; flex: none; }
+.modal-content .save-choice-text b { color: var(--dk-ink); }
+.modal-content .save-choice-text small { color: var(--dk-soft); }
+
+/* ---------- 💬 알림 · 확인 ---------- */
+.alert-card { position: relative; background: var(--win-fill, #fffdf8); background-image: radial-gradient(var(--dk-dot) 1.1px, transparent 1.3px); background-size: 15px 15px;
+    border: 0; border-radius: 16px; padding: 30px 18px 18px; box-shadow: 0 14px 34px rgba(160, 90, 110, .26); }
+.dk-heart { position: absolute; top: -22px; left: 50%; width: 44px; height: 44px; transform: translateX(-50%) rotate(-8deg); filter: var(--dk-out); }
+.alert-card .alert-msg { color: var(--dk-ink); font-weight: 600; }
+.alert-card .btn { border: 1.5px dashed var(--dk-line) !important; background: #fff; color: var(--dk-ink); border-radius: 12px; font-weight: 700; }
+#customAlertConfirmBtn { position: relative; background: var(--dk-accent) !important; color: #fff !important; border: 0 !important; }
+#customAlertConfirmBtn::before { content: ''; position: absolute; inset: 3px; border: 1.4px dashed rgba(255, 255, 255, .75); border-radius: 9px; pointer-events: none; }
+
+/* 💌 전송 중 */
+.sending-card { background: var(--win-fill, #fffdf8); background-image: radial-gradient(var(--dk-dot) 1.1px, transparent 1.3px); background-size: 15px 15px; border: 0; border-radius: 16px; box-shadow: 0 14px 34px rgba(160, 90, 110, .26); }
