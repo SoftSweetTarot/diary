@@ -614,6 +614,17 @@
         function setupLayout() {
             window.addEventListener('resize', refreshLayout);
             document.addEventListener('focusout', () => setTimeout(refreshLayout, 300));
+            /* 📱 아이패드 · 아이폰 : 키보드를 '키보드 내리기' 버튼으로 내리면 화면이 밀린 채로 남아 버튼 누르는 자리가 어긋나요
+               → 키보드가 내려가면(글 쓰는 칸에서 손을 떼거나 화면 높이가 다시 커지면) 화면을 제자리로 돌려놓아요 */
+            const typing = () => { const a = document.activeElement; return !!a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(checkbox|radio|range|button|file|color)$/.test(a.type))); };
+            const unshift = () => { if (typing()) return; if (window.scrollX || window.scrollY) window.scrollTo(0, 0); };
+            document.addEventListener('focusout', () => { setTimeout(unshift, 60); setTimeout(unshift, 350); });
+            /* 아이패드 '키보드 내리기' 는 글 칸에서 손을 떼지 않은 채(포커스 그대로) 키보드만 내려요 → 화면 높이가 다시 커지면 글 칸에서 손을 떼게 해요 */
+            if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(() => {
+                if (visualViewport.height < window.innerHeight - 80) return;                        // 아직 키보드가 올라와 있어요
+                if (typing() && document.activeElement.tagName === 'INPUT') document.activeElement.blur();   // ✏️ 한 줄 칸만 (페이지 글상자는 그대로)
+                unshift();
+            }, 120));
             if (window.ResizeObserver) new ResizeObserver(refreshLayout).observe(document.querySelector('.toolbar'));
             refreshLayout();
         }
