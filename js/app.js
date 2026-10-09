@@ -134,9 +134,9 @@ let fontList = [
 
         const skinPresets = {
             pink: { bg: '#ffe6f0', cover: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%)', page: '#fff0f5', border: '#ffb6c1', accent: '#ff6b81' },
-            mint: { bg: '#e0f2f1', cover: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', page: '#f1f8e9', border: '#a5d6a7', accent: '#2e7d32' },
-            purple: { bg: '#f3e5f5', cover: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', page: '#faf0e6', border: '#ce93d8', accent: '#7b1fa2' },
-            yellow: { bg: '#fffde7', cover: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', page: '#fff8e1', border: '#ffe082', accent: '#f57f17' }
+            mint: { bg: '#e3f6ef', cover: 'linear-gradient(135deg, #7fd6b4, #d4f5e6)', page: '#f2fbf7', border: '#a8dfc8', accent: '#3fae86' },
+            purple: { bg: '#efe7fb', cover: 'linear-gradient(135deg, #b79cf0, #efe3ff)', page: '#f8f3ff', border: '#cdb8f2', accent: '#8d63d8' },
+            yellow: { bg: '#fff4d6', cover: 'linear-gradient(135deg, #ffcf6b, #fff1c4)', page: '#fffaeb', border: '#f5d58a', accent: '#e39a1f' }
         };
 
         window.onload = () => {
