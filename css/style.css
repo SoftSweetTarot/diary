@@ -2819,3 +2819,39 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .shx-card small { font-size: 11.5px; color: #a08890; text-align: center; }
 .shx-card .alert-btns { margin-top: 4px; }
 #stickerGrid[data-share] .smk-it .smk-n { bottom: 21px; }   /* 공유받은 칸 : by 닉네임 줄 위로 */
+
+/* ---------- 📔 페이지 목록 (썸네일만 · js/skins.js openPageList) ---------- */
+.skl-content { width: min(92vw, 420px); }
+.skl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-height: 58vh; overflow-y: auto; padding: 4px 2px; }
+.skl-grid > .shx-bar, .skl-grid > .cs-empty, .skl-grid > .stk-go, .skl-grid > .skl-wide { grid-column: 1 / -1; }
+.skl-grid .cs-empty { text-align: center; padding: 18px 8px 6px; font-size: 13px; line-height: 1.8; color: #a08890; }
+.skl-grid .stk-go { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: inherit; cursor: pointer; }
+.skl-grid .stk-go span { font-size: 2rem; line-height: 1; }
+.skl-grid .stk-go b { font-size: 14px; }
+.skl-grid .stk-go small { font-size: 11.5px; color: #a08890; }
+.skl-it { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.skl-pick { position: relative; display: block; width: 100%; padding: 4px; border: 2px solid transparent; border-radius: 14px; background: none; cursor: pointer; font: inherit; }
+.skl-pick:focus-visible { outline: 2px solid var(--primary-accent); outline-offset: 2px; }
+@media (hover: hover) { .skl-pick:hover { border-color: var(--border-color); } }
+.skl-it.on .skl-pick { border-color: var(--primary-accent); box-shadow: 0 0 0 3px rgba(255,107,129,.18); }
+.skl-on { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); white-space: nowrap; font-size: 10.5px; font-weight: bold; color: #fff; background: var(--primary-accent); border-radius: 999px; padding: 1px 7px; }
+.skl-acts { display: flex; gap: 4px; justify-content: center; }
+.skl-acts button { border: 1.5px solid var(--border-color); background: #fff; border-radius: 10px; padding: 1px 8px; font-size: 13px; cursor: pointer; }
+/* 작은 다이어리 : 바탕 · 겉표지 · 속지 · 하단메뉴 (색 · 꾸밈은 페이지에 저장된 그대로) */
+.skl-mini { position: relative; display: block; width: 100%; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: #f4f4f4; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
+.skl-cv { position: absolute; inset: 6% 8% 17% 8%; border-radius: 7px; }
+.skl-pp { position: absolute; inset: 7%; border: 2px solid; border-radius: 4px; overflow: hidden; container-type: inline-size; }
+.skl-pill { position: absolute; left: 30%; right: 30%; top: 5%; height: 5%; border-radius: 99px; opacity: .55; }
+.skl-bar { position: absolute; left: 10%; right: 10%; bottom: 4%; height: 10%; border: 1.5px solid; border-radius: 99px; display: flex; justify-content: space-around; align-items: center; container-type: inline-size; }
+.skl-bar > i { width: 14%; aspect-ratio: 1; border-radius: 50%; }
+.skl-d { position: absolute; display: block; aspect-ratio: 1; line-height: 1; pointer-events: none; }
+.skl-d > svg, .skl-d > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.skl-d > b { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-weight: normal; font-size: inherit; }
+/* 🌈 배경지 : 칸 5개 · 지금 배경지 작은 그림 · 문구점 칸 */
+#patTabs { margin-bottom: 6px; }
+.pat-cur-sw { display: inline-block; width: 44px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border-color); vertical-align: middle; }
+.pat-cur-sw[hidden] { display: none; }
+.pat-grid > .stk-go { grid-column: 1 / -1; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: inherit; cursor: pointer; }
+.pat-grid > .stk-go span { font-size: 2rem; line-height: 1; }
+.pat-grid > .stk-go small { font-size: 11.5px; color: #a08890; }
+#skinModal .stk-menu { grid-template-columns: repeat(3, 1fr); }

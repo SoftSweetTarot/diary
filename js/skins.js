@@ -105,8 +105,6 @@
         function openSkinBasic() {
             closeModal('skinModal');
             updatePatternUI();
-            renderSkinSelect();
-            updateSkinShareUI();
             openModal('skinBasicModal');
         }
 
@@ -182,6 +180,84 @@
             openModal('skinModal');
         }
 
+        /* ---------- 📔 페이지 목록 (썸네일만 · 스티커 창과 같은 칸 5개) ----------
+           기본 = 기본 페이지 4종 · 내가만든 = 🎨 색상설정 · 🎀 꾸미기에서 저장한 것 · 공유받은 = 📥 파일로 받은 것 + 🌟 모두의 페이지
+           이벤트 = 🌸 계절 테마 등 · 문구점 = 🎁 테마 페이지 + 🛍️ 문구점 가기
+           썸네일은 따로 저장하지 않고, 페이지에 저장된 색 5개 · 꾸밈 위치로 작은 다이어리를 바로 그려요 (요청 없음) */
+        let sklTab = 'free';
+        function openPageList(tab) {
+            closeModal('skinModal');
+            const bar = document.getElementById('pageTabs');
+            if (!bar.childElementCount) bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="sklSetTab('${v}')">${n}</button>`).join('');
+            sklTab = tab || sklTabOf(currentSkinId);
+            renderPageList();
+            openModal('pageListModal');
+        }
+        /* 지금 쓰는 페이지가 들어 있는 칸 */
+        function sklTabOf(id) {
+            if (hasOwn(skinPresets, id)) return 'free';
+            if (String(id).startsWith('cs:')) return 'share';
+            if (String(id).startsWith('th:')) return 'shop';
+            if (hasOwn(customSkins, id)) return customSkins[id].got ? 'share' : 'mine';
+            return 'free';
+        }
+        function sklSetTab(tab) { sklTab = tab; renderPageList(); const g = document.getElementById('pageGrid'); if (g) g.scrollTop = 0; }
+        function sklIsOpen() { const m = document.getElementById('pageListModal'); return !!m && m.style.display === 'flex'; }
+        /* 칸에 보일 페이지들 [{ id, skin, own(지울 수 있음) }] */
+        function sklItems(tab) {
+            const my = got => Object.keys(customSkins).filter(n => !customSkins[n].got === !got).map(n => ({ id: n, skin: customSkins[n], own: true }));
+            if (tab === 'free') return Object.keys(skinPresets).map(k => ({ id: k, skin: skinPresets[k] }));
+            if (tab === 'mine') return my(false).reverse();
+            if (tab === 'share') return my(true).reverse().concat(skinCommunity().map(c => ({ id: c.id, skin: c.skin })));
+            if (tab === 'shop') return (typeof stuThemeList === 'function' ? stuThemeList() : []).filter(t => stuHasTheme(t.id))
+                .map(t => { const th = themeSkinOf(t.id); return th ? { id: 'th:' + t.id, skin: th.skin } : null; }).filter(Boolean);
+            return [];
+        }
+        function renderPageList() {
+            const g = document.getElementById('pageGrid');
+            if (!g) return;
+            document.querySelectorAll('#pageTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === sklTab));
+            const items = sklItems(sklTab);
+            let head = '';
+            if (sklTab === 'share') head = '<div class="shx-bar in"><button type="button" class="shx-btn go" onclick="document.getElementById(\'skinFileInput\').click()">📥 파일 불러오기</button><small>카페에서 받은 페이지 파일을 골라요</small></div>';
+            if (sklTab === 'event' && typeof SEASON_OPEN !== 'undefined' && SEASON_OPEN) head = '<div class="season-card skl-wide" id="seasonCard"></div>';
+            const empty = {
+                mine: '아직 만든 페이지가 없어요.<br>🎨 페이지 색상설정이나 🎀 페이지 꾸미기에서 저장해 보세요!',
+                share: '아직 공유받은 페이지가 없어요.<br>카페에서 받은 파일을 📥 파일 불러오기로 넣어 보세요.',
+                event: '🎁 아직 받은 이벤트 페이지가 없어요.<br>이벤트 페이지가 오면 여기에 들어와요!'
+            }[sklTab];
+            const shop = sklTab === 'shop' ? `<button type="button" class="stk-go" onclick="openShop('#/')"><span>🛍️</span><b>문구점에서 페이지 보기</b><small>새 창으로 열려요</small></button>` : '';
+            g.innerHTML = head + items.map(it => {
+                const on = it.id === currentSkinId, safe = String(it.id).replace(/[\\'"<>&]/g, c => '&#' + c.charCodeAt(0) + ';');
+                const acts = it.own ? `<span class="skl-acts">${it.skin.got ? '' : `<button type="button" title="파일로 저장 (카페에 올리기용)" onclick="downloadSkinFile('${safe}')">💾</button>`}<button type="button" title="지우기" onclick="deleteSkin('${safe}')">🗑</button></span>` : '';
+                return `<div class="skl-it${on ? ' on' : ''}"><button type="button" class="skl-pick" aria-pressed="${on}" onclick="sklPick('${safe}')">${sklThumb(it.skin)}${on ? '<span class="skl-on">✔ 사용 중</span>' : ''}</button>${acts}</div>`;
+            }).join('') + (!items.length && !shop && empty && !(sklTab === 'event' && head) ? `<div class="cs-empty">${empty}</div>` : '') + shop;
+            if (head.includes('seasonCard') && typeof seasonRenderCard === 'function') seasonRenderCard();
+        }
+        function sklPick(id) { if (applySkinPreset(id)) renderPageList(); }
+        /* 작은 다이어리 그림 : 바탕 · 겉표지 · 속지(테두리) · 하단메뉴 + 놓아 둔 꾸밈 (속지 · 머리 · 하단메뉴 자리) */
+        function sklThumb(skin) {
+            /* 기본 페이지 겉표지는 그라데이션이라 sanitizeSkin(색 #rrggbb 만)을 지나도록 잠깐 바꿨다가 돌려놓아요 */
+            const okCol = v => typeof v === 'string' && /^(#[0-9a-f]{3,8}|linear-gradient\([#0-9a-z%,.\s]+\))$/i.test(v);
+            const raw = skin && typeof skin === 'object' ? skin : {}, tmp = Object.assign({}, raw);
+            ['bg', 'cover', 'page', 'border', 'accent'].forEach(k => { if (okCol(raw[k]) && !/^#[0-9a-f]{6}$/i.test(raw[k])) tmp[k] = '#ffffff'; });
+            const c = typeof sanitizeSkin === 'function' ? sanitizeSkin(tmp) : null;
+            if (!c) return '<span class="skl-mini"></span>';
+            ['bg', 'cover', 'page', 'border', 'accent'].forEach(k => { if (okCol(raw[k])) c[k] = raw[k]; });
+            const pw = (document.getElementById('innerPage') || {}).offsetWidth || 340;
+            const bw = (document.querySelector('.toolbar') || {}).offsetWidth || 340;
+            const deco = where => (c.deco || []).filter(d => where.includes(d.a)).map(d => {
+                const ref = d.a === 'paper' || d.a === 'pill' ? pw : bw;
+                const x = /^b[1-4]$/.test(d.a) ? (+d.a[1] - .5) * 25 : d.x;
+                const w = Math.max(4, d.s / ref * 100);
+                return `<span class="skl-d" style="left:${x}%;top:${/^b[1-4]$/.test(d.a) ? 50 : d.y}%;width:${w}%;font-size:${(w * .8).toFixed(1)}cqw;transform:translate(-50%,-50%) rotate(${d.r || 0}deg)${d.f ? ' scaleX(-1)' : ''}">${typeof stuImgHtml === 'function' ? stuImgHtml(d.i, c.imgs || {}) : ''}</span>`;
+            }).join('');
+            return `<span class="skl-mini" style="background:${c.bg}">
+                <span class="skl-cv" style="background:${c.cover}"><span class="skl-pp" style="background:${c.page};border-color:${c.border}"><i class="skl-pill" style="background:${c.accent}"></i>${deco(['paper', 'pill'])}</span></span>
+                <span class="skl-bar" style="background:${c.page};border-color:${c.menu || c.border}">${[1, 2, 3, 4].map(n => `<i style="background:${c['mf' + n] || c.accent}"></i>`).join('')}${deco(['bar', 'b1', 'b2', 'b3', 'b4'])}</span></span>`;
+        }
+        window.openPageList = openPageList; window.sklSetTab = sklSetTab; window.sklPick = sklPick;
+
         /* ---------- ☁️ 말랑 / 🍬 달콤 패턴 목록 (라이브러리처럼 페이지 넘기기 + 배치 설정) ---------- */
         const PAT_LAYOUT_KEY = 'malang_pattern_layout';
         const PAT_DEFAULT_LAYOUT = { rows: 3, cols: 3, size: 100 };
@@ -206,25 +282,42 @@
         }
         function savePatLayout() { try { localStorage.setItem(PAT_LAYOUT_KEY, JSON.stringify(patLayout)); } catch (e) {} }
 
+        /* 배경지 칸 5개 (스티커 창과 같은 이름) : 기본 = ☁️ 말랑배경지 · 내가만든 · 공유받은 = 📥 파일로 받은 것 + 🌟 등록된 사용자 배경지
+           이벤트 = 🍬 달콤배경지 (선물 받은 것만) · 문구점 = 🛍️ 문구점 가기 */
         function patItems() {
-            if (patTier === 'my') return typeof getMyPatternItems === 'function' ? getMyPatternItems() : [];
+            const my = typeof getMyPatternItems === 'function' ? getMyPatternItems() : [];
             const cm = typeof getCommunityItems === 'function' ? getCommunityItems() : [];
-            return BG_PATTERNS.filter(p => p.tier === patTier).concat(cm.filter(p => p.tier === patTier)).filter(p => p.tier !== 'paid' || patHas(p.id));   // 달콤배경지는 선물 받은 것만
+            if (patTier === 'mine') return my.filter(p => !p.got);
+            if (patTier === 'share') return my.filter(p => p.got).concat(cm);
+            if (patTier === 'event') return BG_PATTERNS.filter(p => p.tier === 'paid' && patHas(p.id));
+            if (patTier === 'free') return BG_PATTERNS.filter(p => p.tier === 'free');
+            return [];
         }
         function patPerPage() { return patLayout.rows * patLayout.cols; }
         function patPageCount() { const n = patItems().length; return n ? Math.ceil(n / patPerPage()) : 0; }
 
         function openPatternList(tier) {
-            patTier = ['paid', 'my'].includes(tier) ? tier : 'free';
+            tier = { paid: 'event', my: 'mine' }[tier] || tier;                          // 예전 이름 (🎁 선물 도착 js/arrival.js 가 'paid' 로 불러요)
+            if (!STK_TABS.some(t => t[0] === tier)) {                                  // 칸을 안 정했으면 지금 쓰는 배경지가 있는 칸부터
+                const id = bgPattern ? String(bgPattern.id) : '';
+                const mine = id.startsWith('my:') && (getMyPatternItems().find(p => p.id === id) || {});
+                tier = id.startsWith('cm:') ? 'share' : mine ? (mine.got ? 'share' : 'mine') : (currentBgPattern() || {}).tier === 'paid' ? 'event' : 'free';
+            }
+            const bar = document.getElementById('patTabs');
+            if (bar && !bar.childElementCount) bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="setPatTab('${v}')">${n}</button>`).join('');
+            closeModal('skinModal');
+            setPatTab(tier);
+            openModal('patternModal');
+        }
+        function setPatTab(tier) {
+            patTier = tier;
+            document.querySelectorAll('#patTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tier));
             /* 지금 쓰는 패턴이 이 목록에 있으면 그 페이지부터 보여 주기 */
             const idx = bgPattern ? patItems().findIndex(p => p.id === bgPattern.id) : -1;
             patPage = idx >= 0 ? Math.floor(idx / patPerPage()) : 0;
-            document.getElementById('patTitle').textContent = { free: '☁️ 말랑배경지', paid: '🍬 달콤배경지', my: '📂 내 배경지' }[patTier];
-            closeModal('skinModal');
             renderPatternList();
-            openModal('patternModal');
-
         }
+        window.setPatTab = setPatTab;
 
         function applyPatLayoutStyle() {
             const { rows, cols, size } = patLayout;
@@ -258,11 +351,11 @@
             const items = patItems(), per = patPerPage(), pages = patPageCount();
             const nickRow = document.getElementById('patNickRow');
             if (nickRow) {
-                nickRow.style.display = patTier === 'my' && window.pickPatternFile ? 'flex' : 'none';   // 📥 파일 불러오기 (js/pattern-maker.js)
+                nickRow.style.display = patTier === 'share' && window.pickPatternFile ? 'flex' : 'none';   // 📥 파일 불러오기 (js/pattern-maker.js)
             }
             document.getElementById('patStatus').textContent = items.length
                 ? `배경지 ${items.length}개 · 누르면 전체 배경에 적용돼요`
-                : (patTier === 'my' ? '아직 만든 배경지가 없어요. 페이지 메뉴의 ✏️ 만들기에서 만들어 보세요!' : patTier === 'paid' ? '선물 받은 달콤배경지가 아직 없어요.' : '아직 준비된 배경지가 없어요.');
+                : ({ mine: '아직 만든 배경지가 없어요. 🖼️ 이미지로 · 🖌️ 그려서 배경지에서 만들어 보세요!', share: '아직 공유받은 배경지가 없어요.', event: '🎁 아직 받은 이벤트 배경지가 없어요.', shop: '' }[patTier] ?? '아직 준비된 배경지가 없어요.');
             patPage = pages ? Math.max(0, Math.min(pages - 1, patPage)) : 0;
             const start = patPage * per;
             const frag = document.createDocumentFragment();
@@ -278,18 +371,10 @@
                 sw.appendChild(inner);
                 if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '🍬'; sw.appendChild(b); const d = document.createElement('span'); d.className = 'pat-left'; d.textContent = dLabel(patLeft(p.id)); sw.appendChild(d); if (typeof nwHas === 'function' && nwHas('pat', p.id)) { const nw = document.createElement('em'); nw.className = 'nw-chip'; nw.textContent = 'NEW'; sw.appendChild(nw); } }
                 if (bgPattern && bgPattern.id === p.id) { const c = document.createElement('span'); c.className = 'pat-check'; c.textContent = '✔ 사용 중'; sw.appendChild(c); }
-                const name = document.createElement('span');
-                name.className = 'pat-name';
-                name.textContent = p.name;
-                card.append(sw, name);
-                if (p.by) {                                                    // 등록된 사용자 배경지 : 만든 사람
-                    const by = document.createElement('span');
-                    by.className = 'pat-by';
-                    by.textContent = 'by ' + p.by;
-                    card.appendChild(by);
-                }
+                card.title = p.name || '';
+                card.append(sw);                                               // 썸네일만 (이름 · 만든 사람은 안 보여요)
                 card.onclick = () => { if (!patSwiped) selectBgPattern(p.id); };
-                if (patTier === 'my') {                                        // 내 배경지 : 파일 저장 · 삭제
+                if (p.tier === 'my') {                                         // 내가만든 · 공유받은 : 파일 저장(내가만든만) · 삭제
                     const wrap = document.createElement('div');
                     wrap.className = 'pat-item-wrap';
                     const acts = document.createElement('div');
@@ -300,7 +385,7 @@
                     const del = document.createElement('button');
                     del.type = 'button'; del.className = 'btn'; del.textContent = '🗑'; del.title = '삭제';
                     del.onclick = () => deleteMyPattern(p.uid);
-                    acts.append(send, del);
+                    if (p.got) acts.append(del); else acts.append(send, del);
                     wrap.append(card, acts);
                     frag.appendChild(wrap);
                 } else frag.appendChild(card);
@@ -309,6 +394,13 @@
                 const empty = document.createElement('div');
                 empty.className = 'pat-item empty';
                 frag.appendChild(empty);
+            }
+            if (patTier === 'shop') {                                          // 🛍️ 문구점 칸
+                const go = document.createElement('button');
+                go.type = 'button'; go.className = 'stk-go';
+                go.innerHTML = '<span>🛍️</span><b>문구점에서 배경지 보기</b><small>새 창으로 열려요</small>';
+                go.onclick = () => openShop('#/');
+                frag.appendChild(go);
             }
             grid.appendChild(frag);
             document.getElementById('patPageInfo').textContent = pages ? `${patPage + 1} / ${pages}` : '0 / 0';
@@ -352,7 +444,9 @@
         function updatePatternUI() {
             const p = currentBgPattern();
             const cur = document.getElementById('patCurrent');
-            if (cur) cur.textContent = p ? p.name : '없음 (기본페이지 배경색)';
+            if (cur) { cur.hidden = !p; paintPatternInto(cur, p || null); }                 // 지금 배경지 : 이름 대신 작은 그림
+            const none = document.getElementById('patCurrentNone');
+            if (none) none.hidden = !!p;
             const sc = document.getElementById('patScaleInput');
             if (sc) {
                 sc.disabled = !p;
@@ -362,11 +456,7 @@
             const clr = document.getElementById('patClearBtn');
             if (clr) clr.disabled = !p;
             const note = document.getElementById('skinPatternNote');
-            if (note) {
-                note.style.display = p ? 'flex' : 'none';
-                const nm = document.getElementById('skinPatternName');
-                if (nm) nm.textContent = p ? p.name : '';
-            }
+            if (note) note.style.display = p ? 'flex' : 'none';
         }
 
         /* 스마트폰 : 패턴 목록을 옆으로 밀어서 페이지 넘기기 */

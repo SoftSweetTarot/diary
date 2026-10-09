@@ -89,7 +89,7 @@
                 </div>
                 <div class="pg-gift" data-t="pat">
                   <p class="pg-gift-d">다이어리 뒤 배경에 까는 그림 배경지예요. 보기만 해도 기분이 몽글몽글해져요.</p>
-                  <p class="pg-where">📍 선물이 열리면 다이어리 위쪽 <b>🎨 페이지</b> → <b>🍬 달콤배경지</b> 버튼이 생겨요</p>
+                  <p class="pg-where">📍 선물이 열리면 <b>🎨 페이지</b> → <b>🌈 배경지</b> → <b>이벤트</b> 칸에 들어와요</p>
                   <div class="pg-pats">${sweet.map((p, i) => `<div class="pg-pt"><div class="pg-pt-sw"><i data-i="${i}"></i></div><small>${p.name}</small></div>`).join('')}</div>
                 </div>
                 <ul class="pg-promise">
@@ -135,7 +135,7 @@
             const part = (all, map, tag) => giftOk(all) ? `${tag} 전체 <b>${dLabel(giftLeft(all))}</b>` : `${tag} <b>${giftCount(map)}가지</b>`;
             el.innerHTML = '💝 마음을 넣어 주셔서 고마워요! 선물이 열려 있어요<br>'
                 + [t ? part(giftBox.ta, giftBox.tp, '🎀 마스킹테이프') : '', p ? part(giftBox.pa, giftBox.pp, '🍬 달콤배경지') : ''].filter(Boolean).join(' · ')
-                + '<br><small>디자인마다 남은 날은 ✨ 스티커 · 🍬 달콤배경지 목록에서 볼 수 있어요</small>';
+                + '<br><small>디자인마다 남은 날은 ✨ 스티커 · 🌈 배경지 → 이벤트 칸에서 볼 수 있어요</small>';
         }
 
         /* 내 저금 코드 (구글 로그인했을 때만) */

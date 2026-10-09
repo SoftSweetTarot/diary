@@ -4,9 +4,10 @@
    - 🖼 이미지 배경지     : 내 사진/그림을 바둑판 · 엇갈림으로 반복
    - 🖌 그려서 만들기   : 한 칸을 그리면 이어 붙인 모습이 바로 보임 (이어그리기로 경계가 자연스럽게 연결)
    - 내 배경지는 설정값 'diary_my_patterns' 로 저장 → 말랑달콤 / 다이어리 / 내배경지.json 파일 하나 (js/drive.js)
-       [{"uid":"k3x9","name":"딸기 사선","r":{레시피},"at":1759300000000}, ...]
-   - 💾 파일로 저장 : 파일 이름 · 만든 사람을 쓰면 '이름.json' 파일 하나(이미지 포함)를 내려받아요 → 사용자가 카페 글에 첨부 (js/sharebox.js shxAsk)
-   - 📥 파일 불러오기 : 내 배경지 칸 맨 위 · 카페에서 받은 배경지 파일을 내 배경지에 넣어요 (by 닉네임 표시 · 사용자끼리 주고받기, 개발자 등록 없음)
+       [{"uid":"k3x9","r":{레시피},"at":1759300000000}, {"uid":"m2a1","r":{…},"at":…,"got":1}, ...]   (got : 📥 공유받은 칸)
+   - 이름 · 만든 사람은 없어요 (스티커처럼 썸네일만)
+   - 💾 파일로 저장 : 파일 이름만 쓰면 '이름.json' 파일 하나(이미지 포함)를 내려받아요 → 사용자가 카페 글에 첨부 (js/sharebox.js shxAsk)
+   - 📥 파일 불러오기 : 🌈 배경지 → 공유받은 칸 맨 위 · 카페에서 받은 배경지 파일을 넣어요 (사용자끼리 주고받기, 개발자 등록 없음)
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → pattern-recipe → skins → pattern-maker → service */
 
         /* =====================================================================
@@ -26,10 +27,7 @@
                 if (!it || typeof it !== 'object') return;
                 const r = sanitizeRecipe(it.r);
                 const uid = typeof it.uid === 'string' && /^[a-z0-9]{1,24}$/.test(it.uid) ? it.uid : null;
-                if (r && uid && !myPatterns.some(m => m.uid === uid)) {
-                    const by = recipeText(it.by, 12);
-                    myPatterns.push(Object.assign({ uid, name: recipeText(it.name, 20) || '내 배경지', r, at: +it.at || 0 }, by ? { by } : {}));
-                }
+                if (r && uid && !myPatterns.some(m => m.uid === uid)) myPatterns.push(Object.assign({ uid, r, at: +it.at || 0 }, it.got ? { got: 1 } : {}));
             });
         }
 
@@ -39,22 +37,20 @@
         }
 
         function getMyPatternItems() {
-            return myPatterns.map(m => ({ id: 'my:' + m.uid, uid: m.uid, tier: 'my', name: m.name, by: m.by || '', css: recipeToCss(m.r), recipe: m.r }))
+            return myPatterns.map(m => ({ id: 'my:' + m.uid, uid: m.uid, tier: 'my', name: m.got ? '공유받은 배경지' : '내 배경지', got: !!m.got, css: recipeToCss(m.r), recipe: m.r }))
                 .filter(p => p.css);
         }
 
-        function addMyPattern(name, r, by, file) {                     // by · file : 📥 파일로 불러온 배경지 (만든 사람 · 이미 있으면 'same')
+        function addMyPattern(r, got) {                                 // got : 📥 파일로 불러온 배경지 (공유받은 칸 · 이미 있으면 'same')
             const clean = sanitizeRecipe(r);
             if (!clean) { showMsg('⚠ 배경지를 저장하지 못했어요.<br>다시 만들어 주세요.'); return null; }
-            const nm = recipeText(name, 20) || '내 배경지';
-            const same = myPatterns.find(m => m.name === nm && JSON.stringify(m.r) === JSON.stringify(clean));
-            if (same) return file ? 'same' : same.uid;                    // 같은 배경지를 두 번 누르면 하나만
-            if (myPatterns.length >= MY_PATTERN_MAX) { showMsg(`📂 내 배경지는 최대 ${MY_PATTERN_MAX}개까지 저장할 수 있어요.<br>안 쓰는 배경지를 지운 뒤 다시 저장해 주세요.`); return null; }
+            const same = myPatterns.find(m => JSON.stringify(m.r) === JSON.stringify(clean));
+            if (same) return got ? 'same' : same.uid;                     // 같은 배경지를 두 번 누르면 하나만
+            if (myPatterns.length >= MY_PATTERN_MAX) { showMsg(`🌈 배경지는 최대 ${MY_PATTERN_MAX}개까지 가질 수 있어요.<br>(내가만든 · 공유받은 합쳐서)<br>안 쓰는 배경지를 지운 뒤 다시 저장해 주세요.`); return null; }
             const total = JSON.stringify(myPatterns).length + JSON.stringify(clean).length;
-            if (total > MY_PATTERN_MAX_CHARS) { showMsg('📂 내 배경지 저장 공간이 가득 찼어요.<br>이미지·그림 배경지를 몇 개 지운 뒤 다시 저장해 주세요.'); return null; }
+            if (total > MY_PATTERN_MAX_CHARS) { showMsg('🌈 배경지 저장 공간이 가득 찼어요.<br>이미지·그림 배경지를 몇 개 지운 뒤 다시 저장해 주세요.'); return null; }
             const uid = (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).slice(0, 24);
-            const who = recipeText(by, 12);
-            myPatterns.push(Object.assign({ uid, name: nm, r: clean, at: Date.now() }, who ? { by: who } : {}));
+            myPatterns.push(Object.assign({ uid, r: clean, at: Date.now() }, got ? { got: 1 } : {}));
             saveMyPatterns();
             return uid;
         }
@@ -62,7 +58,7 @@
         async function deleteMyPattern(uid) {
             const m = myPatterns.find(x => x.uid === uid);
             if (!m) return;
-            if (!(await showMsg(`'${m.name}' 배경지를 내 배경지에서 지울까요?`, true))) return;
+            if (!(await showMsg('이 배경지를 지울까요?', true))) return;
             myPatterns = myPatterns.filter(x => x.uid !== uid);
             saveMyPatterns();
             if (bgPattern && bgPattern.id === 'my:' + uid) clearBgPattern();
@@ -99,18 +95,14 @@
         let makerRecipe = null;          // 지금 미리보기 중인 레시피 (이미지·그림은 미리보기용 큰 이미지)
         let makerTimer = null;
 
-        const MAKER_TITLES = { weave: '🧵 무늬 메이커', image: '🖼 내 이미지로 배경지', draw: '🖌 그려서 만들기' };
-        const MAKER_DEFAULT_NAMES = { weave: '나의 무늬', image: '나의 이미지 배경지', draw: '나의 그림 배경지' };
+        const MAKER_TITLES = { weave: '🧵 무늬 메이커', image: '🖼️ 이미지로 배경지', draw: '🖌️ 그려서 배경지' };
 
         function openMaker(mode) {
             makerMode = ['weave', 'image', 'draw'].includes(mode) ? mode : 'weave';
             closeModal('skinModal');
             document.getElementById('makerTitle').textContent = MAKER_TITLES[makerMode];
             ['weave', 'image', 'draw'].forEach(m => { document.getElementById('maker-' + m).style.display = m === makerMode ? 'block' : 'none'; });
-            const nameInput = document.getElementById('makerName');
-            if (!nameInput.value || Object.values(MAKER_DEFAULT_NAMES).includes(nameInput.value)) nameInput.value = MAKER_DEFAULT_NAMES[makerMode];
             openModal('makerModal');
-            loadPatternNick();
             if (makerMode === 'weave') { setupWeaveUI(); updateWeave(); }
             if (makerMode === 'image') { setupImageUI(); updateImagePattern(); }
             if (makerMode === 'draw') { setupDrawUI(); updateDrawPreview(); }
@@ -148,49 +140,33 @@
         function makerSave(apply) {
             const r = finalMakerRecipe();
             if (!r) return;
-            const uid = addMyPattern(document.getElementById('makerName').value, r);
+            const uid = addMyPattern(r);
             if (!uid) return;
             if (apply) selectBgPattern('my:' + uid);
+            else showMsg('🌈 배경지 → 내가만든 칸에 저장했어요!');
         }
 
         function makerDownload() {
             const r = finalMakerRecipe();
             if (!r) return;
-            downloadPatternFile(document.getElementById('makerName').value, r, 'makerBy');
+            downloadPatternFile(r);
         }
 
-        /* ---------- 💾 패턴 파일 : 카페에 첨부해서 올리는 파일 (이미지까지 파일 하나에 들어 있음) ---------- */
-        const PATTERN_NICK_KEY = 'malang_pattern_nick';
-
-        /* 닉네임 : 만들기 창(makerBy)에 적거나 💾 저장 창에서 적어요 · 이 기기에 기억 */
-        function patternNick(fromId) {
-            const ids = fromId ? [fromId] : ['makerBy'];
-            let v = '';
-            ids.forEach(id => { const el = document.getElementById(id); if (!v && el) v = recipeText(el.value, 12); });
-            try { if (v) localStorage.setItem(PATTERN_NICK_KEY, v); } catch (e) {}
-            return v;
-        }
-        function loadPatternNick() {
-            let saved = '';
-            try { saved = localStorage.getItem(PATTERN_NICK_KEY) || ''; } catch (e) {}
-            ['makerBy'].forEach(id => { const el = document.getElementById(id); if (el && !el.value) el.value = saved; });
-        }
-
-        async function downloadPatternFile(name, r, nickFrom) {
-            const nm = recipeText(name, 20) || '내 배경지';
+        /* ---------- 💾 배경지 파일 : 카페에 첨부해서 올리는 파일 (이미지까지 파일 하나에 들어 있음 · 이름 · 만든 사람 없음) ---------- */
+        async function downloadPatternFile(r) {
             if (!window.shxAsk) return;
-            const a = await shxAsk('💾 배경지 파일로 저장', nm, patternNick(nickFrom));
+            const a = await shxAsk('💾 배경지 파일로 저장', '배경지', '', true);
             if (!a) return;
-            shxDownload({ malang_pattern: 1, name: nm, by: a.by, recipe: r }, a.name);
-            showMsg('💾 <b>' + recipeText(a.name, 40) + '.json</b> 파일을 저장했어요!<br><br>말랑달콤 카페의 <b>배경지 게시판</b>에 첨부해서 올려 주세요.<br><span style="font-size:12px;color:#777;">받은 사람은 페이지 → 배경지 → 내 배경지의 📥 파일 불러오기로 넣어요.<br>아이패드 · 아이폰은 \'파일\' 앱 → 다운로드 폴더에 있어요.</span>');
+            shxDownload({ malang_pattern: 1, recipe: r }, a.name);
+            showMsg('💾 <b>' + recipeText(a.name, 40) + '.json</b> 파일을 저장했어요!<br><br>말랑달콤 카페의 <b>배경지 게시판</b>에 첨부해서 올려 주세요.<br><span style="font-size:12px;color:#777;">받은 사람은 🌈 배경지 → 공유받은 → 📥 파일 불러오기로 넣어요.<br>아이패드 · 아이폰은 \'파일\' 앱 → 다운로드 폴더에 있어요.</span>');
         }
 
         function downloadMyPattern(uid) {
             const m = myPatterns.find(x => x.uid === uid);
-            if (m) downloadPatternFile(m.name, m.r);
+            if (m) downloadPatternFile(m.r);
         }
 
-        /* 📥 내 배경지 → 파일 불러오기 : 카페에서 받은 배경지 파일 (.json · 예전 .malang.txt 도 속은 같아요) */
+        /* 📥 배경지 → 공유받은 → 파일 불러오기 : 카페에서 받은 배경지 파일 (.json · 예전 .malang.txt 도 속은 같아요) */
         function pickPatternFile() {
             let inp = document.getElementById('patFileIn');
             if (!inp) {
@@ -206,14 +182,15 @@
             if (f.size > 5 * 1024 * 1024) { showMsg('⚠ 파일이 너무 커요.'); return; }
             let o = null;
             try { o = JSON.parse(await f.text()); } catch (e) {}
+            if (o && o.malang_skin) { showMsg('📔 페이지 파일이에요.<br><b>📔 페이지 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
             if (o && o.malang_sticker) { showMsg('✨ 스티커 파일이에요.<br><b>✨ 스티커 → 그 종류 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
             if (!o || o.malang_pattern !== 1 || !o.recipe) { showMsg('⚠ 말랑달콤 배경지 파일이 아니에요.<br><span style="font-size:12px;color:#777;">카페에서 받은 배경지 파일을 골라 주세요.</span>'); return; }
             if (!sanitizeRecipe(o.recipe)) { showMsg('⚠ 배경지 파일을 읽을 수 없어요.'); return; }
-            const uid = addMyPattern(o.name, o.recipe, o.by, true);
+            const uid = addMyPattern(o.recipe, true);
             if (!uid) return;
-            if (uid === 'same') { showMsg('📂 이미 내 배경지에 있는 배경지예요.'); return; }
+            if (uid === 'same') { showMsg('🌈 이미 가지고 있는 배경지예요.'); return; }
             if (typeof renderPatternList === 'function') renderPatternList();
-            showMsg(`🎉 '${recipeText(o.name, 20) || '내 배경지'}' 배경지를 내 배경지에 넣었어요!` + (recipeText(o.by, 12) ? `<br><small>by ${recipeText(o.by, 12).replace(/[<>&]/g, '')}</small>` : ''));
+            showMsg('🎉 배경지를 공유받은 칸에 넣었어요!');
         }
         window.pickPatternFile = pickPatternFile;
 

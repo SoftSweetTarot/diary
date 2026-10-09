@@ -126,7 +126,7 @@
 
         /* 파일 이름 · 만든 사람 묻기 (배경지 💾 파일로 저장도 같이 써요 js/pattern-maker.js) → { name, by } 또는 null */
         const SHX_NICK = 'malang_pattern_nick';                        // 배경지 만든 사람 닉네임과 같은 칸 (이 기기에 기억)
-        function shxAsk(title, defName, defBy) {
+        function shxAsk(title, defName, defBy, noBy) {                  // noBy : 만든 사람 칸 없이 (🎨 페이지 · 🌈 배경지)
             return new Promise(resolve => {
                 let nick = defBy || '';
                 if (!nick) try { nick = localStorage.getItem(SHX_NICK) || ''; } catch (e) {}
@@ -134,12 +134,12 @@
                 el.className = 'shx-pop';
                 el.innerHTML = `<div class="alert-card shx-card"><b class="shx-t">${shxEsc(title)}</b>
                     <label>파일 이름<input type="text" id="shxName" maxlength="40" value="${shxEsc(defName)}" enterkeyhint="next"></label>
-                    <label>만든 사람<input type="text" id="shxBy" maxlength="12" value="${shxEsc(nick)}" placeholder="닉네임 (안 써도 돼요)" enterkeyhint="done"></label>
-                    <small>받은 사람의 공유받은 칸에 <b>by 닉네임</b>으로 보여요</small>
+                    ${noBy ? '<small>카페에 올릴 때 보이는 파일 이름이에요</small>' : `<label>만든 사람<input type="text" id="shxBy" maxlength="12" value="${shxEsc(nick)}" placeholder="닉네임 (안 써도 돼요)" enterkeyhint="done"></label>
+                    <small>받은 사람의 공유받은 칸에 <b>by 닉네임</b>으로 보여요</small>`}
                     <div class="alert-btns"><button type="button" class="btn btn-primary" data-ok>💾 저장</button><button type="button" class="btn" data-no>취소</button></div></div>`;
                 document.body.appendChild(el);
                 const done = ok => {
-                    const name = shxTxt(shxq('shxName').value, 40).replace(/[\\/:*?"|.]/g, '').trim(), by = shxTxt(shxq('shxBy').value, 12);
+                    const name = shxTxt(shxq('shxName').value, 40).replace(/[\\/:*?"|.]/g, '').trim(), by = noBy ? '' : shxTxt(shxq('shxBy').value, 12);
                     if (ok && !name) { shxq('shxName').focus(); return; }
                     el.remove();
                     if (ok) { try { if (by) localStorage.setItem(SHX_NICK, by); } catch (e) {} }
@@ -147,8 +147,8 @@
                 };
                 el.querySelector('[data-ok]').onclick = () => done(true);
                 el.querySelector('[data-no]').onclick = () => done(false);
-                shxq('shxName').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); shxq('shxBy').focus(); } };
-                shxq('shxBy').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
+                shxq('shxName').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); if (noBy) done(true); else shxq('shxBy').focus(); } };
+                if (!noBy) shxq('shxBy').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } };
             });
         }
         function shxDownload(obj, name) {
@@ -213,7 +213,8 @@
             if (f.size > SHX_FILE_MAX) { showMsg('⚠ 파일이 너무 커요 (20MB까지).'); return; }
             let o = null;
             try { o = JSON.parse(await f.text()); } catch (e) {}
-            if (o && o.malang_pattern) { showMsg('🎨 배경지 파일이에요.<br><b>페이지 → 배경지 → 내 배경지</b>의 📥 파일 불러오기로 넣어 주세요.'); return; }
+            if (o && o.malang_pattern) { showMsg('🌈 배경지 파일이에요.<br><b>🎨 페이지 → 🌈 배경지 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
+            if (o && o.malang_skin) { showMsg('📔 페이지 파일이에요.<br><b>🎨 페이지 → 📔 페이지 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
             if (!o || o.malang_sticker !== 1 || !SHX_KINDS[o.kind] || !Array.isArray(o.items)) { showMsg('⚠ 말랑달콤 스티커 파일이 아니에요.<br><span style="font-size:12px;color:#777;">카페에서 받은 .json 파일을 골라 주세요.</span>'); return; }
             const kind = o.kind, by = shxTxt(o.by, 12);
             const list = await shxLoad(kind), have = new Set(list.map(s => s.h));

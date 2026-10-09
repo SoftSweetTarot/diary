@@ -460,23 +460,13 @@
         function stuBuildSave(w) {
             w.appendChild(stuEl('div', 'stu-hint', '지금 다이어리의 <b>색 + 꾸밈 + 아이콘</b>이 모두 내 페이지로 저장돼요.<br>색은 🎨 기본페이지 창에서 고쳐요.'));
             w.appendChild(stuEl('div', 'stu-sum', `꾸밈 ${stuCur.deco.length}개 · 바꾼 아이콘 ${Object.keys(stuCur.icons).length}개 · 내 이미지 ${Object.keys(stuCur.imgs).length}개`));
-            const inp = stuEl('input', 'btn skin-name-input'); inp.id = 'stuName'; inp.maxLength = 20; inp.placeholder = '페이지 이름 입력';
-            w.appendChild(inp);
-            const sv = stuEl('button', 'btn skin-save-btn', '➕ 내 페이지로 등록하기'); sv.type = 'button'; sv.onclick = stuSave; w.appendChild(sv);
-            const cl = stuEl('button', 'btn stu-clear', '🎨 색 바꾸러 가기 (기본페이지)'); cl.type = 'button'; cl.onclick = () => { closeStudio(); openSkinBasic(); }; w.appendChild(cl);
+            const sv = stuEl('button', 'btn skin-save-btn', '➕ 내 페이지로 저장'); sv.type = 'button'; sv.onclick = stuSave; w.appendChild(sv);
+            const cl = stuEl('button', 'btn stu-clear', '🎨 색 바꾸러 가기 (페이지 색상설정)'); cl.type = 'button'; cl.onclick = () => { closeStudio(); openSkinBasic(); }; w.appendChild(cl);
         }
         async function stuSave() {
-            const name = cleanSkinName(document.getElementById('stuName').value);
-            if (!name) { showMsg('페이지 이름을 입력해주세요!'); return; }
-            if (hasOwn(skinPresets, name) || name.startsWith('cs:') || name.startsWith('th:')) { showMsg('그 이름은 쓸 수 없어요.<br>다른 이름을 적어 주세요.'); return; }
-            if (hasOwn(customSkins, name) && !(await showMsg(`'${name}' 페이지가 이미 있어요.<br>지금 모양으로 바꿀까요?`, true))) return;
-            if (mySkinFull(name)) return;
-            const extra = stuExtra();
-            customSkins[name] = Object.assign(skinFromPickers(), extra);
-            store.setItem('diary_custom_skins', JSON.stringify(customSkins));
-            applySkinPreset(name);
+            if (!(await saveMySkin(Object.assign(skinFromPickers(), stuExtra())))) return;   // 이름 없이 저장 (js/settings.js saveMySkin)
             closeStudio();
-            showMsg(`'${name}' 페이지가 저장되었어요!<br><span style="font-size:12px;color:#777;">🎨 페이지 목록의 '내 페이지'에서 언제든 고를 수 있어요.</span>`);
+            showMsg('🎀 내 페이지에 저장했어요!<br><span style="font-size:12px;color:#777;">📔 페이지 → 내가만든 칸에서 언제든 고를 수 있어요.</span>');
         }
 
         /* ---------- 다이어리 위에서 끌기 ---------- */
