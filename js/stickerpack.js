@@ -133,6 +133,7 @@
             const g = spkq('spkGrid');
             g.addEventListener('pointerdown', spkDown); g.addEventListener('pointermove', spkGridMove);
             g.addEventListener('pointerup', spkGridUp); g.addEventListener('pointercancel', spkGridUp);
+            g.addEventListener('touchstart', e => { if (e.cancelable && e.touches[0] && e.touches[0].touchType === 'stylus') e.preventDefault(); }, { passive: false });   // ✏️ 애플펜슬 : 아이패드의 그림 끌기 막기 (js/elements.js 와 같은 이유)
             spkq('spkBoard').addEventListener('pointerdown', e => { if (!e.target.closest('.spk-it, .spk-tape, .spk-x')) spkPutBack(); });
             window.addEventListener('resize', () => { const b = spkq('spkBoard'); if (spkq('spkRoom').classList.contains('show')) { const r = b.getBoundingClientRect(); spkPlace(r.left, r.top); } });
         }

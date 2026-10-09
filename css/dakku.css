@@ -25,6 +25,7 @@
     padding-top: 30px;
 }
 .modal-content:has(> .modal-title.mt-bar .mt-back:not(.mt-none)) { padding-top: 44px; }
+.modal .modal-content { overflow-x: hidden; overscroll-behavior-x: none; }   /* 모서리 테이프가 살짝 삐져나와도 창 안이 좌우로 밀리지 않게 (위아래로만 움직여요) */
 .dk-tape { position: absolute; top: -4px; width: 84px; height: 24px; opacity: .92; pointer-events: none; z-index: 1;
     clip-path: polygon(0 8%,6% 0,12% 10%,18% 0,24% 8%,30% 0,36% 8%,42% 0,48% 8%,54% 0,60% 8%,66% 0,72% 8%,78% 0,84% 8%,90% 0,96% 10%,100% 0,100% 92%,94% 100%,88% 92%,82% 100%,76% 92%,70% 100%,64% 92%,58% 100%,52% 92%,46% 100%,40% 92%,34% 100%,28% 92%,22% 100%,16% 92%,10% 100%,4% 92%,0 100%); }
 .dk-tape.l { left: -16px; transform: rotate(-16deg); background: repeating-linear-gradient(90deg, var(--dk-tape-a) 0 7px, var(--dk-tape-b) 7px 14px); }
@@ -39,7 +40,8 @@
 .modal-title.mt-bar .mt-back { left: 12px; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: var(--dk-ribbon-ink); max-width: 46%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .modal-title.mt-bar .mt-btn:active { transform: scale(.94); }
 @media (hover: hover) { .modal-title.mt-bar .mt-btn:hover { border-style: solid; border-color: var(--dk-accent); color: var(--dk-accent); } }
-.skin-float .modal-title.mt-bar { cursor: move; }
+.skin-float .modal-title.mt-bar { cursor: move; touch-action: none; user-select: none; -webkit-user-select: none; margin-top: -30px; padding-top: 24px; }
+.skin-float .modal-content:has(> .modal-title.mt-bar .mt-back:not(.mt-none)) > .modal-title.mt-bar { margin-top: -44px; padding-top: 38px; }   /* 창 위쪽 띠 전체를 잡고 끌어요 (‹ · ✕ 버튼은 그대로 눌려요) */
 
 /* ---------- 구역 제목 : 마스킹테이프 ---------- */
 .modal-content .dk-sec { display: table; align-self: flex-start; width: fit-content; max-width: calc(100% + 6px); margin: 16px 0 10px -6px; padding: 4px 14px; font-size: 12.5px; font-weight: 800; text-align: left; line-height: 1.35;

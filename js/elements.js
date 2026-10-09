@@ -352,6 +352,8 @@
             const onStart = (e) => {
                 /* 두 번째 손가락이 다른 것 위에 닿으면 고른 걸 바꾸지 않음 */
                 if (e.touches && e.touches.length > 1 && selectedElement && selectedElement !== el) return;
+                /* ✏️ 애플펜슬은 끌자마자 아이패드가 그림 끌어 옮기기 · 글자 고르기를 시작해서 (손가락은 꾹 눌러야 시작) 스티커 끌기가 중간에 끊겨요 → 펜슬일 때는 막아요 */
+                if (e.touches && e.touches[0] && e.touches[0].touchType === 'stylus' && e.cancelable && !e.target.closest('textarea')) e.preventDefault();
                 selectElement(el);
                 const pos = getClientPos(e);
                 startX = pos.x; startY = pos.y;
@@ -480,6 +482,7 @@
             window.addEventListener('touchmove', onMove, { passive: false });
             window.addEventListener('mouseup', onEnd);
             window.addEventListener('touchend', onEnd);
+            window.addEventListener('touchcancel', onEnd);                     // 끊겨도 (펜슬 등) 떼던 스티커를 제자리에 돌려놔요
         }
 
         function selectElement(el) {

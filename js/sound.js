@@ -46,7 +46,7 @@
         function sndFx() { return sndOn() ? sndCtx() : null; }
         /* 화면을 처음 누를 때 소리 깨우기 (아이폰 · 아이패드 무음 모드 대비) */
         function sndUnlock() {
-            const ac = sndCtx(); if (!ac || snd.unlocked) return;
+            const ac = sndCtx(); if (!ac || (snd.unlocked && ac.state === 'running')) return;   // 아직 안 깨어났으면 다음에 누를 때 또 깨워요
             snd.unlocked = true;
             try {
                 const n = 1600, buf = new ArrayBuffer(44 + n), v = new DataView(buf);
@@ -60,7 +60,7 @@
             try { const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0); } catch (e) {}
         }
 
-        document.addEventListener('pointerdown', sndUnlock, true);
+        ['pointerdown', 'pointerup', 'touchend'].forEach(t => document.addEventListener(t, sndUnlock, true));   // ✏️ 애플펜슬은 누를 때가 아니라 뗄 때 소리를 깨울 수 있어요
         /* 켜졌을 때 · 크기를 바꿀 때 들려주는 반짝 소리 */
         function sndChime() {
             const ac = sndFx(); if (!ac) return;
