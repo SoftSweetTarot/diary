@@ -6,9 +6,9 @@
    - 페이지에는 그림(JPG)째로 그날 파일에 lfi 로 저장돼요 (주소 아님 · 인수인계 12번)
    - 내가만든 목록 : 로그인하면 내 드라이브 말랑달콤 / 스티커 / 속지 / 내속지 / 목록 · 원본 · 둘러보기면 이 기기 (js/coll.js)
    ※ 링 구멍은 미리보기 · 페이지 모두 그 위에 그대로 보여요 (css/style.css --lf-holes)
-   🧻 떡메 만들기 (✂️ 스티커만들기 → 🧻 떡메 만들기) : 같은 창을 떡메 모양으로 써요 (lm.for = 'tk')
+   🧻 떡메모지 만들기 (✂️ 스티커만들기 → 🧻 떡메모지 만들기) : 같은 창을 떡메 모양으로 써요 (lm.for = 'tk')
    - 한 장 크기는 기본 떡메와 같아요 (150 × 148 · 그림은 2배로 그려요) · 링 구멍 대신 위에 🩷 풀칠 띠 색을 골라요
-   - 📌 떡메 묶음으로 꺼내기 : 바로 묶음이 나와서 뜯어 붙여요 · 💾 떡메 만들기 : 내가만든 칸에 저장만
+   - 📌 떡메 묶음으로 꺼내기 : 바로 묶음이 나와서 뜯어 붙여요 · 💾 떡메모지 만들기 : 내가만든 칸에 저장만
    - 내가만든 떡메 : 로그인하면 내 드라이브 말랑달콤 / 스티커 / 떡메 / 내떡메 · 둘러보기면 이 기기 (js/coll.js)
    - 페이지에 붙은 한 장은 글 + 그림 그대로 그날 파일에 저장돼요 (tk: 'my' · tb · 인수인계 12번) */
 
@@ -47,10 +47,10 @@
             const C = tkColl();
             C.onChange = () => { if (box.isConnected && box.dataset.tkm) tkMine(box); };
             box.dataset.tkm = '1';
-            box.innerHTML = `${window.shxBar ? shxBar('tk') : ''}<div class="tk-list"><button type="button" class="tk-it tk-new" onclick="closeModal('tteokModal'); openTteokMaker()"><span class="tk-plus">＋</span><b>떡메 만들기</b></button><div class="cg-host"></div></div>`;
+            box.innerHTML = `${window.shxBar ? shxBar('tk') : ''}<div class="tk-list"><button type="button" class="tk-it tk-new" onclick="closeModal('tteokModal'); openTteokMaker()"><span class="tk-plus">＋</span><b>떡메모지 만들기</b></button><div class="cg-host"></div></div>`;
             return collGrid(box.querySelector('.cg-host'), C,
                 e => `<div class="lm-it" data-shx="${e.id}" data-id="${e.id}"><button type="button" class="tk-it" onclick="tkMineUse('${e.id}')">${tkMiniHtml('my', { src: e.th, glue: e.x && e.x.g })}<b>내 떡메</b></button><i onclick="tkMineDel('${e.id}')" title="지우기">✕</i></div>`,
-                '<p class="svc-tip" style="grid-column:1/-1">아직 만든 떡메가 없어요. <b>＋ 떡메 만들기</b>로 사진을 깔거나 직접 그려 보세요!</p>');
+                '<p class="svc-tip" style="grid-column:1/-1">아직 만든 떡메가 없어요. <b>＋ 떡메모지 만들기</b>로 사진을 깔거나 직접 그려 보세요!</p>');
         }
         async function tkMineUse(id) {
             let t = null;
@@ -98,9 +98,9 @@
             const T = kind === 'tk';
             lm.for = kind;
             lmq('leafMakeModal').querySelector('.lm-content').classList.toggle('lm-tk', T);
-            lmq('lmTitle').textContent = T ? '🧻 떡메 만들기' : '📃 속지 만들기';
+            lmq('lmTitle').textContent = T ? '🧻 떡메모지 만들기' : '📃 속지 만들기';
             lmq('lmGo').textContent = T ? '📌 떡메 묶음으로 꺼내기' : '📃 오늘 페이지에 끼우기';
-            lmq('lmKeep').textContent = T ? '💾 떡메 만들기' : '💾 속지 만들기';
+            lmq('lmKeep').textContent = T ? '💾 떡메모지 만들기' : '💾 속지 만들기';
             lmGlueShow();
             const ca = lmq('canvasArea'), r = ca && ca.getBoundingClientRect();
             if (T) { lm.w = LM_TK_W; lm.h = LM_TK_H; }
