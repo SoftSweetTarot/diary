@@ -114,16 +114,17 @@
         const l = document.createElement('span'), r = document.createElement('span');
         l.className = 'dk-tape l'; r.className = 'dk-tape r';
         box.after(l, r);
+        /* offsetLeft · offsetTop 은 창이 톡 뜨는 애니메이션(크기 · 기울기) 중에도 바뀌지 않아서, 테이프가 처음부터 제자리에 붙어요 */
         const fit = () => {
-            const b = box.getBoundingClientRect(), o = m.getBoundingClientRect();
-            if (!b.width) return;
-            l.style.left = (b.left - o.left - 18) + 'px'; l.style.top = (b.top - o.top - 7) + 'px';
-            r.style.left = (b.right - o.left - r.offsetWidth + 18) + 'px'; r.style.top = (b.top - o.top - 7) + 'px';
+            if (!box.offsetWidth) return;
+            const x = box.offsetLeft, y = box.offsetTop;
+            l.style.left = (x - 18) + 'px'; l.style.top = (y - 7) + 'px';
+            r.style.left = (x + box.offsetWidth - r.offsetWidth + 18) + 'px'; r.style.top = (y - 7) + 'px';
+            m.style.transformOrigin = (x + box.offsetWidth / 2) + 'px ' + (y + box.offsetHeight / 2) + 'px';   // 창과 테이프가 창 가운데를 중심으로 같이 톡 (css/style.css winPop)
         };
         if (window.ResizeObserver) new ResizeObserver(fit).observe(box);
         addEventListener('resize', fit);
         box.addEventListener('dk-move', fit);                      // 창을 끌어서 옮기면 테이프도 같이 (js/skins.js setupSkinWindows)
-        box.addEventListener('animationend', fit);                 // 창이 톡 뜨는 애니메이션(winPop)이 끝난 자리에 다시 붙이기
         fit();
     }
 

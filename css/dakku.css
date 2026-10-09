@@ -31,10 +31,7 @@
     clip-path: polygon(0 8%,6% 0,12% 10%,18% 0,24% 8%,30% 0,36% 8%,42% 0,48% 8%,54% 0,60% 8%,66% 0,72% 8%,78% 0,84% 8%,90% 0,96% 10%,100% 0,100% 92%,94% 100%,88% 92%,82% 100%,76% 92%,70% 100%,64% 92%,58% 100%,52% 92%,46% 100%,40% 92%,34% 100%,28% 92%,22% 100%,16% 92%,10% 100%,4% 92%,0 100%); }
 .dk-tape.l { transform: rotate(-16deg); background: repeating-linear-gradient(90deg, var(--dk-tape-a) 0 7px, var(--dk-tape-b) 7px 14px); }
 .dk-tape.r { transform: rotate(14deg); background: repeating-linear-gradient(45deg, var(--dk-tape-c) 0 6px, var(--dk-tape-d) 6px 12px); }
-/* 창이 톡 뜨는 동안(0.3초)은 숨었다가, 자리잡으면 붙어요 (css/style.css winPop) */
-.dk-tape { animation: dkTapeIn .18s .3s both; }
-@keyframes dkTapeIn { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .dk-tape { animation: none; } }
+
 
 /* ---------- 제목 리본 · ‹ 뒤로 · ✕ ---------- */
 .modal-title.mt-bar { display: block; position: static; text-align: center; margin: 0 0 12px; font-size: 15px; line-height: 1.3; }
