@@ -5,7 +5,7 @@
        한 파일에는 한 종류만 (카페 게시판이 종류별)
    - 📥 파일 불러오기 : 같은 보관 창의 '공유받은' 칸 맨 위 · 파일 이름은 상관없이 파일 속 종류를 보고 그 종류 공유받은 칸에 넣어요
        로그인한 사람만 (게스트는 이 기기 저장 공간이 작아서) · 종류마다 최대 SHX_MAX 개 · 이미 있는 것은 건너뛰어요
-       저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 받은씰 · 받은조각 · 받은모조지 · 받은테이프 · 받은속지 .json (종류마다 파일 하나)
+       저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 받은씰 · 받은조각 · 받은모조지 · 받은마테 · 받은속지 .json (종류마다 파일 하나)
    - 파일 모양 : { malang_sticker: 1, kind, from: 'share', by, items: [ … ] } (그림은 주소가 아닌 그림 그대로 · 인수인계 12번)
        from 은 나중에 🎁 이벤트 · 🛍️ 문구점 스티커팩도 같은 모양으로 쓰려고 넣어 둔 표시
    - 공유받은 스티커는 다시 공유하지 않아요 (📤 공유하기는 내가만든 칸에만) · 하나씩 ✕ 로 지울 수 있어요
@@ -13,7 +13,7 @@
 
         const SHX_MAX = 40, SHX_PER_FILE = 40, SHX_FILE_MAX = 20 * 1024 * 1024;
         const SHX_KINDS = { seal: '🏷️ 씰스티커', piece: '🧩 조각스티커', paper: '📄 모조지', tape: '🎀 마스킹테이프', leaf: '📃 속지' };
-        const SHX_FILES = { seal: '받은씰.json', piece: '받은조각.json', paper: '받은모조지.json', tape: '받은테이프.json', leaf: '받은속지.json' };   // 종류마다 파일 하나 (바뀐 종류만 올려서 빨라요)
+        const SHX_FILES = { seal: '받은씰.json', piece: '받은조각.json', paper: '받은모조지.json', tape: '받은마테.json', leaf: '받은속지.json' };   // 종류마다 파일 하나 (바뀐 종류만 올려서 빨라요)
         const SHX_WHERE = { seal: '✨ 스티커 → 🏷️ 씰스티커', piece: '✨ 스티커 → 🧩 조각스티커', paper: '✨ 스티커 → 📄 모조지', tape: '✨ 스티커 → 🎀 마스킹테이프', leaf: '✨ 스티커 → 📃 속지' };
         const shx = { lists: {}, ids: {}, loads: {}, kind: '', on: false, picks: [] };
         const shxq = id => document.getElementById(id);
