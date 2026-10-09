@@ -2939,6 +2939,9 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
         linear-gradient(90deg, color-mix(in srgb, var(--primary-accent) 30%, transparent) 50%, transparent 0) 0 0 / 34px 34px,
         linear-gradient(color-mix(in srgb, var(--primary-accent) 30%, transparent) 50%, transparent 0) 0 0 / 34px 34px, color-mix(in srgb, var(--primary-accent) 7%, #fff); }
 .snb-cover[hidden] { display: none; }
+.snb-cover { touch-action: none; }
+.snb-cvturn { position: absolute; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.snb-cvflap { position: absolute; top: 0; bottom: 0; display: none; border-radius: 18px 0 0 18px; background: var(--curl-shade-next), color-mix(in srgb, var(--primary-accent) 10%, #fff); filter: drop-shadow(-6px 0 8px rgba(0,0,0,.25)); }
 .snb-cover.open { transform: perspective(1400px) rotateY(-105deg); }
 .snb-lace { position: absolute; left: 0; right: 0; height: 18px; pointer-events: none; background: radial-gradient(circle at 50% 0, #fff 8px, transparent 8.6px) 0 0 / 18px 18px; filter: drop-shadow(0 1.5px 0 rgba(0,0,0,.05)); }
 .snb-lace.top { top: 0; } .snb-lace.bot { bottom: 0; transform: scaleY(-1); }

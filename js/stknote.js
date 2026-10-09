@@ -42,7 +42,8 @@
             const rings = document.createElement('div'); rings.className = 'snb-rings'; rings.innerHTML = '<i></i>'.repeat(9);
             const ears = ['prev', 'next'].map(k => { const e = document.createElement('div'); e.className = 'snb-ear ' + k; e.dataset.dir = k === 'next' ? 1 : -1; e.setAttribute('aria-label', k === 'next' ? '다음 장' : '앞 장'); return e; });
             const cover = document.createElement('div'); cover.className = 'snb-cover'; cover.hidden = true;
-            cover.onclick = () => { if (Date.now() > snb.moved) snbOpenCover(cover); };
+            cover.onclick = () => { if (Date.now() > snb.moved && Date.now() > snb.noClick) snbOpenCover(cover); };
+            snbCoverDrag(cover);
             box.prepend(rings); box.append(...ears, cover);
             snbBind(m, body);
             snbMovable(m, box);
@@ -133,8 +134,60 @@
             const t = (m.querySelector('.modal-title .mt-text') || m.querySelector('.modal-title') || {}).textContent || '';
             const sp = t.trim().match(/^(\S+)\s+(.+)$/) || ['', '📒', t.trim()];
             const esc = s => s.replace(/[<>&"]/g, '');
-            c.innerHTML = `<i class="snb-lace top"></i><i class="snb-lace bot"></i><span class="snb-cv-card"><b>${esc(sp[2])}</b><small>나의 스티커 수첩</small></span><span class="snb-cv-ic">${esc(sp[1])}</span><em>톡 눌러 펼쳐요</em><small class="snb-cv-tip">스티커를 꾹 누른 뒤 끌어다 다이어리에 놓으면 붙어요</small>`;
+            c.innerHTML = `<i class="snb-lace top"></i><i class="snb-lace bot"></i><span class="snb-cv-card"><b>${esc(sp[2])}</b><small>나의 스티커 수첩</small></span><span class="snb-cv-ic">${esc(sp[1])}</span><em>밀어 넘기거나 톡 눌러 펼쳐요</em><small class="snb-cv-tip">스티커를 꾹 누른 뒤 끌어다 다이어리에 놓으면 붙어요</small>`;
             c.classList.remove('open'); c.hidden = false;
+        }
+        /* 📔 겉표지 끌어 넘기기 : 속장처럼 손가락을 따라 오른쪽 끝부터 접히며 넘어가요 (톡 눌러도 펼쳐져요) */
+        function snbCoverDrag(c) {
+            let p = null;
+            const at = d => {
+                d = Math.max(0, Math.min(p.W, d)); p.d = d;
+                const sw = Math.min(70, d), show = d >= 1;
+                p.flap.style.display = p.sh.style.display = show ? 'block' : 'none';
+                c.style.clipPath = d ? `inset(0 ${d}px 0 0)` : '';
+                p.flap.style.width = d + 'px'; p.flap.style.left = (p.W - 2 * d) + 'px';
+                p.sh.style.width = sw + 'px'; p.sh.style.left = (p.W - d - 4) + 'px';
+            };
+            const end = done => {
+                const q = p; p = null;
+                const from = q.d, to = done ? q.W : 0, dur = 120 + 420 * Math.abs(to - from) / q.W, t0 = performance.now();
+                if (done && window.sfx) try { sfx('page'); } catch (e) {}
+                const step = now => {
+                    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+                    p = q; at(from + (to - from) * e); p = null;
+                    if (k < 1) return requestAnimationFrame(step);
+                    q.layer.remove(); c.style.clipPath = '';
+                    if (done) c.hidden = true;
+                };
+                requestAnimationFrame(step);
+            };
+            c.addEventListener('pointerdown', e => {
+                if (e.button > 0 || p || c.classList.contains('open')) return;
+                p = { id: e.pointerId, x: e.clientX, y: e.clientY, W: c.clientWidth, d: 0, on: false, t0: 0 };
+            });
+            window.addEventListener('pointermove', e => {
+                if (!p || p.id !== e.pointerId) return;
+                const dx = e.clientX - p.x, dy = e.clientY - p.y;
+                if (!p.on) {
+                    if (Math.hypot(dx, dy) < 8) return;
+                    if (dx > 0 || Math.abs(dx) < Math.abs(dy)) { p = null; snb.noClick = Date.now() + 2000; return; }   // 왼쪽으로 밀 때만 넘겨요 (다른 쪽으로 밀면 펼치지 않아요)
+                    p.on = true; p.t0 = performance.now();
+                    const L = p.layer = document.createElement('div'); L.className = 'snb-cvturn';
+                    L.innerHTML = '<i class="snb-shadow next"></i><i class="snb-cvflap"></i>';
+                    p.sh = L.firstChild; p.flap = L.lastChild;
+                    c.parentElement.appendChild(L);
+                    try { c.setPointerCapture(e.pointerId); } catch (er) {}
+                }
+                e.preventDefault(); at(-dx - 8);
+            });
+            const up = e => {
+                if (!p || p.id !== e.pointerId) return;
+                if (!p.on) { p = null; return; }
+                snb.noClick = Date.now() + 400;
+                const fast = p.d > 30 && performance.now() - p.t0 < 260;
+                end(e.type !== 'pointercancel' && (p.d > p.W * .3 || fast));
+            };
+            window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);
         }
         function snbOpenCover(c) {
             if (c.classList.contains('open')) return;
