@@ -27,34 +27,49 @@
            📃 속지
            ===================================================================== */
         const LEAFS = [['line', '줄노트'], ['grid', '모눈'], ['dot', '도트'], ['gingham', '깅엄'], ['kraft', '크라프트'], ['plain', '무지']];
-        let pageLeaf = 'line';                                             // 지금 페이지의 속지 (js/elements.js 저장 · 불러오기)
+        let pageLeaf = 'line', pageLeafImg = '';                           // 지금 페이지의 속지 (js/elements.js 저장 · 불러오기) · 'my' = 📃 속지 만들기로 만든 그림(pageLeafImg · js/leafmaker.js)
+        const lfMyOk = img => /^data:image\/(jpeg|png|webp)/.test(img || '');
 
-        function setPageLeaf(id) {
-            pageLeaf = LEAFS.some(l => l[0] === id) ? id : 'line';
-            const c = lfq('canvasArea'); if (!c) return;
-            LEAFS.forEach(([k]) => c.classList.toggle('lf-' + k, k === pageLeaf && k !== 'line'));
+        /* 속지 입히기 (오늘 페이지 · 넘길 때 보이는 옆 페이지 모두) */
+        function lfApply(c, id, img) {
+            const my = id === 'my' && lfMyOk(img);
+            if (!my && !LEAFS.some(l => l[0] === id)) id = 'line';
+            LEAFS.forEach(([k]) => c.classList.toggle('lf-' + k, k === id && k !== 'line'));
+            c.classList.toggle('lf-my', my);
+            if (my) c.style.setProperty('--lf-img', `url("${img}")`); else c.style.removeProperty('--lf-img');
+            return my ? 'my' : id;
+        }
+        function setPageLeaf(id, img) {
+            const c = lfq('canvasArea');
+            pageLeaf = c ? lfApply(c, id, img) : 'line';
+            pageLeafImg = pageLeaf === 'my' ? img : '';
             document.querySelectorAll('#leafPick .lf-pick').forEach(b => b.classList.toggle('on', b.dataset.lf === pageLeaf));
+        }
+        /* 그날 파일에서 속지 읽어 입히기 (js/page.js 넘기는 페이지) */
+        function lfStatic(c, date) {
+            let raw = null; try { raw = JSON.parse(store.getItem(getDateKey(date))); } catch (e) {}
+            if (raw && raw.lf) lfApply(c, raw.lf, raw.lfi);
         }
         function openLeafPicker() {
             const box = lfq('leafPick'); if (!box) return;
             if (!box.firstChild) box.innerHTML = LEAFS.map(([k, n]) => `<button type="button" class="lf-pick" data-lf="${k}" onclick="pickLeaf('${k}')"><i class="lf-sw lf-${k}"></i>${n}</button>`).join('');
-            setPageLeaf(pageLeaf);
+            setPageLeaf(pageLeaf, pageLeafImg);
             lfTabs('leaf', 'free');
             closeModal('stickerMakeModal'); openModal('leafModal');
         }
         /* 고르면 새 속지가 오른쪽에서 스르륵 끼워져요 (붙인 것들은 그 위에 그대로) */
-        function pickLeaf(id) {
+        function pickLeaf(id, img) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
-            if (id === pageLeaf) { closeModal('leafModal'); return; }
+            if (id === pageLeaf && (id !== 'my' || img === pageLeafImg)) { closeModal('leafModal'); return; }
             const c = lfq('canvasArea');
             closeModal('leafModal');
-            const sl = document.createElement('div'); sl.className = 'lf-slide' + (id === 'line' ? '' : ' lf-' + id);
+            const sl = document.createElement('div'); sl.className = 'lf-slide'; lfApply(sl, id, img);
             c.appendChild(sl); lfSlideSnd();
-            const done = () => { sl.remove(); setPageLeaf(id); if (typeof saveData === 'function') saveData(false); };
+            const done = () => { sl.remove(); setPageLeaf(id, img); if (typeof saveData === 'function') saveData(false); };
             try { sl.animate([{ transform: 'translateX(104%) rotate(2deg)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.3,.8,.3,1)' }).onfinish = done; }
             catch (e) { done(); }
         }
-        window.openLeafPicker = openLeafPicker; window.pickLeaf = pickLeaf;
+        window.openLeafPicker = openLeafPicker; window.pickLeaf = pickLeaf; window.lfStatic = lfStatic;
 
         /* =====================================================================
            🧻 떡메모지
@@ -111,6 +126,7 @@
             bar.querySelectorAll('.stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
             lfq(w + 'Free').hidden = tab !== 'free'; other.hidden = tab === 'free';
             if (tab === 'shop') other.innerHTML = `<button type="button" class="stk-go" onclick="openShop('#/c/${encodeURIComponent(name)}')"><span>🛍️</span><b>문구점에서 ${name} 보기</b><small>새 창으로 열려요</small></button>`;
+            else if (tab === 'mine' && w === 'leaf' && window.lmMine) lmMine(other);
             else if (tab === 'event') other.innerHTML = `<div class="cs-empty">🎁 아직 받은 이벤트 선물이 없어요.<br>이벤트 ${name}가 오면 여기에 들어와요!</div>`;
             else if (tab !== 'free') other.innerHTML = `<div class="cs-empty">🛠️ ${name} ${bar.querySelector('.on').textContent} 칸은 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }

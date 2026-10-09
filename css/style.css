@@ -2758,3 +2758,37 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .tk-todo ul { list-style: none; margin: 0; padding: 0; position: absolute; left: 12px; right: 12px; top: 58px; }
 .tk-todo li { height: 22px; border-bottom: 1px dashed color-mix(in srgb, var(--primary-accent) 30%, #fff); display: flex; align-items: center; gap: 6px; }
 .tk-todo li::before { content: ''; width: 9px; height: 9px; border: 1.6px solid color-mix(in srgb, var(--primary-accent) 60%, #fff); border-radius: 2px; }
+
+/* 📃 내가만든 속지 (js/leafmaker.js) : 그림째로 깔고 링 구멍은 그 위에 */
+.inner-page .canvas-area.lf-my, .lf-slide.lf-my, .lf-pick .lf-sw.lf-my { background: var(--lf-holes), var(--lf-img) center / 100% 100% no-repeat, var(--page-bg); }
+.lm-it { position: relative; min-width: 0; }
+.lm-it > .lf-pick, .lm-new { display: block; width: 100%; }
+.lm-it > i { position: absolute; top: -5px; right: -5px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); font-style: normal; font-size: 11px; display: grid; place-items: center; cursor: pointer; color: #a07888; z-index: 1; }
+.lm-new .lf-sw { display: grid; place-items: center; background: color-mix(in srgb, var(--primary-accent) 6%, #fff); box-shadow: none; border: 2px dashed color-mix(in srgb, var(--border-color) 80%, #fff); }
+.lm-new .lf-sw b { font-size: 26px; color: var(--primary-accent); }
+.lf-pick.on .lf-sw { box-shadow: 0 0 0 3px var(--primary-accent); }
+/* 📃 속지 만들기 창 */
+.lm-content { max-width: 380px; }
+.lm-tabs { grid-template-columns: 1fr 1fr !important; }
+.lm-tabs .stk-tab { font-size: 13px; padding: 8px 2px; }
+.lm-box { --lf-holes: radial-gradient(circle at 4.6cqw 50%, color-mix(in srgb, var(--border-color) 55%, #fff) 1.5cqw, color-mix(in srgb, var(--border-color) 90%, #000 5%) 1.55cqw 1.9cqw, transparent 1.95cqw) 0 3cqw / 9cqw 9cqw repeat-y;
+    position: relative; container-type: inline-size; width: min(100%, 230px, 36vh * var(--lm-r, .64)); margin: 12px auto 10px; border-radius: 8px 12px 12px 8px; overflow: hidden;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--border-color), 3px 6px 16px rgba(0,0,0,.12); }
+.lm-box canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.lm-box.drawing canvas { cursor: crosshair; }
+.lm-holes { position: absolute; inset: 0; background: var(--lf-holes); pointer-events: none; }
+.lm-pick { width: 100%; justify-content: center; }
+.lm-row { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; color: #7a5a66; margin-top: 8px; white-space: nowrap; }
+.lm-row input { flex: 1; accent-color: var(--primary-accent); }
+.lm-tip { margin: 6px 0 0; font-size: 11.5px; color: #a08890; text-align: center; }
+.lm-pens { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+.lm-pens button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1.5px #e6d6dc; cursor: pointer; padding: 0; font-size: 15px; background: #fff; }
+.lm-pens button.on { box-shadow: 0 0 0 3px var(--primary-accent); }
+.lm-chips { margin-top: 8px; }
+.lm-chips button { font-size: 12.5px; padding: 5px 10px; }
+.lm-chips button.on { background: var(--primary-accent); border-color: var(--primary-accent); }
+.lm-paper i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+.lm-acts { display: flex; gap: 8px; margin-top: 8px; }
+.lm-acts .btn { flex: 1; justify-content: center; font-size: 13px; }
+.lm-sub { margin: 12px 0 0; font-size: 12.5px; font-weight: bold; color: #7a5a66; }
+.lm-done { margin-top: 14px; }

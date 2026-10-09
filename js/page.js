@@ -278,6 +278,7 @@
                 </div>
                 <div class="canvas-area"></div>`;
             const canvas = page.querySelector('.canvas-area');
+            if (typeof lfStatic === 'function') lfStatic(canvas, date);      // 📃 그날 속지 (js/leafpad.js)
             if (typeof psStaticHtml === 'function') page.insertAdjacentHTML('beforeend', psStaticHtml(date));
             if (typeof ddStaticHtml === 'function') page.insertAdjacentHTML('beforeend', ddStaticHtml(date));
             readDayData(date).forEach(d => canvas.appendChild(createElementFromData(d, false)));
