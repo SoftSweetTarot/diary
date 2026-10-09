@@ -13,7 +13,7 @@
         const pelS = { on: false, cv: null, ctx: null, fl: null, items: [], a: null, st: null, drag: null, board: null, mv: { x: 0, y: 0 }, gone: 0, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '' };
         const pelq = id => document.getElementById(id);
         const pelMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
-        const pelLoad = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
+        const pelLoad = src => new Promise((ok, no) => { const im = new Image(); if (/^https?:/i.test(src)) im.crossOrigin = 'anonymous'; im.onload = () => ok(im); im.onerror = no; im.src = src; });   // 주소 그림은 하얀 테두리를 그리려고 CORS 로
         function pelTint(src, fill) { const c = pelMk(src.width, src.height), d = c.getContext('2d'); d.drawImage(src, 0, 0); d.globalCompositeOperation = 'source-in'; d.fillStyle = fill; d.fillRect(0, 0, c.width, c.height); return c; }
         function pelGrow(src, r, step) { const c = pelMk(src.width, src.height), d = c.getContext('2d'); for (const k of [1, .66, .33]) for (let a = 0; a < 360; a += step) d.drawImage(src, Math.cos(a * Math.PI / 180) * r * k, Math.sin(a * Math.PI / 180) * r * k); d.drawImage(src, 0, 0); return c; }
 

@@ -284,6 +284,13 @@
             renderLibrary();
         }
 
+        /* 그림 모음에서 고르면 : 🏷️ 씰스티커처럼 하얀 칼선 테두리를 둘러 하얀 종이째 나와요 → 떼어 붙여요 (js/stickerpeel.js)
+           그림을 그릴 수 없으면(주소가 막힘) 예전처럼 페이지에 바로 붙어요 */
+        async function libPick(url) {
+            closeModal('stickerModal');
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url))) return; } catch (e) {}
+            addImage(url);
+        }
         function renderLibrary() {
             const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');
             grid.innerHTML = '';
@@ -293,7 +300,7 @@
             if (!view.length) { st.textContent = '그림모음 폴더에 그림이 없어요.'; updateLibPager(); return; }
             const per = libPerPage(), pages = libPageCount();
             libPage = Math.max(0, Math.min(pages - 1, libPage));
-            st.textContent = `그림 ${view.length}개 · 누르면 페이지에 들어가요`;
+            st.textContent = `그림 ${view.length}개 · 누르면 씰스티커로 나와요`;
             const start = libPage * per;
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
             const frag = document.createDocumentFragment();
@@ -307,7 +314,7 @@
                 img.src = url.includes('lh3.googleusercontent.com/d/') ? url + '=w' + thumbW : url;
                 img.onerror = () => item.classList.add('bad');
                 item.appendChild(img);
-                item.onclick = () => { if (libSwiped) return; if (addImage(url)) closeModal('stickerModal'); };
+                item.onclick = () => { if (!libSwiped) libPick(url); };
                 frag.appendChild(item);
             });
             /* 마지막 페이지가 덜 차도 창 크기가 흔들리지 않도록 빈칸 채우기 */
@@ -337,6 +344,7 @@
             if (tapeImg && typeof isTapeSrc === 'function' && isTapeSrc(tapeImg.dataset.src)) {
                 stretchHandle = document.createElement('div');
                 stretchHandle.className = 'handle stretch-handle';
+                el.classList.add('is-tape');
                 stretchHandle.innerHTML = '↔';
                 el.appendChild(stretchHandle);
             }
