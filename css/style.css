@@ -240,6 +240,7 @@
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
             overflow-y: auto; height: min(360px, 54vh); align-content: start; padding: 4px;   /* 스티커가 적거나 없어도 창 크기는 그대로 */
         }
+        .sticker-grid[hidden] { display: none; }   /* 🏷️ 씰스티커 → 기본 : 그림 모음 목록이 대신 보일 때 */
         .sticker-item { font-size: 1.8rem; text-align: center; cursor: pointer; padding: 4px; border-radius: 8px; }
         @media (hover: hover) { .sticker-item:hover { background: #ffe6f0; transform: scale(1.15); transition: transform 0.1s; } }
 

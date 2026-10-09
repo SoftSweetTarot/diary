@@ -350,7 +350,7 @@
             const k = SL_KINDS[kind]; if (!k) return;
             closeModal('stickerMakeModal');
             openModal('stickerModal');
-            const bar = smq('stickerKindTabs'); bar.hidden = true; bar.classList.remove('two');
+            const bar = smq('stickerKindTabs'); bar.hidden = true; bar.classList.remove('two'); stkLib(false);
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0];
             if (kind === 'emoji' && window.spkTabs) { spkTabs(); spkTab('pack'); return; }   // 🍭 미니시트 · 😀 이모지 두 칸 (js/stickerpack.js)
             const b = document.querySelector('#stickerCategories .' + k[1]); if (b) b.click();
@@ -381,10 +381,18 @@
             bar.classList.remove('two');
             bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
             bar.hidden = false;
-            stkTab(tab || (kind === 'piece' ? 'free' : 'mine'));                // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
+            stkTab(tab || (kind === 'seal' ? 'free' : 'mine'));                 // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
+        }
+        /* 🏷️ 씰스티커 → 기본 : 스티커 칸 대신 말랑달콤 그림 모음 목록을 바로 (창 넓이는 목록 배치를 따라요 · js/elements.js) */
+        function stkLib(on) {
+            const box = smq('libBox'); if (!box) return false;
+            box.hidden = !on; smq('stickerGrid').hidden = on; smq('libContent').classList.toggle('lib-content', on);
+            if (on) { applyLibLayoutStyle(); updateLibPager(); loadLibrary(false); }
+            return on;
         }
         function stkTab(tab) {
             document.querySelectorAll('#stickerKindTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+            if (stkLib(tab === 'free' && stkKind === 'seal')) return;
             const g = smq('stickerGrid'), k = STK_KINDS[stkKind];
             delete g.dataset.mine; delete g.dataset.mytape;
             g.scrollTop = 0;
@@ -393,11 +401,9 @@
             if (tab === 'mine') return loadMyStickers(stkKind);
             const got = tab === 'event' && stkKind === 'tape' && typeof tapeRecvHtml === 'function' ? tapeRecvHtml() : '';   // 🎁 이벤트로 받은 테이프 (js/tape.js)
             if (got) { g.innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + got; return; }
-            if (tab === 'free' && stkKind === 'piece') {
-                const ss = document.getElementById('seasonTab');
-                g.innerHTML = go('🧩', '말랑달콤 그림 모음', '카테고리별 조각스티커', "closeModal('stickerModal'); openLibrary()")
-                    + (ss && !ss.hidden ? go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')") : '');
-            } else if (tab === 'shop') g.innerHTML = go('🛍️', '문구점에서 ' + k[1] + ' 보기', '새 창으로 열려요', 'stkShop()');
+            const ss = document.getElementById('seasonTab');
+            if (tab === 'free' && stkKind === 'piece' && ss && !ss.hidden) g.innerHTML = go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')");
+            else if (tab === 'shop') g.innerHTML = go('🛍️', '문구점에서 ' + k[1] + ' 보기', '새 창으로 열려요', 'stkShop()');
             else if (tab === 'event') g.innerHTML = `<div class="cs-empty">🎁 아직 받은 이벤트 선물이 없어요.<br>이벤트 ${k[1]}가 오면 여기에 들어와요!</div>`;
             else g.innerHTML = `<div class="cs-empty">🛠️ ${k[1]} ${stkTabName(tab)} 칸은 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }
