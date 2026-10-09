@@ -7,7 +7,7 @@
    - 페이지 표시를 끄고 싶으면 ⚙ 설정 → 👀 페이지에 보이는 것 (js/show.js)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (D-day 만 '준비 중') */
 
-        const DD_KEY = 'diary_dday', DD_LOCAL = 'malang_dday', DD_MAX = 30, DD_PIN_MAX = 2;
+        const DD_KEY = 'diary_dday', DD_LOCAL = 'malang_dday', DD_MAX = Infinity, DD_PIN_MAX = 2;
         const DD_ICONS = ['⭐', '🎂', '💕', '✈️', '📚', '🎄', '🎓', '💍', '🏃', '🎁', '🌸', '🐶'];
         const DD_KINDS = { until: '다가오는 날', since: '시작한 날부터', yearly: '해마다 (생일 · 기념일)' };
         const dd = { built: false, list: [], edit: null };

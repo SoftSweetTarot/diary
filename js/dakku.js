@@ -122,6 +122,7 @@
         };
         if (window.ResizeObserver) new ResizeObserver(fit).observe(box);
         addEventListener('resize', fit);
+        box.addEventListener('dk-move', fit);                      // 창을 끌어서 옮기면 테이프도 같이 (js/skins.js setupSkinWindows)
         fit();
     }
 

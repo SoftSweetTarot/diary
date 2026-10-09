@@ -10,13 +10,13 @@
                📄 모조지로 다이어리에 붙이기 (모조지 한 장으로 저장 → 가운데 나온 모조지에서 오려 원하는 곳에 · js/papermaker.js)
                  🧩 조각스티커 만들기 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지 만들기 (모조지 한 장으로 저장)
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기 · 💾 저장만 → 🧩 내스티커
-   - 내스티커 : ✨ 스티커 창 → 종류 → 내가만든 에서 언제든 다시 붙여요 (종류마다 최대 40개)
+   - 내스티커 : ✨ 스티커 창 → 종류 → 내가만든 에서 언제든 다시 붙여요 (개수 제한 없음)
      한 칸 : { id, src, t, k } · k = 'seal' 씰 · 'piece' 조각(👜 내 봉투 : 봉투 하나 · 누르면 늘 새 봉투로 나와서 뜯으면 조각이 쏟아져요 js/piecebag.js) · 'paper' 모조지(src = 모조지 한 장 · 누르면 늘 새 종이로 가운데 나와요 js/papermaker.js) · 없으면 사진 · 글씨 스티커(🧩 내스티커)
      저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 종류마다 파일 하나 (내씰 · 내조각 · 내모조지 .json · 바뀐 종류만 다시 올려서 빨라요 · 게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
 
-        const SM_FILES = { seal: '내씰.json', piece: '내조각.json', paper: '내모조지.json' }, SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 10;
+        const SM_FILES = { seal: '내씰.json', piece: '내조각.json', paper: '내모조지.json' }, SM_LOCAL = 'malang_my_stickers', SM_MAX = Infinity, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 10;
         const SM_SHAPES = [['orig', '🖼️ 원본 그대로'], ['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
         const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];

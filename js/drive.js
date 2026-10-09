@@ -16,9 +16,9 @@
         const SETTINGS_FILE_NAME = 'settings.json';           // ⚙ 설정 탭 값 (글꼴 · 소리 · 고른 페이지 등 · 그림 없음) : 말랑달콤 / settings.json
         const CAFE_FILE_NAME = 'cafe.json';                   // ☕ 카페 탭 기록 (출석 · 화분 · 생리 달력 · D-day · 심리테스트 · 오락실 · 행운 번호 · 그림 없음) : 말랑달콤 / cafe.json
         /* 큰 건 나누고 작은 건 모아요
-           - 🎨 내 페이지 (그림 포함 하나에 최대 4MB) : 하나에 파일 하나 → 말랑달콤 / 다이어리 / 페이지 / 러블리핑크.json   { malang_page: 1, name, skin }
+           - 🎨 내 페이지 (그림이 들어가 커요 · 개수 · 용량 제한 없음) : 하나에 파일 하나 → 말랑달콤 / 다이어리 / 페이지 / 러블리핑크.json   { malang_page: 1, name, skin }
                화면 코드는 그대로 store 의 'diary_custom_skins' 하나를 쓰고, 드라이브에 올릴 때만 나눠요 (splitSync) → 하나를 고쳐도 그 파일만 올려요
-           - 📂 내 배경지 (타일 하나에 최대 40KB · 모두 합쳐 400KB) : 파일 하나 → 말랑달콤 / 다이어리 / 내배경지.json   { diary_my_patterns: [...] } */
+           - 📂 내 배경지 (작아요 · 개수 · 용량 제한 없음) : 파일 하나 → 말랑달콤 / 다이어리 / 내배경지.json   { diary_my_patterns: [...] } */
         const SPLIT_DIRS = { diary_custom_skins: '페이지' };
         const PATTERN_FILE_NAME = '내배경지.json', PATTERN_KEY = 'diary_my_patterns';
         const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤 / 다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간

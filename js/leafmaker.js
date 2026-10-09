@@ -2,12 +2,12 @@
    📃 속지 만들기 (✂️ 스티커만들기 → 📃 속지 만들기)
    - 🖼️ 사진 불러오기 : 사진을 페이지 비율로 맞춰 깔아요 (손가락으로 옮기기 · 확대 · 연하게 해서 글씨가 잘 보이게)
    - ✏️ 직접 그리기 : 종이 색 · 밑줄(무지 · 줄 · 모눈 · 도트) 위에 펜으로 그려요 (사진 위에 그려도 돼요)
-   - 다 만들면 오늘 페이지 속지로 끼워지고 📃 속지 → 내가만든 칸에 모여요 (최대 LM_MAX 장)
+   - 다 만들면 오늘 페이지 속지로 끼워지고 📃 속지 → 내가만든 칸에 모여요 (개수 제한 없음)
    - 페이지에는 그림(JPG)째로 그날 파일에 lfi 로 저장돼요 (주소 아님 · 인수인계 12번)
    - 내가만든 목록 : 로그인하면 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 내속지.json · 둘러보기면 이 기기 (js/stickermaker.js 내 스티커와 같은 방식)
    ※ 링 구멍은 미리보기 · 페이지 모두 그 위에 그대로 보여요 (css/style.css --lf-holes) */
 
-        const LM_FILE = '내속지.json', LM_LOCAL = 'malang_my_leafs', LM_MAX = 12, LM_W = 900;
+        const LM_FILE = '내속지.json', LM_LOCAL = 'malang_my_leafs', LM_MAX = Infinity, LM_W = 900;
         const LM_PAPERS = [['page', '스킨 색'], ['#ffffff', '하양'], ['#fffaf0', '미색'], ['#fff0f5', '분홍'], ['#eefaf4', '민트'], ['#eef5ff', '하늘'], ['#f6f0ff', '보라'], ['#e9d5b3', '크라프트']];
         const LM_GUIDES = [['plain', '무지'], ['line', '줄'], ['grid', '모눈'], ['dot', '도트']];
         const LM_PENS = ['#5a3d4a', '#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#ffffff'];

@@ -14,8 +14,8 @@
            📂 내 배경지 (저장 · 불러오기 · 삭제)
            ===================================================================== */
         const MY_PATTERN_KEY = 'diary_my_patterns';
-        const MY_PATTERN_MAX = 30;                 // 최대 개수
-        const MY_PATTERN_MAX_CHARS = 400000;       // 내 배경지 전체 최대 글자 수 (여는 시간이 길어지지 않도록)
+        const MY_PATTERN_MAX = Infinity;           // 개수 제한 없음 (끝없이 저장)
+        const MY_PATTERN_MAX_CHARS = Infinity;     // 전체 용량 제한 없음
         let myPatterns = [];
 
         function loadMyPatterns() {
@@ -179,7 +179,6 @@
             inp.click();
         }
         async function importPatternFile(f) {
-            if (f.size > 5 * 1024 * 1024) { showMsg('⚠ 파일이 너무 커요.'); return; }
             let o = null;
             try { o = JSON.parse(await f.text()); } catch (e) {}
             if (o && o.malang_skin) { showMsg('📔 페이지 파일이에요.<br><b>📔 페이지 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }

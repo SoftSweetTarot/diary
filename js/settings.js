@@ -201,7 +201,7 @@
         const SKIN_KEY = 'diary_skin';
         const SKIN_PRESET_NAMES = { pink: '🌸 러블리 핑크', mint: '🌿 맑은 민트', purple: '💜 파스텔 퍼플', yellow: '⭐ 따뜻한 옐로우' };
         const SKIN_NAME_MAX = 20;
-        const MY_SKIN_MAX = 30;            // 🎨 내 페이지는 30개까지 (하나가 그림 포함 최대 4MB · 열 때마다 모두 읽어요)
+        const MY_SKIN_MAX = Infinity;      // 🎨 내 페이지 개수 제한 없음 (끝없이 저장)
         /* 새 내 페이지를 더 넣을 수 없으면 알리고 true (같은 이름 덮어쓰기는 괜찮아요) */
         function mySkinFull(name) {
             if (hasOwn(customSkins, name) || Object.keys(customSkins).length < MY_SKIN_MAX) return false;
@@ -489,7 +489,6 @@
             const f = e.target.files && e.target.files[0];
             e.target.value = '';
             if (!f) return;
-            if (f.size > 6000000) { showMsg('⚠ 페이지 파일이 아니에요. (파일이 너무 커요)'); return; }
             f.text().then(t => {
                 let o = null; try { o = JSON.parse(t); } catch (er) {}
                 if (o && o.malang_pattern) { showMsg('🌈 배경지 파일이에요.<br><b>🌈 배경지 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }

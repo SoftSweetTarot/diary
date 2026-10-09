@@ -11,8 +11,8 @@
    - 테마 페이지(js/theme-skins.js)은 id 'th:이름' · 보관함에 있는 것만 쓸 수 있어요 (diary_themes = 가진 테마 id 목록)
    ※ 불러오는 순서: settings → … → skins → skinstudio → theme-skins */
 
-        const STU_MAX_DECO = 60, STU_MAX_IMGS = 16, STU_IMG_PX = 112, STU_IMG_MAX_LEN = 24000;
-        const STU_DECO_PX = 640, STU_DECO_IMG_MAX_LEN = 450000, STU_IMGS_TOTAL = 4000000;   // 🖼 꾸밈놓기용 내 이미지는 크게 (아이콘용만 작게 · 위 STU_IMG_PX / STU_IMG_MAX_LEN)
+        const STU_MAX_DECO = Infinity, STU_MAX_IMGS = Infinity, STU_IMG_PX = 112, STU_IMG_MAX_LEN = Infinity;   // 꾸밈 · 내 이미지 개수 · 용량 제한 없음 (크기(px)만 줄여서 담아요)
+        const STU_DECO_PX = 640, STU_DECO_IMG_MAX_LEN = Infinity, STU_IMGS_TOTAL = Infinity;   // 🖼 꾸밈놓기용 내 이미지는 크게 (아이콘용만 작게 · 위 STU_IMG_PX / STU_IMG_MAX_LEN)
         const STU_THEMES_KEY = 'diary_themes';
         const STU_ANCHORS = [
             ['pill', '📅 날짜 줄'], ['paper', '📄 종이'], ['pop', '📍 팝업메뉴'], ['bar', '🔘 하단메뉴'],

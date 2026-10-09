@@ -8,7 +8,7 @@
    ※ 파일 불러오는 순서: … → pattern-maker → doll-render → doll-room → service */
 
         const DOLL_W = 300, DOLL_H = 470, DOLL_CX = 150;
-        const DOLL_MAX_JSON = 150000;          // 인형 하나 최대 글자 수
+        const DOLL_MAX_JSON = Infinity;        // 인형 하나 용량 제한 없음
         const DOLL_MAX_LAYERS = 400, DOLL_MAX_PTS = 800;
 
         /* ---------- 처음 모습 : 마네킹 (눈·코·입·머리·옷 없음) ---------- */

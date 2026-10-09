@@ -12,7 +12,7 @@
             deco: [TOP_FOLDER_NAME, '카페', '인형']             // 👧 인형 꾸미기 : 말랑달콤 / 카페 / 인형 / 로라.json
             // play: [TOP_FOLDER_NAME, '카페', '인형극']        // 🎭 나중에 인형극 : 말랑달콤 / 카페 / 인형극 / 상황극.json
         };
-        const DOLL_MAX_COUNT = 50;                              // 인형 최대 개수
+        const DOLL_MAX_COUNT = Infinity;                        // 인형 개수 제한 없음
         const DOLL_GUEST_KEY = 'malang_dolls_guest';            // 게스트 모드 : 이 기기에만
 
         const dollCache = { list: null, loading: null, mode: '' };   // [{ id, name(파일 이름), doll, time }]

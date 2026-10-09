@@ -9,8 +9,8 @@
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → community-patterns → pattern-recipe → skins → pattern-maker → service */
 
         const RECIPE_KINDS = ['stripe', 'dot', 'check', 'grid', 'scallop', 'tile'];
-        const RECIPE_MAX_SRC = 40000;          // 이미지 레시피 최대 글자 수 (내 배경지 저장 용량을 지키기 위해)
-        const RECIPE_MAX_LEN = 45000;          // 레시피 전체 최대 글자 수
+        const RECIPE_MAX_SRC = Infinity;       // 이미지 배경지 한 칸 용량 제한 없음
+        const RECIPE_MAX_LEN = Infinity;       // 레시피 전체 용량 제한 없음
 
         const RECIPE_LIMITS = {
             a: [0.1, 1], w: [1, 60], g: [0, 120], angle: [0, 180],
@@ -116,7 +116,6 @@
         function sanitizeSkin(input) {
             let s = input;
             if (typeof s === 'string') {
-                if (s.length > 4500000) return null;       // 꾸밈놓기 내 이미지(크게)까지 담을 수 있게
                 try { s = JSON.parse(s); } catch (e) { return null; }
             }
             if (!s || typeof s !== 'object' || Array.isArray(s)) return null;

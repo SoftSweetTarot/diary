@@ -7,7 +7,7 @@
    - 테이프 그림은 js/tape.js 의 tapeSvg 를 그대로 써요 (끝 톱니 · 반투명 · 길이 늘이기 손잡이가 같아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (마스킹테이프 만들기 · 내 마스킹테이프만 '준비 중') */
 
-        const TPM_FILE = '내마테.json', TPM_LOCAL = 'malang_my_tapes', TPM_MAX = 30, TPM_PHOTO_PX = 96;
+        const TPM_FILE = '내마테.json', TPM_LOCAL = 'malang_my_tapes', TPM_MAX = Infinity, TPM_PHOTO_PX = 96;
         const TPM_PAD = 240, TPM_OUT = 120;                              // 그리는 칸(안쪽 해상도) · 저장되는 그림 크기
         const TPM_BRUSH = [['가늘게', 3], ['보통', 7], ['굵게', 14]];
         const TPM_COLORS = ['#ffc9d9', '#ffd9c2', '#fff3a6', '#bff0dc', '#bfe3ff', '#e9e1ff', '#ffffff', '#ff8fab', '#f2a12a', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#4b5aa8'];
