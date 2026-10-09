@@ -278,6 +278,7 @@
             const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tkPieceSvg(tk.pad, tkS.sh));
             if (!addImage(src)) { closeTteokRoom(); return; }
             const el = pg.querySelector('.element-box:last-child'); if (!el) return;
+            el.dataset.float = 1;                                                // 옮길 때 떼지 않고 살짝 떠서 (js/elements.js)
             const w = TK_W + 12, h = TK_H + 20, PADB = 14, deg = Math.round(rot * 10) / 10;   // .element-box 안쪽 여백 6px · 테두리 1px (양쪽)
             const put = (px, py) => { el.dataset.posX = px; el.dataset.posY = py; el.style.transform = `translate(${px}px, ${py}px) scale(1) rotate(${deg}deg)`; };
             el.style.width = w + 'px'; el.style.height = h + 'px'; el.dataset.rotation = deg;

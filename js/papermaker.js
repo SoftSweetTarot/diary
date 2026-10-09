@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/papermaker.js
-   📄 모조지스티커 (모조지 스티커 R&D 와 같은 연출)
-   만들기 : 스티커 만들기 결과창(📷 · 🖼️ 한 장 · 여러 장) · 📸 포토부스 → 📄 모조지스티커 만들기 / 📄 모조지스티커로 다이어리에 붙이기
+   📄 모조지 (모조지 R&D 와 같은 연출)
+   만들기 : 스티커 만들기 결과창(📷 · 🖼️ 한 장 · 여러 장) · 📸 포토부스 → 📄 모조지 만들기 / 📄 모조지로 다이어리에 붙이기
      → 고른 모양대로 오린 사진들이 모조지(도톰한 종이) 한 장에 알아서 나란히 인쇄돼요 (pmMakeSheet) → 📄 내스티커에 '모조지 한 장'으로 저장
    쓰기 : 내스티커에서 모조지를 누르면 (또는 붙이기 버튼) 배경(화면) 한가운데에 모조지가 나와요 (openPaperSheet)
      1) 🔪 커터칼로 오리기 : 오리고 싶은 그림 둘레를 손가락으로 한 바퀴 따라 그리면 쏙 (처음 자리까지 돌아와야 오려져요) → 종이에는 구멍이 남아요
@@ -11,7 +11,7 @@
    - 모조지 · 오린 스티커 바깥은 그대로 페이지라서, 모조지를 띄운 채로 날짜바를 끌어 페이지를 옮기거나 붙인 스티커를 눌러 옮기기 · 돌리기 · 크기 바꾸기를 해요
      (화면 전체를 덮지 않고 모조지 · 스티커 자리에만 손가락을 받는 칸(#pmHit .pm-z)을 둬요 · 글씨 쓰는 중에는 화면 전체)
    - 소리는 없어요 (떨림만)
-   ※ 이 파일이 없어도 다이어리는 정상 동작 (모조지스티커만 '준비 중') */
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (모조지만 '준비 중') */
 
         const PM_W = 360, PM_HR = 2, PM_OUT = 420;
         const PM_PENS = ['#2f2a2c', '#7a4b3a', '#d0566b', '#3f6fb5'];
@@ -50,7 +50,7 @@
             s.globalAlpha = .88; s.drawImage(pr, 0, 0, W, H); s.globalAlpha = 1;                                        // 살짝 바랜 인쇄
             s.fillStyle = 'rgba(240,228,206,.16)'; s.fillRect(0, 0, W, H);
             s.fillStyle = 'rgba(155,110,120,.55)'; s.font = "13px 'Gaegu', 'Jua', sans-serif"; s.textAlign = 'right'; s.textBaseline = 'alphabetic';
-            s.fillText('모조지 스티커 · 말랑달콤', W - 10, H - 8);
+            s.fillText('모조지 · 말랑달콤', W - 10, H - 8);
             return o.toDataURL('image/jpeg', .88);
         }
 
@@ -72,7 +72,7 @@
         async function openPaperSheet(src) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return false; }
             const im = await pmLoad(src);
-            if (!im) { showMsg('모조지스티커를 열지 못했어요.'); return false; }
+            if (!im) { showMsg('모조지를 열지 못했어요.'); return false; }
             pmBuild();
             const S = pmS;
             S.cv = pmq('pmCv'); S.ctx = S.cv.getContext('2d');
@@ -326,6 +326,7 @@
             if (!addImage(o.toDataURL('image/png'))) return;
             const el = pg.querySelector('.element-box:last-child');
             if (el) {
+                el.dataset.float = 1;                                                          // 접착 없는 종이라 옮길 때 떼지 않고 살짝 떠서
                 const w = st.w * st.s / k, h = st.h * st.s / k, PADB = 14;                     // .element-box 안쪽 여백 6px · 테두리 1px (양쪽)
                 const deg = Math.round(Math.max(-.5, Math.min(.5, st.rot)) * 180 / Math.PI * 10) / 10;
                 const put = (px, py) => { el.dataset.posX = px; el.dataset.posY = py; el.style.transform = `translate(${px}px, ${py}px) scale(1) rotate(${deg}deg)`; };

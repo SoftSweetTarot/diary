@@ -4,7 +4,7 @@
    2) 찍기 : 카메라로 3 · 2 · 1 찰칵! (앞 카메라는 거울처럼) · 또는 갤러리의 사진 고르기
    3) 꾸미기 : 필터(뽀샤시 · 흑백 · 빈티지 · 쿨톤) · 아래 글씨 · 반짝이 꾸밈
    4) 📌 다이어리에 붙이기 (🏷️ 씰로 저장 → 하얀 네모에서 떼어 원하는 곳에 · js/stickerpeel.js)
-      🧩 조각스티커 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지스티커 만들기 (사진이 모조지 한 장에 인쇄돼 내스티커에 저장 · js/papermaker.js)
+      🧩 조각스티커 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지 만들기 (사진이 모조지 한 장에 인쇄돼 내스티커에 저장 · js/papermaker.js)
       💾 내 기기에 저장
    - 사진은 이 기기에서만 합쳐서, 다 만든 한 장만 일기에 담겨요 (카메라 영상은 어디에도 보내지 않아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (포토부스만 '준비 중') */
@@ -56,7 +56,7 @@
                   <div class="pb-three">
                     <button type="button" class="pb-go pb-sub" onclick="pbKeep('piece')">🧩<br>조각스티커<br>만들기</button>
                     <button type="button" class="pb-go pb-sub" onclick="pbKeep('seal')">🏷️<br>씰스티커<br>만들기</button>
-                    <button type="button" class="pb-go pb-sub" onclick="pbKeep('paper')">📄<br>모조지스티커<br>만들기</button>
+                    <button type="button" class="pb-go pb-sub" onclick="pbKeep('paper')">📄<br>모조지<br>만들기</button>
                   </div>
                   <div class="pb-two"><button type="button" class="pb-go pb-sub" onclick="pbSave()">💾 내 기기에 저장</button><button type="button" class="pb-go pb-sub" onclick="pbRetake()">🔄 다시 찍기</button></div>
                 </section>
@@ -204,7 +204,7 @@
             const all = [...document.querySelectorAll('#boothRoom .pb-go')]; all.forEach(b => { b.disabled = true; });
             try {
                 let src = pbOut();
-                if (act === 'paper') { if (!window.pmMakeSheet) { comingSoon('📄 모조지스티커'); return; } try { src = await pmMakeSheet([src]); } catch (e) { showMsg('모조지스티커를 만들지 못했어요.'); return; } }
+                if (act === 'paper') { if (!window.pmMakeSheet) { comingSoon('📄 모조지'); return; } try { src = await pmMakeSheet([src]); } catch (e) { showMsg('모조지를 만들지 못했어요.'); return; } }
                 else try { src = await pelBake(src); } catch (e) {}
                 const k = act === 'stick' ? 'seal' : act, r = await smAdd(src, k);
                 if (act === 'stick') { smAddMsg(r, k, true); closeBooth(); openStickerPeel(src); return; }

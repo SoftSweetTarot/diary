@@ -428,10 +428,10 @@
                 if (actionType === 'move') {
                     const ddx = pos.x - startX, ddy = pos.y - startY;
                     if (seal) { seal.move(pos.x, pos.y); return; }
-                    if (!lifted && !el.querySelector('textarea') && Math.hypot(ddx, ddy) > 6) {
+                    if (!lifted && Math.hypot(ddx, ddy) > 6) {
                         lifted = true;
                         el.style.zIndex = zIndexCounter++;
-                        if (!(seal = sealStart())) { el.classList.add('lifting'); liftTo(1.06); }
+                        if (!(seal = sealStart())) { el.classList.add('lifting'); liftTo(1.06); }   // 📝 메모지 · 🧻 떡메 · 📄 모조지 · 테이프 : 살짝 떠서 옮겨요
                         else { seal.move(pos.x, pos.y); return; }
                     }
                     posX = initialX + ddx;
@@ -454,12 +454,24 @@
             const onEnd = () => {
                 actionType = null; pinch = null;
                 if (seal) { lifted = false; seal.up(); return; }
-                if (lifted) { lifted = false; el.classList.remove('lifting'); liftTo(1); }
+                if (lifted) { lifted = false; el.classList.remove('lifting'); land(); }
             };
+            /* 내려앉기 : 살짝 눌렸다가(0.98) 제자리 크기로 */
+            function land() {
+                cancelAnimationFrame(liftRaf);
+                const from = lift, t0 = performance.now();
+                const step = now => {
+                    const k = Math.min(1, (now - t0) / 260);
+                    lift = k < .55 ? from + (.98 - from) * (1 - (1 - k / .55) ** 2) : .98 + .02 * Math.sin((k - .55) / .45 * Math.PI / 2);
+                    updateTransform();
+                    if (k < 1) liftRaf = requestAnimationFrame(step);
+                };
+                liftRaf = requestAnimationFrame(step);
+            }
 
             /* 🏷️ 씰스티커처럼 떼기 시작 : 지금 보이는 모습 그대로 맨 위 캔버스에 옮겨 그리고, 페이지의 스티커는 잠깐 숨겨요 */
             function sealStart() {
-                if (!window.pfxSeal || el.className.indexOf('fr-') >= 0) return null;
+                if (!window.pfxSeal || el.className.indexOf('fr-') >= 0 || el.dataset.float || el.querySelector('textarea')) return null;
                 const img = el.querySelector(':scope > img'), span = !img && el.querySelector(':scope > span');
                 if (img && (!img.complete || !img.naturalWidth || (typeof isTapeSrc === 'function' && isTapeSrc(img.dataset.src)))) return null;
                 if (!img && !span) return null;
@@ -652,6 +664,7 @@
                 if (h) item.h = Math.round(h);
                 item.z = parseInt(el.style.zIndex) || 1;
                 item.bw = el.offsetWidth; item.bh = el.offsetHeight;
+                if (img && el.dataset.float) item.fm = 1;                       // 🧻 떡메 · 📄 모조지 : 옮길 때 떼지 않고 살짝 떠서 (아래 makeTransformable)
                 if (img && el.dataset.frame) {                                  // 📷 사진 틀 (js/frame.js)
                     item.fr = el.dataset.frame;
                     if (el.dataset.caption) item.cp = el.dataset.caption;
@@ -711,6 +724,7 @@
                 const img = document.createElement('img');
                 bindImage(img, data.content);
                 el.appendChild(img);
+                if (data.float) el.dataset.float = 1;
                 if (data.frame && /^[a-z0-9]{1,10}$/.test(data.frame)) {
                     el.classList.add('fr-' + data.frame); el.dataset.frame = data.frame;
                     if (data.caption) el.dataset.caption = String(data.caption).slice(0, 40);
