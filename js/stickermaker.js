@@ -21,7 +21,7 @@
         const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
-            text: '', step: 1, font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '', outDie: '', die: false,
+            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '', outDie: '', die: false,
             many: null, cur: 0 };                                       // many : 여러 장 [{ img, shape, zoom, ox, oy, path }] · cur : 지금 고친 사진
         const smq = id => document.getElementById(id);
         const smSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
@@ -85,8 +85,7 @@
                     <button type="button" class="smk-all" id="smAll" hidden onclick="smAllSame()">🔁 이 모양 · 크기를 모든 사진에</button>
                   </div>
                   <div id="smTextA" class="smk-col" hidden>
-                    <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()" onkeydown="if(event.key==='Enter'){event.preventDefault();smTextNext()}">
-                    <button type="button" class="smk-go" onclick="smTextNext()">다음 단계 ▶</button>
+                    <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                   </div>
                   <div id="smTextB" class="smk-col" hidden>
                     <div class="smk-chips smk-fonts" id="smFonts"></div>
@@ -110,7 +109,6 @@
                       <button type="button" class="smk-go" onclick="smFinish('text',this)">📌 다이어리에 붙이기</button>
                       <button type="button" class="smk-go smk-sub" onclick="smFinish('keep',this)">💾 씰스티커 내가만든에 저장만</button>
                     </div>
-                    <button type="button" class="smk-go smk-sub" id="smTextBack" onclick="smTextPrev()" hidden>◀ 이전 단계</button>
                   </div>
                 </section>
               </div>`;
@@ -136,7 +134,7 @@
                 c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
                 c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(im.src);
                 smS.mode = 'photo'; smS.img = c; smS.zoom = 1; smS.ox = 0; smS.oy = 0; smS.path = []; smS.many = null;
-                smq('smZoom').value = 1; smS.step = 1; smPhase();
+                smq('smZoom').value = 1; smPhase();
                 smShow(); smSetShape(smS.shape === 'free' ? 'circle' : smS.shape);
             };
             im.onerror = () => showMsg('사진을 열지 못했어요. 다른 사진을 골라 주세요.');
@@ -159,7 +157,7 @@
             if (!imgs.length) { showMsg('사진을 열지 못했어요. 다른 사진을 골라 주세요.'); return; }
             const shape = smS.shape === 'free' ? 'circle' : smS.shape;
             smS.many = imgs.map(img => ({ img, shape, zoom: 1, ox: 0, oy: 0, path: [] })); smS.cur = 0;
-            smS.mode = 'photo'; smS.step = 1; smPhase();
+            smS.mode = 'photo'; smPhase();
             smShow(); smGo(0);
             smStripDraw();
         }
@@ -255,7 +253,7 @@
             let size = 64; ctx.font = `${size}px ${smS.font}`;
             while (size > 22 && ctx.measureText(t).width > S - 50) { size -= 2; ctx.font = `${size}px ${smS.font}`; }
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-            if (smS.border) { ctx.save(); ctx.lineWidth = size * .42; ctx.strokeStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,.22)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3; ctx.strokeText(t, S / 2, S / 2); ctx.restore(); }
+            if (smS.border) { ctx.lineWidth = size * .42; ctx.strokeStyle = '#fff'; ctx.strokeText(t, S / 2, S / 2); }   // 🔤 글씨스티커는 그림자 없이
             ctx.lineWidth = size * .12; ctx.strokeStyle = smS.color === '#ffffff' ? '#ff9ab3' : 'rgba(0,0,0,.18)'; ctx.strokeText(t, S / 2, S / 2);
             ctx.fillStyle = smS.color; ctx.fillText(t, S / 2, S / 2);
         }
@@ -285,30 +283,22 @@
 
         /* ---------- 글씨 스티커 ---------- */
         function smStartText() {
-            smS.mode = 'text'; smS.step = 1; smPhase();
+            smS.mode = 'text'; smPhase();
             smq('smText').value = smS.text;
+            if (!smS.fontsBuilt) { smS.fontsBuilt = true; smFillFonts(); }
             smShow(); smSetFont(smS.font); smSetColor(smS.color);
             if (window.matchMedia && matchMedia('(pointer: fine)').matches) setTimeout(() => smq('smText').focus(), 50);   // 📱 터치 기기는 키보드가 저절로 올라와 화면이 움직이지 않게 직접 눌러서 써요
         }
-        /* 글씨 스티커는 두 단계 : 1) 글만 쓰기 → 2) 글꼴 · 색 · 테두리 고르고 붙이기 (사진 스티커는 한 화면 그대로) */
+        /* 글씨 스티커는 한 화면 : 글 쓰기 · 글꼴 · 색 · 테두리를 고르고 바로 붙이기 (사진 스티커도 한 화면) */
         function smPhase() {
-            const t = smS.mode === 'text', one = t && smS.step === 1;
+            const t = smS.mode === 'text';
             smq('smPhotoOpts').hidden = t;
-            smq('smTextA').hidden = !one;
-            smq('smTextB').hidden = !t || one;
-            smq('smFinal').hidden = one;
+            smq('smTextA').hidden = !t; smq('smTextB').hidden = !t;
             smq('smPhotoGo').hidden = t; smq('smTextGo').hidden = !t;
             const many = !t && !!smS.many;                            // 여러 장 : 사진 줄 · 🔁 버튼이 보여요
             smq('smStrip').hidden = !many; smq('smAll').hidden = !many;
-            smq('smTextBack').hidden = !t || one;
-            if (t) smq('smHint').textContent = one ? '✏️ 스티커에 쓸 글자를 써요' : '글꼴 · 색 · 테두리를 골라요';
+            if (t) smq('smHint').textContent = '✏️ 글씨를 쓰고 글꼴 · 색 · 테두리를 골라요';
         }
-        function smTextNext() {
-            if (!(smS.text || '').trim()) { showMsg('스티커에 쓸 글씨를 먼저 써 주세요.'); return; }
-            if (!smS.fontsBuilt) { smS.fontsBuilt = true; smFillFonts(); smSetFont(smS.font); }   // 글꼴 목록은 2단계에 들어갈 때 만들어요 (처음 화면이 가볍게)
-            smS.step = 2; smPhase(); smq('smText').blur(); smq('smRoom').querySelector('.smk-wrap').scrollTop = 0;
-        }
-        function smTextPrev() { smS.step = 1; smPhase(); smq('smRoom').querySelector('.smk-wrap').scrollTop = 0; if (window.matchMedia && matchMedia('(pointer: fine)').matches) setTimeout(() => smq('smText').focus(), 50); }
         /* 글꼴 후보 : 설정창 글꼴 목록(fontList · js/app.js) 중 웹폰트 전부 (기기마다 다른 (Local) · (Apple) 글꼴은 빼요) */
         function smFillFonts() {
             const L = fontList.filter(f => /\[/.test(f.name)), box = smq('smFonts'); if (!box) return;
@@ -473,6 +463,7 @@
         }
         async function smDoFinish(act) {
             if (smS.many && smS.mode === 'photo') return smManyFinish(act);
+            if (smS.mode === 'text' && !(smS.text || '').trim()) { showMsg('스티커에 쓸 글씨를 먼저 써 주세요.'); return; }
             const k = SM_STICK[act] || (act === 'piece' || act === 'seal' || act === 'paper' ? act : '') || (smS.mode === 'text' ? 'seal' : '');   // 🔤 글씨스티커는 🏷️ 씰스티커 → 내가만든에 보관
             let src = smMake(k === 'paper' ? smS.border : !!k);
             if (!src) { showMsg(smS.shape === 'free' ? '✂️ 오리고 싶은 모양을 먼저 그려 주세요.' : '스티커를 만들지 못했어요.'); return; }
@@ -548,5 +539,5 @@
         }
         /* 스티커 창의 다른 칸을 누르면 '내 스티커' 표시 지우기 */
         document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b) { const g = smq('stickerGrid'); if (g) delete g.dataset.mine; } }, true);
-        window.smGo = smGo; window.smAllSame = smAllSame; window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText; window.smTextNext = smTextNext; window.smTextPrev = smTextPrev;
+        window.smGo = smGo; window.smAllSame = smAllSame; window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText;
         window.loadMyStickers = loadMyStickers; window.smAdd = smAdd; window.smAddMsg = smAddMsg;
