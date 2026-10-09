@@ -145,3 +145,55 @@
 
 /* 💌 전송 중 */
 .sending-card { background: var(--win-fill, #fffdf8); background-image: radial-gradient(var(--dk-dot) 1.1px, transparent 1.3px); background-size: 15px 15px; border: 0; border-radius: 16px; box-shadow: 0 14px 34px rgba(160, 90, 110, .26); }
+
+/* ---------- ✂️ 만들기 화면들 (스티커 · 글씨스티커 · 마스킹테이프 js/stickermaker.js · js/tapemaker.js · 포토부스 js/photobooth.js)
+   📃 속지 만들기 창과 같은 모양 : 스킨 바탕 위 모눈 종이 카드 + 모서리 테이프 + 제목 리본 + 줄무늬 큰 버튼 + 점선 작은 버튼 ---------- */
+.smk-room, .pb-room { background: var(--bg-color); color: var(--dk-ink); }
+.smk-room .smk-bar, .pb-room .pb-bar { background: color-mix(in srgb, var(--bg-color) 92%, transparent); padding-bottom: 14px; }
+.smk-bar b, .pb-bar b { flex: 0 1 auto; margin: 0 auto; max-width: calc(100% - 100px); box-sizing: border-box; padding: 7px 28px; font-size: 15px; font-weight: 800; line-height: 1.3;
+    background: var(--dk-ribbon); color: var(--dk-ribbon-ink); clip-path: polygon(0 0, 100% 0, 93% 50%, 100% 100%, 0 100%, 7% 50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.smk-bar button.smk-x, .pb-bar button.pb-x { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1.5px dashed var(--dk-line); color: var(--dk-ribbon-ink); font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
+.smk-bar span.smk-x, .pb-bar .pb-sp { width: 32px; height: 32px; }
+.smk-bar button.smk-x:active, .pb-bar button.pb-x:active { transform: scale(.94); }
+.smk-wrap, .pb-wrap { position: relative; width: calc(100% - 32px); max-width: 440px; margin: 6px auto max(24px, env(safe-area-inset-bottom)); padding: 20px 16px 22px; border-radius: 16px;
+    background-color: var(--win-fill, #fffdf8); background-image: radial-gradient(var(--dk-dot) 1.1px, transparent 1.3px); background-size: 15px 15px;
+    border: 1.5px solid var(--win-border, transparent); box-shadow: 0 14px 34px rgba(160, 90, 110, .2), 0 2px 0 rgba(0, 0, 0, .04); }
+.smk-wrap::before, .smk-wrap::after, .pb-wrap::before, .pb-wrap::after { content: ''; position: absolute; top: -7px; width: 84px; height: 24px; opacity: .92; pointer-events: none;
+    clip-path: polygon(0 8%,6% 0,12% 10%,18% 0,24% 8%,30% 0,36% 8%,42% 0,48% 8%,54% 0,60% 8%,66% 0,72% 8%,78% 0,84% 8%,90% 0,96% 10%,100% 0,100% 92%,94% 100%,88% 92%,82% 100%,76% 92%,70% 100%,64% 92%,58% 100%,52% 92%,46% 100%,40% 92%,34% 100%,28% 92%,22% 100%,16% 92%,10% 100%,4% 92%,0 100%); }
+.smk-wrap::before, .pb-wrap::before { left: -18px; transform: rotate(-16deg); background: repeating-linear-gradient(90deg, var(--dk-tape-a) 0 7px, var(--dk-tape-b) 7px 14px); }
+.smk-wrap::after, .pb-wrap::after { right: -18px; transform: rotate(14deg); background: repeating-linear-gradient(45deg, var(--dk-tape-c) 0 6px, var(--dk-tape-d) 6px 12px); }
+/* 큰 버튼 : 줄무늬 리본 (✨ 나만의 스티커 만들기 버튼과 같은 모양) · 작은 버튼 : 하얀 점선 */
+.smk-room .smk-go, .pb-room .pb-go { position: relative; border: 0; border-radius: 14px; color: var(--dk-ribbon-ink); font-weight: 800; font-size: 15px;
+    background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dk-accent) 32%, #fff) 0 10px, color-mix(in srgb, var(--dk-accent) 22%, #fff) 10px 20px);
+    box-shadow: 0 0 0 3px #fff, 0 4px 10px rgba(200, 100, 130, .24); }
+.smk-room .smk-go::before, .pb-room .pb-go::before { content: ''; position: absolute; inset: 4px; border: 1.6px dashed rgba(255, 255, 255, .95); border-radius: 10px; pointer-events: none; }
+.smk-room .smk-go.smk-sub, .pb-room .pb-go.pb-sub { background: #fff; color: var(--dk-ink); border: 1.5px dashed var(--dk-line); box-shadow: 0 2px 6px rgba(160, 90, 110, .1); font-weight: 700; }
+.smk-room .smk-go.smk-sub::before, .pb-room .pb-go.pb-sub::before { display: none; }
+.smk-room .smk-go:active, .smk-room .smk-go.pressing, .smk-room .smk-go.busy, .pb-room .pb-go:active { transform: scale(.97); filter: none; box-shadow: 0 0 0 3px #fff, 0 2px 5px rgba(200, 100, 130, .22); }
+.smk-room .smk-go.smk-sub:active, .smk-room .smk-go.smk-sub.pressing, .smk-room .smk-go.smk-sub.busy, .pb-room .pb-go.pb-sub:active { background: color-mix(in srgb, var(--dk-accent) 8%, #fff); box-shadow: none; }
+/* 고르는 칩 · 색 · 입력칸 */
+.smk-room .smk-chips button, .pb-room .pb-chips button { border: 1.5px solid var(--dk-line); background: #fff; color: var(--dk-ink); font-weight: 700; }
+.smk-room .smk-chips button.on, .pb-room .pb-chips button.on { background: var(--dk-accent); border-color: var(--dk-accent); color: #fff; }
+.smk-room .smk-chips button:active, .smk-room .smk-chips button.pressing { background: color-mix(in srgb, var(--dk-accent) 10%, #fff); }
+.smk-room .smk-chips button.on:active { background: var(--dk-accent); }
+.smk-room .smk-colors button.on { box-shadow: 0 0 0 3px var(--dk-accent); }
+.smk-room .smk-fonts { background: rgba(255, 255, 255, .75); border: 1.5px dashed var(--dk-line); }
+.smk-room #smText, .pb-room #pbText { border: 1.5px dashed var(--dk-line); background: #fff; color: var(--dk-ink); }
+.smk-room #smText:focus, .pb-room #pbText:focus { border-style: solid; border-color: var(--dk-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dk-accent) 15%, transparent); }
+.smk-room .smk-hint, .smk-room .tpm-lead small, .pb-room .pb-note { color: var(--dk-soft); }
+.smk-room .tpm-lead, .pb-room .pb-lead { color: var(--dk-ink); }
+.smk-room input[type="range"], .smk-room input[type="checkbox"], .pb-room input[type="checkbox"] { accent-color: var(--dk-accent); }
+/* 만드는 판 : 하얀 스티커 대지 (투명한 곳은 옅은 분홍 체크) */
+.smk-room .smk-stage canvas { background: repeating-conic-gradient(color-mix(in srgb, var(--dk-accent) 7%, #fff) 0 25%, #fff 0 50%) 50% / 20px 20px;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--dk-line), 0 6px 16px rgba(160, 90, 110, .14); }
+.smk-room .tpm-stage { background: repeating-conic-gradient(color-mix(in srgb, var(--dk-accent) 7%, #fff) 0 25%, #fff 0 50%) 50% / 20px 20px; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--dk-line), 0 6px 16px rgba(160, 90, 110, .14); }
+.smk-room .tpm-pad { border: 2px dashed var(--dk-line); box-shadow: 0 4px 12px rgba(160, 90, 110, .1); }
+.smk-room .smk-empty, .smk-room .smk-all { border: 1.5px dashed var(--dk-line); }
+/* 포토부스 : 틀 고르기 칸 */
+.pb-room .pb-layouts button { border: 1.5px dashed var(--dk-line); box-shadow: 0 2px 6px rgba(160, 90, 110, .08); color: var(--dk-ink); }
+.pb-room .pb-layouts button.on { border: 2px solid var(--dk-accent); }
+.pb-room .pb-lay { background: var(--dk-ribbon); }
+/* 🎀 마스킹테이프 만들기 : 위에 붙어 있는 테이프 미리보기 줄도 종이 카드 색으로 */
+.smk-room .tpm-top { top: calc(max(10px, env(safe-area-inset-top)) + 46px); margin: 0 -16px; padding: 4px 16px 10px; background: var(--win-fill, #fffdf8); box-shadow: 0 8px 8px -8px rgba(160, 90, 110, .2); }
+.smk-room .tpm-zoom small, .smk-room .tpm-wrap small { color: var(--dk-soft); }
+.smk-room .smk-bar, .pb-room .pb-bar { max-width: 472px; margin: 0 auto; box-sizing: border-box; }   /* 아이패드 : ✕ 가 카드 바로 위에 */
