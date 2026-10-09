@@ -2890,7 +2890,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-pick .btn.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
 .snb-pick .btn.on small { color: #fff; }
 
-.modal.snb-on > .modal-content { position: relative; width: min(94vw, 640px); min-width: 0; max-width: none; height: min(86vh, 920px); max-height: none;
+.modal.snb-on > .modal-content { position: relative; box-sizing: border-box; width: min(94vw, 640px); max-width: calc(100vw - 12px); min-width: 0; max-width: none; height: min(86vh, 920px); max-height: none;
     overflow: hidden; padding: 12px 12px 8px 34px; border-radius: 8px 22px 22px 8px; transition: transform .3s cubic-bezier(.3,.8,.3,1);
     box-shadow: 3px 3px 0 #fff, 5px 5px 0 color-mix(in srgb, var(--border-color) 70%, #fff), 7px 7px 0 #fff, 9px 9px 0 color-mix(in srgb, var(--border-color) 55%, #fff), 0 16px 32px rgba(0,0,0,.2); }
 .modal.snb-on.snb-away > .modal-content { transform: translateY(calc(50vh + 50% - 64px)); }
@@ -2911,15 +2911,26 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-rings { position: absolute; left: -7px; top: 26px; bottom: 26px; width: 30px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; z-index: 7; }
 .snb-rings i { position: relative; display: block; height: 10px; border-radius: 6px; background: linear-gradient(180deg, #fbfbfd, #d9dae2 55%, #b9bbc6); box-shadow: 0 1.5px 2px rgba(0,0,0,.18); }
 .snb-rings i::after { content: ''; position: absolute; right: 2px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: color-mix(in srgb, var(--border-color) 40%, #6d5a62); opacity: .35; }
-/* 장 넘기기 */
-.snb-pager { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 16px; padding: 6px 0 2px; }
-.snb-pager button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border-color); background: #fff; color: var(--primary-accent); font-size: 22px; line-height: 1; cursor: pointer; font-family: inherit; }
-.snb-pager button:disabled { color: #d8cfd3; border-color: #eee6ea; cursor: default; }
-.snb-pn { min-width: 64px; text-align: center; font-weight: bold; color: color-mix(in srgb, var(--primary-accent) 70%, #7a5a66); font-variant-numeric: tabular-nums; }
-.snb-flip { animation: snbFlip .4s ease-in-out; transform-origin: 0 50%; }
-.snb-flipb { animation: snbFlipB .4s ease-in-out; transform-origin: 0 50%; }
-@keyframes snbFlip { 50% { transform: perspective(1200px) rotateY(-55deg); filter: brightness(.95); } }
-@keyframes snbFlipB { 50% { transform: perspective(1200px) rotateY(22deg); filter: brightness(.97); } }
+/* 장 넘기기 : 다이어리처럼 손가락을 따라 접히며 넘어가요 (js/stknote.js snbCurl…) · 아래 귀퉁이를 잡거나 톡 눌러도 넘어가요 */
+.modal.snb-on > .dk-tape { display: none; }                       /* 수첩에는 위 양쪽 테이프가 없어요 */
+.modal.snb-on .snb-body { background: inherit; z-index: 2; }
+.snb-under, .snb-flaps { position: absolute; overflow: hidden; pointer-events: none; }
+.snb-under { z-index: 1; background: inherit; }
+.snb-clone { display: block; width: 100%; height: 100%; overflow: hidden; padding: 2px 2px 0; box-sizing: border-box; }
+.snb-clone::after { content: ''; display: block; height: var(--snb-h, 0); }
+.snb-flaps { z-index: 4; }
+.snb-flap { position: absolute; top: 0; bottom: 0; display: none; }
+.snb-flap.next { border-radius: 18px 0 0 18px; background: var(--curl-shade-next), var(--win-fill, var(--page-bg)); filter: drop-shadow(-6px 0 8px rgba(0,0,0,.25)); }
+.snb-flap.prev { border-radius: 0 14px 14px 0; background: var(--curl-shade-prev), var(--win-fill, var(--page-bg)); filter: drop-shadow(6px 0 8px rgba(0,0,0,.25)); }
+.snb-shadow { position: absolute; top: 0; bottom: 0; display: none; z-index: 3; }
+.snb-shadow.next { background: linear-gradient(to right, rgba(0,0,0,.3), rgba(0,0,0,0)); }
+.snb-shadow.prev { background: linear-gradient(to left, rgba(0,0,0,.3), rgba(0,0,0,0)); }
+.snb-ear { position: absolute; bottom: 0; width: 38px; height: 38px; z-index: 5; cursor: pointer; touch-action: none; }
+.snb-ear[hidden] { display: none; }
+.snb-ear::before { content: ''; position: absolute; width: 22px; height: 22px; bottom: 0; }
+.snb-ear.next { right: 0; } .snb-ear.next::before { right: 0; border-radius: 0 0 20px 0; background: linear-gradient(135deg, #fff 0 50%, transparent 50%); filter: drop-shadow(-2px -2px 2px rgba(0,0,0,.14)); }
+.snb-ear.prev { left: 22px; } .snb-ear.prev::before { left: 0; border-radius: 0 0 0 6px; background: linear-gradient(225deg, #fff 0 50%, transparent 50%); filter: drop-shadow(2px -2px 2px rgba(0,0,0,.14)); }
+@media (hover: hover) { .snb-ear:hover::before { width: 28px; height: 28px; } }
 /* 겉표지 : 다이어리 겉표지처럼 스킨색 깅엄 + 레이스 · 톡 누르면 왼쪽 링을 축으로 펼쳐져요 */
 .snb-cover { position: absolute; inset: 0; z-index: 6; cursor: pointer; border-radius: inherit; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px 20px 30px 40px; text-align: center;
     color: color-mix(in srgb, var(--primary-accent) 90%, #5a1a30 10%); transform-origin: 0 50%; transition: transform .55s cubic-bezier(.5,.1,.4,1);
@@ -2944,6 +2955,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-ghost > * { pointer-events: none; }
 .snb-ghost.stick { transition: transform .18s ease-in; transform-origin: center; }
 .snb-ghost.back { transition: transform .25s ease-out; }
-@media (prefers-reduced-motion: reduce) { .snb-flip, .snb-flipb { animation: none; } .snb-cover { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .snb-cover { transition: none; } }
 .snb-cv-tip { position: absolute; bottom: 30px; left: 40px; right: 20px; font-size: 12px; color: #8a6a75; background: rgba(255,255,255,.9); border-radius: 10px; padding: 5px 8px; }
 .modal.snb-on .sticker-grid > div:not(.sticker-item), .modal.snb-on .sticker-grid > p { grid-column: 1 / -1; }   /* 🍭 미니시트 카드 · 내 스티커 · 안내 칸은 한 줄 전체로 */
+.modal.snb-on .modal-title, .modal.snb-on .snb-rings { cursor: grab; touch-action: none; }   /* ✋ 끌어서 수첩 옮기기 */
+.modal.snb-on .snb-rings { pointer-events: auto; }

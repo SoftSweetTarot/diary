@@ -11,9 +11,9 @@
 
         const SNB_KEY = 'diary_stk_view', SNB_LOCAL = 'malang_stk_view';
         const SNB_MODALS = ['stickerModal', 'paperModal', 'tteokModal', 'leafModal'];
-        const SNB_KEEP = '.modal-title, .stk-tabs, .sticker-categories, .sub-modal-btns, .snb-rings, .snb-cover, .snb-pager';   // 수첩 몸통 밖에 남는 것
+        const SNB_KEEP = '.modal-title, .stk-tabs, .sticker-categories, .sub-modal-btns, .snb-rings, .snb-cover, .snb-ear, .snb-under, .snb-flaps';   // 수첩 몸통 밖에 남는 것
         const SNB_HOLD = 260;                               // 손가락으로 꾹 : 이만큼 누르면 스티커가 떠요
-        const snb = { dropping: false, m: null, page: 0, pages: [[0, 0]], press: null, noClick: 0, fire: false, libSaved: null, lastLib: -1, skipCover: false, tm: 0 };
+        const snb = { pos: { x: 0, y: 0 }, moved: 0, dropping: false, m: null, page: 0, pages: [[0, 0]], press: null, noClick: 0, fire: false, libSaved: null, lastLib: -1, skipCover: false, tm: 0 };
         const snbq = id => document.getElementById(id);
 
         function snbSync() { return typeof drive !== 'undefined' && drive.ready && !drive.guest && typeof store !== 'undefined'; }
@@ -40,14 +40,12 @@
             if (kids[0]) box.insertBefore(body, kids[0]); else box.appendChild(body);
             kids.forEach(c => body.appendChild(c));
             const rings = document.createElement('div'); rings.className = 'snb-rings'; rings.innerHTML = '<i></i>'.repeat(9);
-            const pager = document.createElement('div'); pager.className = 'snb-pager';
-            pager.innerHTML = '<button type="button" class="snb-prev" aria-label="앞 장">‹</button><span class="snb-pn"></span><button type="button" class="snb-next" aria-label="다음 장">›</button>';
-            pager.querySelector('.snb-prev').onclick = () => snbGo(-1);
-            pager.querySelector('.snb-next').onclick = () => snbGo(1);
+            const ears = ['prev', 'next'].map(k => { const e = document.createElement('div'); e.className = 'snb-ear ' + k; e.dataset.dir = k === 'next' ? 1 : -1; e.setAttribute('aria-label', k === 'next' ? '다음 장' : '앞 장'); return e; });
             const cover = document.createElement('div'); cover.className = 'snb-cover'; cover.hidden = true;
-            cover.onclick = () => snbOpenCover(cover);
-            body.after(pager); box.prepend(rings); box.appendChild(cover);
+            cover.onclick = () => { if (Date.now() > snb.moved) snbOpenCover(cover); };
+            box.prepend(rings); box.append(...ears, cover);
             snbBind(m, body);
+            snbMovable(m, box);
             new MutationObserver(snbSoon).observe(body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
             body.addEventListener('load', snbSoon, true);
             return body;
@@ -55,8 +53,36 @@
         function snbUnwrap(m) {
             const box = m.querySelector('.modal-content'), body = box.querySelector(':scope > .snb-body'); if (!body) return;
             [...body.children].forEach(c => box.insertBefore(c, body));
-            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-pager, :scope > .snb-cover').forEach(e => e.remove());
+            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover').forEach(e => e.remove());
             m.classList.remove('snb-on', 'snb-away');
+            box.style.left = box.style.top = box.style.width = box.style.height = '';
+        }
+
+        /* ✋ 수첩 옮기기 : 제목 줄 · 왼쪽 링 · 겉표지를 누른 채 끌면 수첩이 따라와요 (화면 밖으로는 안 나가요 · 아홉 창이 같은 자리를 써요) */
+        function snbMovable(m, box) {
+            let st = null;
+            const grip = e => e.target.closest && (e.target.closest('.snb-cover') || (e.target.closest('.modal-title, .snb-rings') && !e.target.closest('button')));
+            box.addEventListener('pointerdown', e => {
+                if (e.button > 0 || !m.classList.contains('snb-on') || !grip(e)) return;
+                st = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: snb.pos.x, oy: snb.pos.y, on: false };
+            });
+            window.addEventListener('pointermove', e => {
+                if (!st || st.id !== e.pointerId) return;
+                if (!st.on) { if (Math.hypot(e.clientX - st.x, e.clientY - st.y) < 6) return; st.on = true; try { box.setPointerCapture(e.pointerId); } catch (er) {} }
+                snb.pos = { x: st.ox + e.clientX - st.x, y: st.oy + e.clientY - st.y };
+                snbPlaceBox(box);
+                e.preventDefault();
+            });
+            const end = e => { if (!st || st.id !== e.pointerId) return; if (st.on) snb.moved = Date.now() + 350; st = null; };
+            window.addEventListener('pointerup', end, true); window.addEventListener('pointercancel', end, true);
+        }
+        function snbPlaceBox(box) {
+            if (!box) return;
+            box.style.left = box.style.top = '0px';
+            const L = box.offsetLeft, T = box.offsetTop, p = snb.pos;                // 애니메이션 중에도 바뀌지 않는 제자리
+            p.x = Math.max(-L, Math.min(innerWidth - box.offsetWidth - L, p.x));
+            p.y = Math.max(-T, Math.min(innerHeight - box.offsetHeight - T, p.y));
+            box.style.left = p.x + 'px'; box.style.top = p.y + 'px';
         }
 
         /* 창이 열리고 닫히는 것을 지켜봐요 (창을 여는 코드는 그대로) */
@@ -74,6 +100,7 @@
             if (snbMode() !== 'note') { snbUnwrap(m); if (snb.m === m) snb.m = null; return; }
             snbWrap(m);
             m.classList.add('snb-on'); m.classList.remove('snb-away');
+            snbSize(m); snbPlaceBox(m.querySelector('.modal-content'));
             const again = snb.skipCover && snb.m === m;
             snb.skipCover = false;
             snb.m = m;
@@ -89,6 +116,15 @@
                 libPage = Math.floor(first / (libLayout.rows * libLayout.cols));
             }
         }
+
+        /* 📐 수첩 크기 : 480 × 620 고정 (도련 · 2026-10-09) · 화면이 그보다 작으면 화면 안에 들어오게만 줄여요 */
+        const SNB_W = 480, SNB_H = 620;
+        function snbSize(m) {
+            const box = m && m.querySelector('.modal-content'); if (!box) return;
+            box.style.width = Math.min(SNB_W, innerWidth - 12) + 'px';
+            box.style.height = Math.min(SNB_H, innerHeight - 12) + 'px';
+        }
+        window.addEventListener('resize', () => { if (snb.m && snb.m.classList.contains('snb-on')) { snbSize(snb.m); snbPlaceBox(snb.m.querySelector('.modal-content')); } });
 
         /* ---------- 📔 겉표지 : 다이어리 겉표지처럼 깅엄 + 레이스 · 톡 누르면 펼쳐져요 ---------- */
         function snbCover(m) {
@@ -110,18 +146,18 @@
         function snbSoon() { clearTimeout(snb.tm); snb.tm = setTimeout(snbMeasure, 60); }
         window.addEventListener('resize', snbSoon);
         function snbLibOn(m) { const b = snbq('libBox'); return m && m.id === 'stickerModal' && b && !b.hidden; }
-        /* 🏷️ 씰스티커 → 기본(그림 모음) : 한 장 = 그림 모음 한 페이지가 되도록 칸 수를 장 크기에 맞춰요 (이 기기 배치 설정은 안 바꿔요) */
+        /* 🏷️ 씰스티커 → 기본(그림 모음) : 그림 모음 전체를 한 번에 펼쳐 두고 수첩이 장을 나눠요 · 칸 크기는 수첩 폭에 맞춰요 (이 기기 배치 설정은 안 바꿔요)
+           그림은 loading=lazy 라 펼친 장의 그림만 불러와요 */
         function snbLibFit(body) {
             if (typeof libLayout === 'undefined' || typeof renderLibrary !== 'function') return false;
             const g = 8, w = body.clientWidth - 12, h = body.clientHeight - 12;
             if (w < 100 || h < 100) return false;
             const cols = Math.max(3, Math.min(10, Math.round(w / 92))), size = Math.max(50, Math.min(140, Math.floor((w - (cols - 1) * g) / cols)));
-            const rows = Math.max(1, Math.min(10, Math.floor((h + g) / (size + g))));
+            const n = typeof libView === 'function' ? libView().length : 0, rows = Math.max(1, Math.ceil(n / cols));
             if (libLayout.cols === cols && libLayout.rows === rows && libLayout.size === size) return false;
             if (!snb.libSaved) snb.libSaved = libLayout;
-            const first = libPage * libLayout.rows * libLayout.cols;
             libLayout = { rows, cols, size };
-            libPage = Math.floor(first / (rows * cols));
+            libPage = 0;
             if (typeof libItems !== 'undefined' && libItems) renderLibrary(); else if (typeof applyLibLayoutStyle === 'function') applyLibLayoutStyle();
             return true;
         }
@@ -157,31 +193,66 @@
             snb.page = Math.max(0, Math.min(snb.pages.length - 1, snb.page));
             snbShow();
         }
-        function snbShow(dir) {
+        function snbCut(n, H) { const [s0, e0] = snb.pages[n] || [0, 0]; const c = Math.floor(H - (e0 - s0) - 4); return c > 2 && snb.pages.length > 1 ? c : 0; }
+        function snbShow() {
             const m = snb.m; if (!m) return;
-            const body = m.querySelector('.snb-body'); if (!body) return;
-            const [s, e] = snb.pages[snb.page] || [0, 0], H = body.clientHeight;
-            body.scrollTop = s;
-            const cut = Math.floor(H - (e - s) - 4);
-            body.style.clipPath = cut > 2 && snb.pages.length > 1 ? `inset(0 0 ${cut}px 0)` : '';
-            const lib = snbLibOn(m), pn = m.querySelector('.snb-pn');
-            let at = snb.page, all = snb.pages.length;
-            if (lib && typeof libPageCount === 'function') { at = libPage; all = Math.max(1, libPageCount()); }
-            if (pn) pn.textContent = (at + 1) + ' / ' + all + (body.querySelector('.cg-more') && !lib ? '+' : '');
-            const pv = m.querySelector('.snb-prev'), nv = m.querySelector('.snb-next');
-            if (pv) pv.disabled = at <= 0 && snb.page <= 0;
-            if (nv) nv.disabled = at >= all - 1 && snb.page >= snb.pages.length - 1;
-            if (lib) { if (snb.lastLib >= 0 && snb.lastLib !== libPage) dir = libPage > snb.lastLib ? 1 : -1; snb.lastLib = libPage; }
-            if (dir) { body.classList.remove('snb-flip', 'snb-flipb'); void body.offsetWidth; body.classList.add(dir > 0 ? 'snb-flip' : 'snb-flipb'); if (window.sfx) try { sfx('page'); } catch (e) {} }
+            const body = m.querySelector('.snb-body'); if (!body || snb.curl) return;
+            body.scrollTop = (snb.pages[snb.page] || [0])[0];
+            const cut = snbCut(snb.page, body.clientHeight);
+            body.style.clipPath = cut ? `inset(0 0 ${cut}px 0)` : '';
+            m.querySelectorAll('.snb-ear').forEach(e => { const n = snb.page + +e.dataset.dir; e.hidden = n < 0 || n >= snb.pages.length; });
         }
-        function snbGo(d) {
-            const m = snb.m; if (!m) return;
-            const n = snb.page + d;
-            if (n >= 0 && n < snb.pages.length) { snb.page = n; return snbShow(d); }
-            if (snbLibOn(m) && typeof changeLibPage === 'function') {         // 그림 모음은 다음 페이지를 불러요
-                const before = libPage; changeLibPage(d);
-                if (libPage !== before) snb.page = d > 0 ? 0 : 999;
-            }
+        function snbGo(d) { if (snbCurlBegin(d)) snbCurlTo(snb.curl.W, true); }
+
+        /* ---------- 📖 장 넘기기 : 다이어리처럼 손가락을 따라 장이 접히며 넘어가요 (js/page.js beginCurl 과 같은 모양)
+           뒤에 넘어갈 장(복사본)을 깔고 → 지금 장을 접히는 선까지 잘라 내고 → 접힌 뒷면(flap)과 그림자를 그려요 ---------- */
+        function snbCurlBegin(dir) {
+            const m = snb.m; if (!m || snb.curl) return false;
+            const body = m.querySelector('.snb-body'), box = body && body.parentElement, n = snb.page + dir;
+            if (!body || n < 0 || n >= snb.pages.length) return false;
+            const W = body.clientWidth, H = body.clientHeight, pos = { left: body.offsetLeft + 'px', top: body.offsetTop + 'px', width: W + 'px', height: H + 'px' };
+            const under = document.createElement('div'); under.className = 'snb-under'; Object.assign(under.style, pos);
+            const cl = body.cloneNode(true); cl.className = 'snb-clone'; cl.removeAttribute('style'); cl.style.setProperty('--snb-h', H + 'px');
+            cl.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+            under.appendChild(cl);
+            const shadow = document.createElement('i'); shadow.className = 'snb-shadow ' + (dir > 0 ? 'next' : 'prev'); under.appendChild(shadow);
+            const layer = document.createElement('div'); layer.className = 'snb-flaps'; Object.assign(layer.style, pos);
+            const flap = document.createElement('i'); flap.className = 'snb-flap ' + (dir > 0 ? 'next' : 'prev'); layer.appendChild(flap);
+            box.insertBefore(under, body); box.appendChild(layer);
+            cl.scrollTop = snb.pages[n][0];
+            const uc = snbCut(n, H); if (uc) cl.style.clipPath = `inset(0 0 ${uc}px 0)`;
+            snb.curl = { dir, n, W, body, under, layer, flap, shadow, cut: snbCut(snb.page, H), d: 0 };
+            m.querySelectorAll('.snb-ear').forEach(e => { e.hidden = true; });
+            snbCurlAt(0);
+            return true;
+        }
+        function snbCurlAt(d) {
+            const c = snb.curl; if (!c) return;
+            d = Math.max(0, Math.min(c.W, d)); c.d = d;
+            const show = d >= 1, sw = Math.min(70, d);
+            c.flap.style.display = c.shadow.style.display = show ? 'block' : 'none';
+            c.flap.style.width = d + 'px'; c.shadow.style.width = sw + 'px';
+            if (c.dir > 0) { c.body.style.clipPath = `inset(0 ${d}px ${c.cut}px 0)`; c.flap.style.left = (c.W - 2 * d) + 'px'; c.shadow.style.left = (c.W - d - 4) + 'px'; }
+            else { c.body.style.clipPath = `inset(0 0 ${c.cut}px ${d}px)`; c.flap.style.left = d + 'px'; c.shadow.style.left = (d - sw - 4) + 'px'; }
+        }
+        function snbCurlTo(target, complete) {
+            const c = snb.curl; if (!c) return;
+            const from = c.d, dur = 120 + 420 * Math.abs(target - from) / c.W, t0 = performance.now();
+            if (complete && window.sfx) try { sfx('page'); } catch (e) {}
+            const step = now => {
+                if (snb.curl !== c) return;
+                const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+                snbCurlAt(from + (target - from) * e);
+                if (k < 1) requestAnimationFrame(step); else snbCurlEnd(complete);
+            };
+            requestAnimationFrame(step);
+        }
+        function snbCurlEnd(complete) {
+            const c = snb.curl; if (!c) return;
+            if (complete) snb.page = c.n;
+            c.under.remove(); c.layer.remove();
+            snb.curl = null;
+            snbShow();
         }
 
         /* ---------- ✋ 밀어서 넘기기 · 꾹 눌러 끌어 붙이기 ---------- */
@@ -203,23 +274,36 @@
                 const p = snb.press; if (!p || p.id !== e.pointerId || p.body !== body) return;
                 const dx = e.clientX - p.x, dy = e.clientY - p.y, d = Math.hypot(dx, dy);
                 if (p.drag) { snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }
+                if (p.curl) { snbCurlAt((p.curl > 0 ? -dx : dx) - (p.ear ? 0 : 8)); e.preventDefault(); return; }
                 if (d > 8) { clearTimeout(p.timer); p.gone = true; }
                 if (p.mouse && p.it && d > 6 && !p.swipe) snbLift(e, body);           // 마우스는 스티커를 누른 채 움직이면 바로 · 빈 곳을 밀면 넘기기
-                else if (d > 6) p.swipe = true;
+                else if (d > 8 && !p.swipe) {
+                    p.swipe = true;
+                    if (Math.abs(dx) > Math.abs(dy) && snbCurlBegin(dx < 0 ? 1 : -1)) { p.curl = dx < 0 ? 1 : -1; p.t0 = performance.now(); }
+                }
             });
             const up = e => {
                 const p = snb.press; if (!p || p.id !== e.pointerId || p.body !== body) return;
                 clearTimeout(p.timer); snb.press = null;
                 if (p.drag) { snb.noClick = Date.now() + 500; snbDrop(p, e.clientX, e.clientY, e.type === 'pointercancel'); return; }
-                const dx = e.clientX - p.x, dy = e.clientY - p.y;
-                if (e.type !== 'pointercancel' && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+                if (p.curl && snb.curl) {
                     snb.noClick = Date.now() + 400;
-                    snbGo(dx < 0 ? 1 : -1);
-                }
+                    const c = snb.curl, fast = c.d > 30 && performance.now() - (p.t0 || 0) < 260;
+                    const done = e.type !== 'pointercancel' && (c.d > c.W * .3 || fast || (p.ear && c.d < 6));   // 귀퉁이를 톡 눌러도 넘어가요
+                    snbCurlTo(done ? c.W : 0, done);
+                } else if (p.swipe) snb.noClick = Date.now() + 400;
             };
             window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);   // 몸통 밖에서 떼도 끝나요
             body.addEventListener('touchend', e => { if (Date.now() < snb.noClick) e.stopPropagation(); }, true);   // 밀기 · 끌어 붙이기는 수첩이 맡아요 (그림 모음이 한 번 더 넘기지 않게)
             body.addEventListener('contextmenu', e => e.preventDefault());
+            m.querySelectorAll('.snb-ear').forEach(ear => ear.addEventListener('pointerdown', e => {   // 📄 아래 귀퉁이 : 잡아 넘기기 · 톡 눌러 넘기기 (마우스로도 쉽게)
+                if (e.button > 0 || snb.curl) return;
+                e.preventDefault();
+                const dir = +ear.dataset.dir;
+                if (!snbCurlBegin(dir)) return;
+                snb.press = { body, id: e.pointerId, x: e.clientX, y: e.clientY, t: ear, it: null, ear: true, curl: dir, swipe: true, t0: performance.now(), timer: 0 };
+                try { ear.setPointerCapture(e.pointerId); } catch (er) {}
+            }));
         }
         document.addEventListener('click', e => {
             if (snb.fire || Date.now() > snb.noClick || !snb.m || !snb.m.contains(e.target)) return;
@@ -320,7 +404,7 @@
             else later();
         }
 
-        window.snbMode = snbMode; window.snbSet = snbSet; window.snbRender = snbRender; window.snbGo = snbGo;
+        window.snbState = () => ({ page: snb.page, pages: snb.pages.length, curl: !!snb.curl }); window.snbMode = snbMode; window.snbSet = snbSet; window.snbRender = snbRender; window.snbGo = snbGo;
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['stknote'] = true;
