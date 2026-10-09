@@ -10,23 +10,23 @@
                📄 모조지로 다이어리에 붙이기 (모조지 한 장으로 저장 → 가운데 나온 모조지에서 오려 원하는 곳에 · js/papermaker.js)
                  🧩 조각스티커 만들기 · 🏷️ 씰스티커 만들기 (하얀 테두리를 둘러 그 종류 내스티커에 저장) · 📄 모조지 만들기 (모조지 한 장으로 저장)
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기 · 💾 저장만 → 🧩 내스티커
-   - 내스티커 : ✨ 스티커 창 → 종류 → 내스티커 에서 언제든 다시 붙여요 (모든 종류 합쳐 최대 40개)
+   - 내스티커 : ✨ 스티커 창 → 종류 → 내가만든 에서 언제든 다시 붙여요 (종류마다 최대 40개)
      한 칸 : { id, src, t, k } · k = 'seal' 씰 · 'piece' 조각(👜 내 봉투 : 봉투 하나 · 누르면 늘 새 봉투로 나와서 뜯으면 조각이 쏟아져요 js/piecebag.js) · 'paper' 모조지(src = 모조지 한 장 · 누르면 늘 새 종이로 가운데 나와요 js/papermaker.js) · 없으면 사진 · 글씨 스티커(🧩 내스티커)
-     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 내스티커.json (게스트는 이 기기에만)
+     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 종류마다 파일 하나 (내씰 · 내조각 · 내모조지 .json · 바뀐 종류만 다시 올려서 빨라요 · 게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
 
-        const SM_FILE = '내스티커.json', SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 10;
+        const SM_FILES = { seal: '내씰.json', piece: '내조각.json', paper: '내모조지.json' }, SM_LOCAL = 'malang_my_stickers', SM_MAX = 40, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 10;
         const SM_SHAPES = [['orig', '🖼️ 원본 그대로'], ['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
         const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
-            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileId: null, loading: null, out: '', outDie: '', die: false,
+            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileIds: {}, loading: null, out: '', outDie: '', die: false,
             many: null, cur: 0 };                                       // many : 여러 장 [{ img, shape, zoom, ox, oy, path }] · cur : 지금 고친 사진
         const smq = id => document.getElementById(id);
         const smSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
 
-        /* ---------- 내 스티커 목록 (드라이브) ---------- */
+        /* ---------- 내 스티커 목록 (드라이브 · 종류마다 파일 하나) ---------- */
         async function smLoad() {
             if (smS.list) return smS.list;
             if (smS.loading) return smS.loading;
@@ -34,8 +34,16 @@
                 let arr = [];
                 try {
                     if (smSync()) {
-                        const rootId = await getFolder(STICKER_PATH, false);
-                        if (rootId) { const f = (await driveList(`name='${SM_FILE}' and '${rootId}' in parents and trashed=false`, 'id,name'))[0]; if (f) { smS.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); arr = Array.isArray(o.s) ? o.s : []; } }
+                        const dir = await getFolder(STICKER_PATH, false);
+                        if (dir) {
+                            const names = Object.values(SM_FILES), fs = await driveList(`'${dir}' in parents and trashed=false and (${names.map(n => `name='${n}'`).join(' or ')})`, 'id,name');
+                            const got = await Promise.all(Object.entries(SM_FILES).map(async ([k, n]) => {
+                                const f = fs.find(x => x.name === n); if (!f) return [];
+                                smS.fileIds[k] = f.id;
+                                try { const o = JSON.parse(await readFileText(f.id) || '{}'); return Array.isArray(o.s) ? o.s.filter(x => x && smKindOf(x) === k) : []; } catch (e) { return []; }
+                            }));
+                            arr = got.flat();
+                        }
                     } else { const o = JSON.parse(localStorage.getItem(SM_LOCAL) || '{}'); arr = Array.isArray(o.s) ? o.s : []; }
                 } catch (e) {}
                 const ok = u => /^data:image\/(png|webp|jpeg)/.test(u || '');
@@ -45,23 +53,25 @@
             })();
             return smS.loading;
         }
-        /* 저장은 한 번에 하나씩 : 저장 중에 또 바뀌면 끝난 뒤 '마지막 목록'만 한 번 더 올려요 (✕를 빨리 여러 번 눌러도 업로드가 쌓이지 않아요) */
-        let smQ = null, smDirty = false;
-        async function smSave() {
-            smDirty = true;
+        /* 저장은 한 번에 하나씩 : 저장 중에 또 바뀌면 끝난 뒤 '바뀐 종류 파일'만 한 번 더 올려요 (✕를 빨리 여러 번 눌러도 업로드가 쌓이지 않아요) */
+        let smQ = null;
+        const smDirty = new Set();
+        async function smSave(kind) {
+            smDirty.add(kind || 'piece');
             while (smQ) await smQ.catch(() => {});
-            if (!smDirty) return;
-            smDirty = false;
-            smQ = smWrite();
-            try { await smQ; } catch (e) { smDirty = true; throw e; } finally { smQ = null; }
+            if (!smDirty.size) return;
+            const ks = [...smDirty]; smDirty.clear();
+            smQ = smWrite(ks);
+            try { await smQ; } catch (e) { ks.forEach(k => smDirty.add(k)); throw e; } finally { smQ = null; }
         }
-        async function smWrite() {
-            const body = JSON.stringify({ v: 1, s: smS.list });
-            if (smSync()) {
-                const rootId = await getFolder(STICKER_PATH, true);
-                try { const r = await driveUpsert(rootId, SM_FILE, smS.fileId, body); smS.fileId = r.id; }
-                catch (e) { if (e && e.code === 'gone') { smS.fileId = null; const r = await driveUpsert(rootId, SM_FILE, null, body); smS.fileId = r.id; } else throw e; }
-            } else localStorage.setItem(SM_LOCAL, body);
+        async function smWrite(ks) {
+            if (!smSync()) { localStorage.setItem(SM_LOCAL, JSON.stringify({ v: 1, s: smS.list })); return; }
+            const dir = await getFolder(STICKER_PATH, true);
+            await Promise.all(ks.map(async k => {
+                const body = JSON.stringify({ v: 1, s: smS.list.filter(x => smKindOf(x) === k) });
+                try { const r = await driveUpsert(dir, SM_FILES[k], smS.fileIds[k], body); smS.fileIds[k] = r.id; }
+                catch (e) { if (e && e.code === 'gone') { smS.fileIds[k] = null; const r = await driveUpsert(dir, SM_FILES[k], null, body); smS.fileIds[k] = r.id; } else throw e; }
+            }));
         }
 
         /* ---------- 화면 ---------- */
@@ -416,10 +426,11 @@
         async function smAdd(src, k, t) {
             try {
                 await smLoad();
-                if (smS.list.length >= SM_MAX) return 'full';
+                const kind = smKindOf({ k });
+                if (smS.list.filter(x => smKindOf(x) === kind).length >= SM_MAX) return 'full';     // 종류마다 SM_MAX 개
                 const many = Array.isArray(src) && src.length > 1, one = Array.isArray(src) ? src[0] : src;
                 smS.list.unshift(Object.assign({ id: Date.now().toString(36), src: many ? await smSheetPrev(src) : one, t: t || '' }, many ? { ss: src } : {}, k ? { k } : {}));
-                await smSave();
+                await smSave(kind);
                 return 'ok';
             } catch (e) { return 'fail'; }
         }
@@ -441,7 +452,7 @@
         const SM_PATH = { '': '🧩 조각스티커 → 내가만든', piece: '🧩 조각스티커 → 내가만든(👜 내 봉투)', seal: '🏷️ 씰스티커 → 내가만든', paper: '📄 모조지 → 내가만든' };
         /* 저장 결과 안내 (stick : 붙이는 중이면 꽉 찼을 때 · 실패만 알려요) */
         function smAddMsg(r, k, stick) {
-            if (r === 'full') { if (!stick) showMsg(`내 스티커는 ${SM_MAX}개까지 저장돼요.<br>안 쓰는 스티커를 지워 주세요.`); }
+            if (r === 'full') { if (!stick) showMsg(`내가만든 칸은 종류마다 ${SM_MAX}개까지 저장돼요.<br>안 쓰는 스티커를 지워 주세요.`); }
             else if (r === 'fail') showMsg('⚠ 내 스티커를 저장하지 못했어요. 잠시 후 다시 해 주세요.');
             else if (!stick) showMsg(`✂️ 내 스티커에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → ${SM_PATH[k || '']}에서 붙일 수 있어요.</span>`);
         }
@@ -512,9 +523,10 @@
         }
         async function smDel(i) {
             if (!(await showMsg('이 스티커를 내 스티커에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 일기에 붙인 스티커는 그대로 남아요.</span>', true))) return;
+            const kind = smKindOf(smS.list[i]);
             smS.list.splice(i, 1);
             const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers(g.dataset.mine);   // 바로 사라지고, 저장은 뒤에서 (드라이브 업로드를 기다리지 않아요)
-            smSave().catch(() => showMsg('⚠ 지운 것을 드라이브에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 지워 주세요.</span>'));
+            smSave(kind).catch(() => showMsg('⚠ 지운 것을 드라이브에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 지워 주세요.</span>'));
         }
         async function loadMyStickers(kind) {
             const g = smq('stickerGrid'); g.dataset.mine = kind;

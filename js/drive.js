@@ -11,7 +11,7 @@
         const TOP_FOLDER_NAME = '말랑달콤';                   // 최상위 폴더 (다이어리 폴더의 상위 폴더)
         const ROOT_FOLDER_NAME = '다이어리';                  // 다이어리 루트 폴더 (말랑달콤 폴더 안)
         const ROOT_PATH = [TOP_FOLDER_NAME, ROOT_FOLDER_NAME]; // 드라이브 경로 : 말랑달콤 / 다이어리
-        const STICKER_PATH = ROOT_PATH.concat('스티커');       // 스티커 보관 : 말랑달콤 / 다이어리 / 스티커 (내스티커 · 내속지 · 내마스킹테이프 · 받은스티커 .json)
+        const STICKER_PATH = ROOT_PATH.concat('스티커');       // 스티커 보관 : 말랑달콤 / 다이어리 / 스티커 (내씰 · 내조각 · 내모조지 · 내테이프 · 내속지 · 받은씰 … 종류마다 .json 하나)
         const ROOT_PATH_TEXT = ROOT_PATH.join(' / ');
         const SETTINGS_FILE_NAME = 'settings.json';           // 페이지·글꼴 등 설정 (말랑달콤 폴더 바로 아래에 1개 : 말랑달콤 / settings.json)
         const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤 / 다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
