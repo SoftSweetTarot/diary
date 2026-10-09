@@ -3,7 +3,7 @@
    - ✏️ 그리기 : 네모 한 칸에 펜 · 지우개로 직접 그리면 테이프에 쭉 이어 붙어요 (🔁 이어지게 그리기 · 되돌리기 · 바탕색 · 크기)
    - 🖼️ 내 사진으로 : 사진 가운데를 네모로 잘라 테이프에 이어 붙여요 (사진은 이 기기에서만 줄여서, 완성된 테이프만 저장돼요)
    - 📌 바로 붙이거나 💾 내 마스킹테이프에 저장 → ✨ 스티커 창 → 🎀 마스킹테이프 → 내스티커에서 언제든 다시 붙여요 (최대 30개 · 선물 받은 테이프와 같은 칸에 따로 묶어 보여요)
-     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내마스킹테이프.json (게스트는 이 기기에만)
+     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 내마스킹테이프.json (게스트는 이 기기에만)
    - 테이프 그림은 js/tape.js 의 tapeSvg 를 그대로 써요 (끝 톱니 · 반투명 · 길이 늘이기 손잡이가 같아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (마스킹테이프 만들기 · 내 마스킹테이프만 '준비 중') */
 
@@ -39,7 +39,7 @@
                 let arr = [];
                 try {
                     if (tpmSync()) {
-                        const rootId = await getFolder(ROOT_PATH, false);
+                        const rootId = await getFolder(STICKER_PATH, false);
                         if (rootId) { const f = (await driveList(`name='${TPM_FILE}' and '${rootId}' in parents and trashed=false`, 'id,name'))[0]; if (f) { tpmS.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); arr = Array.isArray(o.t) ? o.t : []; } }
                     } else { const o = JSON.parse(localStorage.getItem(TPM_LOCAL) || '{}'); arr = Array.isArray(o.t) ? o.t : []; }
                 } catch (e) {}
@@ -52,7 +52,7 @@
         async function tpmSave() {
             const body = JSON.stringify({ v: 1, t: tpmS.list });
             if (tpmSync()) {
-                const rootId = await getFolder(ROOT_PATH, true);
+                const rootId = await getFolder(STICKER_PATH, true);
                 try { const r = await driveUpsert(rootId, TPM_FILE, tpmS.fileId, body); tpmS.fileId = r.id; }
                 catch (e) { if (e && e.code === 'gone') { tpmS.fileId = null; const r = await driveUpsert(rootId, TPM_FILE, null, body); tpmS.fileId = r.id; } else throw e; }
             } else localStorage.setItem(TPM_LOCAL, body);

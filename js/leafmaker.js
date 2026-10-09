@@ -4,7 +4,7 @@
    - ✏️ 직접 그리기 : 종이 색 · 밑줄(무지 · 줄 · 모눈 · 도트) 위에 펜으로 그려요 (사진 위에 그려도 돼요)
    - 다 만들면 오늘 페이지 속지로 끼워지고 📃 속지 → 내가만든 칸에 모여요 (최대 LM_MAX 장)
    - 페이지에는 그림(JPG)째로 그날 파일에 lfi 로 저장돼요 (주소 아님 · 인수인계 12번)
-   - 내가만든 목록 : 로그인하면 내 드라이브 '내속지.json' · 둘러보기면 이 기기 (js/stickermaker.js 내 스티커와 같은 방식)
+   - 내가만든 목록 : 로그인하면 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 내속지.json · 둘러보기면 이 기기 (js/stickermaker.js 내 스티커와 같은 방식)
    ※ 링 구멍은 미리보기 · 페이지 모두 그 위에 그대로 보여요 (css/style.css --lf-holes) */
 
         const LM_FILE = '내속지.json', LM_LOCAL = 'malang_my_leafs', LM_MAX = 12, LM_W = 900;
@@ -26,7 +26,7 @@
                 let arr = [];
                 try {
                     if (lmSync()) {
-                        const rootId = await getFolder(ROOT_PATH, false);
+                        const rootId = await getFolder(STICKER_PATH, false);
                         if (rootId) { const f = (await driveList(`name='${LM_FILE}' and '${rootId}' in parents and trashed=false`, 'id,name'))[0]; if (f) { lm.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); arr = Array.isArray(o.l) ? o.l : []; } }
                     } else { const o = JSON.parse(localStorage.getItem(LM_LOCAL) || '{}'); arr = Array.isArray(o.l) ? o.l : []; }
                 } catch (e) {}
@@ -39,7 +39,7 @@
         async function lmSave() {
             const body = JSON.stringify({ v: 1, l: lm.list });
             if (lmSync()) {
-                const rootId = await getFolder(ROOT_PATH, true);
+                const rootId = await getFolder(STICKER_PATH, true);
                 try { const r = await driveUpsert(rootId, LM_FILE, lm.fileId, body); lm.fileId = r.id; }
                 catch (e) { if (e && e.code === 'gone') { lm.fileId = null; const r = await driveUpsert(rootId, LM_FILE, null, body); lm.fileId = r.id; } else throw e; }
             } else localStorage.setItem(LM_LOCAL, body);

@@ -12,7 +12,7 @@
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기 · 💾 저장만 → 🧩 내스티커
    - 내스티커 : ✨ 스티커 창 → 종류 → 내스티커 에서 언제든 다시 붙여요 (모든 종류 합쳐 최대 40개)
      한 칸 : { id, src, t, k } · k = 'seal' 씰 · 'piece' 조각(👜 내 봉투 : 봉투 하나 · 누르면 늘 새 봉투로 나와서 뜯으면 조각이 쏟아져요 js/piecebag.js) · 'paper' 모조지(src = 모조지 한 장 · 누르면 늘 새 종이로 가운데 나와요 js/papermaker.js) · 없으면 사진 · 글씨 스티커(🧩 내스티커)
-     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 내스티커.json (게스트는 이 기기에만)
+     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 내스티커.json (게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
 
@@ -34,7 +34,7 @@
                 let arr = [];
                 try {
                     if (smSync()) {
-                        const rootId = await getFolder(ROOT_PATH, false);
+                        const rootId = await getFolder(STICKER_PATH, false);
                         if (rootId) { const f = (await driveList(`name='${SM_FILE}' and '${rootId}' in parents and trashed=false`, 'id,name'))[0]; if (f) { smS.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); arr = Array.isArray(o.s) ? o.s : []; } }
                     } else { const o = JSON.parse(localStorage.getItem(SM_LOCAL) || '{}'); arr = Array.isArray(o.s) ? o.s : []; }
                 } catch (e) {}
@@ -58,7 +58,7 @@
         async function smWrite() {
             const body = JSON.stringify({ v: 1, s: smS.list });
             if (smSync()) {
-                const rootId = await getFolder(ROOT_PATH, true);
+                const rootId = await getFolder(STICKER_PATH, true);
                 try { const r = await driveUpsert(rootId, SM_FILE, smS.fileId, body); smS.fileId = r.id; }
                 catch (e) { if (e && e.code === 'gone') { smS.fileId = null; const r = await driveUpsert(rootId, SM_FILE, null, body); smS.fileId = r.id; } else throw e; }
             } else localStorage.setItem(SM_LOCAL, body);
