@@ -2879,3 +2879,71 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 /* 📚 모음 칸 (js/coll.js collGrid) : 칸들은 바깥 격자에 그대로 들어가고, 끝에 닿으면 다음 묶음을 읽어요 */
 .cg-host { display: contents; }
 .cg-more { grid-column: 1 / -1; width: 100%; min-height: 8px; text-align: center; font-size: 12.5px; color: #b08a98; padding: 6px 0; }
+
+/* ═══════ 📒 스티커 수첩 (⚙️ 설정 → 📒 스티커 고르는 창 → 수첩 · js/stknote.js) ═══════
+   지금 창(고르는 창)은 그대로 두고, 수첩일 때만 같은 창에 .snb-on 을 달아 모양을 덧입혀요
+   위의 칸(기본 · 내가만든 …)만 남기고 옵션 줄은 숨겨요 → 스티커가 최대한 많이 보이게 */
+.snb-pick { display: flex; gap: 8px; margin-top: 6px; }
+.snb-pick .btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; white-space: normal; text-align: center; line-height: 1.3; }
+.snb-pick .btn b { font-size: 14px; }
+.snb-pick .btn small { font-size: 11px; color: #a08a94; font-weight: normal; }
+.snb-pick .btn.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
+.snb-pick .btn.on small { color: #fff; }
+
+.modal.snb-on > .modal-content { position: relative; width: min(94vw, 640px); min-width: 0; max-width: none; height: min(86vh, 920px); max-height: none;
+    overflow: hidden; padding: 12px 12px 8px 34px; border-radius: 8px 22px 22px 8px; transition: transform .3s cubic-bezier(.3,.8,.3,1);
+    box-shadow: 3px 3px 0 #fff, 5px 5px 0 color-mix(in srgb, var(--border-color) 70%, #fff), 7px 7px 0 #fff, 9px 9px 0 color-mix(in srgb, var(--border-color) 55%, #fff), 0 16px 32px rgba(0,0,0,.2); }
+.modal.snb-on.snb-away > .modal-content { transform: translateY(calc(50vh + 50% - 64px)); }
+.modal.snb-on .lib-cats, .modal.snb-on .lib-pager, .modal.snb-on .lib-toolbar, .modal.snb-on .lib-layout,
+.modal.snb-on .svc-tip, .modal.snb-on .tp-note, .modal.snb-on #tkEdgePick, .modal.snb-on .shx-bar, .modal.snb-on .sub-modal-btns { display: none !important; }
+.snb-body { flex: 1; min-height: 0; overflow: hidden; position: relative; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: 2px 2px 0; }
+.snb-body::after { content: ''; display: block; height: var(--snb-h, 0); }    /* 마지막 장도 맨 위부터 보이게 */
+.snb-body img { -webkit-user-drag: none; -webkit-touch-callout: none; }
+.modal.snb-on .sticker-grid { height: auto; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+.modal.snb-on .lib-grid { max-height: none; overflow: visible; touch-action: none; }
+.modal.snb-on .lib-box { margin: 0; }
+.modal.snb-on .smk-mine, .modal.snb-on .sticker-grid .smk-in-modal { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+.modal.snb-on .paper-pick { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+.modal.snb-on .lf-picks { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.modal.snb-on .tk-list { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); margin-top: 4px; }
+.modal.snb-on .stk-tabs { flex-shrink: 0; }
+/* 링 : 수첩 왼쪽에 꽂힌 은색 고리 */
+.snb-rings { position: absolute; left: -7px; top: 26px; bottom: 26px; width: 30px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; z-index: 7; }
+.snb-rings i { position: relative; display: block; height: 10px; border-radius: 6px; background: linear-gradient(180deg, #fbfbfd, #d9dae2 55%, #b9bbc6); box-shadow: 0 1.5px 2px rgba(0,0,0,.18); }
+.snb-rings i::after { content: ''; position: absolute; right: 2px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: color-mix(in srgb, var(--border-color) 40%, #6d5a62); opacity: .35; }
+/* 장 넘기기 */
+.snb-pager { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 16px; padding: 6px 0 2px; }
+.snb-pager button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border-color); background: #fff; color: var(--primary-accent); font-size: 22px; line-height: 1; cursor: pointer; font-family: inherit; }
+.snb-pager button:disabled { color: #d8cfd3; border-color: #eee6ea; cursor: default; }
+.snb-pn { min-width: 64px; text-align: center; font-weight: bold; color: color-mix(in srgb, var(--primary-accent) 70%, #7a5a66); font-variant-numeric: tabular-nums; }
+.snb-flip { animation: snbFlip .4s ease-in-out; transform-origin: 0 50%; }
+.snb-flipb { animation: snbFlipB .4s ease-in-out; transform-origin: 0 50%; }
+@keyframes snbFlip { 50% { transform: perspective(1200px) rotateY(-55deg); filter: brightness(.95); } }
+@keyframes snbFlipB { 50% { transform: perspective(1200px) rotateY(22deg); filter: brightness(.97); } }
+/* 겉표지 : 다이어리 겉표지처럼 스킨색 깅엄 + 레이스 · 톡 누르면 왼쪽 링을 축으로 펼쳐져요 */
+.snb-cover { position: absolute; inset: 0; z-index: 6; cursor: pointer; border-radius: inherit; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px 20px 30px 40px; text-align: center;
+    color: color-mix(in srgb, var(--primary-accent) 90%, #5a1a30 10%); transform-origin: 0 50%; transition: transform .55s cubic-bezier(.5,.1,.4,1);
+    background:
+        linear-gradient(90deg, rgba(0,0,0,.1), rgba(255,255,255,.2) 22px, transparent 30px),
+        linear-gradient(90deg, color-mix(in srgb, var(--primary-accent) 30%, transparent) 50%, transparent 0) 0 0 / 34px 34px,
+        linear-gradient(color-mix(in srgb, var(--primary-accent) 30%, transparent) 50%, transparent 0) 0 0 / 34px 34px, color-mix(in srgb, var(--primary-accent) 7%, #fff); }
+.snb-cover[hidden] { display: none; }
+.snb-cover.open { transform: perspective(1400px) rotateY(-105deg); }
+.snb-lace { position: absolute; left: 0; right: 0; height: 18px; pointer-events: none; background: radial-gradient(circle at 50% 0, #fff 8px, transparent 8.6px) 0 0 / 18px 18px; filter: drop-shadow(0 1.5px 0 rgba(0,0,0,.05)); }
+.snb-lace.top { top: 0; } .snb-lace.bot { bottom: 0; transform: scaleY(-1); }
+.snb-cv-card { display: block; background: #fff; border-radius: 18px; padding: 16px 26px 14px; box-shadow: 0 3px 0 rgba(0,0,0,.05), 0 8px 18px rgba(0,0,0,.08); transform: rotate(-2deg); }
+.snb-cv-card b { display: block; font-size: 26px; line-height: 1.2; }
+.snb-cv-card small { display: block; margin-top: 4px; font-size: 13px; color: #9a7f8a; font-weight: normal; }
+.snb-cv-ic { font-size: 74px; line-height: 1; transform: rotate(8deg);
+    filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 4px 5px rgba(0,0,0,.15)); }
+.snb-cover em { font-style: normal; font-size: 13px; font-weight: bold; color: #7b5a63; background: #fff; border-radius: 999px; padding: 6px 14px; max-width: 92%; animation: snbNudge 1.6s infinite; }
+@keyframes snbNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-6px); } }
+/* 끄는 중인 스티커 : 손가락을 따라 떠다녀요 */
+.snb-ghost { position: fixed; left: 0; top: 0; z-index: 5000; pointer-events: none; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 10px 12px rgba(80,40,60,.3)); transition: none; }
+.snb-ghost > img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.snb-ghost > * { pointer-events: none; }
+.snb-ghost.stick { transition: transform .18s ease-in; transform-origin: center; }
+.snb-ghost.back { transition: transform .25s ease-out; }
+@media (prefers-reduced-motion: reduce) { .snb-flip, .snb-flipb { animation: none; } .snb-cover { transition: none; } }
+.snb-cv-tip { position: absolute; bottom: 30px; left: 40px; right: 20px; font-size: 12px; color: #8a6a75; background: rgba(255,255,255,.9); border-radius: 10px; padding: 5px 8px; }
+.modal.snb-on .sticker-grid > div:not(.sticker-item), .modal.snb-on .sticker-grid > p { grid-column: 1 / -1; }   /* 🍭 미니시트 카드 · 내 스티커 · 안내 칸은 한 줄 전체로 */
