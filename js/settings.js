@@ -579,6 +579,18 @@
                 if (p && p !== box && ![...p.children].some(c => !c.classList.contains('mt-moved') && !c.hidden && c.tagName !== 'INPUT')) p.classList.add('mt-moved');
             });
         }
+        /* 제목이 ‹ · ✕ 사이에 다 안 들어가면 글씨를 조금씩 줄여 한 줄에 맞춰요 (제목이 바뀔 때도) */
+        function mtFit(modal) {
+            const t = modal && modal.querySelector('.modal-title.mt-bar .mt-text'); if (!t || !t.offsetWidth) return;
+            t.style.fontSize = ''; t.style.paddingLeft = t.style.paddingRight = ''; t.style.whiteSpace = t.style.lineHeight = '';
+            const bar = t.parentElement.getBoundingClientRect(), bk = t.parentElement.querySelector('.mt-back:not(.mt-none)'), x = t.parentElement.querySelector('.mt-x');
+            const side = Math.max(bk ? bk.getBoundingClientRect().right - bar.left : 0, x ? bar.right - x.getBoundingClientRect().left : 0) + 6;
+            t.style.maxWidth = Math.max(60, bar.width - side * 2) + 'px';                 // 가운데 리본이 ‹ · ✕ 와 안 겹치게
+            let fs = parseFloat(getComputedStyle(t).fontSize) || 15;
+            if (t.scrollWidth > t.clientWidth + 1) t.style.paddingLeft = t.style.paddingRight = '16px';
+            while (t.scrollWidth > t.clientWidth + 1 && fs > 12) { fs -= .5; t.style.fontSize = fs + 'px'; }
+            if (t.scrollWidth > t.clientWidth + 1) { t.style.whiteSpace = 'normal'; t.style.lineHeight = '1.15'; }   // 그래도 길면 리본 안에서 두 줄로
+        }
         document.querySelectorAll('.modal').forEach(mtDecorate);
         function openModal(id) {
             if (id === 'settingsModal') { saveData(false); updateStorageInfo(); refreshStorageStats(); if (typeof sndRenderSettings === 'function') sndRenderSettings(); }
@@ -590,8 +602,12 @@
                 if (id === 'serviceModal' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) warmServer(FORTUNE_API_URL);
             }
             if (id === 'serviceModal' && typeof svcShowCats === 'function') svcShowCats();
-            mtDecorate(document.getElementById(id));       // 카페는 늘 카테고리부터
-            document.getElementById(id).style.display = 'flex';
+            const m = document.getElementById(id);
+            mtDecorate(m);       // 카페는 늘 카테고리부터
+            m.style.display = 'flex';
+            mtFit(m);
+            const t = m.querySelector('.modal-title.mt-bar .mt-text');
+            if (t && !t.dataset.fit) { t.dataset.fit = 1; new MutationObserver(() => mtFit(m)).observe(t, { childList: true, characterData: true, subtree: true }); }
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         /* 창 밖(배경 · 페이지)을 누르면 닫혀요 : 그 창의 ✕ 를 눌러 준 것과 같아요 (창마다 닫을 때 하는 일을 그대로)
