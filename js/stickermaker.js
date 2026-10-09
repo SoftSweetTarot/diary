@@ -12,67 +12,19 @@
    - 글씨 스티커 : 1단계 글자 쓰기 → (다음 단계) 2단계 글꼴 · 색 · 하얀 테두리 고르고 붙이기 · 💾 저장만 → 🧩 내스티커
    - 내스티커 : ✨ 스티커 창 → 종류 → 내가만든 에서 언제든 다시 붙여요 (개수 제한 없음)
      한 칸 : { id, src, t, k } · k = 'seal' 씰 · 'piece' 조각(👜 내 봉투 : 봉투 하나 · 누르면 늘 새 봉투로 나와서 뜯으면 조각이 쏟아져요 js/piecebag.js) · 'paper' 모조지(src = 모조지 한 장 · 누르면 늘 새 종이로 가운데 나와요 js/papermaker.js) · 없으면 사진 · 글씨 스티커(🧩 내스티커)
-     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 종류마다 파일 하나 (내씰 · 내조각 · 내모조지 .json · 바뀐 종류만 다시 올려서 빨라요 · 게스트는 이 기기에만)
+     저장 위치 : 내 드라이브 말랑달콤 / 스티커 / 씰 · 조각 · 모조지 / 내씰 · 내조각 · 내모조지 / 목록(작은 그림 100개씩) · 원본(하나에 파일 하나) (js/coll.js · 게스트는 이 기기에만)
    ※ 사진은 이 기기에서만 오려서, 완성한 스티커 그림만 저장돼요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (세 버튼만 '준비 중') */
 
-        const SM_FILES = { seal: '내씰.json', piece: '내조각.json', paper: '내모조지.json' }, SM_LOCAL = 'malang_my_stickers', SM_MAX = Infinity, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 10;
+        const SM_MAX = Infinity, SM_SIZE = 300, SM_OUT = 260, SM_MANY = 10;
         const SM_SHAPES = [['orig', '🖼️ 원본 그대로'], ['circle', '동그라미'], ['heart', '하트'], ['star', '별'], ['round', '둥근네모'], ['cloud', '구름'], ['free', '✂️ 손으로']];
         const SM_DEF_FONT = "'Jua', sans-serif";                      // 처음 글꼴 (고르는 목록은 설정창과 같은 fontList · js/app.js)
         const SM_COLORS = ['#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#ffffff'];
         const smS = { built: false, mode: 'photo', img: null, shape: 'circle', zoom: 1, ox: 0, oy: 0, path: [], drawing: false, border: true,
-            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], list: null, fileIds: {}, loading: null, out: '', outDie: '', die: false,
+            text: '', font: SM_DEF_FONT, color: SM_COLORS[0], out: '', outDie: '', die: false,
             many: null, cur: 0 };                                       // many : 여러 장 [{ img, shape, zoom, ox, oy, path }] · cur : 지금 고친 사진
         const smq = id => document.getElementById(id);
-        const smSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
-
-        /* ---------- 내 스티커 목록 (드라이브 · 종류마다 파일 하나) ---------- */
-        async function smLoad() {
-            if (smS.list) return smS.list;
-            if (smS.loading) return smS.loading;
-            smS.loading = (async () => {
-                let arr = [];
-                try {
-                    if (smSync()) {
-                        const dir = await getFolder(STICKER_PATH, false);
-                        if (dir) {
-                            const names = Object.values(SM_FILES), fs = await driveList(`'${dir}' in parents and trashed=false and (${names.map(n => `name='${n}'`).join(' or ')})`, 'id,name');
-                            const got = await Promise.all(Object.entries(SM_FILES).map(async ([k, n]) => {
-                                const f = fs.find(x => x.name === n); if (!f) return [];
-                                smS.fileIds[k] = f.id;
-                                try { const o = JSON.parse(await readFileText(f.id) || '{}'); return Array.isArray(o.s) ? o.s.filter(x => x && smKindOf(x) === k) : []; } catch (e) { return []; }
-                            }));
-                            arr = got.flat();
-                        }
-                    } else { const o = JSON.parse(localStorage.getItem(SM_LOCAL) || '{}'); arr = Array.isArray(o.s) ? o.s : []; }
-                } catch (e) {}
-                const ok = u => /^data:image\/(png|webp|jpeg)/.test(u || '');
-                smS.list = arr.filter(x => x && ok(x.src) && (!x.ss || (Array.isArray(x.ss) && x.ss.length && x.ss.every(ok))));
-                smS.loading = null;
-                return smS.list;
-            })();
-            return smS.loading;
-        }
-        /* 저장은 한 번에 하나씩 : 저장 중에 또 바뀌면 끝난 뒤 '바뀐 종류 파일'만 한 번 더 올려요 (✕를 빨리 여러 번 눌러도 업로드가 쌓이지 않아요) */
-        let smQ = null;
-        const smDirty = new Set();
-        async function smSave(kind) {
-            smDirty.add(kind || 'piece');
-            while (smQ) await smQ.catch(() => {});
-            if (!smDirty.size) return;
-            const ks = [...smDirty]; smDirty.clear();
-            smQ = smWrite(ks);
-            try { await smQ; } catch (e) { ks.forEach(k => smDirty.add(k)); throw e; } finally { smQ = null; }
-        }
-        async function smWrite(ks) {
-            if (!smSync()) { localStorage.setItem(SM_LOCAL, JSON.stringify({ v: 1, s: smS.list })); return; }
-            const dir = await getFolder(STICKER_PATH, true);
-            await Promise.all(ks.map(async k => {
-                const body = JSON.stringify({ v: 1, s: smS.list.filter(x => smKindOf(x) === k) });
-                try { const r = await driveUpsert(dir, SM_FILES[k], smS.fileIds[k], body); smS.fileIds[k] = r.id; }
-                catch (e) { if (e && e.code === 'gone') { smS.fileIds[k] = null; const r = await driveUpsert(dir, SM_FILES[k], null, body); smS.fileIds[k] = r.id; } else throw e; }
-            }));
-        }
+        const smColl = kind => stkColl(kind, false);                   // 🏷️ 씰 · 🧩 조각 · 📄 모조지 → 내가만든 (js/coll.js)
 
         /* ---------- 화면 ---------- */
         function smBuild() {
@@ -425,14 +377,12 @@
            결과 : 'ok' · 'full' (다 못 넣음) · 'fail' */
         async function smAdd(src, k, t) {
             try {
-                await smLoad();
                 const kind = smKindOf({ k });
-                if (smS.list.filter(x => smKindOf(x) === kind).length >= SM_MAX) return 'full';     // 종류마다 SM_MAX 개
                 const many = Array.isArray(src) && src.length > 1, one = Array.isArray(src) ? src[0] : src;
-                smS.list.unshift(Object.assign({ id: Date.now().toString(36), src: many ? await smSheetPrev(src) : one, t: t || '' }, many ? { ss: src } : {}, k ? { k } : {}));
-                await smSave(kind);
+                const item = Object.assign({ src: many ? await smSheetPrev(src) : one, t: t || '' }, many ? { ss: src } : {}, k ? { k } : {});
+                await collAdd(smColl(kind), item, await collThumb(item.src), { k: k || '', n: many ? src.length : 0, t: (t || '').slice(0, 12) });   // 화면은 바로 · 드라이브는 뒤에서
                 return 'ok';
-            } catch (e) { return 'fail'; }
+            } catch (e) { console.warn(e); return 'fail'; }
         }
         /* 여러 장 한 칸의 미리보기 : 하얀 종이 위에 스티커들을 나란히 (내스티커 칸에 보여요) */
         async function smSheetPrev(srcs) {
@@ -498,22 +448,17 @@
             piece: '✂️ 아직 만든 조각스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>🧩 조각스티커 만들기를 눌러 보세요!',
             seal: '🏷️ 아직 만든 씰스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>🏷️ 씰스티커 만들기나 📌 다이어리에 붙이기를 눌러 보세요!<br>🔤 글씨스티커 만들기로 만든 글씨도 여기에 모여요.',
             paper: '📄 아직 만든 모조지가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>📄 모조지 만들기나 다이어리에 붙이기를 눌러 보세요!' };
-        function smGrid(kind) {
-            const L = (smS.list || []).map((s, i) => [s, i]).filter(([s]) => smKindOf(s) === kind);
-            const it = ([s, i]) => s.k === 'piece'
-                ? `<span class="smk-it smk-bag" data-shx="${i}"><button type="button" onclick="smUse(${i})" aria-label="조각스티커 봉투"><img src="${s.src}" alt=""></button><b class="smk-n">${s.ss ? s.ss.length : 1}pcs</b><i onclick="smDel(${i})" title="지우기">✕</i></span>`
-                : `<span class="smk-it" data-shx="${i}"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button>${s.ss ? `<b class="smk-n">${s.ss.length}장</b>` : ''}<i onclick="smDel(${i})" title="지우기">✕</i></span>`;
-            if (kind === 'piece') {                                     // 🧩 내가 만든 조각은 👜 내 봉투에 (봉투 하나 = 한 칸 · 처음엔 안 뜯은 봉투)
-                const bag = L.filter(([s]) => s.k === 'piece'), rest = L.filter(([s]) => !s.k);
-                if (!L.length) return `<div class="smk-empty">${SM_EMPTY.piece}</div>`;
-                return (bag.length ? '<div class="stk-head">👜 내 봉투</div>' + bag.map(it).join('') : '')
-                    + (rest.length ? '<div class="stk-head">✂️ 사진 · 글씨 스티커</div>' + rest.map(it).join('') : '');
-            }
-            if (!L.length) return `<div class="smk-empty">${SM_EMPTY[kind]}</div>`;
-            return L.map(it).join('');
+        /* 한 칸 (목록의 작은 그림 · 누르면 원본을 읽어서 붙여요) */
+        function smCell(kind, e) {
+            const id = e.id, img = `<img src="${e.th}" alt="${(e.x.t || '내 스티커').replace(/["<>&]/g, '')}">`;
+            return e.x.k === 'piece'
+                ? `<span class="smk-it smk-bag" data-shx="${id}" data-id="${id}"><button type="button" onclick="smUse('${kind}','${id}')" aria-label="조각스티커 봉투">${img}</button><b class="smk-n">${e.x.n || 1}pcs</b><i onclick="smDel('${kind}','${id}')" title="지우기">✕</i></span>`
+                : `<span class="smk-it" data-shx="${id}" data-id="${id}"><button type="button" onclick="smUse('${kind}','${id}')">${img}</button>${e.x.n ? `<b class="smk-n">${e.x.n}장</b>` : ''}<i onclick="smDel('${kind}','${id}')" title="지우기">✕</i></span>`;
         }
-        function smUse(i) {
-            const s = smS.list && smS.list[i]; if (!s) return;
+        async function smUse(kind, id) {
+            let s = null;
+            try { s = await collItem(smColl(kind), id); } catch (e) {}
+            if (!s) { showMsg('⚠ 이 스티커를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); return; }
             if (s.k === 'seal' && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.ss || s.src, { ts: !!s.t }); }   // 여러 장 한 칸은 종이째 · t(글씨)가 있으면 🔤 글씨스티커
             else if (s.k === 'piece' && window.openPieceBag) {               // 🧩 봉투 : 늘 새 봉투로 나와요 (뜯어서 꺼내요)
                 closeModal('stickerModal');
@@ -521,19 +466,17 @@
             } else if (s.k === 'paper' && window.openPaperSheet) { closeModal('stickerModal'); openPaperSheet(s.src); }   // 📄 모조지 : 늘 새 종이로 가운데 나와요 (오려서 붙여요)
             else (s.ss || [s.src]).forEach(smStick);
         }
-        async function smDel(i) {
+        async function smDel(kind, id) {
             if (!(await showMsg('이 스티커를 내 스티커에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 일기에 붙인 스티커는 그대로 남아요.</span>', true))) return;
-            const kind = smKindOf(smS.list[i]);
-            smS.list.splice(i, 1);
-            const g = smq('stickerGrid'); if (g && g.dataset.mine) loadMyStickers(g.dataset.mine);   // 바로 사라지고, 저장은 뒤에서 (드라이브 업로드를 기다리지 않아요)
-            smSave(kind).catch(() => showMsg('⚠ 지운 것을 드라이브에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 지워 주세요.</span>'));
+            await collRemove(smColl(kind), id);                         // 바로 사라지고, 드라이브는 뒤에서
+            const g = smq('stickerGrid'); if (g && g.dataset.mine === kind) loadMyStickers(kind);
         }
-        async function loadMyStickers(kind) {
+        function loadMyStickers(kind) {
             const g = smq('stickerGrid'); g.dataset.mine = kind;
-            g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
-            await smLoad();
-            const has = smS.list.some(s => smKindOf(s) === kind), bar = has && window.shxBar ? shxBar(kind) : '';   // 📤 공유하기 (js/sharebox.js)
-            if (g.dataset.mine === kind) g.innerHTML = `<div class="smk-mine smk-in-modal">${bar}${smGrid(kind)}</div>`;
+            const C = smColl(kind);
+            C.onChange = () => { if (g.dataset.mine === kind && g.isConnected) loadMyStickers(kind); };
+            g.innerHTML = `<div class="smk-mine smk-in-modal">${window.shxBar ? shxBar(kind) : ''}<div class="cg-host"></div></div>`;   // 📤 공유하기 (js/sharebox.js)
+            return collGrid(g.querySelector('.cg-host'), C, e => smCell(kind, e), `<div class="smk-empty">${SM_EMPTY[kind]}</div>`);
         }
 
         /* ✂️ 스티커만들기 창의 📷 · 🖼️ · 🔤 버튼 (사진 고르는 창은 눌렀을 때 바로 열려야 해서 화면을 먼저 만들어 둬요) */
@@ -552,4 +495,4 @@
         /* 스티커 창의 다른 칸을 누르면 '내 스티커' 표시 지우기 */
         document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b) { const g = smq('stickerGrid'); if (g) delete g.dataset.mine; } }, true);
         window.smGo = smGo; window.smAllSame = smAllSame; window.smOpenCam = smOpenCam; window.smOpenFile = smOpenFile; window.smOpenText = smOpenText;
-        window.loadMyStickers = loadMyStickers; window.smAdd = smAdd; window.smAddMsg = smAddMsg;
+        window.loadMyStickers = loadMyStickers; window.smAdd = smAdd; window.smAddMsg = smAddMsg; window.smUse = smUse; window.smDel = smDel;

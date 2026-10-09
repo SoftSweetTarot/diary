@@ -193,8 +193,9 @@
         /* =====================================================================
            🎨 페이지 (다이어리 색 5개 : 전체 배경 · 겉표지 · 속지 · 테두리 · 포인트)
            - 페이지 목록 : 기본 페이지 4종 + 🌟 모두의 페이지(카페에서 받아 등록, js/community-skins.js) + 🎨 내 페이지
-           - 내 페이지     : 'diary_custom_skins' → 말랑달콤 / 다이어리 / 페이지 / 이름.json (하나에 파일 하나 · js/drive.js splitSync)
-           - 지금 고른 페이지 : 'diary_skin' → settings.json  (다음에 열어도 · 다른 기기에서도 그대로)
+           - 내 페이지     : 말랑달콤 / 페이지 / 페이지 / 내페이지 · 받은페이지 / 목록(작은 그림 100개씩) · 원본(하나에 파일 하나) (js/coll.js)
+               화면의 customSkins 에는 읽어 온 원본만 있어요 (지금 쓰는 페이지 · 눌러서 고른 페이지) · 목록 칸은 작은 그림으로 그려요
+           - 지금 고른 페이지 : 'diary_skin' → 설정.json  (다음에 열어도 · 다른 기기에서도 그대로)
                예) {"id":"mint"} · {"id":"20261009-120533"} · {"id":"cs:3","c":{색 5개}}
                모두의 페이지는 색도 같이 적어 둬서, 목록에서 빠져도 쓰던 색이 유지돼요. (내 페이지는 그림이 커서 이름만)
            ===================================================================== */
@@ -310,7 +311,8 @@
             currentSkinInline = hit.kind === 'preset' || hit.kind === 'th' ? null : hit.skin;
             renderSkinSelect();
             if (opts.save !== false) {
-                const rec = hit.kind === 'preset' || hit.kind === 'th' || hit.kind === 'my' ? { id } : { id, c: hit.skin };   // 🎨 내 페이지는 이름만 (그림은 페이지 / 이름.json 에 있어요 → settings.json 은 가볍게)
+                const rec = hit.kind === 'preset' || hit.kind === 'th' || hit.kind === 'my' ? { id } : { id, c: hit.skin };   // 🎨 내 페이지는 id 만 (그림은 원본 파일에 있어요 → 설정.json 은 가볍게)
+                if (hit.kind === 'my' && hit.skin.got) rec.g = 1;                                                       // 받은페이지 칸 것 (다음에 열 때 어디서 읽을지)
                 store.setItem(SKIN_KEY, JSON.stringify(rec));
             }
             return true;
@@ -404,22 +406,47 @@
             return skin;
         }
 
-        /* 내 페이지 이름표 : 이름을 짓지 않아서 저장한 때(년월일-시분초)로 · 드라이브 파일 이름도 이것 (페이지 / 20261009-120533.json) */
-        function newSkinId() {
-            const d = new Date(), z = n => String(n).padStart(2, '0');
-            const base = `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`;
-            let id = base, n = 2;
-            while (skinNameTaken(id)) id = `${base}-${n++}`;
-            return id;
+        /* ---------- 🎨 내 페이지 모음 (js/coll.js) ---------- */
+        const pgColl = got => collOf(PAGE_PATH.concat('페이지', got ? '받은페이지' : '내페이지'));
+        /* 목록에 보일 작은 페이지 : 색 + 꾸밈 자리 (꾸밈 그림만 48px 로 줄여요) */
+        async function pgThumb(skin) {
+            const th = Object.assign({}, skin), used = new Set((skin.deco || []).map(d => String(d.i)).filter(i => i.startsWith('u:')).map(i => i.slice(2)));
+            delete th.icons; delete th.got;
+            if (skin.imgs) { th.imgs = {}; for (const k of Object.keys(skin.imgs)) if (used.has(k)) th.imgs[k] = await collThumb(skin.imgs[k], 48) || skin.imgs[k]; }
+            return th;
         }
+        const pgHash = skin => collHash(JSON.stringify(sanitizeSkin(skin)));
+        /* 페이지 원본을 읽어서 customSkins 에 (이미 있으면 바로) : 성공하면 true */
+        async function pgEnsure(id, got) {
+            if (hasOwn(customSkins, id)) return true;
+            for (const g of got == null ? [false, true] : [!!got]) {
+                let skin = null;
+                try { skin = await collItem(pgColl(g), id); } catch (e) {}
+                const c = skin && sanitizeSkin(skin);
+                if (c) { customSkins[id] = g ? Object.assign(c, { got: 1 }) : c; return true; }
+            }
+            return false;
+        }
+        /* 로그인할 때 · 다른 기기에서 고른 페이지가 바뀌었을 때 : 지금 고른 내 페이지 원본 먼저 */
+        async function pgPrepare() {
+            let rec = null;
+            try { rec = JSON.parse(store.getItem(SKIN_KEY)); } catch (e) {}
+            const id = rec && typeof rec.id === 'string' ? rec.id : '';
+            if (id && !hasOwn(skinPresets, id) && !/^(cs|th):/.test(id)) await pgEnsure(id, rec.g ? true : null);
+        }
+        if (typeof COLL !== 'undefined') COLL.loginHooks.push(() => { customSkins = {}; return pgPrepare(); });
+
         /* 내 페이지 저장 (🎨 색상설정 · 🎀 꾸미기 공용) : 지금 내가만든 페이지를 쓰는 중이면 그 페이지를 고칠지 물어요 */
         async function saveMySkin(skin) {
             const cur = hasOwn(customSkins, currentSkinId) && !customSkins[currentSkinId].got ? currentSkinId : '';
             let id = '';
             if (cur && await showMsg('🎨 지금 쓰는 내 페이지를 이 모양으로 바꿀까요?<br><span style="font-size:12px;color:#777;">취소를 누르면 새 페이지로 하나 더 저장해요.</span>', true)) id = cur;
-            if (!id) { if (mySkinFull('')) return false; id = newSkinId(); }
+            const th = await pgThumb(skin), x = { h: pgHash(skin) };
+            try {
+                if (id) await collSet(pgColl(false), id, skin, th, x);          // 화면은 바로 · 드라이브는 뒤에서
+                else { if (mySkinFull('')) return false; id = await collAdd(pgColl(false), skin, th, x); }
+            } catch (e) { showMsg('⚠ 내 페이지를 저장하지 못했어요. 잠시 뒤 다시 해 주세요.'); return false; }
             customSkins[id] = skin;
-            store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             applySkinPreset(id);
             return true;
         }
@@ -429,24 +456,16 @@
             if (await saveMySkin(newSkin)) showMsg('🎨 내 페이지에 저장했어요!<br><span style="font-size:12px;color:#777;">📔 페이지 → 내가만든 칸에서 언제든 고를 수 있어요.</span>');
         }
 
-        async function deleteSkin(id) {
-            if (!hasOwn(customSkins, id)) return;
+        async function deleteSkin(id, got) {
             if (!(await showMsg('이 페이지를 지울까요?', true))) return;
+            try { await collRemove(pgColl(!!got), id); } catch (e) { showMsg('⚠ 지우지 못했어요. 잠시 뒤 다시 해 주세요.'); return; }
             delete customSkins[id];
-            store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             if (currentSkinId === id) applySkinPreset('pink');
             renderSkinSelect();
         }
 
+        /* 드라이브에서 읽은 뒤 (customSkins 는 로그인할 때 지금 고른 페이지 원본만 채워요 · pgPrepare) */
         function loadCustomSkins() {
-            customSkins = {};
-            const saved = store.getItem('diary_custom_skins');
-            if (saved) {
-                try {
-                    const obj = JSON.parse(saved);
-                    if (obj && typeof obj === 'object') Object.keys(obj).forEach(n => { if (obj[n] && typeof obj[n] === 'object') customSkins[n] = obj[n]; });
-                } catch (e) { console.warn('내 페이지를 읽지 못했어요', e); }
-            }
             restoreSkin();
             if (typeof loadBgPattern === 'function') loadBgPattern();   // 전체 배경지 (js/skins.js)
         }
@@ -455,6 +474,7 @@
            파일 : 사용자가 정한 이름.json  내용 : {"malang_skin":1,"skin":{색 · 꾸밈}}  → 카페에 첨부 → 받은 사람은 📔 페이지 → 공유받은 → 📥 파일 불러오기
            (이름 · 만든 사람은 담지 않아요 · 썸네일만) */
         async function downloadSkinFile(id) {
+            await pgEnsure(id, false);
             const c = hasOwn(customSkins, id) ? sanitizeSkin(customSkins[id]) : null;
             if (!c) { showMsg('⚠ 이 페이지를 읽을 수 없어요.'); return; }
             if (!window.shxAsk) return;
@@ -474,14 +494,20 @@
                 return c ? { skin: c } : null;
             } catch (e) { return null; }
         }
-        function addReceivedSkin(p) {
+        async function addReceivedSkin(p) {
             if (!p) { showMsg('⚠ 페이지 파일이 아니거나 깨진 파일이에요.'); return; }
-            const same = Object.keys(customSkins).find(n => JSON.stringify(sanitizeSkin(customSkins[n])) === JSON.stringify(p.skin));
-            if (same) { applySkinPreset(same); showMsg('📔 이미 가지고 있는 페이지예요.'); return; }
+            const h = pgHash(p.skin);
+            let same = null;
+            try {
+                for (const g of [true, false]) { const e = (await collAll(pgColl(g))).find(x => x.x && x.x.h === h); if (e) { same = { id: e.id, g }; break; } }
+            } catch (e) { showMsg('⚠ 페이지 목록을 읽지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 불러와 주세요.</span>'); return; }
+            if (same) { if (await pgEnsure(same.id, same.g)) applySkinPreset(same.id); showMsg('📔 이미 가지고 있는 페이지예요.'); return; }
             if (mySkinFull('')) return;
-            const id = newSkinId();
-            customSkins[id] = Object.assign({}, p.skin, { got: 1 });                 // got : 공유받은 칸에 보여요
-            store.setItem('diary_custom_skins', JSON.stringify(customSkins));
+            const skin = Object.assign({}, p.skin, { got: 1 });                      // got : 공유받은 칸에 보여요
+            let id;
+            try { id = await collAdd(pgColl(true), skin, await pgThumb(skin), { h }); }
+            catch (e) { showMsg('⚠ 페이지를 넣지 못했어요. 잠시 뒤 다시 해 주세요.'); return; }
+            customSkins[id] = skin;
             applySkinPreset(id);
             showMsg('📥 페이지를 공유받은 칸에 넣고 적용했어요!');
         }

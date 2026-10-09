@@ -2860,3 +2860,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .pat-grid > .stk-go span { font-size: 2rem; line-height: 1; }
 .pat-grid > .stk-go small { font-size: 11.5px; color: #a08890; }
 #skinModal .stk-menu { grid-template-columns: repeat(3, 1fr); }
+
+/* 📚 모음 칸 (js/coll.js collGrid) : 칸들은 바깥 격자에 그대로 들어가고, 끝에 닿으면 다음 묶음을 읽어요 */
+.cg-host { display: contents; }
+.cg-more { grid-column: 1 / -1; width: 100%; min-height: 8px; text-align: center; font-size: 12.5px; color: #b08a98; padding: 6px 0; }

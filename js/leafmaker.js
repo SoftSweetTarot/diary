@@ -4,62 +4,40 @@
    - ✏️ 직접 그리기 : 종이 색 · 밑줄(무지 · 줄 · 모눈 · 도트) 위에 펜으로 그려요 (사진 위에 그려도 돼요)
    - 다 만들면 오늘 페이지 속지로 끼워지고 📃 속지 → 내가만든 칸에 모여요 (개수 제한 없음)
    - 페이지에는 그림(JPG)째로 그날 파일에 lfi 로 저장돼요 (주소 아님 · 인수인계 12번)
-   - 내가만든 목록 : 로그인하면 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 내속지.json · 둘러보기면 이 기기 (js/stickermaker.js 내 스티커와 같은 방식)
+   - 내가만든 목록 : 로그인하면 내 드라이브 말랑달콤 / 스티커 / 속지 / 내속지 / 목록 · 원본 · 둘러보기면 이 기기 (js/coll.js)
    ※ 링 구멍은 미리보기 · 페이지 모두 그 위에 그대로 보여요 (css/style.css --lf-holes) */
 
-        const LM_FILE = '내속지.json', LM_LOCAL = 'malang_my_leafs', LM_MAX = Infinity, LM_W = 900;
+        const LM_W = 900;
         const LM_PAPERS = [['page', '스킨 색'], ['#ffffff', '하양'], ['#fffaf0', '미색'], ['#fff0f5', '분홍'], ['#eefaf4', '민트'], ['#eef5ff', '하늘'], ['#f6f0ff', '보라'], ['#e9d5b3', '크라프트']];
         const LM_GUIDES = [['plain', '무지'], ['line', '줄'], ['grid', '모눈'], ['dot', '도트']];
         const LM_PENS = ['#5a3d4a', '#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#ffffff'];
         const LM_SIZES = [['3', '가늘게'], ['7', '보통'], ['16', '굵게']];
         const lm = { built: false, tab: 'photo', w: LM_W, h: 1400, img: null, zoom: 1, ox: 0, oy: 0, wash: 0, paper: 'page', guide: 'plain',
-            pen: LM_PENS[0], size: 7, erase: false, ink: null, undo: [], drag: null, list: null, fileId: null, loading: null };
+            pen: LM_PENS[0], size: 7, erase: false, ink: null, undo: [], drag: null };
         const lmq = id => document.getElementById(id);
-        const lmSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
+        const lmColl = () => stkColl('leaf', false);                  // 📃 내가만든 속지 (js/coll.js)
         const lmOk = u => /^data:image\/(jpeg|png|webp)/.test(u || '');
 
-        /* ---------- 내가만든 속지 목록 ---------- */
-        async function lmLoad() {
-            if (lm.list) return lm.list;
-            if (lm.loading) return lm.loading;
-            lm.loading = (async () => {
-                let arr = [];
-                try {
-                    if (lmSync()) {
-                        const rootId = await getFolder(STICKER_PATH, false);
-                        if (rootId) { const f = (await driveList(`name='${LM_FILE}' and '${rootId}' in parents and trashed=false`, 'id,name'))[0]; if (f) { lm.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); arr = Array.isArray(o.l) ? o.l : []; } }
-                    } else { const o = JSON.parse(localStorage.getItem(LM_LOCAL) || '{}'); arr = Array.isArray(o.l) ? o.l : []; }
-                } catch (e) {}
-                lm.list = arr.filter(x => x && lmOk(x.src));
-                lm.loading = null;
-                return lm.list;
-            })();
-            return lm.loading;
+        /* ---------- 📃 속지 창 → 내가만든 칸 ---------- */
+        function lmMine(box) {
+            const C = lmColl(), cur = collHash(typeof pageLeafImg !== 'undefined' ? pageLeafImg : '');
+            C.onChange = () => { if (box.isConnected && box.dataset.lm) lmMine(box); };
+            box.dataset.lm = '1';
+            box.innerHTML = `${window.shxBar ? shxBar('leaf') : ''}<div class="lf-picks"><button type="button" class="lf-pick lm-new" onclick="closeModal('leafModal'); openLeafMaker()"><i class="lf-sw"><b>＋</b></i>속지 만들기</button><div class="cg-host"></div></div>`;
+            return collGrid(box.querySelector('.cg-host'), C,
+                e => `<div class="lm-it" data-shx="${e.id}" data-id="${e.id}"><button type="button" class="lf-pick${e.x.h === cur ? ' on' : ''}" onclick="lmUse('${e.id}')"><i class="lf-sw lf-my" style="--lf-img:url('${e.th}')"></i>내 속지</button><i onclick="lmDel('${e.id}')" title="지우기">✕</i></div>`,
+                '<p class="svc-tip">아직 만든 속지가 없어요. <b>＋ 속지 만들기</b>로 사진을 깔거나 직접 그려 보세요!</p>');
         }
-        async function lmSave() {
-            const body = JSON.stringify({ v: 1, l: lm.list });
-            if (lmSync()) {
-                const rootId = await getFolder(STICKER_PATH, true);
-                try { const r = await driveUpsert(rootId, LM_FILE, lm.fileId, body); lm.fileId = r.id; }
-                catch (e) { if (e && e.code === 'gone') { lm.fileId = null; const r = await driveUpsert(rootId, LM_FILE, null, body); lm.fileId = r.id; } else throw e; }
-            } else localStorage.setItem(LM_LOCAL, body);
+        async function lmUse(id) {
+            let l = null;
+            try { l = await collItem(lmColl(), id); } catch (e) {}
+            if (l && lmOk(l.src)) { if (window.pickLeaf) pickLeaf('my', l.src); }
+            else showMsg('⚠ 이 속지를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
         }
-        /* 📃 속지 창 → 내가만든 칸 */
-        async function lmMine(box) {
-            box.innerHTML = '<div class="cs-empty">📃 불러오는 중…</div>';
-            const list = await lmLoad();
-            const cur = typeof pageLeafImg !== 'undefined' ? pageLeafImg : '';
-            box.innerHTML = `${list.length && window.shxBar ? shxBar('leaf') : ''}<div class="lf-picks">${list.map((l, i) => `<div class="lm-it" data-shx="${i}"><button type="button" class="lf-pick${l.src === cur ? ' on' : ''}" onclick="lmUse(${i})"><i class="lf-sw lf-my" style="--lf-img:url('${l.src}')"></i>내 속지 ${list.length - i}</button><i onclick="lmDel(${i})" title="지우기">✕</i></div>`).join('')}
-                <button type="button" class="lf-pick lm-new" onclick="closeModal('leafModal'); openLeafMaker()"><i class="lf-sw"><b>＋</b></i>속지 만들기</button></div>
-                ${list.length ? '' : '<p class="svc-tip">아직 만든 속지가 없어요. <b>＋ 속지 만들기</b>로 사진을 깔거나 직접 그려 보세요!</p>'}`;
-        }
-        async function lmUse(i) { const l = (await lmLoad())[i]; if (l && window.pickLeaf) pickLeaf('my', l.src); }
-        async function lmDel(i) {
-            const list = await lmLoad(); if (!list[i]) return;
+        async function lmDel(id) {
             if (!(await showMsg('이 속지를 내가만든 칸에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 끼운 페이지의 속지는 그대로 남아요.</span>', true))) return;
-            list.splice(i, 1);
+            await collRemove(lmColl(), id);
             lmMine(lmq('leafOther'));
-            lmSave().catch(() => showMsg('⚠ 지운 것을 드라이브에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 지워 주세요.</span>'));
         }
 
         /* ---------- 만들기 창 ---------- */
@@ -176,22 +154,18 @@
             const src = c.toDataURL('image/jpeg', .86);
             if (btn) btn.disabled = true;
             let saved = true;
-            try {
-                const list = await lmLoad();
-                list.unshift({ id: Date.now().toString(36), src });
-                if (list.length > LM_MAX) list.length = LM_MAX;
-                await lmSave();
-            } catch (e) { saved = false; }
+            try { await collAdd(lmColl(), { src }, await collThumb(src), { h: collHash(src) }); }   // 화면은 바로 · 드라이브는 뒤에서
+            catch (e) { saved = false; }
             if (btn) btn.disabled = false;
             if (keep) {
                 if (!saved) { showMsg('⚠ 내가만든 칸에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">잠시 뒤 다시 눌러 주세요.</span>'); return; }
                 closeModal('leafMakeModal');
-                showMsg(`💾 내가만든 칸에 저장했어요!<br><span style="font-size:12px;color:#777;">✨ 스티커 → 📃 속지 → 내가만든 칸에서 끼울 수 있어요. (최대 ${LM_MAX}장)</span>`);
+                showMsg(`💾 내가만든 칸에 저장했어요!<br><span style="font-size:12px;color:#777;">✨ 스티커 → 📃 속지 → 내가만든 칸에서 끼울 수 있어요.</span>`);
                 return;
             }
             closeModal('leafMakeModal');
             if (window.pickLeaf) pickLeaf('my', src);
-            showMsg(saved ? `📃 오늘 페이지 속지로 끼웠어요!<br><span style="font-size:12px;color:#777;">✨ 스티커 → 📃 속지 → 내가만든 칸에서 다른 날에도 쓸 수 있어요. (최대 ${LM_MAX}장)</span>`
+            showMsg(saved ? `📃 오늘 페이지 속지로 끼웠어요!<br><span style="font-size:12px;color:#777;">✨ 스티커 → 📃 속지 → 내가만든 칸에서 다른 날에도 쓸 수 있어요.</span>`
                 : '📃 오늘 페이지 속지로 끼웠어요!<br><span style="font-size:12px;color:#777;">⚠ 내가만든 칸에는 저장하지 못했어요.</span>');
         }
 

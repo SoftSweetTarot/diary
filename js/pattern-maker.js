@@ -3,8 +3,8 @@
    - 🧵 무늬 메이커     : 줄무늬 · 도트 · 깅엄 체크 · 격자 · 물결 (색 · 굵기 · 간격 · 기울기)
    - 🖼 이미지 배경지     : 내 사진/그림을 바둑판 · 엇갈림으로 반복
    - 🖌 그려서 만들기   : 한 칸을 그리면 이어 붙인 모습이 바로 보임 (이어그리기로 경계가 자연스럽게 연결)
-   - 내 배경지는 설정값 'diary_my_patterns' 로 저장 → 말랑달콤 / 다이어리 / 내배경지.json 파일 하나 (js/drive.js)
-       [{"uid":"k3x9","r":{레시피},"at":1759300000000}, {"uid":"m2a1","r":{…},"at":…,"got":1}, ...]   (got : 📥 공유받은 칸)
+   - 내 배경지 : 말랑달콤 / 페이지 / 배경지 / 내배경지 · 받은배경지 / 목록(작은 그림 100개씩) · 원본(레시피 하나에 파일 하나) (js/coll.js)
+       목록 칸은 작은 그림으로 그리고, 고를 때 원본을 읽어요 · 지금 고른 배경지 원본은 로그인할 때 먼저 읽어요
    - 이름 · 만든 사람은 없어요 (스티커처럼 썸네일만)
    - 💾 파일로 저장 : 파일 이름만 쓰면 '이름.json' 파일 하나(이미지 포함)를 내려받아요 → 사용자가 카페 글에 첨부 (js/sharebox.js shxAsk)
    - 📥 파일 불러오기 : 🌈 배경지 → 공유받은 칸 맨 위 · 카페에서 받은 배경지 파일을 넣어요 (사용자끼리 주고받기, 개발자 등록 없음)
@@ -13,54 +13,86 @@
         /* =====================================================================
            📂 내 배경지 (저장 · 불러오기 · 삭제)
            ===================================================================== */
-        const MY_PATTERN_KEY = 'diary_my_patterns';
         const MY_PATTERN_MAX = Infinity;           // 개수 제한 없음 (끝없이 저장)
-        const MY_PATTERN_MAX_CHARS = Infinity;     // 전체 용량 제한 없음
-        let myPatterns = [];
+        const patColl = got => collOf(PAGE_PATH.concat('배경지', got ? '받은배경지' : '내배경지'));
+        let myPatterns = [];                       // 원본을 읽어 온 것만 [{ uid, r, got }] (지금 고른 것 · 눌러서 고른 것)
+        const patView = { mine: null, share: null };   // 목록 칸에 보이는 것 : { C, lists, next, items[] }
 
-        function loadMyPatterns() {
-            let arr = null;
-            try { arr = JSON.parse(store.getItem(MY_PATTERN_KEY)); } catch (e) { arr = null; }
-            myPatterns = [];
-            if (!Array.isArray(arr)) return;
-            arr.forEach(it => {
-                if (!it || typeof it !== 'object') return;
-                const r = sanitizeRecipe(it.r);
-                const uid = typeof it.uid === 'string' && /^[a-z0-9]{1,24}$/.test(it.uid) ? it.uid : null;
-                if (r && uid && !myPatterns.some(m => m.uid === uid)) myPatterns.push(Object.assign({ uid, r, at: +it.at || 0 }, it.got ? { got: 1 } : {}));
-            });
+        /* 원본 읽기 (이미 있으면 바로) : 성공하면 true */
+        async function patEnsure(uid, got) {
+            if (myPatterns.some(m => m.uid === uid)) return true;
+            for (const g of got == null ? [false, true] : [!!got]) {
+                let r = null;
+                try { r = sanitizeRecipe(await collItem(patColl(g), uid)); } catch (e) {}
+                if (r) { myPatterns.push(Object.assign({ uid, r }, g ? { got: 1 } : {})); return true; }
+            }
+            return false;
         }
-
-        function saveMyPatterns() {
-            if (myPatterns.length) store.setItem(MY_PATTERN_KEY, JSON.stringify(myPatterns));
-            else if (store.getItem(MY_PATTERN_KEY) !== null) store.removeItem(MY_PATTERN_KEY);
+        /* 로그인할 때 · 다른 기기에서 고른 배경지가 바뀌었을 때 : 지금 고른 배경지 원본 먼저 */
+        async function patPrepare() {
+            let v = null;
+            try { v = JSON.parse(store.getItem(BG_PATTERN_KEY)); } catch (e) {}
+            if (v && typeof v.id === 'string' && v.id.startsWith('my:')) await patEnsure(v.id.slice(3), v.g ? true : null);
         }
+        if (typeof COLL !== 'undefined') COLL.loginHooks.push(() => { myPatterns = []; patView.mine = patView.share = null; return patPrepare(); });
+        function loadMyPatterns() {}                                   // 예전 이름 (js/skins.js loadBgPattern) : 원본은 patPrepare 가 읽어요
 
         function getMyPatternItems() {
             return myPatterns.map(m => ({ id: 'my:' + m.uid, uid: m.uid, tier: 'my', name: m.got ? '공유받은 배경지' : '내 배경지', got: !!m.got, css: recipeToCss(m.r), recipe: m.r }))
                 .filter(p => p.css);
         }
+        /* 목록 칸 (🌈 배경지 → 내가만든 · 공유받은) : 읽은 묶음까지의 작은 그림들 · more = 아직 안 읽은 묶음이 있어요 */
+        function patListItems(tab) {
+            const v = patView[tab];
+            if (!v) return { items: [], more: true };
+            return { items: v.items, more: v.next >= 0 };
+        }
+        /* 묶음 하나 더 읽기 (처음이면 가장 새 묶음부터) → 다 읽으면 다시 그려요 */
+        async function patListMore(tab) {
+            const got = tab === 'share', C = patColl(got);
+            let v = patView[tab];
+            if (v && v.busy) return;
+            if (!v) {
+                v = patView[tab] = { C, lists: null, next: 0, items: [], busy: true };
+                C.onChange = () => { patView[tab] = null; if (typeof renderPatternList === 'function') renderPatternList(); };
+                try { v.lists = await collIndex(C); } catch (e) { v.busy = false; v.next = -1; return; }
+                v.next = v.lists.length - 1;
+                v.items = C.pend.slice().reverse().map(e => patCell(e, got));
+            }
+            v.busy = true;
+            try {
+                while (v.next >= 0) {
+                    const arr = await collLoad(C, v.lists[v.next--]);
+                    v.items = v.items.concat(arr.slice().reverse().filter(e => !C.gone.has(e.id)).map(e => patCell(e, got)).filter(p => p.css));
+                    if (arr.length) break;
+                }
+            } catch (e) { v.next = -1; }
+            v.busy = false;
+            if (collOnline() && !C.checked) collCheck(C);
+        }
+        const patCell = (e, got) => ({ id: 'my:' + e.id, uid: e.id, tier: 'my', got: !!got, name: got ? '공유받은 배경지' : '내 배경지', css: recipeToCss(e.th) });
+        async function patThumb(r) { return r.kind === 'tile' && /^data:/.test(r.src) ? Object.assign({}, r, { src: await collThumb(r.src) || r.src }) : r; }
 
-        function addMyPattern(r, got) {                                 // got : 📥 파일로 불러온 배경지 (공유받은 칸 · 이미 있으면 'same')
+        /* 넣기 → uid · got 이고 이미 있으면 'same' · 실패 null */
+        async function addMyPattern(r, got) {                           // got : 📥 파일로 불러온 배경지 (공유받은 칸)
             const clean = sanitizeRecipe(r);
             if (!clean) { showMsg('⚠ 배경지를 저장하지 못했어요.<br>다시 만들어 주세요.'); return null; }
-            const same = myPatterns.find(m => JSON.stringify(m.r) === JSON.stringify(clean));
-            if (same) return got ? 'same' : same.uid;                     // 같은 배경지를 두 번 누르면 하나만
-            if (myPatterns.length >= MY_PATTERN_MAX) { showMsg(`🌈 배경지는 최대 ${MY_PATTERN_MAX}개까지 가질 수 있어요.<br>(내가만든 · 공유받은 합쳐서)<br>안 쓰는 배경지를 지운 뒤 다시 저장해 주세요.`); return null; }
-            const total = JSON.stringify(myPatterns).length + JSON.stringify(clean).length;
-            if (total > MY_PATTERN_MAX_CHARS) { showMsg('🌈 배경지 저장 공간이 가득 찼어요.<br>이미지·그림 배경지를 몇 개 지운 뒤 다시 저장해 주세요.'); return null; }
-            const uid = (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).slice(0, 24);
-            myPatterns.push(Object.assign({ uid, r: clean, at: Date.now() }, got ? { got: 1 } : {}));
-            saveMyPatterns();
-            return uid;
+            const h = collHash(JSON.stringify(clean)), C = patColl(got);
+            try {
+                const same = (await collAll(C)).find(e => e.x && e.x.h === h);
+                if (same) return got ? 'same' : same.id;                    // 같은 배경지를 두 번 누르면 하나만
+                const uid = await collAdd(C, clean, await patThumb(clean), { h });   // 화면은 바로 · 드라이브는 뒤에서
+                myPatterns.push(Object.assign({ uid, r: clean }, got ? { got: 1 } : {}));
+                patView[got ? 'share' : 'mine'] = null;
+                return uid;
+            } catch (e) { showMsg('⚠ 배경지를 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 해 주세요.</span>'); return null; }
         }
 
-        async function deleteMyPattern(uid) {
-            const m = myPatterns.find(x => x.uid === uid);
-            if (!m) return;
+        async function deleteMyPattern(uid, got) {
             if (!(await showMsg('이 배경지를 지울까요?', true))) return;
+            try { await collRemove(patColl(got), uid); } catch (e) { showMsg('⚠ 지우지 못했어요. 잠시 뒤 다시 해 주세요.'); return; }
             myPatterns = myPatterns.filter(x => x.uid !== uid);
-            saveMyPatterns();
+            patView[got ? 'share' : 'mine'] = null;
             if (bgPattern && bgPattern.id === 'my:' + uid) clearBgPattern();
             renderPatternList();
         }
@@ -137,10 +169,10 @@
             return null;
         }
 
-        function makerSave(apply) {
+        async function makerSave(apply) {
             const r = finalMakerRecipe();
             if (!r) return;
-            const uid = addMyPattern(r);
+            const uid = await addMyPattern(r);
             if (!uid) return;
             if (apply) selectBgPattern('my:' + uid);
             else showMsg('🌈 배경지 → 내가만든 칸에 저장했어요!');
@@ -161,9 +193,10 @@
             showMsg('💾 <b>' + recipeText(a.name, 40) + '.json</b> 파일을 저장했어요!<br><br>말랑달콤 카페의 <b>배경지 게시판</b>에 첨부해서 올려 주세요.<br><span style="font-size:12px;color:#777;">받은 사람은 🌈 배경지 → 공유받은 → 📥 파일 불러오기로 넣어요.<br>아이패드 · 아이폰은 \'파일\' 앱 → 다운로드 폴더에 있어요.</span>');
         }
 
-        function downloadMyPattern(uid) {
+        async function downloadMyPattern(uid) {
+            await patEnsure(uid, false);
             const m = myPatterns.find(x => x.uid === uid);
-            if (m) downloadPatternFile(m.r);
+            if (m) downloadPatternFile(m.r); else showMsg('⚠ 이 배경지를 불러오지 못했어요.');
         }
 
         /* 📥 배경지 → 공유받은 → 파일 불러오기 : 카페에서 받은 배경지 파일 (.json · 예전 .malang.txt 도 속은 같아요) */
@@ -185,7 +218,7 @@
             if (o && o.malang_sticker) { showMsg('✨ 스티커 파일이에요.<br><b>✨ 스티커 → 그 종류 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
             if (!o || o.malang_pattern !== 1 || !o.recipe) { showMsg('⚠ 말랑달콤 배경지 파일이 아니에요.<br><span style="font-size:12px;color:#777;">카페에서 받은 배경지 파일을 골라 주세요.</span>'); return; }
             if (!sanitizeRecipe(o.recipe)) { showMsg('⚠ 배경지 파일을 읽을 수 없어요.'); return; }
-            const uid = addMyPattern(o.recipe, true);
+            const uid = await addMyPattern(o.recipe, true);
             if (!uid) return;
             if (uid === 'same') { showMsg('🌈 이미 가지고 있는 배경지예요.'); return; }
             if (typeof renderPatternList === 'function') renderPatternList();

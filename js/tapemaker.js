@@ -3,18 +3,18 @@
    - ✏️ 그리기 : 네모 한 칸에 펜 · 지우개로 직접 그리면 테이프에 쭉 이어 붙어요 (🔁 이어지게 그리기 · 되돌리기 · 바탕색 · 크기)
    - 🖼️ 내 사진으로 : 사진 가운데를 네모로 잘라 테이프에 이어 붙여요 (사진은 이 기기에서만 줄여서, 완성된 테이프만 저장돼요)
    - 📌 바로 붙이거나 💾 내 마스킹테이프에 저장 → ✨ 스티커 창 → 🎀 마스킹테이프 → 내스티커에서 언제든 다시 붙여요 (최대 30개 · 선물 받은 테이프와 같은 칸에 따로 묶어 보여요)
-     저장 위치 : 내 드라이브 말랑달콤 / 다이어리 / 스티커 / 내마테.json (게스트는 이 기기에만)
+     저장 위치 : 내 드라이브 말랑달콤 / 스티커 / 마테 / 내마테 / 목록 · 원본 (js/coll.js · 게스트는 이 기기에만)
    - 테이프 그림은 js/tape.js 의 tapeSvg 를 그대로 써요 (끝 톱니 · 반투명 · 길이 늘이기 손잡이가 같아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (마스킹테이프 만들기 · 내 마스킹테이프만 '준비 중') */
 
-        const TPM_FILE = '내마테.json', TPM_LOCAL = 'malang_my_tapes', TPM_MAX = Infinity, TPM_PHOTO_PX = 96;
+        const TPM_MAX = Infinity, TPM_PHOTO_PX = 96;
         const TPM_PAD = 240, TPM_OUT = 120;                              // 그리는 칸(안쪽 해상도) · 저장되는 그림 크기
         const TPM_BRUSH = [['가늘게', 3], ['보통', 7], ['굵게', 14]];
         const TPM_COLORS = ['#ffc9d9', '#ffd9c2', '#fff3a6', '#bff0dc', '#bfe3ff', '#e9e1ff', '#ffffff', '#ff8fab', '#f2a12a', '#4caf7a', '#3d9be0', '#8a6be0', '#5a3d4a', '#4b5aa8'];
         const TPM_SIZE = { d: [16, 60, 30], i: [16, 60, 30] };            // 크기 막대 : [가장 작게, 가장 크게, 처음 값] (그리기 · 사진)
-        const tpmS = { built: false, m: 'd', bg: '#ffc9d9', pen: '#ffffff', br: 7, er: false, wrap: true, sd: 30, si: 30, dimg: '', img: '', undo: [], list: null, fileId: null, loading: null };
+        const tpmS = { built: false, m: 'd', bg: '#ffc9d9', pen: '#ffffff', br: 7, er: false, wrap: true, sd: 30, si: 30, dimg: '', img: '', undo: [] };
         const tpmq = id => document.getElementById(id);
-        const tpmSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
+        const tpmColl = () => stkColl('tape', false);                  // 🎀 내가만든 테이프 (js/coll.js)
         const tpmR = n => Math.round(n * 100) / 100;
 
         /* 저장해 둔 모양(o) → tape.js 의 tapeSvg 가 읽는 모양 (그림 · 사진 모두 '한 칸 그림'을 이어 붙여요) */
@@ -31,32 +31,8 @@
             return re && re.test(o.img || '') ? { id: o.id, m: o.m, bg: o.bg, s, img: o.img } : null;
         }
 
-        /* ---------- 내 마스킹테이프 목록 (드라이브) ---------- */
-        async function tpmLoad() {
-            if (tpmS.list) return tpmS.list;
-            if (tpmS.loading) return tpmS.loading;
-            tpmS.loading = (async () => {
-                let arr = [];
-                try {
-                    if (tpmSync()) {
-                        const rootId = await getFolder(STICKER_PATH, false);
-                        if (rootId) { const f = (await driveList(`name='${TPM_FILE}' and '${rootId}' in parents and trashed=false`, 'id,name'))[0]; if (f) { tpmS.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); arr = Array.isArray(o.t) ? o.t : []; } }
-                    } else { const o = JSON.parse(localStorage.getItem(TPM_LOCAL) || '{}'); arr = Array.isArray(o.t) ? o.t : []; }
-                } catch (e) {}
-                tpmS.list = arr.map(tpmClean).filter(Boolean);
-                tpmS.loading = null;
-                return tpmS.list;
-            })();
-            return tpmS.loading;
-        }
-        async function tpmSave() {
-            const body = JSON.stringify({ v: 1, t: tpmS.list });
-            if (tpmSync()) {
-                const rootId = await getFolder(STICKER_PATH, true);
-                try { const r = await driveUpsert(rootId, TPM_FILE, tpmS.fileId, body); tpmS.fileId = r.id; }
-                catch (e) { if (e && e.code === 'gone') { tpmS.fileId = null; const r = await driveUpsert(rootId, TPM_FILE, null, body); tpmS.fileId = r.id; } else throw e; }
-            } else localStorage.setItem(TPM_LOCAL, body);
-        }
+        /* 목록에 보일 작은 테이프 (그림만 48px 로 줄여요) */
+        async function tpmThumb(o) { return { m: o.m, bg: o.bg, s: o.s, img: await collThumb(o.img, 48) || o.img }; }
 
         /* ---------- 화면 (스티커 만들기 화면의 모양을 같이 써요 : css .smk-*) ---------- */
         function tpmBuild() {
@@ -185,11 +161,8 @@
             if (tpmS.m === 'i' && !tpmS.img) { showMsg('🖼️ 사진을 먼저 골라 주세요.'); return; }
             if (tpmS.m === 'd') { tpmExport(); if (!tpmS.dimg) { showMsg('✏️ 먼저 네모 칸에 그려 주세요.'); return; } }
             const o = tpmCur();
-            try {
-                await tpmLoad();
-                if (tpmS.list.length >= TPM_MAX) { if (!stick) { showMsg(`내 마스킹테이프는 ${TPM_MAX}개까지 저장돼요.<br>안 쓰는 테이프를 지워 주세요.`); return; } }
-                else { tpmS.list.unshift(o); await tpmSave(); }
-            } catch (e) { if (!stick) { showMsg('⚠ 내 마스킹테이프를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
+            try { await collAdd(tpmColl(), o, await tpmThumb(o), {}); }       // 화면은 바로 · 드라이브는 뒤에서
+            catch (e) { if (!stick) { showMsg('⚠ 내 마스킹테이프를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
             if (stick) { tpmStick(o); return; }
             closeTapeMaker();
             showMsg('🎀 내 마스킹테이프에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → 🎀 마스킹테이프 → 내가만든 칸에서 붙일 수 있어요.</span>');
@@ -200,26 +173,27 @@
         }
 
         /* ---------- ✏️ 스티커 창 → 🎀 내 마스킹테이프 ---------- */
-        function tpmGrid() {
-            return (tpmS.list || []).map((o, i) => `<div class="tpm-it" data-shx="${i}"><button type="button" class="tp-item" onclick="tpmUse(${i})"><span style="background-image:url(&quot;${tpmUrl(o)}&quot;)"></span></button><i onclick="tpmDel(${i})" title="지우기">✕</i></div>`).join('');
+        function tpmCell(e) {
+            const t = e.th && typeof e.th === 'object' ? Object.assign({ id: e.id }, e.th) : null;
+            return `<div class="tpm-it" data-shx="${e.id}" data-id="${e.id}"><button type="button" class="tp-item" onclick="tpmUse('${e.id}')"><span style="background-image:url(&quot;${t ? tpmUrl(t) : ''}&quot;)"></span></button><i onclick="tpmDel('${e.id}')" title="지우기">✕</i></div>`;
         }
         /* ✨ 스티커 → 🎀 마스킹테이프 → 내가만든 : 내가 만든 테이프 (이벤트로 받은 테이프는 이벤트 칸 · js/stickermaker.js stkTab) */
-        async function loadMyTapes() {
+        function loadMyTapes() {
             const g = tpmq('stickerGrid');
             g.dataset.mytape = '1';
-            g.innerHTML = '<div class="cs-empty">불러오는 중…</div>';
-            await tpmLoad();
-            if (!g.dataset.mytape) return;
-            const made = tpmGrid();
-            g.innerHTML = made
-                ? (window.shxBar ? shxBar('tape') : '') + '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + made
-                : '<div class="cs-empty">🎀 아직 마스킹테이프가 없어요.<br>✂️ 스티커만들기에서 나만의 테이프를 만들어 보세요!</div>';
+            const C = tpmColl();
+            C.onChange = () => { if (g.dataset.mytape && g.isConnected) loadMyTapes(); };
+            g.innerHTML = (window.shxBar ? shxBar('tape') : '') + '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div><div class="cg-host"></div>';
+            return collGrid(g.querySelector('.cg-host'), C, tpmCell, '<div class="cs-empty">🎀 아직 마스킹테이프가 없어요.<br>✂️ 스티커만들기에서 나만의 테이프를 만들어 보세요!</div>');
         }
-        function tpmUse(i) { const o = tpmS.list && tpmS.list[i]; if (o) tpmStick(o); }
-        async function tpmDel(i) {
+        async function tpmUse(id) {
+            let o = null;
+            try { o = tpmClean(await collItem(tpmColl(), id)); } catch (e) {}
+            if (o) tpmStick(o); else showMsg('⚠ 이 테이프를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
+        }
+        async function tpmDel(id) {
             if (!(await showMsg('이 테이프를 내 마스킹테이프에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 일기에 붙인 테이프는 그대로 남아요.</span>', true))) return;
-            tpmS.list.splice(i, 1);
-            try { await tpmSave(); } catch (e) {}
+            await collRemove(tpmColl(), id);
             const g = tpmq('stickerGrid'); if (g && g.dataset.mytape) loadMyTapes();
         }
 
@@ -237,4 +211,4 @@
         /* 스티커 창의 다른 칸을 누르면 '내 마스킹테이프' 표시 지우기 */
         document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.cat-btn'); if (b) { const g = tpmq('stickerGrid'); if (g) delete g.dataset.mytape; } }, true);
         window.openTapeMaker = openTapeMaker;
-        window.loadMyTapes = loadMyTapes;
+        window.loadMyTapes = loadMyTapes; window.tpmUse = tpmUse; window.tpmDel = tpmDel;

@@ -111,8 +111,17 @@
 
             const folderId = await getFolder(DOLL_FOLDERS.deco, true);   // 폴더가 없으면 만들기
             const body = JSON.stringify(d);
+            /* 📱 두 기기 : 덮어쓸 인형을 다른 기기가 그 사이 고쳤거나, 같은 이름 인형을 새로 만들었으면 물어봐요 */
+            let writeId = targetId;
+            const known = targetId && list.find(e => e.id === targetId);
+            const cur = targetId ? await driveMeta(targetId) : await findFile(folderId, fname);
+            if (cur && (!known || Date.parse(cur.modifiedTime) !== known.time)) {
+                const yes = await showAsk(`📱 다른 기기에서 '${dollText(d.name, 12)}' 인형을 ${known ? '고쳤어요' : '만들었어요'}.<br>지금 인형으로 바꿀까요?`, '👧 지금 인형으로', '그만두기');
+                if (!yes) { dollCache.list = null; return null; }          // 다음에 목록을 새로 읽어요
+                writeId = cur.id;
+            } else if (targetId && !cur) writeId = null;                   // 그 사이 지워졌으면 새로 만들어요
             let saved;
-            try { saved = await driveUpsert(folderId, fname, targetId, body); }
+            try { saved = await driveUpsert(folderId, fname, writeId, body); }
             catch (e) {
                 if (e && e.code === 'gone') saved = await driveUpsert(folderId, fname, null, body);   // 그 사이 지워진 파일 → 새로 만들기
                 else throw e;
@@ -120,7 +129,8 @@
             const prev = list.find(e => e.id === saved.id);
             if (prev && prev.name !== fname) await dollRenameFile(saved.id, fname);        // 이름을 바꿨으면 파일 이름도
             if (origId && origId !== saved.id) { try { await driveTrash(origId); } catch (e) {} }   // 다른 인형을 덮어썼으면 원래 파일은 휴지통으로
-            dollCache.list = [{ id: saved.id, name: fname, doll: d, time: now }].concat(list.filter(e => e.id !== saved.id && e.id !== origId));
+            dollCache.list = [{ id: saved.id, name: fname, doll: d, time: Date.parse(saved.modifiedTime) || now }].concat(list.filter(e => e.id !== saved.id && e.id !== origId));
+            if (cur && writeId === cur.id && !known) dollCache.list = null;   // 다른 기기 인형이 섞였으니 다음에 새로 읽어요
             return { id: saved.id, doll: d };
         }
 

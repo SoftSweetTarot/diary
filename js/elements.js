@@ -124,7 +124,7 @@
         /* ---------- 📚 라이브러리 페이지 넘기기 · 배치 설정 ----------
            - 한 페이지에 (몇 줄 × 한 줄에 몇 개)개씩 보여 주고, ◀ 이전 / 다음 ▶ 버튼(또는 옆으로 밀기)으로 넘김
            - 배치 설정(한 줄에 몇 개·몇 줄·크기)은 기기마다 화면 크기가 달라서 이 기기(localStorage)에만 기억
-             → 구글 드라이브 저장(일기·settings.json)에는 전혀 영향 없음 */
+             → 구글 드라이브 저장(일기·설정.json)에는 전혀 영향 없음 */
         const LIB_LAYOUT_KEY = 'malang_lib_layout';
         const LIB_DEFAULT_LAYOUT = { rows: 3, cols: 5, size: 88 };
         const LIB_LAYOUT_LIMITS = { rows: [1, 10], cols: [1, 10], size: [50, 180] };

@@ -1,8 +1,9 @@
 /* 말랑달콤 다이어리 - js/search.js
    🔍 일기 검색 : 지금까지 쓴 일기에서 낱말을 찾아요 (다이어리 위쪽 날짜 뒤의 🔍)
    - 글상자 · 오늘의 질문 대답 · 이모지 스티커 · 운세/꿈해몽/행운 카드 글 · 기분/날씨 도장 이름까지 찾아요
-   - 빠르게 찾으려고 '검색 목록'을 따로 둬요 : 말랑달콤 / 다이어리 / 검색-2026.json (한 해에 파일 1개, 글만 담겨요)
+   - 빠르게 찾으려고 '검색 목록'을 따로 둬요 : 말랑달콤 / 다이어리 / 검색 / 검색-2026.json (한 해에 파일 1개, 글만 담겨요)
      일기를 저장하면 검색 목록도 고쳐 두었다가, 20초 뒤(또는 화면을 닫을 때) 한 번에 올려요
+     올리기 전에 다른 기기가 그 파일을 고쳤으면 : 그 파일 위에 이 기기에서 바뀐 날만 얹어서 올려요
    - 검색 창을 처음 열 때 (기기마다 · 접속할 때마다 한 번) 드라이브의 일기 목록과 맞춰 봐요
      다른 기기에서 쓴 일기처럼 목록에 없는 날만 그 일기 파일을 읽어서 채워요 (처음 한 번은 조금 걸릴 수 있어요)
    - 게스트(로그인 안 함)는 지금 기기에 있는 일기에서만 찾아요
@@ -42,15 +43,13 @@
             let Y = sr.years.get(y);
             if (Y && Y.ready) return Y;
             if (Y && Y.loading) return Y.loading;
-            Y = { ready: false, d: {}, fileId: null, dirty: false, pend: [] };
+            Y = { ready: false, d: {}, fileId: null, mt: '', dirty: false, pend: [], touched: new Set() };
             sr.years.set(y, Y);
             Y.loading = (async () => {
                 try {
-                    const rootId = await getFolder(ROOT_PATH, false);
-                    if (rootId) {
-                        const f = (await driveList(`name='${SR_PREFIX}${y}.json' and '${rootId}' in parents and trashed=false`, 'id,name'))[0];
-                        if (f) { Y.fileId = f.id; const o = JSON.parse(await readFileText(f.id) || '{}'); if (o && o.d && typeof o.d === 'object') Y.d = o.d; }
-                    }
+                    const dir = await getFolder(SEARCH_PATH, false);
+                    const f = dir && await findFile(dir, `${SR_PREFIX}${y}.json`);
+                    if (f) { Y.fileId = f.id; Y.mt = f.modifiedTime || ''; const o = JSON.parse(await readFileText(f.id) || '{}'); if (o && o.d && typeof o.d === 'object') Y.d = o.d; }
                 } catch (e) {}
                 Y.ready = true; Y.loading = null;
                 Y.pend.splice(0).forEach(k => srApply(Y, k));
@@ -63,9 +62,18 @@
             let raw = null; try { raw = JSON.parse(store.getItem(key)); } catch (e) {}
             const t = srText(raw);
             const old = Y.d[day];
-            if (!t) { if (old) { delete Y.d[day]; Y.dirty = true; } }
-            else if (!old || old[0] !== t) { Y.d[day] = [t, '']; Y.dirty = true; }         // '' = 드라이브 파일 시각은 다음에 맞춰 볼게요
-            if (Y.dirty) srSchedule();
+            if (!t) { if (old) srSet(Y, day, null); }
+            else if (!old || old[0] !== t) srSet(Y, day, [t, '']);                          // '' = 드라이브 파일 시각은 다음에 맞춰 볼게요
+        }
+        /* 이 기기에서 바꾼 날 (올릴 때 다른 기기 것과 합치려고 기억) */
+        function srSet(Y, day, v) {
+            if (v) Y.d[day] = v; else delete Y.d[day];
+            Y.touched.add(day); Y.dirty = true; srSchedule();
+        }
+        /* 다른 기기에서 일기가 바뀌었어요 (js/drive.js checkRemote) → 검색 창을 열 때 다시 맞춰 봐요 */
+        function srRemote() {
+            sr.synced = false;
+            sr.years.forEach((Y, y) => { if (Y.ready && !Y.dirty) sr.years.delete(y); });
         }
         /* 일기를 저장할 때마다 (js/elements.js 의 saveData 에서 불러요) */
         function searchTouch(key) {
@@ -83,11 +91,20 @@
             for (const [y, Y] of sr.years) {
                 if (!Y.ready || !Y.dirty) continue;
                 Y.dirty = false;
+                const mine = new Set(Y.touched); Y.touched.clear();
                 try {
-                    const rootId = await getFolder(ROOT_PATH, true);
-                    const saved = await driveUpsert(rootId, `${SR_PREFIX}${y}.json`, Y.fileId, JSON.stringify({ v: 1, d: Y.d }));
-                    Y.fileId = saved.id;
-                } catch (e) { Y.dirty = true; if (e && e.code === 'gone') Y.fileId = null; srSchedule(); }
+                    const dir = await getFolder(SEARCH_PATH, true), name = `${SR_PREFIX}${y}.json`;
+                    let cur = Y.fileId ? await driveMeta(Y.fileId) : null;
+                    if (!cur) cur = await findFile(dir, name);
+                    if (cur && cur.modifiedTime !== Y.mt) {                              // 다른 기기가 고쳤어요 → 그 위에 내가 바꾼 날만
+                        let rd = {}; try { const o = JSON.parse(await readFileText(cur.id) || '{}'); if (o && o.d && typeof o.d === 'object') rd = o.d; } catch (e) {}
+                        const keep = day => mine.has(day) || Y.touched.has(day);
+                        Object.keys(rd).forEach(day => { if (!keep(day)) Y.d[day] = rd[day]; });
+                        Object.keys(Y.d).forEach(day => { if (!(day in rd) && !keep(day)) delete Y.d[day]; });
+                    }
+                    const saved = await driveUpsert(dir, name, cur && cur.id, JSON.stringify({ v: 1, d: Y.d }));
+                    Y.fileId = saved.id; Y.mt = saved.modifiedTime || '';
+                } catch (e) { Y.dirty = true; mine.forEach(d => Y.touched.add(d)); if (e && e.code === 'gone') Y.fileId = null; srSchedule(); }
             }
         }
         document.addEventListener('visibilitychange', () => { if (document.hidden) srUpload(); });
@@ -97,7 +114,7 @@
             if (sr.synced || !srOn()) return;
             if (sr.syncing) return sr.syncing;
             sr.syncing = (async () => {
-                const rootId = await getFolder(ROOT_PATH, false);
+                const rootId = await getFolder(DAY_PATH, false);
                 if (!rootId) { sr.synced = true; return; }
                 const years = (await driveList(`'${rootId}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name'))
                     .map(f => +((/^(\d{4})년$/.exec(f.name) || [])[1])).filter(Boolean).sort();
@@ -114,7 +131,7 @@
                             if (!e || (e[1] && f.modifiedTime && e[1] < f.modifiedTime) || !e[1]) need.push({ Y, date, key, day, f });
                         });
                     }
-                    Object.keys(Y.d).forEach(day => { if (!seen.has(day) && !store.getItem('diary_' + day.replace(/-/g, '_'))) { delete Y.d[day]; Y.dirty = true; } });
+                    Object.keys(Y.d).forEach(day => { if (!seen.has(day) && !store.getItem('diary_' + day.replace(/-/g, '_'))) srSet(Y, day, null); });
                 }
                 for (let i = 0; i < need.length; i += 4) {                          // 목록에 없는 날만 읽어서 채우기 (4개씩)
                     if (progress) progress(i, need.length);
@@ -123,8 +140,7 @@
                             const text = await fetchDay(n.date);                 // 메모리에 쌓아 두지 않고 글만 뽑아요
                             let raw = null; try { raw = JSON.parse(text); } catch (e) {}
                             const t = srText(raw);
-                            if (t) n.Y.d[n.day] = [t, n.f.modifiedTime || '']; else delete n.Y.d[n.day];
-                            n.Y.dirty = true;
+                            srSet(n.Y, n.day, t ? [t, n.f.modifiedTime || ''] : null);
                         } catch (e) {}
                     }));
                 }
@@ -201,3 +217,4 @@
         }
         window.openSearch = openSearch;
         window.searchTouch = searchTouch;
+        window.srRemote = srRemote;

@@ -29,6 +29,13 @@
                 document.getElementById('customAlertModal').style.display = 'flex';
             });
         }
+        /* 버튼 글자를 바꿔서 묻기 (확인 → ok · 취소 → no) : 결과 true / false */
+        async function showAsk(msg, ok, no) {
+            const a = document.getElementById('customAlertConfirmBtn'), b = document.getElementById('customAlertCancelBtn');
+            const oa = a.textContent, ob = b.textContent;
+            a.textContent = ok; b.textContent = no;
+            try { return await showMsg(msg, true); } finally { a.textContent = oa; b.textContent = ob; }
+        }
         function closeMsg(res) {
             document.getElementById('customAlertModal').style.display = 'none';
             if (msgResolve) {

@@ -17,7 +17,7 @@
         ];
         const TM_ANCHOR_MS = 120000;
         /* ⏲ 자동으로 사라지는 시간 (설정에서 정해요) : 팝업메뉴가 닫히는 시간 = 그림 선택이 풀리는 시간 (한 값으로 통일)
-           저장: 'diary_clear_sec'(settings.json) · 게스트는 이 기기 'malang_clear_sec' */
+           저장: 'diary_clear_sec'(설정.json) · 게스트는 이 기기 'malang_clear_sec' */
         const CLR_KEY = 'diary_clear_sec', CLR_LOCAL = 'malang_clear_sec', CLR_DEF = 3, CLR_MIN = 1, CLR_MAX = 15;
         function clearSec() {
             let v = null;
