@@ -2893,6 +2893,13 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .modal.snb-on > .modal-content { position: relative; box-sizing: border-box; width: min(94vw, 640px); max-width: calc(100vw - 12px); min-width: 0; max-width: none; height: min(86vh, 920px); max-height: none;
     overflow: hidden; padding: 12px 12px 8px 34px; border-radius: 8px 22px 22px 8px; transition: transform .3s cubic-bezier(.3,.8,.3,1);
     box-shadow: 3px 3px 0 #fff, 5px 5px 0 color-mix(in srgb, var(--border-color) 70%, #fff), 7px 7px 0 #fff, 9px 9px 0 color-mix(in srgb, var(--border-color) 55%, #fff), 0 16px 32px rgba(0,0,0,.2); }
+.modal.snb-on { pointer-events: none; }                                  /* 수첩이 떠 있어도 뒤의 다이어리를 잡고 옮길 수 있어요 */
+.modal.snb-on > .modal-content { pointer-events: auto; }
+.modal.snb-on.snb-back { z-index: 0; }                                  /* 다이어리를 누르면 다이어리가 앞으로 · 수첩을 누르면 수첩이 앞으로 */
+#diaryWrapper.snb-front { z-index: 1; }
+.modal.snb-on, .modal.snb-on *, .snb-ghost, .snb-ghost * { -webkit-tap-highlight-color: transparent; }   /* 누를 때 생기는 회색 네모 없애기 */
+.modal.snb-on .snb-body :focus, .modal.snb-on .snb-body :focus-visible { outline: none; }
+.snb-ghost > :not(img) { background: transparent !important; box-shadow: none !important; border-color: transparent !important; }
 .modal.snb-on.snb-away > .modal-content { transform: translateY(calc(50vh + 50% - 64px)); }
 .modal.snb-on .lib-cats, .modal.snb-on .lib-pager, .modal.snb-on .lib-toolbar, .modal.snb-on .lib-layout,
 .modal.snb-on .svc-tip, .modal.snb-on .tp-note, .modal.snb-on #tkEdgePick, .modal.snb-on .shx-bar, .modal.snb-on .sub-modal-btns { display: none !important; }

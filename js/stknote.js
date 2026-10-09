@@ -110,7 +110,7 @@
             snbMeasure();
         }
         function snbOnHide(m) {
-            m.classList.remove('snb-away');
+            m.classList.remove('snb-away', 'snb-back'); const w = snbq('diaryWrapper'); if (w) w.classList.remove('snb-front');
             if (snb.m !== m || snb.skipCover || snb.dropping) return;
             if (snb.libSaved && typeof libLayout !== 'undefined') {           // 🏷️ 그림 모음 배치는 원래대로 (수첩일 때만 장에 맞춰요)
                 const first = libPage * libLayout.rows * libLayout.cols;
@@ -329,6 +329,7 @@
                 const dx = e.clientX - p.x, dy = e.clientY - p.y, d = Math.hypot(dx, dy);
                 if (p.drag) { snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }
                 if (p.curl) { snbCurlAt((p.curl > 0 ? -dx : dx) - (p.ear ? 0 : 8)); e.preventDefault(); return; }
+                if (d > 8 && p.it && !p.swipe && Math.abs(dy) * 2 >= Math.abs(dx)) { clearTimeout(p.timer); snbLift(e, body); snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }   // 스티커를 누른 채 옆으로만 밀지 않고 끌면 기다리지 않고 바로 떼어져요
                 if (d > 8) { clearTimeout(p.timer); p.gone = true; }
                 if (d > 8 && !p.swipe) {                                       // 제목 아래는 어디를 밀어도 장 넘기기 · 스티커는 꾹 누른 뒤 끌어요 (마우스도 같아요)
                     p.swipe = true;
@@ -358,6 +359,13 @@
                 try { ear.setPointerCapture(e.pointerId); } catch (er) {}
             }));
         }
+        /* 🔀 수첩 ↔ 다이어리 : 누른 쪽이 앞으로 와요 (번갈아 옮기기) */
+        document.addEventListener('pointerdown', e => {
+            const m = snb.m, w = snbq('diaryWrapper'); if (!m || !w || !m.classList.contains('snb-on') || m.style.display !== 'flex') return;
+            const back = !!(e.target.closest && e.target.closest('#diaryWrapper'));
+            if (back === m.classList.contains('snb-back')) return;
+            m.classList.toggle('snb-back', back); w.classList.toggle('snb-front', back);
+        }, true);
         document.addEventListener('click', e => {
             if (snb.fire || Date.now() > snb.noClick || !snb.m || !snb.m.contains(e.target)) return;
             e.stopPropagation(); e.preventDefault();
@@ -379,7 +387,7 @@
             document.body.appendChild(g);
             p.ghost = g; p.gw = w; p.gh = h;
             snbGhostAt(p.x, p.y);
-            snb.m.classList.add('snb-away');
+            snb.m.classList.add('snb-away'); snb.m.classList.remove('snb-back'); const dw = snbq('diaryWrapper'); if (dw) dw.classList.remove('snb-front');
             if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
         }
         function snbGhostAt(x, y) { const p = snb.press || snb.last; if (p && p.ghost) p.ghost.style.transform = `translate(${x - p.gw / 2}px, ${y - p.gh / 2}px) rotate(-4deg) scale(1.12)`; }
