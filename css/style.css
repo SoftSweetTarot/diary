@@ -2713,6 +2713,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .tk-glue::after { content: ''; position: absolute; left: 6px; right: 6px; top: 3px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.55); }
 .tk-pull { position: absolute; right: -6px; bottom: -4px; font-size: 12px; font-weight: 800; color: color-mix(in srgb, var(--primary-accent) 88%, #4a2030); background: #fff; border: 2px solid color-mix(in srgb, var(--border-color) 55%, #fff); border-radius: 999px; padding: 1px 8px; transform: rotate(-4deg); pointer-events: none; animation: tkNudge 1.6s ease-in-out infinite; }
 @keyframes tkNudge { 50% { transform: rotate(-4deg) translateY(-3px); } }
+.tk-room .tk-rpad { position: absolute; left: 0; top: 0; width: 150px; height: 172px; transform-origin: 0 0; filter: drop-shadow(0 6px 14px rgba(90,60,50,.18)); }
+.tk-room .tk-fly { position: absolute; height: auto; pointer-events: none; -webkit-user-drag: none; user-select: none; filter: drop-shadow(0 6px 10px rgba(90,60,50,.2)); }
 .tk-stub { position: absolute; left: 0; top: 0; width: 150px; height: 22px; }
 .tk-stub .rim, .tk-stub .face { position: absolute; inset: 0; } .tk-stub .rim { background: #fffdf6; }
 .tk-sheet { position: absolute; left: 0; top: 0; width: 150px; height: 160px; }
