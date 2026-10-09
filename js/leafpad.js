@@ -77,7 +77,7 @@
         const TK_PADS = [['memo', '메모'], ['check', '체크'], ['sky', '하늘'], ['todo', '투두']];
         const TK_EDGES = [['straight', '반듯하게'], ['top', '윗변만 찢김'], ['all', '사방 찢김']];
         const TK_W = 150, TK_H = 148;
-        const tk = { pad: 'memo', edge: 'top' };
+        const tk = { pad: 'memo', edge: 'top', my: null };              // my : 🧻 내가만든 · 공유받은 떡메 { src(앞면 그림 JPG), glue(풀칠 띠 색 · 빈 값 = 스킨 색) } (js/leafmaker.js)
         const tkR = (a, b) => a + Math.random() * (b - a);
 
         function tkHex(c) {
@@ -90,10 +90,18 @@
         const tkAcc = () => tkHex(getComputedStyle(document.documentElement).getPropertyValue('--primary-accent'));
 
         /* 묶음 위에 보이는 맨 윗장 (HTML) */
-        function tkSheetHtml(id) {
+        function tkSheetHtml(id, my = tk.my) {
+            if (id === 'my') return `<div class="tk-sheet tk-my" style="background-image:url('${my && my.src || ''}')"></div>`;
             const h = { memo: '<span class="hd">MEMO</span>', sky: '<span class="hd">오늘 하늘 ☁</span><i class="cl"></i>', todo: '<span class="hd">TO DO</span><ul><li></li><li></li><li></li><li></li></ul>' }[id] || '';
             return `<div class="tk-sheet tk-${id}">${h}</div>`;
         }
+        /* 작은 떡메 묶음 그림 (목록 칸) · glue : 풀칠 띠 색 */
+        function tkMiniHtml(id, my) {
+            const g = my && /^#[0-9a-f]{6}$/i.test(my.glue || '') ? ` style="--tk-glue:${my.glue}"` : '';
+            return `<span class="tk-mini"><span class="tk-pad"${g}><span class="tk-stack"></span><span class="tk-top">${tkSheetHtml(id, my)}</span><span class="tk-glue"></span></span></span>`;
+        }
+        /* 🧻 내가만든 · 공유받은 떡메로 묶음 꺼내기 */
+        function tkUseMy(my) { tk.pad = 'my'; tk.my = my; spawnTteok(); }
         function tkChips(box, list, cur, fn) {
             box.innerHTML = list.map(([k, n]) => `<button type="button" class="tk-chip${k === cur ? ' on' : ''}" data-k="${k}">${n}</button>`).join('');
             box.querySelectorAll('.tk-chip').forEach(b => b.onclick = () => { box.querySelectorAll('.tk-chip').forEach(x => x.classList.toggle('on', x === b)); fn(b.dataset.k); });
@@ -109,8 +117,8 @@
         function openTteok() {
             const box = lfq('tkList');
             if (!box.firstChild) {
-                box.innerHTML = TK_PADS.map(([k, n]) => `<button type="button" class="tk-it" data-k="${k}"><span class="tk-mini"><span class="tk-pad"><span class="tk-stack"></span><span class="tk-top">${tkSheetHtml(k)}</span><span class="tk-glue"></span></span></span><b>${n}</b></button>`).join('');
-                box.querySelectorAll('.tk-it').forEach(b => tkTap(b, () => { tk.pad = b.dataset.k; spawnTteok(); }));
+                box.innerHTML = TK_PADS.map(([k, n]) => `<button type="button" class="tk-it" data-k="${k}">${tkMiniHtml(k)}<b>${n}</b></button>`).join('');
+                box.querySelectorAll('.tk-it').forEach(b => tkTap(b, () => { tk.pad = b.dataset.k; tk.my = null; spawnTteok(); }));
             }
             tkChips(lfq('tkEdgePick'), TK_EDGES, tk.edge, k => { tk.edge = k; });
             lfTabs('tk', 'free');
@@ -125,10 +133,12 @@
             if (!bar.firstChild) bar.innerHTML = LF_TAB_NAMES.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="lfTabs('${w}','${v}')">${n}</button>`).join('');
             bar.querySelectorAll('.stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
             lfq(w + 'Free').hidden = tab !== 'free'; other.hidden = tab === 'free';
+            if (w === 'tk') lfq('tkEdgePick').hidden = tab === 'event' || tab === 'shop';   // 찢김 모양은 기본 · 내가만든 · 공유받은 떡메 모두
             delete other.dataset.share; if (window.shxStop) shxStop();
             if (tab === 'shop') other.innerHTML = `<button type="button" class="stk-go" onclick="openShop('#/c/${encodeURIComponent(name)}')"><span>🛍️</span><b>문구점에서 ${name} 보기</b><small>새 창으로 열려요</small></button>`;
             else if (tab === 'mine' && w === 'leaf' && window.lmMine) lmMine(other);
-            else if (tab === 'share' && w === 'leaf' && window.shxShareTab) shxShareTab('leaf', other);   // 📥 공유받은 속지 (js/sharebox.js)
+            else if (tab === 'mine' && w === 'tk' && window.tkMine) tkMine(other);                    // 🧻 내가만든 떡메 (js/leafmaker.js)
+            else if (tab === 'share' && window.shxShareTab) shxShareTab(w, other);                     // 📥 공유받은 속지 · 떡메 (js/sharebox.js)
             else if (tab === 'event') other.innerHTML = `<div class="cs-empty">🎁 아직 받은 이벤트 선물이 없어요.<br>이벤트 ${name}가 오면 여기에 들어와요!</div>`;
             else if (tab !== 'free') other.innerHTML = `<div class="cs-empty">🛠️ ${name} ${bar.querySelector('.on').textContent} 칸은 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }
@@ -157,7 +167,9 @@
         function tkPieceSvg(id, sh, tape = true) {
             const acc = tkAcc(), W = TK_W, H = TK_H, F = "font-family=\"'Fredoka','Arial Rounded MT Bold',sans-serif\" font-weight=\"700\"";
             let face = '';
-            if (id === 'memo') {
+            if (id === 'my') {
+                face = `<rect width="${W}" height="${H}" fill="#fff"/><image href="${tk.my && tk.my.src || ''}" width="${W}" height="${H}" preserveAspectRatio="none"/>`;
+            } else if (id === 'memo') {
                 face = `<rect width="${W}" height="${H}" fill="#fff6cf"/>`;
                 for (let y = 61; y < H - 6; y += 22) face += `<rect x="0" y="${y}" width="${W}" height="1" fill="#f1d58a"/>`;
                 face += `<text x="12" y="27" ${F} font-size="17" letter-spacing="1" fill="#d98d2b">MEMO<tspan fill="${tkMix(acc, 1)}" dx="4">♡</tspan></text>`;
@@ -215,6 +227,8 @@
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
             closeModal('tteokModal'); tkBuild();
             lfq('tkRTop').innerHTML = tkSheetHtml(tk.pad); lfq('tkRStubs').innerHTML = '';
+            const g = tk.pad === 'my' && tk.my && /^#[0-9a-f]{6}$/i.test(tk.my.glue || '') ? tk.my.glue : '';
+            lfq('tkRPad').style.setProperty('--tk-glue', g || 'initial');
             Object.assign(tkS, { on: true, mv: [0, 0], drag: null, hint: '' });
             tkLayout();
             lfq('tkRoom').classList.add('show'); document.body.classList.add('fc-lock');
@@ -326,7 +340,7 @@
         /* 📝 페이지에 붙은 떡메 = 글상자(textarea) + 뒤에 깔린 떡메 그림 · 일기에는 글 + 떡메 종류(tk) + 그림 그대로(tb) 저장 (js/elements.js)
            옮길 때는 메모지처럼 살짝 떠서 · 짧게 톡 누르면 골라지면서 글쓰기 */
         function tkNoteDress(el, pad, src) {
-            if (!TK_PADS.some(p => p[0] === pad)) pad = 'memo';
+            if (pad !== 'my' && !TK_PADS.some(p => p[0] === pad)) pad = 'memo';
             el.classList.add('tk-note', 'tk-note-' + pad); el.dataset.tk = pad; el.dataset.tkSrc = src;
             const im = document.createElement('img'); im.className = 'tk-bg'; im.alt = ''; im.draggable = false; im.src = src;
             el.insertBefore(im, el.firstChild);
@@ -349,3 +363,4 @@
             tkGain.gain.setTargetAtTime(v, ac.currentTime, .03);
         }
         window.openTteok = openTteok; window.spawnTteok = spawnTteok; window.closeTteokRoom = closeTteokRoom; window.tkNoteDress = tkNoteDress; window.lfTabs = lfTabs;
+        window.tkMiniHtml = tkMiniHtml; window.tkUseMy = tkUseMy;

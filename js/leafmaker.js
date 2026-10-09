@@ -5,18 +5,26 @@
    - 다 만들면 오늘 페이지 속지로 끼워지고 📃 속지 → 내가만든 칸에 모여요 (개수 제한 없음)
    - 페이지에는 그림(JPG)째로 그날 파일에 lfi 로 저장돼요 (주소 아님 · 인수인계 12번)
    - 내가만든 목록 : 로그인하면 내 드라이브 말랑달콤 / 스티커 / 속지 / 내속지 / 목록 · 원본 · 둘러보기면 이 기기 (js/coll.js)
-   ※ 링 구멍은 미리보기 · 페이지 모두 그 위에 그대로 보여요 (css/style.css --lf-holes) */
+   ※ 링 구멍은 미리보기 · 페이지 모두 그 위에 그대로 보여요 (css/style.css --lf-holes)
+   🧻 떡메 만들기 (✂️ 스티커만들기 → 🧻 떡메 만들기) : 같은 창을 떡메 모양으로 써요 (lm.for = 'tk')
+   - 한 장 크기는 기본 떡메와 같아요 (150 × 148 · 그림은 2배로 그려요) · 링 구멍 대신 위에 🩷 풀칠 띠 색을 골라요
+   - 📌 떡메 묶음으로 꺼내기 : 바로 묶음이 나와서 뜯어 붙여요 · 💾 떡메 만들기 : 내가만든 칸에 저장만
+   - 내가만든 떡메 : 로그인하면 내 드라이브 말랑달콤 / 스티커 / 떡메 / 내떡메 · 둘러보기면 이 기기 (js/coll.js)
+   - 페이지에 붙은 한 장은 글 + 그림 그대로 그날 파일에 저장돼요 (tk: 'my' · tb · 인수인계 12번) */
 
         const LM_W = 900;
         const LM_PAPERS = [['page', '스킨 색'], ['#ffffff', '하양'], ['#fffaf0', '미색'], ['#fff0f5', '분홍'], ['#eefaf4', '민트'], ['#eef5ff', '하늘'], ['#f6f0ff', '보라'], ['#e9d5b3', '크라프트']];
         const LM_GUIDES = [['plain', '무지'], ['line', '줄'], ['grid', '모눈'], ['dot', '도트']];
         const LM_PENS = ['#5a3d4a', '#ff6b8b', '#ff9f43', '#ffd23f', '#4caf7a', '#3d9be0', '#8a6be0', '#ffffff'];
         const LM_SIZES = [['3', '가늘게'], ['7', '보통'], ['16', '굵게']];
-        const lm = { built: false, tab: 'photo', w: LM_W, h: 1400, img: null, zoom: 1, ox: 0, oy: 0, wash: 0, paper: 'page', guide: 'plain',
+        const LM_GLUES = [['', '스킨 색'], ['#ffb3c6', '분홍'], ['#ffcf9e', '살구'], ['#ffe98a', '노랑'], ['#b9ebcf', '민트'], ['#b7dcff', '하늘'], ['#d6c6ff', '보라'], ['#d9bf94', '크라프트']];
+        const LM_TK_W = 300, LM_TK_H = 296;                              // 🧻 떡메 한 장 (TK_W × TK_H 의 2배 · js/leafpad.js)
+        const lm = { built: false, for: 'leaf', glue: '', tab: 'photo', w: LM_W, h: 1400, img: null, zoom: 1, ox: 0, oy: 0, wash: 0, paper: 'page', guide: 'plain',
             pen: LM_PENS[0], size: 7, erase: false, ink: null, undo: [], drag: null };
         const lmq = id => document.getElementById(id);
         const lmColl = () => stkColl('leaf', false);                  // 📃 내가만든 속지 (js/coll.js)
         const lmOk = u => /^data:image\/(jpeg|png|webp)/.test(u || '');
+        const tkColl = () => stkColl('tk', false);                     // 🧻 내가만든 떡메 (js/coll.js)
 
         /* ---------- 📃 속지 창 → 내가만든 칸 ---------- */
         function lmMine(box) {
@@ -34,6 +42,27 @@
             if (l && lmOk(l.src)) { if (window.pickLeaf) pickLeaf('my', l.src); }
             else showMsg('⚠ 이 속지를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
         }
+        /* ---------- 🧻 떡메모지 창 → 내가만든 칸 ---------- */
+        function tkMine(box) {
+            const C = tkColl();
+            C.onChange = () => { if (box.isConnected && box.dataset.tkm) tkMine(box); };
+            box.dataset.tkm = '1';
+            box.innerHTML = `${window.shxBar ? shxBar('tk') : ''}<div class="tk-list"><button type="button" class="tk-it tk-new" onclick="closeModal('tteokModal'); openTteokMaker()"><span class="tk-plus">＋</span><b>떡메 만들기</b></button><div class="cg-host"></div></div>`;
+            return collGrid(box.querySelector('.cg-host'), C,
+                e => `<div class="lm-it" data-shx="${e.id}" data-id="${e.id}"><button type="button" class="tk-it" onclick="tkMineUse('${e.id}')">${tkMiniHtml('my', { src: e.th, glue: e.x && e.x.g })}<b>내 떡메</b></button><i onclick="tkMineDel('${e.id}')" title="지우기">✕</i></div>`,
+                '<p class="svc-tip" style="grid-column:1/-1">아직 만든 떡메가 없어요. <b>＋ 떡메 만들기</b>로 사진을 깔거나 직접 그려 보세요!</p>');
+        }
+        async function tkMineUse(id) {
+            let t = null;
+            try { t = await collItem(tkColl(), id); } catch (e) {}
+            if (t && lmOk(t.src)) tkUseMy({ src: t.src, glue: t.glue || '' });
+            else showMsg('⚠ 이 떡메를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
+        }
+        async function tkMineDel(id) {
+            if (!(await showMsg('이 떡메를 내가만든 칸에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 붙인 떡메는 그대로 남아요.</span>', true))) return;
+            await collRemove(tkColl(), id);
+            tkMine(lmq('tkOther'));
+        }
         async function lmDel(id) {
             if (!(await showMsg('이 속지를 내가만든 칸에서 지울까요?<br><span style="font-size:12px;color:#777;">이미 끼운 페이지의 속지는 그대로 남아요.</span>', true))) return;
             await collRemove(lmColl(), id);
@@ -48,6 +77,8 @@
             lmq('lmPaper').querySelectorAll('button').forEach(b => { const c = b.dataset.v === 'page' ? 'var(--page-bg)' : b.dataset.v; b.insertAdjacentHTML('afterbegin', `<i style="background:${c}"></i>`); });
             chips('lmGuide', LM_GUIDES, lm.guide, v => { lm.guide = v; lmDraw(); });
             chips('lmSize', LM_SIZES, String(lm.size), v => { lm.size = +v; });
+            chips('lmGlue', LM_GLUES, lm.glue, v => { lm.glue = v; lmGlueShow(); });
+            lmq('lmGlue').querySelectorAll('button').forEach(b => b.insertAdjacentHTML('afterbegin', `<i style="background:${b.dataset.v || 'var(--primary-accent)'}"></i>`));
             const pens = lmq('lmPens');
             pens.innerHTML = LM_PENS.map(c => `<button type="button" data-c="${c}" style="background:${c}" class="${c === lm.pen ? 'on' : ''}" aria-label="펜 색"></button>`).join('') + '<button type="button" data-c="erase" class="lm-eraser" aria-label="지우개">🧽</button>';
             pens.onclick = e => { const t = e.target.closest('button'); if (!t) return; pens.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === t)); lm.erase = t.dataset.c === 'erase'; if (!lm.erase) lm.pen = t.dataset.c; };
@@ -58,11 +89,22 @@
             cv.addEventListener('pointerdown', lmDown); cv.addEventListener('pointermove', lmMove);
             ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => cv.addEventListener(t, lmUp));
         }
-        function openLeafMaker() {
+        function lmGlueShow() { lmq('lmBox').style.setProperty('--tk-glue', lm.glue || 'initial'); }
+        const openLeafMaker = () => lmOpen('leaf');
+        const openTteokMaker = () => lmOpen('tk');
+        function lmOpen(kind) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
             lmBuild();
+            const T = kind === 'tk';
+            lm.for = kind;
+            lmq('leafMakeModal').querySelector('.lm-content').classList.toggle('lm-tk', T);
+            lmq('lmTitle').textContent = T ? '🧻 떡메 만들기' : '📃 속지 만들기';
+            lmq('lmGo').textContent = T ? '📌 떡메 묶음으로 꺼내기' : '📃 오늘 페이지에 끼우기';
+            lmq('lmKeep').textContent = T ? '💾 떡메 만들기' : '💾 속지 만들기';
+            lmGlueShow();
             const ca = lmq('canvasArea'), r = ca && ca.getBoundingClientRect();
-            lm.w = LM_W; lm.h = Math.round(LM_W * (r && r.width ? r.height / r.width : 1.55));
+            if (T) { lm.w = LM_TK_W; lm.h = LM_TK_H; }
+            else { lm.w = LM_W; lm.h = Math.round(LM_W * (r && r.width ? r.height / r.width : 1.55)); }
             const cv = lmq('lmCv'); cv.width = lm.w; cv.height = lm.h;
             lm.ink = document.createElement('canvas'); lm.ink.width = lm.w; lm.ink.height = lm.h;
             lm.img = null; lm.zoom = 1; lm.ox = lm.oy = 0; lm.wash = 0; lm.undo = [];
@@ -91,7 +133,7 @@
         function lmAccent() { return getComputedStyle(document.documentElement).getPropertyValue('--primary-accent').trim() || '#ff6b81'; }
         /* 종이 → 사진 → 연하게(하얀 막) → 밑줄 → 그림 */
         function lmCompose(x) {
-            const W = lm.w, H = lm.h, u = W / 100;
+            const W = lm.w, H = lm.h, u = lm.for === 'tk' ? 6 : W / 100;     // 🧻 떡메는 줄 간격이 기본 메모 떡메와 비슷하게
             x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
             x.fillStyle = lmPaperColor(); x.fillRect(0, 0, W, H);
             if (lm.paper === '#e9d5b3') { for (let i = 0; i < 2600; i++) { x.fillStyle = `rgba(120,85,45,${Math.random() * .09})`; x.fillRect(Math.random() * W, Math.random() * H, 2, 2); } }
@@ -151,7 +193,8 @@
         async function lmDone(btn, keep) {                              // keep : 💾 내가만든 칸에 저장만 (오늘 페이지는 그대로)
             if (btn && btn.disabled) return;
             const c = document.createElement('canvas'); c.width = lm.w; c.height = lm.h; lmCompose(c.getContext('2d'));
-            const src = c.toDataURL('image/jpeg', .86);
+            const src = c.toDataURL('image/jpeg', lm.for === 'tk' ? .9 : .86);
+            if (lm.for === 'tk') return tkDone(btn, keep, src);
             if (btn) btn.disabled = true;
             let saved = true;
             try { await collAdd(lmColl(), { src }, await collThumb(src), { h: collHash(src) }); }   // 화면은 바로 · 드라이브는 뒤에서
@@ -169,5 +212,25 @@
                 : '📃 오늘 페이지 속지로 끼웠어요!<br><span style="font-size:12px;color:#777;">⚠ 내가만든 칸에는 저장하지 못했어요.</span>');
         }
 
-        window.openLeafMaker = openLeafMaker; window.lmTab = lmTab; window.lmUndo = lmUndo; window.lmClear = lmClear; window.lmDone = lmDone;
+        /* 🧻 떡메 : 내가만든 칸에 넣고 · 📌 이면 바로 묶음으로 */
+        async function tkDone(btn, keep, src) {
+            const glue = lm.glue;
+            if (btn) btn.disabled = true;
+            let saved = true;
+            try { await collAdd(tkColl(), { src, glue }, await collThumb(src), { h: collHash(src + glue), g: glue }); }
+            catch (e) { saved = false; }
+            if (btn) btn.disabled = false;
+            if (keep) {
+                if (!saved) { showMsg('⚠ 내가만든 칸에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">잠시 뒤 다시 눌러 주세요.</span>'); return; }
+                closeModal('leafMakeModal');
+                showMsg(`💾 내가만든 칸에 저장했어요!<br><span style="font-size:12px;color:#777;">✨ 스티커 → 🧻 떡메모지 → 내가만든 칸에서 꺼낼 수 있어요.</span>`);
+                return;
+            }
+            closeModal('leafMakeModal');
+            tkUseMy({ src, glue });
+            if (!saved) showMsg('⚠ 내가만든 칸에는 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">이 묶음은 지금 바로 뜯어 쓸 수 있어요.</span>');
+        }
+
+        window.openLeafMaker = openLeafMaker; window.openTteokMaker = openTteokMaker;
+        window.tkMine = tkMine; window.tkMineUse = tkMineUse; window.tkMineDel = tkMineDel; window.lmTab = lmTab; window.lmUndo = lmUndo; window.lmClear = lmClear; window.lmDone = lmDone;
         window.lmMine = lmMine; window.lmUse = lmUse; window.lmDel = lmDel;

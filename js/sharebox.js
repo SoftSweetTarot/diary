@@ -1,19 +1,19 @@
 /* 말랑달콤 다이어리 - js/sharebox.js
    📤 스티커 공유 : 내가 만든 스티커를 파일(.json) 하나로 저장 → 네이버 카페에 올려 주고받아요 (개발자 등록 없이 사용자끼리)
-   - 📤 공유하기 : 보관 창의 '내가만든' 칸 맨 위 (🏷️ 씰 · 🧩 조각 · 📄 모조지 · 🎀 마스킹테이프 · 📃 속지)
+   - 📤 공유하기 : 보관 창의 '내가만든' 칸 맨 위 (🏷️ 씰 · 🧩 조각 · 📄 모조지 · 🎀 마스킹테이프 · 📃 속지 · 🧻 떡메)
        누르면 고르기 → 스티커를 톡톡 눌러 체크 → 💾 파일로 저장 → 파일 이름 · 만든 사람(닉네임) 쓰기 → 기기에 저장
        한 파일에는 한 종류만 (카페 게시판이 종류별)
    - 📥 파일 불러오기 : 같은 보관 창의 '공유받은' 칸 맨 위 · 파일 이름은 상관없이 파일 속 종류를 보고 그 종류 공유받은 칸에 넣어요
        로그인한 사람만 (게스트는 이 기기 저장 공간이 작아서) · 종류마다 개수 제한 없음 · 이미 있는 것은 건너뛰어요
-       저장 위치 : 내 드라이브 말랑달콤 / 스티커 / 씰 / 받은씰 · 조각 / 받은조각 · 모조지 / 받은모조지 · 마테 / 받은마테 · 속지 / 받은속지 (목록 · 원본 js/coll.js)
+       저장 위치 : 내 드라이브 말랑달콤 / 스티커 / 씰 / 받은씰 · 조각 / 받은조각 · 모조지 / 받은모조지 · 마테 / 받은마테 · 속지 / 받은속지 · 떡메 / 받은떡메 (목록 · 원본 js/coll.js)
    - 파일 모양 : { malang_sticker: 1, kind, from: 'share', by, items: [ … ] } (그림은 주소가 아닌 그림 그대로 · 인수인계 12번)
        from 은 나중에 🎁 이벤트 · 🛍️ 문구점 스티커팩도 같은 모양으로 쓰려고 넣어 둔 표시
    - 공유받은 스티커는 다시 공유하지 않아요 (📤 공유하기는 내가만든 칸에만) · 하나씩 ✕ 로 지울 수 있어요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (공유하기 · 공유받은 칸만 없음) */
 
         const SHX_MAX = Infinity, SHX_PER_FILE = Infinity, SHX_FILE_MAX = Infinity;   // 개수 · 파일 용량 제한 없음 (끝없이 저장)
-        const SHX_KINDS = { seal: '🏷️ 씰스티커', piece: '🧩 조각스티커', paper: '📄 모조지', tape: '🎀 마스킹테이프', leaf: '📃 속지' };
-        const SHX_WHERE = { seal: '✨ 스티커 → 🏷️ 씰스티커', piece: '✨ 스티커 → 🧩 조각스티커', paper: '✨ 스티커 → 📄 모조지', tape: '✨ 스티커 → 🎀 마스킹테이프', leaf: '✨ 스티커 → 📃 속지' };
+        const SHX_KINDS = { seal: '🏷️ 씰스티커', piece: '🧩 조각스티커', paper: '📄 모조지', tape: '🎀 마스킹테이프', leaf: '📃 속지', tk: '🧻 떡메모지' };
+        const SHX_WHERE = { seal: '✨ 스티커 → 🏷️ 씰스티커', piece: '✨ 스티커 → 🧩 조각스티커', paper: '✨ 스티커 → 📄 모조지', tape: '✨ 스티커 → 🎀 마스킹테이프', leaf: '✨ 스티커 → 📃 속지', tk: '✨ 스티커 → 🧻 떡메모지' };
         const shx = { kind: '', on: false, picks: [] };                 // picks : 고른 칸 id
         const shxq = id => document.getElementById(id);
         const shxSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
@@ -26,6 +26,7 @@
             if (!o || typeof o !== 'object') return null;
             if (kind === 'tape') return typeof tpmClean === 'function' ? tpmClean(o) : null;
             if (kind === 'leaf') return shxImg(o.src) ? { src: o.src } : null;
+            if (kind === 'tk') return shxImg(o.src) ? { src: o.src, glue: /^#[0-9a-f]{6}$/i.test(o.glue || '') ? o.glue : '' } : null;
             if (!shxImg(o.src)) return null;
             const k = o.k === 'seal' || o.k === 'paper' || o.k === 'piece' ? o.k : '';
             if ((kind === 'piece' ? k !== 'piece' && k !== '' : k !== kind)) return null;
@@ -35,7 +36,7 @@
             if (k) it.k = k;
             return it;
         }
-        const shxKey = (kind, it) => collHash(kind + '|' + (kind === 'tape' ? it.bg + it.s + it.img : it.src + (it.ss ? it.ss.join('') : '')));
+        const shxKey = (kind, it) => collHash(kind + '|' + (kind === 'tape' ? it.bg + it.s + it.img : it.src + (it.ss ? it.ss.join('') : '') + (it.glue || '')));
         const shxColl = kind => stkColl(kind, true);                    // 📥 공유받은 (js/coll.js)
         const shxMine = kind => stkColl(kind, false);                   // 📤 내가만든 (공유하기에서 고르는 곳)
 
@@ -128,7 +129,7 @@
             if (!shxSync()) { box.innerHTML = head.replace('onclick="shxPickFile()"', 'onclick="shxGuest()"') + `<div class="cs-empty">🔐 공유받은 스티커는 로그인하면 쓸 수 있어요.<br>내 구글 드라이브에 안전하게 보관돼요.</div>`; return; }
             const C = shxColl(kind);
             C.onChange = () => { if (shxBox && shxBox.box === box && box.isConnected && box.dataset.share === kind) shxShareTab(kind, box); };
-            const wrap = kind === 'tape' ? '<div class="cg-host"></div>' : kind === 'leaf' ? '<div class="lf-picks"><div class="cg-host"></div></div>' : '<div class="smk-mine smk-in-modal"><div class="cg-host"></div></div>';
+            const wrap = kind === 'tape' ? '<div class="cg-host"></div>' : kind === 'leaf' ? '<div class="lf-picks"><div class="cg-host"></div></div>' : kind === 'tk' ? '<div class="tk-list"><div class="cg-host"></div></div>' : '<div class="smk-mine smk-in-modal"><div class="cg-host"></div></div>';
             box.innerHTML = head + wrap;
             return collGrid(box.querySelector('.cg-host'), C, e => shxCell(kind, e), `<div class="cs-empty">📥 아직 공유받은 ${SHX_KINDS[kind].replace(/^\S+\s/, '')}가 없어요.<br>카페에서 받은 파일을 불러와 보세요!</div>`);
         }
@@ -139,6 +140,7 @@
             const del = `<i onclick="shxDel('${kind}','${id}')" title="지우기">✕</i>`;
             if (kind === 'tape') { const t = e.th && typeof e.th === 'object' ? Object.assign({ id }, e.th) : null; return `<div class="tpm-it" data-id="${id}"><button type="button" class="tp-item" onclick="shxUse('${kind}','${id}')"><span style="background-image:url(&quot;${t ? tpmUrl(t) : ''}&quot;)"></span></button>${del}${by}</div>`; }
             if (kind === 'leaf') return `<div class="lm-it" data-id="${id}"><button type="button" class="lf-pick" onclick="shxUse('${kind}','${id}')"><i class="lf-sw lf-my" style="--lf-img:url('${e.th}')"></i>${x.by ? 'by ' + shxEsc(x.by) : '받은 속지'}</button>${del}</div>`;
+            if (kind === 'tk') return `<div class="lm-it" data-id="${id}"><button type="button" class="tk-it" onclick="shxUse('${kind}','${id}')">${tkMiniHtml('my', { src: e.th, glue: x.g })}<b>${x.by ? 'by ' + shxEsc(x.by) : '받은 떡메'}</b></button>${del}</div>`;
             return `<span class="smk-it${x.k === 'piece' ? ' smk-bag' : ''}" data-id="${id}"><button type="button" onclick="shxUse('${kind}','${id}')"><img src="${e.th}" alt=""></button>${x.n ? `<b class="smk-n">${x.n}${x.k === 'piece' ? 'pcs' : '장'}</b>` : ''}${del}${by}</span>`;
         }
         function shxGuest() { showMsg('🔐 공유받은 스티커는 <b>로그인</b>하면 불러올 수 있어요.<br><span style="font-size:12px;color:#777;">받은 스티커는 내 구글 드라이브에 보관돼요.</span>'); }
@@ -148,6 +150,7 @@
             if (!s) { showMsg('⚠ 이 스티커를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); return; }
             if (kind === 'tape') { if (typeof tpmStick === 'function') tpmStick(s); return; }
             if (kind === 'leaf') { if (window.pickLeaf) pickLeaf('my', s.src); return; }
+            if (kind === 'tk') { if (window.tkUseMy) tkUseMy(s); return; }
             closeModal('stickerModal');
             if (kind === 'seal' && window.openStickerPeel) openStickerPeel(s.ss || s.src, { ts: !!s.t });
             else if (kind === 'paper' && window.openPaperSheet) openPaperSheet(s.src);
@@ -196,7 +199,7 @@
             try {
                 for (const { it, h } of fresh.reverse()) {                        // 파일 맨 앞 것이 맨 위에 보이게
                     const th = kind === 'tape' ? await tpmThumb(it) : await collThumb(it.src);
-                    await collAdd(C, it, th, { by, h, k: it.k || '', n: it.ss ? it.ss.length : 0 });   // 화면은 바로 · 드라이브는 뒤에서
+                    await collAdd(C, it, th, Object.assign({ by, h, k: it.k || '', n: it.ss ? it.ss.length : 0 }, it.glue ? { g: it.glue } : {}));   // 화면은 바로 · 드라이브는 뒤에서
                 }
             } catch (e) { showMsg('⚠ 공유받은 칸에 넣지 못했어요.<br><span style="font-size:12px;color:#777;">잠시 뒤 다시 불러와 주세요.</span>'); return; }
             if (shxBox && shxBox.box.isConnected && shxBox.box.dataset.share === shxBox.kind) shxShareTab(shxBox.kind, shxBox.box);

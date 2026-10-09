@@ -44,6 +44,7 @@
       pick: `<rect x="8" y="10" width="32" height="28" rx="5" fill="#fff" ${K}/><rect x="11.5" y="13.5" width="25" height="21" rx="2.5" fill="#d4ecff"/><path d="M11.5 31l7-8 5 5.5 3.5-3.5 9.5 9.5a2.5 2.5 0 0 1-2.5 2h-20a2.5 2.5 0 0 1-2.5-2.5z" fill="#9ed7c0"/><circle cx="30.5" cy="19.5" r="2.8" fill="#ffd36b"/><circle cx="38" cy="36" r="6" fill="#ff9fb8" ${T}/><path d="${heart(38, 34, .3)}" fill="#fff"/>`,
       text: `${bubble('Aa', '#e6dcff')}${spark(38, 9, 4, '#ffe08f')}`,
       tapemk: `<path d="M18 33H36L34 36L36 39H18Z" fill="#ffd8a8" ${K}/><circle cx="18" cy="21" r="12" fill="#ffd8a8" ${K}/><circle cx="18" cy="21" r="5" fill="#fff" ${K}/><g fill="#fff"><circle cx="10.5" cy="17" r="1.3"/><circle cx="25" cy="15" r="1.3"/><circle cx="26" cy="27" r="1.3"/><circle cx="11" cy="27.5" r="1.3"/></g><circle cx="37" cy="12" r="7" fill="#ff9fb8" ${T}/><path d="M37 8.5v7M33.5 12h7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`,
+      tteokmk: `<path d="M7 18h26v20.5a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" fill="#fffaf0" ${K}/><path d="M7 35h26M7 38h26" stroke="#e8dccb" stroke-width="1.2"/><path d="M7 18h26v14H7z" fill="#dff3ff"/><path d="M11.5 24h13M11.5 28.5h9" stroke="#9dc9ea" stroke-width="1.5" stroke-linecap="round"/><rect x="5.5" y="12" width="29" height="7.5" rx="2" fill="#ff9fb8" ${K}/><path d="M9 15h22" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".7"/><circle cx="37" cy="12" r="7" fill="#ffd36b" ${T}/><path d="M37 8.5v7M33.5 12h7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`,
       leafmk: `<rect x="8" y="8" width="25" height="32" rx="4" fill="#dceaff" ${K}/><path d="M14 18h13M14 24h13M14 30h8" stroke="#9dbbe6" stroke-width="1.6" stroke-linecap="round"/><g transform="rotate(35 34 28)"><rect x="31" y="12" width="7" height="24" rx="1.5" fill="#ffd36b" ${T}/><rect x="31" y="12" width="7" height="4.5" rx="1.5" fill="#ff9fb8" ${T}/><path d="M31 36l3.5 6 3.5-6z" fill="#fde9cf" ${T}/></g>`,
       /* 🎨 페이지 */
       palette: `<path d="M24 7C13 7 6 14.5 6 23.5S13.5 41 22 41c3 0 4-1.6 4-3.4 0-2.6-2.4-3-2.4-5.2 0-2 1.7-3.4 3.8-3.4h4.6C38 29 42 25.5 42 20.5 42 12.5 34 7 24 7z" fill="#fff3e3" ${K}/><g ${T}><circle cx="14.5" cy="23" r="3.3" fill="#ff9fb8"/><circle cx="19" cy="14.5" r="3.3" fill="#ffd36b"/><circle cx="28.5" cy="13" r="3.3" fill="#9ed7c0"/><circle cx="35.5" cy="19.5" r="3.3" fill="#a9c8f5"/></g>`,
@@ -93,7 +94,7 @@
     /* 메뉴 이름 → 아이콘 */
     const MAP = {
         '미니시트': 'emoji', '캡슐스티커': 'caps', '마스킹테이프': 'tape', '조각스티커': 'piece', '씰스티커': 'seal', '모조지': 'paper', '속지': 'leaf', '메모지': 'memo', '떡메모지': 'tteok',
-        '포토부스': 'booth', '사진찍기': 'cam', '사진고르기': 'pick', '사진찍어 만들기': 'cam', '앨범골라 만들기': 'pick', '글씨 스티커': 'text', '글씨스티커 만들기': 'text', '마스킹테이프 만들기': 'tapemk', '속지 만들기': 'leafmk',
+        '포토부스': 'booth', '사진찍기': 'cam', '사진고르기': 'pick', '사진찍어 만들기': 'cam', '앨범골라 만들기': 'pick', '글씨 스티커': 'text', '글씨스티커 만들기': 'text', '마스킹테이프 만들기': 'tapemk', '속지 만들기': 'leafmk', '떡메 만들기': 'tteokmk',
         '페이지': 'leaf', '페이지 색상설정': 'palette', '페이지 꾸미기': 'bow', '배경지': 'cloud', '이미지로 배경지': 'pick', '그려서 배경지': 'brush',
         '매일': 'sprout', '운세·마음': 'ball', '만들기·꾸미기': 'doll', '게임': 'game', '펫 키우기': 'paw', '함께하기': 'letter',
         '말랑달콤 저금통': 'piggy', '말랑달콤 배경화면': 'wall', '말랑달콤 문구점': 'shop',

@@ -2720,6 +2720,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 
 /* 🧻 떡메모지 (js/leafpad.js) : 풀칠한 묶음 · 맨 윗장 · 뜯긴 자국 */
 .tk-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 8px 0 0; }
+.tk-row[hidden] { display: none; }
 .tk-chip { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--dk-ink, #7b5a63); background: #fff; border: 2px solid color-mix(in srgb, var(--border-color) 55%, #fff); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
 .tk-chip.on { background: color-mix(in srgb, var(--primary-accent) 14%, #fff); border-color: var(--primary-accent); color: color-mix(in srgb, var(--primary-accent) 88%, #4a2030); }
 .tk-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 4px; }
@@ -2735,7 +2736,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .tk-top { position: absolute; left: 0; top: 0; width: 150px; height: 160px; transform-origin: 50% 0; overflow: hidden; border-radius: 1px; }
 .tk-stubs { position: absolute; inset: 0; pointer-events: none; }
 .tk-glue { position: absolute; left: -1px; right: -1px; top: -3px; height: 15px; border-radius: 3px 3px 1px 1px;
-    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%, rgba(0,0,0,.06)), color-mix(in srgb, var(--primary-accent) 62%, #fff); box-shadow: 0 1.5px 0 rgba(0,0,0,.08), inset 0 -1px 0 rgba(0,0,0,.05); }
+    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%, rgba(0,0,0,.06)), var(--tk-glue, color-mix(in srgb, var(--primary-accent) 62%, #fff)); box-shadow: 0 1.5px 0 rgba(0,0,0,.08), inset 0 -1px 0 rgba(0,0,0,.05); }
 .tk-glue::after { content: ''; position: absolute; left: 6px; right: 6px; top: 3px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.55); }
 .tk-room .tk-rpad { position: absolute; left: 0; top: 0; width: 150px; height: 172px; transform-origin: 0 0; filter: drop-shadow(0 6px 14px rgba(90,60,50,.18)); }
 .tk-room .tk-x { position: absolute; right: -4px; top: -28px; width: 30px; height: 30px; padding: 0; border: 0; background: none; font: inherit; font-size: 20px; font-weight: 800; line-height: 30px; color: color-mix(in srgb, var(--primary-accent) 80%, #4a2030); text-shadow: 0 0 3px #fff, 0 0 6px #fff; cursor: pointer; touch-action: none; }
@@ -2748,6 +2749,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .element-box.tk-note-check textarea { padding-top: 22px; line-height: 1.3; }
 .element-box.tk-note-sky textarea { padding: 50px 14px 34px; line-height: 1.3; }
 .element-box.tk-note-todo textarea { padding: 59px 10px 8px 32px; }
+.element-box.tk-note-my textarea { padding-top: 22px; line-height: 1.3; }   /* 🧻 내가만든 떡메 : 그림 위 어디든 */
+.tk-my { background: #fff 0 12px / 150px 148px no-repeat; }
 .tk-stub { position: absolute; left: 0; top: 0; width: 150px; height: 22px; }
 .tk-stub .rim, .tk-stub .face { position: absolute; inset: 0; } .tk-stub .rim { background: #fffdf6; }
 .tk-sheet { position: absolute; left: 0; top: 0; width: 150px; height: 160px; }
@@ -2798,6 +2801,18 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lm-sub { margin: 12px 0 0; font-size: 12.5px; font-weight: bold; color: #7a5a66; }
 .lm-done { margin-top: 14px; }
 .lm-keep { width: 100%; justify-content: center; margin-top: 10px; font-size: 13.5px; }
+/* 🧻 떡메 만들기 (js/leafmaker.js · 속지 만들기 창을 같이 써요) : 링 구멍 대신 위에 풀칠 띠 */
+.lm-glue-box, .lm-glue { display: none; }
+.lm-tk .lm-holes { display: none; }
+.lm-tk .lm-box { overflow: visible; border-radius: 2px; margin-top: 24px; }
+.lm-tk .lm-box canvas { border-radius: 2px; }
+.lm-tk .lm-glue { display: block; position: absolute; left: -1px; right: -1px; top: -13px; height: 15px; border-radius: 3px 3px 1px 1px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%, rgba(0,0,0,.06)), var(--tk-glue, color-mix(in srgb, var(--primary-accent) 62%, #fff)); box-shadow: 0 1.5px 0 rgba(0,0,0,.08); }
+.lm-tk .lm-glue-box { display: block; }
+.tk-list .lm-it > .tk-it { width: 100%; }
+.tk-list .tk-it.tk-new { justify-content: center; border-style: dashed; color: var(--primary-accent); }
+.tk-list .tk-it.tk-new .tk-plus { width: 66px; height: 76px; display: grid; place-items: center; font-size: 26px; font-weight: 800; }
+.tk-list .tk-it b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .smk-hint b { color: var(--primary-accent); } .smk-hint small { font-size: 11px; color: var(--dk-soft, #b48b97); }   /* 🔤 글씨스티커 : 엔터 안내 2줄 */
 
 /* 📤 스티커 공유 (js/sharebox.js) : 내가만든 칸 📤 공유하기 · 공유받은 칸 📥 파일 불러오기 · 고르기 체크 · 파일 이름 창 */
