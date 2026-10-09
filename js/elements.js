@@ -352,8 +352,6 @@
             const onStart = (e) => {
                 /* 두 번째 손가락이 다른 것 위에 닿으면 고른 걸 바꾸지 않음 */
                 if (e.touches && e.touches.length > 1 && selectedElement && selectedElement !== el) return;
-                /* ✏️ 애플펜슬은 끌자마자 아이패드가 그림 끌어 옮기기 · 글자 고르기를 시작해서 (손가락은 꾹 눌러야 시작) 스티커 끌기가 중간에 끊겨요 → 펜슬일 때는 막아요 */
-                if (e.touches && e.touches[0] && e.touches[0].touchType === 'stylus' && e.cancelable && !e.target.closest('textarea')) e.preventDefault();
                 selectElement(el);
                 const pos = getClientPos(e);
                 startX = pos.x; startY = pos.y;
@@ -518,6 +516,14 @@
             if (idleDown) { clearTimeout(idleTimer); idleTimer = 0; } else idleArm();
         };
         ['mousedown', 'touchstart', 'mouseup', 'touchend', 'touchcancel'].forEach(t => document.addEventListener(t, idleTouch, { capture: true, passive: true }));
+        /* ✏️ 애플펜슬 : 아이패드는 펜슬로 끌자마자 그림 끌어 옮기기 · 글자 고르기를 시작해서 (손가락은 꾹 눌러야 시작) 끌기가 중간에 끊겨요
+           → 페이지 스티커 · 🍭 미니시트 · 🏷️ 씰스티커 · 🧩 조각스티커(비닐 찢기) · 📄 모조지 화면에서는 펜슬일 때 그 동작을 막아요 (글상자 · 버튼은 그대로) */
+        document.addEventListener('touchstart', e => {
+            const t = e.touches[0], tg = e.target;
+            if (!e.cancelable || !t || t.touchType !== 'stylus' || !tg.closest) return;
+            if (tg.closest('textarea, input, button, select')) return;
+            if (tg.closest('#canvasArea .element-box, .spk-grid, .pel-room')) e.preventDefault();
+        }, { capture: true, passive: false });
 
         document.getElementById('canvasArea').addEventListener('click', (e) => {
             if (e.target.id === 'canvasArea') {
