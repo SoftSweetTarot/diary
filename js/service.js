@@ -61,7 +61,7 @@
         }
 
         /* =====================================================================
-           ☕ 카페 창 : 카테고리 6개(매일 · 운세·마음 · 만들기·꾸미기 · 게임 · 보고·듣기 · 함께하기) → 그 안의 놀이
+           ☕ 카페 창 : 카테고리 6개(매일 · 운세·마음 · 인형 꾸미기 · 게임 · 보고·듣기 · 함께하기) → 그 안의 놀이
            - 아직 안 만든 기능은 버튼에 '(준비중)'이 붙어 있고, 누르면 안내 메시지만 떠요.
              기능을 만들면 index.html 버튼의 class 에서 'soon' 과 <small>(준비중)</small> 을 빼고 아래 함수 내용을 바꾸면 돼요.
            ===================================================================== */
@@ -116,7 +116,7 @@
             svcSeenAdd([b.id]);
             setTimeout(svcDailyBadges, 0);
         }, true);
-        const SVC_CAT_NAMES = { daily: '🌱 매일', fortune: '🔮 운세·마음', make: '🎨 만들기·꾸미기', game: '🕹️ 게임', watch: '🎧 보고·듣기', together: '💌 함께하기' };
+        const SVC_CAT_NAMES = { daily: '🌱 매일', fortune: '🔮 운세·마음', make: '🧸 인형 꾸미기', game: '🕹️ 게임', watch: '🎧 보고·듣기', together: '💌 함께하기' };
         function svcOpenCat(id) {
             const panel = document.getElementById('svcPanel-' + id); if (!panel) return;
             document.getElementById('svcCats').hidden = true;
