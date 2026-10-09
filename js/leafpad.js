@@ -40,6 +40,7 @@
             const box = lfq('leafPick'); if (!box) return;
             if (!box.firstChild) box.innerHTML = LEAFS.map(([k, n]) => `<button type="button" class="lf-pick" data-lf="${k}" onclick="pickLeaf('${k}')"><i class="lf-sw lf-${k}"></i>${n}</button>`).join('');
             setPageLeaf(pageLeaf);
+            lfTabs('leaf', 'free');
             closeModal('stickerMakeModal'); openModal('leafModal');
         }
         /* 고르면 새 속지가 오른쪽에서 스르륵 끼워져요 (붙인 것들은 그 위에 그대로) */
@@ -87,7 +88,22 @@
             tkChips(lfq('tkPadPick'), TK_PADS, tk.pad, k => { tk.pad = k; lfq('tkTop').innerHTML = tkSheetHtml(k); lfq('tkStubs').innerHTML = ''; });
             tkChips(lfq('tkEdgePick'), TK_EDGES, tk.edge, k => { tk.edge = k; });
             lfq('tkTop').innerHTML = tkSheetHtml(tk.pad); lfq('tkStubs').innerHTML = '';
+            lfTabs('tk', 'free');
             closeModal('stickerMakeModal'); openModal('tteokModal');
+        }
+
+        /* 📃 속지 · 🧻 떡메 창 위 카테고리 4칸 (다른 스티커 창과 같은 모양) · 기본 = 지금 고르는 판, 문구점 = 🛍️ 그 칸, 나머지는 '준비 중' */
+        const LF_TABS = {
+            leaf: ['속지', ['내속지', '공유속지', '기본속지', '문구점속지']],
+            tk: ['떡메모지', ['내떡메모지', '공유떡메모지', '기본떡메모지', '문구점떡메모지']],
+        };
+        function lfTabs(w, tab) {
+            const [name, ns] = LF_TABS[w], bar = lfq(w + 'Tabs'), other = lfq(w + 'Other');
+            if (!bar.firstChild) bar.innerHTML = ['mine', 'share', 'free', 'shop'].map((v, i) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="lfTabs('${w}','${v}')">${ns[i]}</button>`).join('');
+            bar.querySelectorAll('.stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+            lfq(w + 'Free').hidden = tab !== 'free'; other.hidden = tab === 'free';
+            if (tab === 'shop') other.innerHTML = `<button type="button" class="stk-go" onclick="openShop('#/c/${encodeURIComponent(name)}')"><span>🛍️</span><b>문구점에서 ${name} 보기</b><small>새 창으로 열려요</small></button>`;
+            else if (tab !== 'free') other.innerHTML = `<div class="cs-empty">🛠️ ${bar.querySelector('.on').textContent}는 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }
 
         /* 찢긴 선 : 종이 끝을 따라 잔물결 + 자잘한 톱니 */
@@ -166,4 +182,4 @@
             try { top.animate([{ transform: 'none' }, { transform: 'perspective(520px) rotateX(-24deg) translateY(-2px)' }, { transform: 'none' }], { duration: 260, easing: 'ease-out' }).onfinish = fin; }
             catch (e) { fin(); }
         }
-        window.openTteok = openTteok; window.tearTteok = tearTteok;
+        window.openTteok = openTteok; window.tearTteok = tearTteok; window.lfTabs = lfTabs;

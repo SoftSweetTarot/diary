@@ -1245,7 +1245,7 @@
         .sticker-grid .cs-it { position: relative; grid-column: span 2; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border: none; background: none; font-family: inherit; }
         .sticker-grid .cs-it img { width: 100%; max-width: 76px; aspect-ratio: 1; }
         .sticker-grid .cs-it small { font-size: 10.5px; line-height: 1.3; color: #8a6a58; word-break: keep-all; }
-        .sticker-grid .cs-empty { grid-column: 1 / -1; text-align: center; padding: 18px 8px 6px; font-size: 13px; line-height: 1.8; color: #a08890; }
+        .sticker-grid .cs-empty, .lf-other .cs-empty { grid-column: 1 / -1; text-align: center; padding: 18px 8px 6px; font-size: 13px; line-height: 1.8; color: #a08890; }
         .cs-guide { grid-column: 1 / -1; margin: 10px 2px 4px; padding: 12px 12px 10px; border-radius: 16px; background: #fff7fa; border: 2px dashed #ffc2d4; text-align: left; color: #6a5560; }
         .cs-guide-t { font-size: 13.5px; font-weight: 900; color: #e0457a; text-align: center; margin-bottom: 6px; }
         .cs-guide ol { margin: 0; padding: 0 0 0 20px; font-size: 12.5px; line-height: 1.65; word-break: keep-all; }
@@ -2584,16 +2584,19 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .stk-tab { padding: 6px 1px; border: 1.5px solid var(--border-color); border-radius: 12px; background: #fff; font: inherit; font-size: 12px; font-weight: bold; line-height: 1.2; color: #7a5a66; cursor: pointer; word-break: keep-all; letter-spacing: -.02em; }
 .stk-tab.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
 .sticker-grid .stk-head { grid-column: 1 / -1; font-size: 12.5px; font-weight: bold; color: #7a5a66; padding: 6px 2px 0; }
-.sticker-grid .stk-go { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: inherit; cursor: pointer; }
-.sticker-grid .stk-go span { font-size: 2rem; line-height: 1; }
-.sticker-grid .stk-go b { font-size: 14px; }
-.sticker-grid .stk-go small { font-size: 11.5px; color: #a08890; }
+.sticker-grid .stk-go, .lf-other .stk-go { width: 100%; grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: inherit; cursor: pointer; }
+.sticker-grid .stk-go span, .lf-other .stk-go span { font-size: 2rem; line-height: 1; }
+.sticker-grid .stk-go b, .lf-other .stk-go b { font-size: 14px; }
+.sticker-grid .stk-go small, .lf-other .stk-go small { font-size: 11.5px; color: #a08890; }
 .paper-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .paper-pick .pp-pick-btn { flex-direction: column; gap: 4px; padding: 14px 4px 8px; font-size: 12px; justify-content: center; }
 .paper-pick .pp-pick-btn small { font-size: 11.5px; color: inherit; line-height: 1.2; }
 .paper-pick .pp-chip { transform: scale(1.5); margin: 8px 0 10px; }
 
 /* 🍭 미니시트 (js/stickerpack.js) : 🍭 미니시트 창 위쪽 두 칸 · 팩 고르기 · 하얀 판 · 떠오른 스티커 */
+.lf-other { margin: 4px 0 6px; }
+.lf-other[hidden] { display: none; }
+.lf-tabs .stk-tab { font-size: 11.5px; letter-spacing: -.05em; }
 .stk-tabs.two { grid-template-columns: repeat(2, 1fr); }
 .spk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 4px 2px; }
 .spk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border: 1.5px solid var(--border-color); border-radius: 18px; background: #fff; font: inherit; color: #6b4f5a; cursor: pointer; box-shadow: 0 2px 0 var(--border-color); }
