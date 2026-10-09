@@ -2,19 +2,33 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff4f7">
 <title>말랑달콤 문구점</title>
-<link rel="stylesheet" href="shop.css?v=2">
+<link rel="icon" href="../icons/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shop.css?v=3">
 </head>
 <body>
+<!-- 🛍️ 말랑달콤 문구점 (다이어리 → 카페 → 🛍️ 문구점 · 각 보관 창의 '문구점' 칸에서 새 창으로 열려요)
+     칸 : 스티커(씰 · 조각 · 마테 · 모조지 · 메모지 · 떡메 · 속지) · 페이지 · 배경지 · 배경화면 → shop.js SH_TREE
+     상품은 문구점 시트(문구점_앱스크립트.gs)에서 · 주문은 🧺 장바구니 → 저금 코드와 함께 복사 → 오픈채팅 -->
 <header class="sh-top">
-  <a class="sh-logo" href="#/">🍬 말랑달콤 문구점</a>
-  <button class="sh-x" type="button" id="shClose" aria-label="닫기">✕</button>
+  <a class="sh-logo" href="#/" aria-label="문구점 처음으로"><span class="sh-logo-ic">🍬</span><span class="sh-logo-tx"><b>말랑달콤</b> 문구점</span></a>
+  <div class="sh-top-r">
+    <button class="sh-ic" type="button" id="shFindBtn" aria-label="찾기">🔍</button>
+    <button class="sh-ic" type="button" id="shClose" aria-label="닫기">✕</button>
+  </div>
+  <form class="sh-find" id="shFind" hidden><input type="search" id="shFindIn" placeholder="찾고 싶은 스티커 이름" enterkeyhint="search" maxlength="30"><button type="submit">찾기</button></form>
 </header>
 <nav class="sh-main" id="shMain"></nav>
 <nav class="sh-sub" id="shSub"></nav>
-<main id="shView"><p class="sh-msg">불러오는 중…</p></main>
-<footer class="sh-foot">© 말랑달콤 · 결제는 오픈채팅으로 안내해 드려요</footer>
-<script src="shop.js?v=2"></script>
+<main id="shView"><div class="sh-msg"><span class="sh-bounce">🍬</span>문구점 문을 여는 중…</div></main>
+<button class="sh-cart-fab" type="button" id="shCartFab" hidden onclick="location.hash='#/cart'"><span>🧺</span><b id="shCartN">0</b></button>
+<div class="sh-pop" id="shPop" hidden></div>
+<footer class="sh-foot">🎀 말랑달콤 문구점 · 주문은 오픈채팅으로 받아요</footer>
+<script src="shop.js?v=3"></script>
 </body>
 </html>

@@ -38,7 +38,7 @@
                 if (j && j.ok && typeof setGift === 'function') setGift(j.tape, j.pat, j.tp, j.pp);
                 if (j && j.ok && typeof wlSetMine === 'function') wlSetMine(j.walls);          // 🖼️ 내가 받은 배경화면 (js/wall.js)
                 if (j && j.ok && j.me) pr.me = String(j.me);
-                if (j && j.ok && j.code) pr.code = String(j.code);
+                if (j && j.ok && j.code) { pr.code = String(j.code); try { localStorage.setItem('malang_code', pr.code); } catch (e) {} }   // 🛍️ 문구점 주문에 저금 코드를 같이 적으려고 (shop/shop.js)
                 if (j && j.ok && j.gift) prGift(j.gift);
                 if (j && j.ok && j.first && typeof capsWelcome === 'function') capsWelcome();   // 🎁 처음 온 사람 → 캡슐 스티커 첫 선물 (js/gacha.js)
             } catch (e) { pr.last = Date.now() - PR_EVERY + 30000; }

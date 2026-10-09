@@ -230,7 +230,7 @@
                 share: '아직 공유받은 페이지가 없어요.<br>카페에서 받은 파일을 📥 파일 불러오기로 넣어 보세요.',
                 event: '🎁 아직 받은 이벤트 페이지가 없어요.<br>이벤트 페이지가 오면 여기에 들어와요!'
             }[sklTab];
-            const shop = sklTab === 'shop' ? `<button type="button" class="stk-go" onclick="openShop('#/')"><span>🛍️</span><b>문구점에서 페이지 보기</b><small>새 창으로 열려요</small></button>` : '';
+            const shop = sklTab === 'shop' ? `<button type="button" class="stk-go" onclick="openShop('#/c/페이지')"><span>🛍️</span><b>문구점에서 페이지 보기</b><small>새 창으로 열려요</small></button>` : '';
             const cell = (it, got) => {
                 const on = it.id === currentSkinId, safe = String(it.id).replace(/[\\'"<>&]/g, c => '&#' + c.charCodeAt(0) + ';');
                 const acts = it.own ? `<span class="skl-acts">${got ? '' : `<button type="button" title="파일로 저장 (카페에 올리기용)" onclick="downloadSkinFile('${safe}')">💾</button>`}<button type="button" title="지우기" onclick="deleteSkin('${safe}', ${got ? 1 : 0})">🗑</button></span>` : '';
@@ -422,7 +422,7 @@
                 const go = document.createElement('button');
                 go.type = 'button'; go.className = 'stk-go';
                 go.innerHTML = '<span>🛍️</span><b>문구점에서 배경지 보기</b><small>새 창으로 열려요</small>';
-                go.onclick = () => openShop('#/');
+                go.onclick = () => openShop('#/c/배경지');
                 frag.appendChild(go);
             }
             grid.appendChild(frag);

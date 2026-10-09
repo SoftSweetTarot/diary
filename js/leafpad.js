@@ -135,7 +135,7 @@
             lfq(w + 'Free').hidden = tab !== 'free'; other.hidden = tab === 'free';
             if (w === 'tk') lfq('tkEdgePick').hidden = tab === 'event' || tab === 'shop';   // 찢김 모양은 기본 · 내가만든 · 공유받은 떡메 모두
             delete other.dataset.share; if (window.shxStop) shxStop();
-            if (tab === 'shop') other.innerHTML = `<button type="button" class="stk-go" onclick="openShop('#/c/${encodeURIComponent(name)}')"><span>🛍️</span><b>문구점에서 ${name} 보기</b><small>새 창으로 열려요</small></button>`;
+            if (tab === 'shop') other.innerHTML = `<button type="button" class="stk-go" onclick="openShop('#/c/스티커/${encodeURIComponent(name)}')"><span>🛍️</span><b>문구점에서 ${name} 보기</b><small>새 창으로 열려요</small></button>`;
             else if (tab === 'mine' && w === 'leaf' && window.lmMine) lmMine(other);
             else if (tab === 'mine' && w === 'tk' && window.tkMine) tkMine(other);                    // 🧻 내가만든 떡메 (js/leafmaker.js)
             else if (tab === 'share' && window.shxShareTab) shxShareTab(w, other);                     // 📥 공유받은 속지 · 떡메 (js/sharebox.js)
