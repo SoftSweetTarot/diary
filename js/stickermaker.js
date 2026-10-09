@@ -254,7 +254,7 @@
             let size = 64; ctx.font = `${size}px ${smS.font}`;
             while (size > 22 && ctx.measureText(t).width > S - 50) { size -= 2; ctx.font = `${size}px ${smS.font}`; }
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-            if (smS.border) { ctx.save(); ctx.lineWidth = size * .42; ctx.strokeStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,.22)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3; ctx.strokeText(t, S / 2, S / 2); ctx.restore(); }
+            if (smS.border) { ctx.lineWidth = size * .42; ctx.strokeStyle = '#fff'; ctx.strokeText(t, S / 2, S / 2); }   // 🔤 글씨스티커는 그림자 없이
             ctx.lineWidth = size * .12; ctx.strokeStyle = smS.color === '#ffffff' ? '#ff9ab3' : 'rgba(0,0,0,.18)'; ctx.strokeText(t, S / 2, S / 2);
             ctx.fillStyle = smS.color; ctx.fillText(t, S / 2, S / 2);
         }
