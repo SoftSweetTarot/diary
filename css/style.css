@@ -2702,7 +2702,13 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .tk-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 8px 0 0; }
 .tk-chip { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--dk-ink, #7b5a63); background: #fff; border: 2px solid color-mix(in srgb, var(--border-color) 55%, #fff); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
 .tk-chip.on { background: color-mix(in srgb, var(--primary-accent) 14%, #fff); border-color: var(--primary-accent); color: color-mix(in srgb, var(--primary-accent) 88%, #4a2030); }
-.tk-zone { display: flex; justify-content: center; align-items: flex-end; height: 200px; }
+.tk-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 4px; }
+.tk-it { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 2px 8px; border: 2px solid color-mix(in srgb, var(--border-color) 55%, #fff); border-radius: 14px; background: #fff; font: inherit; color: var(--dk-ink, #7b5a63); cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.tk-it b { font-size: 12.5px; }
+.tk-it:active { transform: scale(.96); }
+.tk-mini { display: block; width: 66px; height: 76px; }
+.tk-mini .tk-pad { display: block; margin: 0; transform: scale(.44); transform-origin: 0 0; pointer-events: none; }
+.tk-mini .tk-stack, .tk-mini .tk-top, .tk-mini .tk-glue { display: block; }
 .tk-pad { position: relative; width: 150px; height: 172px; cursor: pointer; touch-action: none; margin-top: 14px; -webkit-tap-highlight-color: transparent; }
 .tk-stack { position: absolute; left: 0; right: 0; top: 0; height: 160px; border-radius: 2px; background: #fbf9f4;
     box-shadow: 0 1.5px 0 #f1ede4, 0 3px 0 #fbf9f4, 0 4.5px 0 #ece7dd, 0 6px 0 #fbf9f4, 0 7.5px 0 #e8e2d6, 0 9px 0 #f7f4ec, 0 10.5px 0 #e2dbce, 0 13px 8px rgba(100,70,60,.18); }
@@ -2711,8 +2717,6 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .tk-glue { position: absolute; left: -1px; right: -1px; top: -3px; height: 15px; border-radius: 3px 3px 1px 1px;
     background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%, rgba(0,0,0,.06)), color-mix(in srgb, var(--primary-accent) 62%, #fff); box-shadow: 0 1.5px 0 rgba(0,0,0,.08), inset 0 -1px 0 rgba(0,0,0,.05); }
 .tk-glue::after { content: ''; position: absolute; left: 6px; right: 6px; top: 3px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.55); }
-.tk-pull { position: absolute; right: -6px; bottom: -4px; font-size: 12px; font-weight: 800; color: color-mix(in srgb, var(--primary-accent) 88%, #4a2030); background: #fff; border: 2px solid color-mix(in srgb, var(--border-color) 55%, #fff); border-radius: 999px; padding: 1px 8px; transform: rotate(-4deg); pointer-events: none; animation: tkNudge 1.6s ease-in-out infinite; }
-@keyframes tkNudge { 50% { transform: rotate(-4deg) translateY(-3px); } }
 .tk-room .tk-rpad { position: absolute; left: 0; top: 0; width: 150px; height: 172px; transform-origin: 0 0; filter: drop-shadow(0 6px 14px rgba(90,60,50,.18)); }
 .tk-room .tk-x { position: absolute; right: -4px; top: -28px; width: 30px; height: 30px; padding: 0; border: 0; background: none; font: inherit; font-size: 20px; font-weight: 800; line-height: 30px; color: color-mix(in srgb, var(--primary-accent) 80%, #4a2030); text-shadow: 0 0 3px #fff, 0 0 6px #fff; cursor: pointer; touch-action: none; }
 .tk-room .tk-fly { position: absolute; height: auto; pointer-events: none; -webkit-user-drag: none; user-select: none; filter: drop-shadow(0 6px 10px rgba(90,60,50,.2)); }

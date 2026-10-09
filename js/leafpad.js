@@ -90,12 +90,14 @@
             el.addEventListener('pointerup', e => { if (at && Math.hypot(e.clientX - at[0], e.clientY - at[1]) < 16) { e.preventDefault(); fn(); } at = null; });
             el.addEventListener('pointercancel', () => { at = null; });
         }
+        /* 🧻 기본떡메모지 : 종류별 떡메 묶음 목록 (다른 스티커 창처럼) → 톡 고르면 페이지 앞에 묶음이 나와요 */
         function openTteok() {
-            const pad = document.querySelector('#tteokModal .tk-pad');
-            if (pad && !pad.dataset.tap) { pad.dataset.tap = 1; tkTap(pad, spawnTteok); }
-            tkChips(lfq('tkPadPick'), TK_PADS, tk.pad, k => { tk.pad = k; lfq('tkTop').innerHTML = tkSheetHtml(k); });
+            const box = lfq('tkList');
+            if (!box.firstChild) {
+                box.innerHTML = TK_PADS.map(([k, n]) => `<button type="button" class="tk-it" data-k="${k}"><span class="tk-mini"><span class="tk-pad"><span class="tk-stack"></span><span class="tk-top">${tkSheetHtml(k)}</span><span class="tk-glue"></span></span></span><b>${n}</b></button>`).join('');
+                box.querySelectorAll('.tk-it').forEach(b => tkTap(b, () => { tk.pad = b.dataset.k; spawnTteok(); }));
+            }
             tkChips(lfq('tkEdgePick'), TK_EDGES, tk.edge, k => { tk.edge = k; });
-            lfq('tkTop').innerHTML = tkSheetHtml(tk.pad);
             lfTabs('tk', 'free');
             closeModal('stickerMakeModal'); openModal('tteokModal');
         }
