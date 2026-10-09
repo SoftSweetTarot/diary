@@ -38,6 +38,32 @@
                 else { img.classList.add('broken'); img.alt = '⚠ ' + src; }
             };
             img.src = resolveSrc(src);
+            inlineImage(img);
+        }
+        /* 🖼️ 페이지 그림은 주소가 아닌 그림 그대로(data) 일기 JSON에 담아요 (확정 원칙)
+           → 불러올 때 개발자 구글 드라이브 · 앱스크립트 트래픽 0 · 주소로 붙은 그림은 한 번 그려서 바꾼 뒤 저장
+           - 긴 변 최대 1000px · 투명한 곳이 있으면 PNG, 없으면 JPG */
+        const INLINE_MAX = 1000;
+        function inlineImage(img) {
+            const src = img.dataset.src;
+            if (!src || src.startsWith('data:')) return;
+            const im = new Image();
+            im.crossOrigin = 'anonymous';
+            im.onload = () => {
+                if (img.dataset.src !== src || !im.naturalWidth) return;
+                try {
+                    const k = Math.min(1, INLINE_MAX / Math.max(im.naturalWidth, im.naturalHeight));
+                    const w = Math.max(1, Math.round(im.naturalWidth * k)), h = Math.max(1, Math.round(im.naturalHeight * k));
+                    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+                    const x = cv.getContext('2d'); x.drawImage(im, 0, 0, w, h);
+                    const a = x.getImageData(0, 0, w, h).data; let clear = false;
+                    for (let i = 3; i < a.length; i += 16) if (a[i] < 255) { clear = true; break; }
+                    const url = clear ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', .9);
+                    img.dataset.src = url; img.src = url;
+                    if (img.isConnected && typeof saveData === 'function') saveData(false);
+                } catch (e) {}
+            };
+            im.src = resolveSrc(src);
         }
 
         function addImage(src, fallback) {
