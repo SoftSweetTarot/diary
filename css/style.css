@@ -2792,3 +2792,4 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lm-acts .btn { flex: 1; justify-content: center; font-size: 13px; }
 .lm-sub { margin: 12px 0 0; font-size: 12.5px; font-weight: bold; color: #7a5a66; }
 .lm-done { margin-top: 14px; }
+.lm-keep { width: 100%; justify-content: center; margin-top: 10px; font-size: 13.5px; }

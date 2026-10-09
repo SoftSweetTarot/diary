@@ -170,7 +170,7 @@
         function lmClear() { lm.undo.push(lm.ink.getContext('2d').getImageData(0, 0, lm.w, lm.h)); lm.ink.getContext('2d').clearRect(0, 0, lm.w, lm.h); lmDraw(); }
 
         /* ---------- 다 만들었어요 : 오늘 페이지에 끼우고 내가만든 칸에 넣어요 ---------- */
-        async function lmDone(btn) {
+        async function lmDone(btn, keep) {                              // keep : 💾 내가만든 칸에 저장만 (오늘 페이지는 그대로)
             if (btn && btn.disabled) return;
             const c = document.createElement('canvas'); c.width = lm.w; c.height = lm.h; lmCompose(c.getContext('2d'));
             const src = c.toDataURL('image/jpeg', .86);
@@ -183,6 +183,12 @@
                 await lmSave();
             } catch (e) { saved = false; }
             if (btn) btn.disabled = false;
+            if (keep) {
+                if (!saved) { showMsg('⚠ 내가만든 칸에 저장하지 못했어요.<br><span style="font-size:12px;color:#777;">잠시 뒤 다시 눌러 주세요.</span>'); return; }
+                closeModal('leafMakeModal');
+                showMsg(`💾 내가만든 칸에 저장했어요!<br><span style="font-size:12px;color:#777;">✨ 스티커 → 📃 속지 → 내가만든 칸에서 끼울 수 있어요. (최대 ${LM_MAX}장)</span>`);
+                return;
+            }
             closeModal('leafMakeModal');
             if (window.pickLeaf) pickLeaf('my', src);
             showMsg(saved ? `📃 오늘 페이지 속지로 끼웠어요!<br><span style="font-size:12px;color:#777;">✨ 스티커 → 📃 속지 → 내가만든 칸에서 다른 날에도 쓸 수 있어요. (최대 ${LM_MAX}장)</span>`

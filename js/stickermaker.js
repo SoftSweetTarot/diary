@@ -108,7 +108,7 @@
                     </div>
                     <div id="smTextGo" class="smk-col">
                       <button type="button" class="smk-go" onclick="smFinish('text',this)">📌 다이어리에 붙이기</button>
-                      <button type="button" class="smk-go smk-sub" onclick="smFinish('keep',this)">💾 내 스티커에 저장만</button>
+                      <button type="button" class="smk-go smk-sub" onclick="smFinish('keep',this)">💾 씰스티커 내가만든에 저장만</button>
                     </div>
                     <button type="button" class="smk-go smk-sub" id="smTextBack" onclick="smTextPrev()" hidden>◀ 이전 단계</button>
                   </div>
@@ -473,7 +473,7 @@
         }
         async function smDoFinish(act) {
             if (smS.many && smS.mode === 'photo') return smManyFinish(act);
-            const k = SM_STICK[act] || (act === 'piece' || act === 'seal' || act === 'paper' ? act : '');
+            const k = SM_STICK[act] || (act === 'piece' || act === 'seal' || act === 'paper' ? act : '') || (smS.mode === 'text' ? 'seal' : '');   // 🔤 글씨스티커는 🏷️ 씰스티커 → 내가만든에 보관
             let src = smMake(k === 'paper' ? smS.border : !!k);
             if (!src) { showMsg(smS.shape === 'free' ? '✂️ 오리고 싶은 모양을 먼저 그려 주세요.' : '스티커를 만들지 못했어요.'); return; }
             if (k === 'paper') { const o = await smPaperSheet([src]); if (!o) return; src = o[0]; }
@@ -495,7 +495,7 @@
         const smKindOf = s => s.k === 'seal' || s.k === 'paper' ? s.k : 'piece';
         const SM_EMPTY = {
             piece: '✂️ 아직 만든 조각스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>🧩 조각스티커 만들기를 눌러 보세요!',
-            seal: '🏷️ 아직 만든 씰스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>🏷️ 씰스티커 만들기나 📌 다이어리에 붙이기를 눌러 보세요!',
+            seal: '🏷️ 아직 만든 씰스티커가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>🏷️ 씰스티커 만들기나 📌 다이어리에 붙이기를 눌러 보세요!<br>🔤 글씨스티커 만들기로 만든 글씨도 여기에 모여요.',
             paper: '📄 아직 만든 모조지가 없어요.<br>📸 포토부스 · 📷 사진찍기 · 🖼️ 사진고르기 결과에서<br>📄 모조지 만들기나 다이어리에 붙이기를 눌러 보세요!' };
         function smGrid(kind) {
             const L = (smS.list || []).map((s, i) => [s, i]).filter(([s]) => smKindOf(s) === kind);
