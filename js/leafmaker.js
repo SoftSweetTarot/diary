@@ -49,7 +49,7 @@
             box.innerHTML = '<div class="cs-empty">📃 불러오는 중…</div>';
             const list = await lmLoad();
             const cur = typeof pageLeafImg !== 'undefined' ? pageLeafImg : '';
-            box.innerHTML = `<div class="lf-picks">${list.map((l, i) => `<div class="lm-it"><button type="button" class="lf-pick${l.src === cur ? ' on' : ''}" onclick="lmUse(${i})"><i class="lf-sw lf-my" style="--lf-img:url('${l.src}')"></i>내 속지 ${list.length - i}</button><i onclick="lmDel(${i})" title="지우기">✕</i></div>`).join('')}
+            box.innerHTML = `${list.length && window.shxBar ? shxBar('leaf') : ''}<div class="lf-picks">${list.map((l, i) => `<div class="lm-it" data-shx="${i}"><button type="button" class="lf-pick${l.src === cur ? ' on' : ''}" onclick="lmUse(${i})"><i class="lf-sw lf-my" style="--lf-img:url('${l.src}')"></i>내 속지 ${list.length - i}</button><i onclick="lmDel(${i})" title="지우기">✕</i></div>`).join('')}
                 <button type="button" class="lf-pick lm-new" onclick="closeModal('leafModal'); openLeafMaker()"><i class="lf-sw"><b>＋</b></i>속지 만들기</button></div>
                 ${list.length ? '' : '<p class="svc-tip">아직 만든 속지가 없어요. <b>＋ 속지 만들기</b>로 사진을 깔거나 직접 그려 보세요!</p>'}`;
         }

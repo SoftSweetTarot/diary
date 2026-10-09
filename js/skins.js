@@ -258,8 +258,7 @@
             const items = patItems(), per = patPerPage(), pages = patPageCount();
             const nickRow = document.getElementById('patNickRow');
             if (nickRow) {
-                nickRow.style.display = patTier === 'my' && items.length ? 'flex' : 'none';
-                if (patTier === 'my' && typeof loadPatternNick === 'function') loadPatternNick();
+                nickRow.style.display = patTier === 'my' && window.pickPatternFile ? 'flex' : 'none';   // 📥 파일 불러오기 (js/pattern-maker.js)
             }
             document.getElementById('patStatus').textContent = items.length
                 ? `배경지 ${items.length}개 · 누르면 전체 배경에 적용돼요`

@@ -5,8 +5,8 @@
    - 🖌 그려서 만들기   : 한 칸을 그리면 이어 붙인 모습이 바로 보임 (이어그리기로 경계가 자연스럽게 연결)
    - 내 배경지는 설정값 'diary_my_patterns' 로 저장 → 구글 드라이브 settings.json 에 함께 저장
        [{"uid":"k3x9","name":"딸기 사선","r":{레시피},"at":1759300000000}, ...]
-   - 💾 파일로 저장 : 'malang_pattern_날짜_시간.malang.txt' 파일 하나(이미지 포함, 배경지 이름·닉네임은 파일 안에)를 내려받아 → 사용자가 카페 글에 첨부
-     → 관리자가 pattern-tool.html(배경지 등록 도구)에 넣어 js/community-patterns.js + patterns 폴더를 만들어 깃허브에 올림
+   - 💾 파일로 저장 : 파일 이름 · 만든 사람을 쓰면 '이름.json' 파일 하나(이미지 포함)를 내려받아요 → 사용자가 카페 글에 첨부 (js/sharebox.js shxAsk)
+   - 📥 파일 불러오기 : 내 배경지 칸 맨 위 · 카페에서 받은 배경지 파일을 내 배경지에 넣어요 (by 닉네임 표시 · 사용자끼리 주고받기, 개발자 등록 없음)
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → patterns → pattern-recipe → skins → pattern-maker → service */
 
         /* =====================================================================
@@ -27,7 +27,8 @@
                 const r = sanitizeRecipe(it.r);
                 const uid = typeof it.uid === 'string' && /^[a-z0-9]{1,24}$/.test(it.uid) ? it.uid : null;
                 if (r && uid && !myPatterns.some(m => m.uid === uid)) {
-                    myPatterns.push({ uid, name: recipeText(it.name, 20) || '내 배경지', r, at: +it.at || 0 });
+                    const by = recipeText(it.by, 12);
+                    myPatterns.push(Object.assign({ uid, name: recipeText(it.name, 20) || '내 배경지', r, at: +it.at || 0 }, by ? { by } : {}));
                 }
             });
         }
@@ -38,21 +39,22 @@
         }
 
         function getMyPatternItems() {
-            return myPatterns.map(m => ({ id: 'my:' + m.uid, uid: m.uid, tier: 'my', name: m.name, css: recipeToCss(m.r), recipe: m.r }))
+            return myPatterns.map(m => ({ id: 'my:' + m.uid, uid: m.uid, tier: 'my', name: m.name, by: m.by || '', css: recipeToCss(m.r), recipe: m.r }))
                 .filter(p => p.css);
         }
 
-        function addMyPattern(name, r) {
+        function addMyPattern(name, r, by, file) {                     // by · file : 📥 파일로 불러온 배경지 (만든 사람 · 이미 있으면 'same')
             const clean = sanitizeRecipe(r);
             if (!clean) { showMsg('⚠ 배경지를 저장하지 못했어요.<br>다시 만들어 주세요.'); return null; }
             const nm = recipeText(name, 20) || '내 배경지';
             const same = myPatterns.find(m => m.name === nm && JSON.stringify(m.r) === JSON.stringify(clean));
-            if (same) return same.uid;                                   // 같은 배경지를 두 번 누르면 하나만
+            if (same) return file ? 'same' : same.uid;                    // 같은 배경지를 두 번 누르면 하나만
             if (myPatterns.length >= MY_PATTERN_MAX) { showMsg(`📂 내 배경지는 최대 ${MY_PATTERN_MAX}개까지 저장할 수 있어요.<br>안 쓰는 배경지를 지운 뒤 다시 저장해 주세요.`); return null; }
             const total = JSON.stringify(myPatterns).length + JSON.stringify(clean).length;
             if (total > MY_PATTERN_MAX_CHARS) { showMsg('📂 내 배경지 저장 공간이 가득 찼어요.<br>이미지·그림 배경지를 몇 개 지운 뒤 다시 저장해 주세요.'); return null; }
             const uid = (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).slice(0, 24);
-            myPatterns.push({ uid, name: nm, r: clean, at: Date.now() });
+            const who = recipeText(by, 12);
+            myPatterns.push(Object.assign({ uid, name: nm, r: clean, at: Date.now() }, who ? { by: who } : {}));
             saveMyPatterns();
             return uid;
         }
@@ -151,12 +153,6 @@
             if (apply) selectBgPattern('my:' + uid);
         }
 
-        function makerCopyCode() {
-            const r = finalMakerRecipe();
-            if (!r) return;
-            copyPatternCode(document.getElementById('makerName').value, r, 'makerBy');
-        }
-
         function makerDownload() {
             const r = finalMakerRecipe();
             if (!r) return;
@@ -166,9 +162,9 @@
         /* ---------- 💾 패턴 파일 : 카페에 첨부해서 올리는 파일 (이미지까지 파일 하나에 들어 있음) ---------- */
         const PATTERN_NICK_KEY = 'malang_pattern_nick';
 
-        /* 닉네임 : 만들기 창(makerBy)과 내 패턴 창(patNick) 두 곳에서 적을 수 있고, 이 기기에 기억 */
+        /* 닉네임 : 만들기 창(makerBy)에 적거나 💾 저장 창에서 적어요 · 이 기기에 기억 */
         function patternNick(fromId) {
-            const ids = fromId ? [fromId] : ['makerBy', 'patNick'];
+            const ids = fromId ? [fromId] : ['makerBy'];
             let v = '';
             ids.forEach(id => { const el = document.getElementById(id); if (!v && el) v = recipeText(el.value, 12); });
             try { if (v) localStorage.setItem(PATTERN_NICK_KEY, v); } catch (e) {}
@@ -177,50 +173,49 @@
         function loadPatternNick() {
             let saved = '';
             try { saved = localStorage.getItem(PATTERN_NICK_KEY) || ''; } catch (e) {}
-            ['makerBy', 'patNick'].forEach(id => { const el = document.getElementById(id); if (el && !el.value) el.value = saved; });
+            ['makerBy'].forEach(id => { const el = document.getElementById(id); if (el && !el.value) el.value = saved; });
         }
 
-        function patternFileText(name, r, nickFrom) {
-            return JSON.stringify({ malang_pattern: 1, name: recipeText(name, 20) || '내 배경지', by: patternNick(nickFrom), recipe: r });
-        }
-
-        function downloadPatternFile(name, r, nickFrom) {
+        async function downloadPatternFile(name, r, nickFrom) {
             const nm = recipeText(name, 20) || '내 배경지';
-            if (!patternNick(nickFrom)) {
-                showMsg('💾 "만든 사람(닉네임)"을 적어 주세요.<br>등록되면 배경지 아래에 이름이 표시돼요.');
-                return;
-            }
-            const blob = new Blob([patternFileText(nm, r, nickFrom)], { type: 'text/plain;charset=utf-8' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            /* 파일 이름은 영어·숫자만 (한글 파일 이름은 일부 브라우저에서 'download'로 바뀌어 버림) · 패턴 이름은 파일 안에 들어 있음 */
-            const d = new Date(), z = n => String(n).padStart(2, '0');
-            a.download = `malang_pattern_${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.malang.txt`;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            showMsg('💾 배경지 파일을 저장했어요! <b>(' + a.download + ')</b><br><br>말랑달콤 카페 글쓰기에서 이 파일을 <b>첨부</b>해서 올려 주세요.<br>등록되면 모든 사용자의 배경지 목록에 나타나요 💕<br><span style="font-size:12px;color:#777;">파일이 안 받아지면 📋 코드 복사 후 카페 글에 붙여 넣어도 돼요.</span>');
+            if (!window.shxAsk) return;
+            const a = await shxAsk('💾 배경지 파일로 저장', nm, patternNick(nickFrom));
+            if (!a) return;
+            shxDownload({ malang_pattern: 1, name: nm, by: a.by, recipe: r }, a.name);
+            showMsg('💾 <b>' + recipeText(a.name, 40) + '.json</b> 파일을 저장했어요!<br><br>말랑달콤 카페의 <b>배경지 게시판</b>에 첨부해서 올려 주세요.<br><span style="font-size:12px;color:#777;">받은 사람은 페이지 → 배경지 → 내 배경지의 📥 파일 불러오기로 넣어요.<br>아이패드 · 아이폰은 \'파일\' 앱 → 다운로드 폴더에 있어요.</span>');
         }
 
         function downloadMyPattern(uid) {
             const m = myPatterns.find(x => x.uid === uid);
-            if (m) downloadPatternFile(m.name, m.r, 'patNick');
+            if (m) downloadPatternFile(m.name, m.r);
         }
 
-        /* 코드 복사 : 파일 첨부가 안 될 때 카페 글에 붙여 넣는 용도 (패턴 등록 도구에 그대로 붙여 넣기 가능) */
-        function copyPatternCode(name, r, nickFrom) {
-            const text = patternFileText(name, r, nickFrom);
-            const done = () => {};
-            const fallback = () => {
-                const ta = document.createElement('textarea');
-                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-                document.body.appendChild(ta); ta.select();
-                try { document.execCommand('copy'); done(); } catch (e) { showMsg('복사하지 못했어요.'); }
-                ta.remove();
-            };
-            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
-            else fallback();
+        /* 📥 내 배경지 → 파일 불러오기 : 카페에서 받은 배경지 파일 (.json · 예전 .malang.txt 도 속은 같아요) */
+        function pickPatternFile() {
+            let inp = document.getElementById('patFileIn');
+            if (!inp) {
+                inp = document.createElement('input');
+                inp.type = 'file'; inp.id = 'patFileIn'; inp.hidden = true;
+                inp.accept = '.json,.txt,application/json,text/plain';
+                inp.onchange = () => { const f = inp.files && inp.files[0]; inp.value = ''; if (f) importPatternFile(f); };
+                document.body.appendChild(inp);
+            }
+            inp.click();
         }
+        async function importPatternFile(f) {
+            if (f.size > 5 * 1024 * 1024) { showMsg('⚠ 파일이 너무 커요.'); return; }
+            let o = null;
+            try { o = JSON.parse(await f.text()); } catch (e) {}
+            if (o && o.malang_sticker) { showMsg('✨ 스티커 파일이에요.<br><b>✨ 스티커 → 그 종류 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
+            if (!o || o.malang_pattern !== 1 || !o.recipe) { showMsg('⚠ 말랑달콤 배경지 파일이 아니에요.<br><span style="font-size:12px;color:#777;">카페에서 받은 배경지 파일을 골라 주세요.</span>'); return; }
+            if (!sanitizeRecipe(o.recipe)) { showMsg('⚠ 배경지 파일을 읽을 수 없어요.'); return; }
+            const uid = addMyPattern(o.name, o.recipe, o.by, true);
+            if (!uid) return;
+            if (uid === 'same') { showMsg('📂 이미 내 배경지에 있는 배경지예요.'); return; }
+            if (typeof renderPatternList === 'function') renderPatternList();
+            showMsg(`🎉 '${recipeText(o.name, 20) || '내 배경지'}' 배경지를 내 배경지에 넣었어요!` + (recipeText(o.by, 12) ? `<br><small>by ${recipeText(o.by, 12).replace(/[<>&]/g, '')}</small>` : ''));
+        }
+        window.pickPatternFile = pickPatternFile;
 
         /* 이미지·그림 한 칸을 레시피 용량(RECIPE_MAX_SRC) 안에 들어가도록 압축
            PNG(투명 유지) → WEBP(투명 유지) → JPEG(바탕색을 칠해서) 순서로, 안 되면 해상도를 낮춰 다시 시도 */

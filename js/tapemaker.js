@@ -201,7 +201,7 @@
 
         /* ---------- ✏️ 스티커 창 → 🎀 내 마스킹테이프 ---------- */
         function tpmGrid() {
-            return (tpmS.list || []).map((o, i) => `<div class="tpm-it"><button type="button" class="tp-item" onclick="tpmUse(${i})"><span style="background-image:url(&quot;${tpmUrl(o)}&quot;)"></span></button><i onclick="tpmDel(${i})" title="지우기">✕</i></div>`).join('');
+            return (tpmS.list || []).map((o, i) => `<div class="tpm-it" data-shx="${i}"><button type="button" class="tp-item" onclick="tpmUse(${i})"><span style="background-image:url(&quot;${tpmUrl(o)}&quot;)"></span></button><i onclick="tpmDel(${i})" title="지우기">✕</i></div>`).join('');
         }
         /* ✨ 스티커 → 🎀 마스킹테이프 → 내가만든 : 내가 만든 테이프 (이벤트로 받은 테이프는 이벤트 칸 · js/stickermaker.js stkTab) */
         async function loadMyTapes() {
@@ -212,7 +212,7 @@
             if (!g.dataset.mytape) return;
             const made = tpmGrid();
             g.innerHTML = made
-                ? '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + made
+                ? (window.shxBar ? shxBar('tape') : '') + '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + made
                 : '<div class="cs-empty">🎀 아직 마스킹테이프가 없어요.<br>✂️ 스티커만들기에서 나만의 테이프를 만들어 보세요!</div>';
         }
         function tpmUse(i) { const o = tpmS.list && tpmS.list[i]; if (o) tpmStick(o); }

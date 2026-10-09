@@ -125,8 +125,10 @@
             if (!bar.firstChild) bar.innerHTML = LF_TAB_NAMES.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="lfTabs('${w}','${v}')">${n}</button>`).join('');
             bar.querySelectorAll('.stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
             lfq(w + 'Free').hidden = tab !== 'free'; other.hidden = tab === 'free';
+            delete other.dataset.share; if (window.shxStop) shxStop();
             if (tab === 'shop') other.innerHTML = `<button type="button" class="stk-go" onclick="openShop('#/c/${encodeURIComponent(name)}')"><span>🛍️</span><b>문구점에서 ${name} 보기</b><small>새 창으로 열려요</small></button>`;
             else if (tab === 'mine' && w === 'leaf' && window.lmMine) lmMine(other);
+            else if (tab === 'share' && w === 'leaf' && window.shxShareTab) shxShareTab('leaf', other);   // 📥 공유받은 속지 (js/sharebox.js)
             else if (tab === 'event') other.innerHTML = `<div class="cs-empty">🎁 아직 받은 이벤트 선물이 없어요.<br>이벤트 ${name}가 오면 여기에 들어와요!</div>`;
             else if (tab !== 'free') other.innerHTML = `<div class="cs-empty">🛠️ ${name} ${bar.querySelector('.on').textContent} 칸은 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }

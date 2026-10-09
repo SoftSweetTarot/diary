@@ -381,11 +381,13 @@
             document.querySelectorAll('#stickerKindTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
             if (stkLib(tab === 'free' && stkKind === 'seal')) return;
             const g = smq('stickerGrid'), k = STK_KINDS[stkKind];
-            delete g.dataset.mine; delete g.dataset.mytape;
+            delete g.dataset.mine; delete g.dataset.mytape; delete g.dataset.share;
+            if (window.shxStop) shxStop();
             g.scrollTop = 0;
             const go = (ic, name, sub, fn) => `<button type="button" class="stk-go" onclick="${fn}"><span>${ic}</span><b>${name}</b><small>${sub}</small></button>`;
             if (tab === 'mine' && stkKind === 'tape') return loadMyTapes();
             if (tab === 'mine') return loadMyStickers(stkKind);
+            if (tab === 'share' && window.shxShareTab) return shxShareTab(stkKind, g);            // 📥 공유받은 (js/sharebox.js)
             const got = tab === 'event' && stkKind === 'tape' && typeof tapeRecvHtml === 'function' ? tapeRecvHtml() : '';   // 🎁 이벤트로 받은 테이프 (js/tape.js)
             if (got) { g.innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + got; return; }
             const ss = document.getElementById('seasonTab');
@@ -488,8 +490,8 @@
         function smGrid(kind) {
             const L = (smS.list || []).map((s, i) => [s, i]).filter(([s]) => smKindOf(s) === kind);
             const it = ([s, i]) => s.k === 'piece'
-                ? `<span class="smk-it smk-bag"><button type="button" onclick="smUse(${i})" aria-label="조각스티커 봉투"><img src="${s.src}" alt=""></button><b class="smk-n">${s.ss ? s.ss.length : 1}pcs</b><i onclick="smDel(${i})" title="지우기">✕</i></span>`
-                : `<span class="smk-it"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button>${s.ss ? `<b class="smk-n">${s.ss.length}장</b>` : ''}<i onclick="smDel(${i})" title="지우기">✕</i></span>`;
+                ? `<span class="smk-it smk-bag" data-shx="${i}"><button type="button" onclick="smUse(${i})" aria-label="조각스티커 봉투"><img src="${s.src}" alt=""></button><b class="smk-n">${s.ss ? s.ss.length : 1}pcs</b><i onclick="smDel(${i})" title="지우기">✕</i></span>`
+                : `<span class="smk-it" data-shx="${i}"><button type="button" onclick="smUse(${i})"><img src="${s.src}" alt="${s.t || '내 스티커'}"></button>${s.ss ? `<b class="smk-n">${s.ss.length}장</b>` : ''}<i onclick="smDel(${i})" title="지우기">✕</i></span>`;
             if (kind === 'piece') {                                     // 🧩 내가 만든 조각은 👜 내 봉투에 (봉투 하나 = 한 칸 · 처음엔 안 뜯은 봉투)
                 const bag = L.filter(([s]) => s.k === 'piece'), rest = L.filter(([s]) => !s.k);
                 if (!L.length) return `<div class="smk-empty">${SM_EMPTY.piece}</div>`;
@@ -518,7 +520,8 @@
             const g = smq('stickerGrid'); g.dataset.mine = kind;
             g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
             await smLoad();
-            if (g.dataset.mine === kind) g.innerHTML = `<div class="smk-mine smk-in-modal">${smGrid(kind)}</div>`;
+            const has = smS.list.some(s => smKindOf(s) === kind), bar = has && window.shxBar ? shxBar(kind) : '';   // 📤 공유하기 (js/sharebox.js)
+            if (g.dataset.mine === kind) g.innerHTML = `<div class="smk-mine smk-in-modal">${bar}${smGrid(kind)}</div>`;
         }
 
         /* ✂️ 스티커만들기 창의 📷 · 🖼️ · 🔤 버튼 (사진 고르는 창은 눌렀을 때 바로 열려야 해서 화면을 먼저 만들어 둬요) */
