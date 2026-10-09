@@ -155,7 +155,7 @@
                     const x = clamp(start.ox + e.clientX - start.x, -baseL, Math.max(-baseL, window.innerWidth - r.width - baseL));
                     const y = clamp(start.oy + e.clientY - start.y, -baseT, Math.max(-baseT, window.innerHeight - r.height - baseT));
                     posOf[modal.id] = { x, y };
-                    box.style.transform = `translate(${x}px, ${y}px)`;
+                    box.style.position = 'relative'; box.style.left = x + 'px'; box.style.top = y + 'px';   // transform 이 아니라 left · top : 창이 따로 겹 층을 만들지 않아야 ← · ✕ 버튼이 테이프 위에 나와요
                     box.dispatchEvent(new Event('dk-move'));                   // 모서리 테이프도 창을 따라가게 (js/dakku.js dkTapes)
                 });
                 const end = () => { start = null; };
@@ -164,7 +164,7 @@
             });
             /* 화면 크기가 바뀌면(폰 돌리기 등) 옮겨 둔 창은 가운데로 */
             window.addEventListener('resize', () => {
-                Object.keys(posOf).forEach(id => { delete posOf[id]; const b = document.querySelector('#' + id + ' .modal-content'); if (b) { b.style.transform = ''; b.dispatchEvent(new Event('dk-move')); } });
+                Object.keys(posOf).forEach(id => { delete posOf[id]; const b = document.querySelector('#' + id + ' .modal-content'); if (b) { b.style.left = b.style.top = ''; b.dispatchEvent(new Event('dk-move')); } });
             });
             /* 👀 버튼 : 누르고 있는 동안 창을 투명하게 */
             document.querySelectorAll('.skin-peek-btn').forEach(btn => {
