@@ -470,6 +470,7 @@
             if (!name) { showMsg('페이지 이름을 입력해주세요!'); return; }
             if (hasOwn(skinPresets, name) || name.startsWith('cs:') || name.startsWith('th:')) { showMsg('그 이름은 쓸 수 없어요.<br>다른 이름을 적어 주세요.'); return; }
             if (hasOwn(customSkins, name) && !(await showMsg(`'${name}' 페이지가 이미 있어요.<br>지금 모양으로 바꿀까요?`, true))) return;
+            if (mySkinFull(name)) return;
             const extra = stuExtra();
             customSkins[name] = Object.assign(skinFromPickers(), extra);
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));

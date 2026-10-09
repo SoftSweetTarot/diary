@@ -13,7 +13,13 @@
         const ROOT_PATH = [TOP_FOLDER_NAME, ROOT_FOLDER_NAME]; // 드라이브 경로 : 말랑달콤 / 다이어리
         const STICKER_PATH = ROOT_PATH.concat('스티커');       // 스티커 보관 : 말랑달콤 / 다이어리 / 스티커 (내씰 · 내조각 · 내모조지 · 내마테 · 내속지 · 받은씰 … 종류마다 .json 하나)
         const ROOT_PATH_TEXT = ROOT_PATH.join(' / ');
-        const SETTINGS_FILE_NAME = 'settings.json';           // 페이지·글꼴 등 설정 (말랑달콤 폴더 바로 아래에 1개 : 말랑달콤 / settings.json)
+        const SETTINGS_FILE_NAME = 'settings.json';           // ⚙ 설정 탭 값 (글꼴 · 소리 · 고른 페이지 등 · 그림 없음) : 말랑달콤 / settings.json
+        const CAFE_FILE_NAME = 'cafe.json';                   // ☕ 카페 탭 기록 (출석 · 화분 · 생리 달력 · D-day · 심리테스트 · 오락실 · 행운 번호 · 그림 없음) : 말랑달콤 / cafe.json
+        /* 🖼 그림이 들어가는 것은 하나에 파일 하나 (사용자가 정한 이름.json) → 하나를 고쳐도 그 파일만 올려요
+           - 🎨 내 페이지 : 말랑달콤 / 다이어리 / 페이지 / 러블리핑크.json   { malang_page: 1, name, skin }
+           - 📂 내 배경지 : 말랑달콤 / 다이어리 / 배경지 / 딸기줄.json       { malang_pattern: 1, uid, name, by, recipe, at } (카페 공유 파일과 같은 모양)
+           - 화면 코드는 그대로 store 의 'diary_custom_skins' · 'diary_my_patterns' 하나를 쓰고, 드라이브에 올릴 때만 나눠요 (splitSync) */
+        const SPLIT_DIRS = { diary_custom_skins: '페이지', diary_my_patterns: '배경지' };
         const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤 / 다이어리' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
         const DRIVE_SCOPE = USE_APP_DATA_FOLDER
             ? 'https://www.googleapis.com/auth/drive.appdata'
@@ -57,7 +63,9 @@
             guest: false, uploading: false, needAuth: false, error: false, lastSaved: null,
             gen: 0,            // 다시 불러오기 할 때마다 증가 (예전 요청의 결과가 뒤늦게 섞이는 것 방지)
             inflight: null,    // 지금 업로드 중인 키
-            settingsFile: null,
+            settingsFile: null, cafeFile: null,
+            split: {},                   // 'diary_custom_skins' · 'diary_my_patterns' → Map(항목 이름표 → { id, fname, body }) (드라이브에 있는 파일)
+            splitJunk: {},               // 같은 항목이 두 파일로 생긴 것(두 기기에서 동시에) 중 옛것 → 다음 저장 때 휴지통으로 · 읽을 수 없는 파일 이름(그 이름은 피해서 저장)
             dirtyKeys: new Set(),        // 아직 드라이브에 올리지 못한 변경 (날짜/설정 키)
             loadedDays: new Set(),       // 드라이브에서 이미 읽어 온 날짜 (없는 날짜도 '읽음' 처리)
             dayLoads: new Map(),         // 읽는 중인 날짜 요청
@@ -129,11 +137,14 @@
         function parseDayKey(k) { const r = DAY_KEY_RE.exec(k); return r ? { y: +r[1], m: +r[2], d: +r[3] } : null; }
         function isDayKey(k) { return DAY_KEY_RE.test(k); }
         function isSettingKey(k) { return (k.startsWith('diary_') || VAULT_KEYS.includes(k)) && !isDayKey(k) && k !== PAGE_SIZE_KEY; }
+        /* 설정 키가 드라이브의 어느 파일로 가는지 : 'cafe' · 'split' · 'settings' */
+        function keyFile(k) { return CAFE_KEYS.includes(k) ? 'cafe' : SPLIT_DIRS[k] ? 'split' : 'settings'; }
 
         /* 🔐 암호 보관 : 출석 · 화분 기록은 settings.json 에서 무엇인지 알아볼 수 없게 저장해요
            - 이름도 뜻 없는 글자 (VAULT_KEYS) · 내용은 뒤섞은 글자 + 앞 7자리 확인 표시
            - 누가 글자를 하나라도 고치면 확인 표시가 맞지 않아서 그 기록은 버리고 처음부터 (고칠 이유가 없게) */
         const VAULT_KEYS = ['zq7k2m', 'xr4p9w'];
+        const CAFE_KEYS = VAULT_KEYS.concat(['diary_cycle', 'diary_dday', 'diary_psy', 'diary_arcade_best', 'diary_luck_seed']);   // ☕ cafe.json 으로 가는 키
         const VAULT_SALT = 'mL4q!z9Rw2';
         function vaultHash(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36).padStart(7, '0').slice(-7); }
         function vaultMix(bytes) {
@@ -264,7 +275,8 @@
         function resetDriveCaches() {
             drive.folderIds.clear(); drive.folderBusy.clear();
             drive.monthIndex.clear(); drive.monthBusy.clear();
-            drive.settingsFile = null;
+            drive.settingsFile = null; drive.cafeFile = null;
+            drive.split = {}; drive.splitJunk = {};
         }
 
         /* ---------- 읽기 : 설정 / 하루치 ---------- */
@@ -276,6 +288,89 @@
             if (!files[0]) return null;
             drive.settingsFile = files[0];
             return parseJsonObject(await readFileText(files[0].id), 'settings');
+        }
+
+        async function fetchCafe() {
+            drive.cafeFile = null;
+            const rootId = await getFolder([TOP_FOLDER_NAME], false);
+            if (!rootId) return null;
+            const files = await driveList(`name='${CAFE_FILE_NAME}' and '${rootId}' in parents and trashed=false`, 'id,name,modifiedTime');
+            if (!files[0]) return null;
+            drive.cafeFile = files[0];
+            return parseJsonObject(await readFileText(files[0].id), 'cafe');
+        }
+
+        /* ---------- 🖼 하나에 파일 하나 (내 페이지 · 내 배경지) ---------- */
+        /* 파일 이름 : 드라이브 · 컴퓨터에서 못 쓰는 글자는 빼고, 같은 이름이면 (2) (3)… */
+        function splitSafeName(name) {
+            return String(name == null ? '' : name).replace(/[\/\\:*?"<>|\u0000-\u001f]/g, '').replace(/^[.\s]+|[.\s]+$/g, '').slice(0, 40) || '이름없음';
+        }
+        /* store 값 → 항목들 [{ key: 이름표, name, body }] */
+        function splitEntries(k, text) {
+            let v = null; try { v = JSON.parse(text); } catch (e) {}
+            if (k === 'diary_custom_skins') return v && typeof v === 'object' && !Array.isArray(v)
+                ? Object.keys(v).filter(n => v[n] && typeof v[n] === 'object').map(n => ({ key: n, name: n, body: JSON.stringify({ malang_page: 1, name: n, skin: v[n] }) })) : [];
+            return Array.isArray(v) ? v.filter(m => m && m.uid).map(m => ({ key: m.uid, name: m.name, body: JSON.stringify(Object.assign({ malang_pattern: 1, uid: m.uid, name: m.name }, m.by ? { by: m.by } : {}, { recipe: m.r, at: m.at || 0 })) })) : [];
+        }
+        /* 파일 내용 → [이름표, 값] (모양이 틀리면 null) */
+        function splitParse(k, o) {
+            if (!o || typeof o !== 'object') return null;
+            if (k === 'diary_custom_skins') return o.malang_page === 1 && typeof o.name === 'string' && o.name && o.skin && typeof o.skin === 'object' ? [o.name, o.skin] : null;
+            return o.malang_pattern === 1 && typeof o.uid === 'string' && o.uid && o.recipe ? [o.uid, Object.assign({ uid: o.uid, name: String(o.name || ''), r: o.recipe, at: +o.at || 0 }, o.by ? { by: String(o.by) } : {})] : null;
+        }
+        /* 폴더의 파일을 모두 읽어 store 값 하나로 (읽다가 실패하면 에러 → 로그인이 실패한 것처럼 아무것도 바꾸지 않음) */
+        async function fetchSplit(k) {
+            const map = new Map(), junk = { trash: [], names: new Set() };
+            drive.split[k] = map; drive.splitJunk[k] = junk;
+            const dir = await getFolder(ROOT_PATH.concat(SPLIT_DIRS[k]), false);
+            if (!dir) return null;
+            const files = (await driveList(`'${dir}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,name,modifiedTime')).filter(f => /\.json$/i.test(f.name));
+            const got = new Map();                                   // 이름표 → { f, val, body }
+            let i = 0;
+            await Promise.all(Array.from({ length: 5 }, async () => {
+                while (i < files.length) {
+                    const f = files[i++], body = await readFileText(f.id);
+                    let hit = null; try { hit = splitParse(k, JSON.parse(body)); } catch (e) {}
+                    if (!hit) { junk.names.add(f.name.toLowerCase()); continue; }          // 읽을 수 없는 파일 : 지우지 않고 그 이름만 피해요
+                    const old = got.get(hit[0]);
+                    if (old && Date.parse(old.f.modifiedTime) >= Date.parse(f.modifiedTime)) { junk.trash.push(f.id); continue; }
+                    if (old) junk.trash.push(old.f.id);
+                    got.set(hit[0], { f, val: hit[1], body });
+                }
+            }));
+            if (!got.size) return null;
+            got.forEach((g, key) => { map.set(key, { id: g.f.id, fname: g.f.name, body: g.body }); junk.time = Math.max(junk.time || 0, Date.parse(g.f.modifiedTime) || 0); });
+            if (k === 'diary_custom_skins') { const o = {}; got.forEach((g, key) => { o[key] = g.val; }); return o; }
+            return Array.from(got.values()).map(g => g.val).sort((a, b) => a.at - b.at);
+        }
+        /* 바뀐 항목 파일만 올리고, 없어진 항목 파일은 휴지통으로 (이름이 바뀌면 새 이름으로 만들고 옛 파일은 휴지통) */
+        async function splitSync(k) {
+            const map = drive.split[k] || (drive.split[k] = new Map()), junk = drive.splitJunk[k] || (drive.splitJunk[k] = { trash: [], names: new Set() });
+            const entries = splitEntries(k, store.getItem(k)), want = new Set(entries.map(e => e.key));
+            const used = new Set(junk.names);
+            const plan = entries.map(e => {
+                const base = splitSafeName(e.name); let fname = base + '.json', n = 2;
+                while (used.has(fname.toLowerCase())) fname = `${base} (${n++}).json`;
+                used.add(fname.toLowerCase());
+                return Object.assign({ fname }, e);
+            });
+            const dir = await getFolder(ROOT_PATH.concat(SPLIT_DIRS[k]), true);
+            for (const [key, rec] of Array.from(map)) {                       // 없어진 항목
+                if (want.has(key)) continue;
+                await driveTrash(rec.id); map.delete(key);
+            }
+            for (const e of plan) {
+                const rec = map.get(e.key);
+                if (rec && rec.fname === e.fname && rec.body === e.body) continue;
+                if (rec && rec.fname === e.fname) {
+                    try { await driveUpsert(dir, e.fname, rec.id, e.body); rec.body = e.body; continue; }
+                    catch (er) { if (!(er && er.code === 'gone')) throw er; }   // 그 사이 지워진 파일 → 새로 만들어요
+                }
+                const saved = await driveUpsert(dir, e.fname, null, e.body);
+                if (rec && rec.fname !== e.fname) { try { await driveTrash(rec.id); } catch (er) {} }   // 이름이 바뀐 것 : 옛 파일은 휴지통
+                map.set(e.key, { id: saved.id, fname: e.fname, body: e.body });
+            }
+            while (junk.trash.length) { const id = junk.trash.shift(); try { await driveTrash(id); } catch (er) {} }
         }
 
         async function fetchDay(date) {
@@ -321,12 +416,16 @@
 
         async function loadFromDrive() {
             resetDriveCaches();
-            const settings = await fetchSettings();        // 읽지 못하면 여기서 에러 → 아무것도 바꾸지 않음
+            const [settings, cafe, pages, pats] = await Promise.all([fetchSettings(), fetchCafe(),
+                fetchSplit('diary_custom_skins'), fetchSplit('diary_my_patterns')]);   // 읽지 못하면 여기서 에러 → 아무것도 바꾸지 않음
             clearTimeout(uploadTimer);
             drive.gen++;
             store.clear();
             drive.dirtyKeys.clear(); drive.loadedDays.clear(); drive.dayLoads.clear();
-            if (settings) Object.keys(settings).forEach(k => { if (isSettingKey(k)) store.putLoaded(k, JSON.stringify(settings[k])); });
+            if (settings) Object.keys(settings).forEach(k => { if (isSettingKey(k) && keyFile(k) === 'settings') store.putLoaded(k, JSON.stringify(settings[k])); });
+            if (cafe) Object.keys(cafe).forEach(k => { if (keyFile(k) === 'cafe') store.putLoaded(k, JSON.stringify(cafe[k])); });
+            if (pages) store.putLoaded('diary_custom_skins', JSON.stringify(pages));
+            if (pats) store.putLoaded('diary_my_patterns', JSON.stringify(pats));
             drive.ready = true; drive.guest = false;
             drive.needAuth = false; drive.error = false;
             applyLoadedData();
@@ -374,8 +473,8 @@
         }
 
         /* 설정 값은 모두 JSON 글자 · 잘못된 값이 하나 섞여도 settings.json 전체가 깨지지 않게 그 값만 빼고 저장 */
-        function settingsBody() {
-            return '{' + store.keys().filter(isSettingKey).map(k => {
+        function settingsBody(file) {
+            return '{' + store.keys().filter(k => isSettingKey(k) && keyFile(k) === (file || 'settings')).map(k => {
                 const v = store.getItem(k);
                 try { JSON.parse(v); } catch (e) { console.warn('설정 값이 JSON 이 아니라서 저장하지 않았어요:', k); return ''; }
                 return JSON.stringify(k) + ':' + v;
@@ -399,6 +498,12 @@
                     const f = idx.files.get(name);
                     const saved = await driveUpsert(idx.folderId, name, f && f.id, val);   // 있으면 덮어쓰기, 없으면 새 파일
                     idx.files.set(name, { id: saved.id, name, modifiedTime: saved.modifiedTime });
+                } else if (keyFile(key) === 'split') {
+                    await splitSync(key);                                                   // 🖼 내 페이지 · 내 배경지 : 바뀐 것만 하나씩
+                } else if (keyFile(key) === 'cafe') {
+                    const rootId = await getFolder([TOP_FOLDER_NAME], true);
+                    const saved = await driveUpsert(rootId, CAFE_FILE_NAME, drive.cafeFile && drive.cafeFile.id, settingsBody('cafe'));
+                    drive.cafeFile = { id: saved.id, name: CAFE_FILE_NAME, modifiedTime: saved.modifiedTime };
                 } else {
                     const rootId = await getFolder([TOP_FOLDER_NAME], true);                // '말랑달콤' 폴더 (없으면 생성)
                     const saved = await driveUpsert(rootId, SETTINGS_FILE_NAME, drive.settingsFile && drive.settingsFile.id, settingsBody());
@@ -672,7 +777,9 @@
                     const f = idx && idx.files.get(dayFileName(dk.d));
                     driveTime = f && f.modifiedTime ? Date.parse(f.modifiedTime) : 0;
                 } else if (isSettingKey(k)) {
-                    driveTime = drive.settingsFile && drive.settingsFile.modifiedTime ? Date.parse(drive.settingsFile.modifiedTime) : 0;
+                    const sf = keyFile(k) === 'cafe' ? drive.cafeFile : drive.settingsFile;
+                    driveTime = keyFile(k) === 'split' ? (drive.splitJunk[k] && drive.splitJunk[k].time) || 0      // 🖼 폴더에서 가장 늦게 고친 파일 시각
+                        : sf && sf.modifiedTime ? Date.parse(sf.modifiedTime) : 0;
                 } else continue;
                 if (driveTime && driveTime >= p.savedAt) continue;                      // 이미 드라이브에 반영됨(더 최신)
                 if (store.getItem(k) === v) continue;                                   // 내용이 같음

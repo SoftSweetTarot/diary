@@ -193,14 +193,21 @@
         /* =====================================================================
            🎨 페이지 (다이어리 색 5개 : 전체 배경 · 겉표지 · 속지 · 테두리 · 포인트)
            - 페이지 목록 : 기본 페이지 4종 + 🌟 모두의 페이지(카페에서 받아 등록, js/community-skins.js) + 🎨 내 페이지
-           - 내 페이지     : 'diary_custom_skins' → settings.json
+           - 내 페이지     : 'diary_custom_skins' → 말랑달콤 / 다이어리 / 페이지 / 이름.json (하나에 파일 하나 · js/drive.js splitSync)
            - 지금 고른 페이지 : 'diary_skin' → settings.json  (다음에 열어도 · 다른 기기에서도 그대로)
-               예) {"id":"mint"} · {"id":"봄날","c":{색 5개}} · {"id":"cs:3","c":{색 5개}}
-               모두의 페이지·내 페이지는 색도 같이 적어 둬서, 목록에서 빠지거나 지워도 쓰던 색이 유지돼요.
+               예) {"id":"mint"} · {"id":"봄날"} · {"id":"cs:3","c":{색 5개}}
+               모두의 페이지는 색도 같이 적어 둬서, 목록에서 빠져도 쓰던 색이 유지돼요. (내 페이지는 그림이 커서 이름만)
            ===================================================================== */
         const SKIN_KEY = 'diary_skin';
         const SKIN_PRESET_NAMES = { pink: '🌸 러블리 핑크', mint: '🌿 맑은 민트', purple: '💜 파스텔 퍼플', yellow: '⭐ 따뜻한 옐로우' };
         const SKIN_NAME_MAX = 20;
+        const MY_SKIN_MAX = 30;            // 🎨 내 페이지는 30개까지 (하나가 그림 포함 최대 4MB · 열 때마다 모두 읽어요)
+        /* 새 내 페이지를 더 넣을 수 없으면 알리고 true (같은 이름 덮어쓰기는 괜찮아요) */
+        function mySkinFull(name) {
+            if (hasOwn(customSkins, name) || Object.keys(customSkins).length < MY_SKIN_MAX) return false;
+            showMsg(`내 페이지는 ${MY_SKIN_MAX}개까지 만들 수 있어요.<br>안 쓰는 페이지를 지우고 다시 해 주세요.`);
+            return true;
+        }
         let currentSkinId = 'pink';
         let currentSkinInline = null;      // 목록에 없는 페이지를 쓰는 중일 때 그 색 (예: 내려간 모두의 페이지)
 
@@ -303,7 +310,7 @@
             currentSkinInline = hit.kind === 'preset' || hit.kind === 'th' ? null : hit.skin;
             renderSkinSelect();
             if (opts.save !== false) {
-                const rec = hit.kind === 'preset' || hit.kind === 'th' ? { id } : { id, c: hit.skin };
+                const rec = hit.kind === 'preset' || hit.kind === 'th' || hit.kind === 'my' ? { id } : { id, c: hit.skin };   // 🎨 내 페이지는 이름만 (그림은 페이지 / 이름.json 에 있어요 → settings.json 은 가볍게)
                 store.setItem(SKIN_KEY, JSON.stringify(rec));
             }
             updateSkinShareUI();
@@ -424,6 +431,7 @@
             if (hasOwn(skinPresets, nameInput) || nameInput.startsWith('cs:')) { showMsg('그 이름은 쓸 수 없어요.<br>다른 이름을 적어 주세요.'); return; }
             if (hasOwn(customSkins, nameInput) && !(await showMsg(`'${nameInput}' 페이지가 이미 있어요.<br>지금 색으로 바꿀까요?`, true))) return;
 
+            if (mySkinFull(nameInput)) return;
             const newSkin = skinFromPickers();
             if (typeof stuExtra === 'function') Object.assign(newSkin, stuExtra());   // 🎀 페이지 만들기에서 놓은 꾸밈 · 아이콘도 함께
 
@@ -529,6 +537,7 @@
             const same = Object.keys(customSkins).find(n => JSON.stringify(sanitizeSkin(customSkins[n])) === JSON.stringify(p.skin));
             if (same) { applySkinPreset(same); return; }
             const name = freeSkinName(p.name);
+            if (mySkinFull(name)) return;
             customSkins[name] = p.skin;
             store.setItem('diary_custom_skins', JSON.stringify(customSkins));
             applySkinPreset(name);

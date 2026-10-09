@@ -2,7 +2,7 @@
    🕹️ 말랑 오락실 : 옛날 오락실 느낌의 미니 게임 + 🧠 두뇌 게임 (카페 → 🕹️ 오락실)
    - 옛날 게임을 그대로 옮긴 게 아니라, 누구나 쓸 수 있는 '게임 방식'으로 새로 만든 말랑달콤 게임이에요.
    - 그림은 이모지 + 직접 그린 도형, 소리는 브라우저가 만드는 8비트 소리 (파일 없음 · 트래픽 0)
-   - 최고 점수는 설정(settings.json)에 함께 저장 → PC · 휴대폰 어디서나 같은 기록 (새 기록이 나올 때만 바뀌어요)
+   - 최고 점수는 카페 기록(cafe.json)에 함께 저장 → PC · 휴대폰 어디서나 같은 기록 (새 기록이 나올 때만 바뀌어요)
      로그인하지 않은(게스트) 때만 이 기기에 기억
    - 휴대폰 : 손가락(끌기 · 탭 · 밀기) + 화면 방향 버튼 / PC : 키보드(방향키 · 스페이스) · 마우스
    - 새 게임 추가 : 아래 ARCADE_GAMES 에 { id, name, icon, desc, how, W, H, pad, create } 를 하나 더 넣어요.
@@ -11,7 +11,7 @@
    ※ 이 파일이 없어도 다이어리는 정상 동작 (오락실만 '준비 중') */
 
         const ARCADE_BEST_KEY = 'malang_arcade_best';      // 게스트용 (이 기기)
-        const ARCADE_BEST_SYNC = 'diary_arcade_best';      // 설정 저장소 키 (드라이브 settings.json)
+        const ARCADE_BEST_SYNC = 'diary_arcade_best';      // 설정 저장소 키 (드라이브 cafe.json)
         const AR_DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
         const AR_OPP = { up: 'down', down: 'up', left: 'right', right: 'left' };
         const arRand = (a, b) => a + Math.random() * (b - a);
