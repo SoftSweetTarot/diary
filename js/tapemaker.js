@@ -192,7 +192,7 @@
             } catch (e) { if (!stick) { showMsg('⚠ 내 마스킹테이프를 저장하지 못했어요. 잠시 후 다시 해 주세요.'); return; } }
             if (stick) { tpmStick(o); return; }
             closeTapeMaker();
-            showMsg('🎀 내 마스킹테이프에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → 🎀 마스킹테이프 → 내스티커에서 붙일 수 있어요.</span>');
+            showMsg('🎀 내 마스킹테이프에 저장했어요!<br><span style="font-size:12px;color:#777;">하단메뉴 ✨ 스티커 → 🎀 마스킹테이프 → 내가만든 칸에서 붙일 수 있어요.</span>');
         }
         function tpmStick(o) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!<br><span style="font-size:12px;color:#777;">테이프는 🎀 내 마스킹테이프에 저장돼 있어요.</span>'); return; }
@@ -203,18 +203,16 @@
         function tpmGrid() {
             return (tpmS.list || []).map((o, i) => `<div class="tpm-it"><button type="button" class="tp-item" onclick="tpmUse(${i})"><span style="background-image:url(&quot;${tpmUrl(o)}&quot;)"></span></button><i onclick="tpmDel(${i})" title="지우기">✕</i></div>`).join('');
         }
-        /* ✨ 스티커 → 🎀 마스킹테이프 → 내스티커 : 내가 만든 테이프 + 선물 받은 테이프 (받은 칸은 NEW 표시가 지워지기 전에 먼저 그려요) */
+        /* ✨ 스티커 → 🎀 마스킹테이프 → 내가만든 : 내가 만든 테이프 (이벤트로 받은 테이프는 이벤트 칸 · js/stickermaker.js stkTab) */
         async function loadMyTapes() {
-            const g = tpmq('stickerGrid'), got = typeof tapeRecvHtml === 'function' ? tapeRecvHtml() : '';
+            const g = tpmq('stickerGrid');
             g.dataset.mytape = '1';
             g.innerHTML = '<div class="cs-empty">불러오는 중…</div>';
             await tpmLoad();
             if (!g.dataset.mytape) return;
             const made = tpmGrid();
-            g.innerHTML = made || got
-                ? '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>'
-                    + (made ? '<div class="stk-head">✂️ 내가 만든 테이프</div>' + made : '')
-                    + (got ? '<div class="stk-head">🎁 받은 테이프</div>' + got : '')
+            g.innerHTML = made
+                ? '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + made
                 : '<div class="cs-empty">🎀 아직 마스킹테이프가 없어요.<br>✂️ 스티커만들기에서 나만의 테이프를 만들어 보세요!</div>';
         }
         function tpmUse(i) { const o = tpmS.list && tpmS.list[i]; if (o) tpmStick(o); }

@@ -103,17 +103,16 @@
         }
 
         /* 📃 속지 · 🧻 떡메 창 위 카테고리 4칸 (다른 스티커 창과 같은 모양) · 기본 = 지금 고르는 판, 문구점 = 🛍️ 그 칸, 나머지는 '준비 중' */
-        const LF_TABS = {
-            leaf: ['속지', ['내속지', '공유속지', '기본속지', '문구점속지']],
-            tk: ['떡메모지', ['내떡메모지', '공유떡메모지', '기본떡메모지', '문구점떡메모지']],
-        };
+        const LF_TABS = { leaf: '속지', tk: '떡메모지' };
+        const LF_TAB_NAMES = [['free', '기본'], ['mine', '내가만든'], ['share', '공유받은'], ['event', '이벤트'], ['shop', '문구점']];   // 모든 보관 창 공통 (js/stickermaker.js STK_TABS)
         function lfTabs(w, tab) {
-            const [name, ns] = LF_TABS[w], bar = lfq(w + 'Tabs'), other = lfq(w + 'Other');
-            if (!bar.firstChild) bar.innerHTML = ['mine', 'share', 'free', 'shop'].map((v, i) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="lfTabs('${w}','${v}')">${ns[i]}</button>`).join('');
+            const name = LF_TABS[w], bar = lfq(w + 'Tabs'), other = lfq(w + 'Other');
+            if (!bar.firstChild) bar.innerHTML = LF_TAB_NAMES.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="lfTabs('${w}','${v}')">${n}</button>`).join('');
             bar.querySelectorAll('.stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
             lfq(w + 'Free').hidden = tab !== 'free'; other.hidden = tab === 'free';
             if (tab === 'shop') other.innerHTML = `<button type="button" class="stk-go" onclick="openShop('#/c/${encodeURIComponent(name)}')"><span>🛍️</span><b>문구점에서 ${name} 보기</b><small>새 창으로 열려요</small></button>`;
-            else if (tab !== 'free') other.innerHTML = `<div class="cs-empty">🛠️ ${bar.querySelector('.on').textContent}는 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
+            else if (tab === 'event') other.innerHTML = `<div class="cs-empty">🎁 아직 받은 이벤트 선물이 없어요.<br>이벤트 ${name}가 오면 여기에 들어와요!</div>`;
+            else if (tab !== 'free') other.innerHTML = `<div class="cs-empty">🛠️ ${name} ${bar.querySelector('.on').textContent} 칸은 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }
 
         /* 찢긴 선 : 종이 끝을 따라 잔물결 + 자잘한 톱니 */

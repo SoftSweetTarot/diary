@@ -366,8 +366,10 @@
             seal: ['🏷️', '씰스티커', ['스티커']],
             paper: ['📄', '모조지', ['스티커']],
         };
-        const STK_TABS = [['mine', '내'], ['share', '공유'], ['free', '기본'], ['shop', '문구점']];
-        const stkTabName = (kind, tab) => STK_TABS.find(x => x[0] === tab)[1] + (kind === 'paper' ? '모조지' : '스티커');   // 📄 모조지는 접착이 없어서 '스티커' 대신 '모조지'
+        /* 보관 창 칸 5개 (모든 보관 창 공통 · 속지 · 떡메 창도 같은 이름 js/leafpad.js)
+           기본 = 처음부터 있는 것 · 내가만든 = 내가 만든 것 · 공유받은 = 다른 사람이 공유한 것 · 이벤트 = 개발자가 이벤트로 준 기간 있는 선물 · 문구점 = 🛍️ 문구점 */
+        const STK_TABS = [['free', '기본'], ['mine', '내가만든'], ['share', '공유받은'], ['event', '이벤트'], ['shop', '문구점']];
+        const stkTabName = tab => STK_TABS.find(x => x[0] === tab)[1];
         let stkKind = 'tape';
         function openStickerKind(kind, tab) {
             const k = STK_KINDS[kind]; if (!k) return;
@@ -377,9 +379,9 @@
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0] + ' ' + k[1];
             const bar = smq('stickerKindTabs');
             bar.classList.remove('two');
-            bar.innerHTML = STK_TABS.map(([v]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${stkTabName(kind, v)}</button>`).join('');
+            bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
             bar.hidden = false;
-            stkTab(tab || 'mine');
+            stkTab(tab || (kind === 'piece' ? 'free' : 'mine'));                // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
         }
         function stkTab(tab) {
             document.querySelectorAll('#stickerKindTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
@@ -389,12 +391,15 @@
             const go = (ic, name, sub, fn) => `<button type="button" class="stk-go" onclick="${fn}"><span>${ic}</span><b>${name}</b><small>${sub}</small></button>`;
             if (tab === 'mine' && stkKind === 'tape') return loadMyTapes();
             if (tab === 'mine') return loadMyStickers(stkKind);
+            const got = tab === 'event' && stkKind === 'tape' && typeof tapeRecvHtml === 'function' ? tapeRecvHtml() : '';   // 🎁 이벤트로 받은 테이프 (js/tape.js)
+            if (got) { g.innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + got; return; }
             if (tab === 'free' && stkKind === 'piece') {
                 const ss = document.getElementById('seasonTab');
                 g.innerHTML = go('🧩', '말랑달콤 그림 모음', '카테고리별 조각스티커', "closeModal('stickerModal'); openLibrary()")
                     + (ss && !ss.hidden ? go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')") : '');
             } else if (tab === 'shop') g.innerHTML = go('🛍️', '문구점에서 ' + k[1] + ' 보기', '새 창으로 열려요', 'stkShop()');
-            else g.innerHTML = `<div class="cs-empty">🛠️ ${stkKind === 'paper' ? '' : k[1] + ' '}${stkTabName(stkKind, tab)}는 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
+            else if (tab === 'event') g.innerHTML = `<div class="cs-empty">🎁 아직 받은 이벤트 선물이 없어요.<br>이벤트 ${k[1]}가 오면 여기에 들어와요!</div>`;
+            else g.innerHTML = `<div class="cs-empty">🛠️ ${k[1]} ${stkTabName(tab)} 칸은 준비 중이에요.<br>조금만 기다려 주세요!</div>`;
         }
         function stkShop() { openShop('#/' + (STK_KINDS[stkKind][2].length ? 'c/' + STK_KINDS[stkKind][2].map(encodeURIComponent).join('/') : '')); }
         window.openStickerKind = openStickerKind; window.stkTab = stkTab; window.stkShop = stkShop;
@@ -438,7 +443,7 @@
             });
             return c.toDataURL('image/png');
         }
-        const SM_PATH = { '': '🧩 조각스티커 → 내스티커', piece: '🧩 조각스티커 → 내스티커(👜 내 봉투)', seal: '🏷️ 씰스티커 → 내스티커', paper: '📄 모조지 → 내스티커' };
+        const SM_PATH = { '': '🧩 조각스티커 → 내가만든', piece: '🧩 조각스티커 → 내가만든(👜 내 봉투)', seal: '🏷️ 씰스티커 → 내가만든', paper: '📄 모조지 → 내가만든' };
         /* 저장 결과 안내 (stick : 붙이는 중이면 꽉 찼을 때 · 실패만 알려요) */
         function smAddMsg(r, k, stick) {
             if (r === 'full') { if (!stick) showMsg(`내 스티커는 ${SM_MAX}개까지 저장돼요.<br>안 쓰는 스티커를 지워 주세요.`); }
