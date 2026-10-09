@@ -86,7 +86,6 @@
                   </div>
                   <div id="smTextA" class="smk-col" hidden>
                     <input id="smText" maxlength="12" placeholder="스티커 글씨 (예: 오늘도 화이팅!)" oninput="smS.text=this.value;smDraw()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
-                    <p class="smk-enter">⌨️ 글씨를 다 쓰면 키보드의 <b>엔터(↵)</b>를 눌러 주세요<br><small>아이패드의 '키보드 내리기' 버튼으로 내리면 버튼 누르는 자리가 어긋날 수 있어요</small></p>
                   </div>
                   <div id="smTextB" class="smk-col" hidden>
                     <div class="smk-chips smk-fonts" id="smFonts"></div>
@@ -295,7 +294,7 @@
             smq('smPhotoGo').hidden = t; smq('smTextGo').hidden = !t;
             const many = !t && !!smS.many;                            // 여러 장 : 사진 줄 · 🔁 버튼이 보여요
             smq('smStrip').hidden = !many; smq('smAll').hidden = !many;
-            if (t) smq('smHint').textContent = '✏️ 글씨를 쓰고 글꼴 · 색 · 테두리를 골라요';
+            if (t) smq('smHint').innerHTML = '⌨️ 글씨를 다 쓰면 키보드의 <b>엔터(↵)</b>를 눌러 주세요<br><small>아이패드의 \'키보드 내리기\' 버튼으로 내리면 버튼 누르는 자리가 어긋날 수 있어요</small>';
         }
         /* 글꼴 후보 : 설정창 글꼴 목록(fontList · js/app.js) 중 웹폰트 전부 (기기마다 다른 (Local) · (Apple) 글꼴은 빼요) */
         function smFillFonts() {

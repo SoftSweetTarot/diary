@@ -2793,4 +2793,4 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lm-sub { margin: 12px 0 0; font-size: 12.5px; font-weight: bold; color: #7a5a66; }
 .lm-done { margin-top: 14px; }
 .lm-keep { width: 100%; justify-content: center; margin-top: 10px; font-size: 13.5px; }
-.smk-enter { margin: -4px 0 0; text-align: center; font-size: 12.5px; line-height: 1.5; color: var(--dk-ink, #7b5a63); } .smk-enter b { color: var(--primary-accent); } .smk-enter small { font-size: 11px; color: var(--dk-soft, #b48b97); }
+.smk-hint b { color: var(--primary-accent); } .smk-hint small { font-size: 11px; color: var(--dk-soft, #b48b97); }   /* 🔤 글씨스티커 : 엔터 안내 2줄 */
