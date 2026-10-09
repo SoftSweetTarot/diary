@@ -295,6 +295,7 @@
             const t = smS.mode === 'text', one = t && smS.step === 1;
             smq('smPhotoOpts').hidden = t;
             smq('smTextA').hidden = !one;
+            smq('smCanvas').parentElement.hidden = one;                // 🔤 1단계(글 쓰기)에는 미리보기 판이 없어요
             smq('smTextB').hidden = !t || one;
             smq('smFinal').hidden = one;
             smq('smPhotoGo').hidden = t; smq('smTextGo').hidden = !t;
