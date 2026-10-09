@@ -2715,6 +2715,12 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 @keyframes tkNudge { 50% { transform: rotate(-4deg) translateY(-3px); } }
 .tk-room .tk-rpad { position: absolute; left: 0; top: 0; width: 150px; height: 172px; transform-origin: 0 0; filter: drop-shadow(0 6px 14px rgba(90,60,50,.18)); }
 .tk-room .tk-fly { position: absolute; height: auto; pointer-events: none; -webkit-user-drag: none; user-select: none; filter: drop-shadow(0 6px 10px rgba(90,60,50,.2)); }
+/* 🧻 페이지에 붙은 떡메 메모 (js/leafpad.js tkNoteDress) : 뒤에 떡메 그림 · 그 위 글상자는 머리글 아래부터 */
+.element-box.tk-note > .tk-bg { position: absolute; left: 6px; top: 6px; width: calc(100% - 12px); height: calc(100% - 12px); }
+.element-box.tk-note textarea { position: relative; box-sizing: border-box; padding: 53px 14px 8px; line-height: 22px; }   /* 메모 줄 위에 글씨가 앉게 */
+.element-box.tk-note-check textarea { padding-top: 22px; line-height: 1.3; }
+.element-box.tk-note-sky textarea { padding: 50px 14px 34px; line-height: 1.3; }
+.element-box.tk-note-todo textarea { padding: 59px 10px 8px 32px; }
 .tk-stub { position: absolute; left: 0; top: 0; width: 150px; height: 22px; }
 .tk-stub .rim, .tk-stub .face { position: absolute; inset: 0; } .tk-stub .rim { background: #fffdf6; }
 .tk-sheet { position: absolute; left: 0; top: 0; width: 150px; height: 160px; }

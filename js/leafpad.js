@@ -276,9 +276,10 @@
             const cx = Math.min(r.right, Math.max(r.left, b.left + b.width / 2)), cy = Math.min(r.bottom, Math.max(r.top, b.top + b.height / 2));
             tkS.fly = null; f.remove();
             const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tkPieceSvg(tk.pad, tkS.sh));
-            if (!addImage(src)) { closeTteokRoom(); return; }
+            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { closeTteokRoom(); return; }
+            addText();                                                           // 떡메는 메모도 돼요 : 글상자 + 뒤에 떡메 그림 (짧게 톡 → 글쓰기)
             const el = pg.querySelector('.element-box:last-child'); if (!el) return;
-            el.dataset.float = 1;                                                // 옮길 때 떼지 않고 살짝 떠서 (js/elements.js)
+            tkNoteDress(el, tk.pad, src);
             const w = TK_W + 12, h = TK_H + 20, PADB = 14, deg = Math.round(rot * 10) / 10;   // .element-box 안쪽 여백 6px · 테두리 1px (양쪽)
             const put = (px, py) => { el.dataset.posX = px; el.dataset.posY = py; el.style.transform = `translate(${px}px, ${py}px) scale(1) rotate(${deg}deg)`; };
             el.style.width = w + 'px'; el.style.height = h + 'px'; el.dataset.rotation = deg;
@@ -288,6 +289,16 @@
             put(Math.round(x + (cx - (bb.left + bb.width / 2)) / k), Math.round(y + (cy - (bb.top + bb.height / 2)) / k));
             if (typeof saveData === 'function') saveData(false);
             tkSay('붙었어요 ✨ 한 장 더 뜯어도 돼요');
+        }
+
+        /* 📝 페이지에 붙은 떡메 = 글상자(textarea) + 뒤에 깔린 떡메 그림 · 일기에는 글 + 떡메 종류(tk) + 그림 그대로(tb) 저장 (js/elements.js)
+           옮길 때는 메모지처럼 살짝 떠서 · 짧게 톡 누르면 골라지면서 글쓰기 */
+        function tkNoteDress(el, pad, src) {
+            if (!TK_PADS.some(p => p[0] === pad)) pad = 'memo';
+            el.classList.add('tk-note', 'tk-note-' + pad); el.dataset.tk = pad; el.dataset.tkSrc = src;
+            const im = document.createElement('img'); im.className = 'tk-bg'; im.alt = ''; im.draggable = false; im.src = src;
+            el.insertBefore(im, el.firstChild);
+            const ta = el.querySelector('textarea'); if (ta) ta.placeholder = '톡 눌러서 메모해요 ✍️';
         }
 
         /* ---------- 소리 : 찢는 동안 '찌이익'만 (당기는 빠르기만큼) ---------- */
@@ -305,4 +316,4 @@
             }
             tkGain.gain.setTargetAtTime(v, ac.currentTime, .03);
         }
-        window.openTteok = openTteok; window.spawnTteok = spawnTteok; window.closeTteokRoom = closeTteokRoom; window.lfTabs = lfTabs;
+        window.openTteok = openTteok; window.spawnTteok = spawnTteok; window.closeTteokRoom = closeTteokRoom; window.tkNoteDress = tkNoteDress; window.lfTabs = lfTabs;

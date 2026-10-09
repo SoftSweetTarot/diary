@@ -664,13 +664,14 @@
                 if (h) item.h = Math.round(h);
                 item.z = parseInt(el.style.zIndex) || 1;
                 item.bw = el.offsetWidth; item.bh = el.offsetHeight;
-                if (img && el.dataset.float) item.fm = 1;                       // 🧻 떡메 · 📄 모조지 : 옮길 때 떼지 않고 살짝 떠서 (아래 makeTransformable)
+                if (img && el.dataset.float) item.fm = 1;                       // 📄 모조지 : 옮길 때 떼지 않고 살짝 떠서 (아래 makeTransformable)
                 if (img && el.dataset.frame) {                                  // 📷 사진 틀 (js/frame.js)
                     item.fr = el.dataset.frame;
                     if (el.dataset.caption) item.cp = el.dataset.caption;
                 }
                 if (textarea) {
                     if (el.dataset.paper) item.pp = el.dataset.paper;            // 📝 글상자 모양 (js/paper.js)
+                    if (el.dataset.tk) { item.tk = el.dataset.tk; item.tb = slimEnc(el.dataset.tkSrc); }   // 🧻 떡메 메모 : 종류 + 그림 그대로 (js/leafpad.js)
                     const fid = fontIdOf(textarea.dataset.font);
                     if (fid !== 'sys') item.f = fid;
                     if ((textarea.dataset.color || DEFAULT_TEXT_COLOR) !== DEFAULT_TEXT_COLOR) item.k = textarea.dataset.color;
@@ -718,6 +719,7 @@
                 styleTextarea(ta, data.fontFamily, data.color, data.fontSize);
                 el.appendChild(ta);
                 if (data.paper && /^[a-z]{1,10}$/.test(data.paper)) { el.classList.add('pp-' + data.paper); el.dataset.paper = data.paper; }
+                if (data.tk && data.tb && window.tkNoteDress) tkNoteDress(el, data.tk, data.tb);
             } else if (data.type === 'doll') {
                 buildPlacedDoll(el, data.content, interactive);                // 👧 붙인 인형 (js/doll-room.js)
             } else if (data.type === 'image') {
