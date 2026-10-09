@@ -42,6 +42,11 @@
 @media (hover: hover) { .modal-title.mt-bar .mt-btn:hover { border-style: solid; border-color: var(--dk-accent); color: var(--dk-accent); } }
 .skin-float .modal-title.mt-bar { cursor: move; touch-action: none; user-select: none; -webkit-user-select: none; margin-top: -30px; padding-top: 24px; }
 .skin-float .modal-content:has(> .modal-title.mt-bar .mt-back:not(.mt-none)) > .modal-title.mt-bar { margin-top: -44px; padding-top: 38px; }   /* 창 위쪽 띠 전체를 잡고 끌어요 (‹ · ✕ 버튼은 그대로 눌려요) */
+/* 카테고리 칸(내 · 공유 · 기본 · 문구점)이 있는 창 : 제목 리본을 ‹ 뒤로 · ✕ 줄로 올려 한 줄 아끼기 */
+.modal-content:has(> .stk-tabs:not([hidden])):has(> .modal-title.mt-bar) { padding-top: 8px; }
+.modal-content:has(> .stk-tabs:not([hidden])):has(> .modal-title.mt-bar) > .modal-title.mt-bar { margin: 0 0 10px; }
+.skin-float .modal-content:has(> .stk-tabs:not([hidden])):has(> .modal-title.mt-bar) > .modal-title.mt-bar { margin-top: -8px; padding-top: 8px; }
+.modal-content:has(> .stk-tabs:not([hidden])) > .modal-title.mt-bar .mt-text { max-width: calc(100% - 196px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: top; }
 
 /* ---------- 구역 제목 : 마스킹테이프 ---------- */
 .modal-content .dk-sec { display: table; align-self: flex-start; width: fit-content; max-width: calc(100% + 6px); margin: 16px 0 10px -6px; padding: 4px 14px; font-size: 12.5px; font-weight: 800; text-align: left; line-height: 1.35;
