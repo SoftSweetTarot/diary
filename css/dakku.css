@@ -73,7 +73,7 @@
 .modal .settings-grid { grid-template-columns: repeat(3, 1fr); }
 
 /* ✨ 스티커 창 : 4×2 + 아래 '나만의 스티커 만들기' */
-#stickerMakeModal .stk-menu { grid-template-columns: repeat(4, 1fr); }
+#stickerMakeModal .stk-menu { grid-template-columns: repeat(3, 1fr); }   /* 스티커 · 스티커 · 테이프 / 종이 3가지 (메모지 · 떡메모지 · 속지) 를 세 칸씩 */
 .dk-cta { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 16px); height: 50px; margin: 22px auto 4px; border: 0; border-radius: 14px; flex: none;
     background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dk-accent) 32%, #fff) 0 10px, color-mix(in srgb, var(--dk-accent) 22%, #fff) 10px 20px);
     color: var(--dk-ribbon-ink); font: inherit; font-size: 15px; font-weight: 800; cursor: pointer;

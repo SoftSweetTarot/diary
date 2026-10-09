@@ -644,7 +644,8 @@
             const day = { v: 3, pw: ps.w, ph: ps.h, i: elementsData };
             if (pageStamps.mo) day.mo = pageStamps.mo;                          // 😊 오늘의 기분 · ☀️ 날씨 도장 (js/stamp.js)
             if (pageStamps.we) day.we = pageStamps.we;
-            if (elementsData.length || day.mo || day.we) store.setItem(dayKey, JSON.stringify(day));
+            if (typeof pageLeaf !== 'undefined' && pageLeaf !== 'line') day.lf = pageLeaf;   // 📃 속지 (js/leafpad.js · 줄노트는 기본이라 저장 안 함)
+            if (elementsData.length || day.mo || day.we || day.lf) store.setItem(dayKey, JSON.stringify(day));
             else store.removeItem(dayKey);   // 빈 페이지는 파일에 남기지 않음
             if (typeof searchTouch === 'function') searchTouch(dayKey);          // 🔍 검색 목록 고치기 (js/search.js)
 
@@ -714,6 +715,7 @@
             clearCanvas();
             pageStamps.mo = ''; pageStamps.we = '';
             if (typeof psRender === 'function') psRender();
+            if (typeof setPageLeaf === 'function') setPageLeaf('line');
             const canvas = document.getElementById('canvasArea');
             const key = getDateKey(currentDate);
             /* 아직 드라이브에서 읽지 못한 날짜라면 읽어 온 뒤에 표시 (빈 화면으로 덮어쓰는 사고 방지) */
@@ -734,6 +736,7 @@
             let raw = null; try { raw = JSON.parse(store.getItem(key)); } catch (e) {}
             pageStamps.mo = raw && raw.mo || ''; pageStamps.we = raw && raw.we || '';
             if (typeof psRender === 'function') psRender();
+            if (typeof setPageLeaf === 'function') setPageLeaf(raw && raw.lf);  // 📃 그날 속지 (js/leafpad.js)
             if (typeof ddRefresh === 'function') ddRefresh();               // ⏳ 이 페이지 날짜 기준 D-day (js/dday.js)
         }
         const pageStamps = { mo: '', we: '' };            // 지금 페이지의 기분 · 날씨 도장

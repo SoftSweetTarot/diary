@@ -357,7 +357,7 @@
         }
         window.openStickerList = openStickerList;
 
-        /* ✨ 스티커 창 → 🎀 마스킹테이프 · 🧩 조각스티커 · 🏷️ 씰스티커 · 📄 모조지스티커 · 📃 속지 : 목록 창 위에 카테고리 4개, 소스는 그 아래
+        /* ✨ 스티커 창 → 🎀 마스킹테이프 · 🧩 조각스티커 · 🏷️ 씰스티커 · 📄 모조지스티커 : 목록 창 위에 카테고리 4개, 소스는 그 아래
            지금 있는 것 : 🎀 내스티커(만든 · 받은 테이프) / 🧩 내스티커(👜 내 봉투 · 사진 · 글씨) · 기본스티커(그림 모음 · 계절) / 🏷️ · 📄 내스티커(만든 것)
                           문구점스티커는 모든 종류가 🛍️ 문구점의 그 칸으로 / 나머지는 '준비 중' */
         const STK_KINDS = {
@@ -365,7 +365,6 @@
             piece: ['🧩', '조각스티커', ['스티커', '이미지 스티커팩']],
             seal: ['🏷️', '씰스티커', ['스티커']],
             paper: ['📄', '모조지스티커', ['스티커']],
-            leaf: ['📃', '속지', []],
         };
         const STK_TABS = [['mine', '내스티커'], ['share', '공유스티커'], ['free', '기본스티커'], ['shop', '문구점스티커']];
         let stkKind = 'tape';
@@ -388,7 +387,7 @@
             g.scrollTop = 0;
             const go = (ic, name, sub, fn) => `<button type="button" class="stk-go" onclick="${fn}"><span>${ic}</span><b>${name}</b><small>${sub}</small></button>`;
             if (tab === 'mine' && stkKind === 'tape') return loadMyTapes();
-            if (tab === 'mine' && stkKind !== 'leaf') return loadMyStickers(stkKind);
+            if (tab === 'mine') return loadMyStickers(stkKind);
             if (tab === 'free' && stkKind === 'piece') {
                 const ss = document.getElementById('seasonTab');
                 g.innerHTML = go('🧩', '말랑달콤 그림 모음', '카테고리별 조각스티커', "closeModal('stickerModal'); openLibrary()")
