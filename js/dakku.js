@@ -93,7 +93,7 @@
     /* 메뉴 이름 → 아이콘 */
     const MAP = {
         '미니시트': 'emoji', '캡슐스티커': 'caps', '마스킹테이프': 'tape', '조각스티커': 'piece', '씰스티커': 'seal', '모조지': 'paper', '속지': 'leaf', '메모지': 'memo', '떡메모지': 'tteok',
-        '포토부스': 'booth', '사진찍기': 'cam', '사진고르기': 'pick', '글씨 스티커': 'text', '마스킹테이프 만들기': 'tapemk', '속지 만들기': 'leafmk',
+        '포토부스': 'booth', '사진찍기': 'cam', '사진고르기': 'pick', '글씨 스티커': 'text', '글씨스티커 만들기': 'text', '마스킹테이프 만들기': 'tapemk', '속지 만들기': 'leafmk',
         '기본페이지': 'palette', '페이지꾸미기': 'bow', '테마 보관함': 'gift', '말랑배경지': 'cloud', '달콤배경지': 'candy', '내 배경지': 'folder', '이미지 배경지': 'pick', '그려서 만들기': 'brush',
         '매일': 'sprout', '운세·마음': 'ball', '만들기·꾸미기': 'doll', '게임': 'game', '펫 키우기': 'paw', '함께하기': 'letter',
         '말랑달콤 저금통': 'piggy', '말랑달콤 배경화면': 'wall', '말랑달콤 문구점': 'shop',
@@ -108,11 +108,28 @@
         if (k && ICON[k]) ic.innerHTML = svg(k);
     }
 
+    /* 창 모서리 테이프 : 창(스크롤되는 상자) 밖 · 바깥 화면(.modal)에 붙여서 창 테두리 밖으로 삐져나와요 (안에 넣으면 잘려요)
+       창 크기 · 화면 크기가 바뀌면 다시 맞춰요 */
+    function dkTapes(m, box) {
+        const l = document.createElement('span'), r = document.createElement('span');
+        l.className = 'dk-tape l'; r.className = 'dk-tape r';
+        box.after(l, r);
+        const fit = () => {
+            const b = box.getBoundingClientRect(), o = m.getBoundingClientRect();
+            if (!b.width) return;
+            l.style.left = (b.left - o.left - 18) + 'px'; l.style.top = (b.top - o.top - 7) + 'px';
+            r.style.left = (b.right - o.left - r.offsetWidth + 18) + 'px'; r.style.top = (b.top - o.top - 7) + 'px';
+        };
+        if (window.ResizeObserver) new ResizeObserver(fit).observe(box);
+        addEventListener('resize', fit);
+        fit();
+    }
+
     function dkDecorate(m) {
         if (!m || m.dataset.dk) return; m.dataset.dk = '1';
         const box = m.querySelector('.modal-content, .alert-card'); if (!box) return;
         if (box.classList.contains('alert-card')) box.insertAdjacentHTML('afterbegin', `<span class="dk-heart">${svg('heartS')}</span>`);
-        else box.insertAdjacentHTML('afterbegin', '<span class="dk-tape l"></span><span class="dk-tape r"></span>');
+        else dkTapes(m, box);
         /* 메뉴 칸 : 아이콘은 다이컷 스티커 · 이름은 점선 라벨 */
         box.querySelectorAll('.service-btn').forEach((b, i) => {
             const ic = b.querySelector('.service-icon'); if (!ic) return;
