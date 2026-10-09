@@ -197,3 +197,21 @@
 .smk-room .tpm-top { top: calc(max(10px, env(safe-area-inset-top)) + 46px); margin: 0 -16px; padding: 4px 16px 10px; background: var(--win-fill, #fffdf8); box-shadow: 0 8px 8px -8px rgba(160, 90, 110, .2); }
 .smk-room .tpm-zoom small, .smk-room .tpm-wrap small { color: var(--dk-soft); }
 .smk-room .smk-bar, .pb-room .pb-bar { max-width: 472px; margin: 0 auto; box-sizing: border-box; }   /* 아이패드 : ✕ 가 카드 바로 위에 */
+
+/* ---------- ✂️ 만들기 화면 → 가운데 뜨는 팝업 창 (📃 속지 만들기 창처럼 · 뒤의 다이어리가 보여요)
+   제목 줄(.smk-bar · .pb-bar)이 카드 윗부분 · 아래(.smk-wrap · .pb-wrap)가 카드 몸통이고 몸통만 위아래로 움직여요
+   모서리 테이프는 제목 줄에 붙어서 카드 밖으로 삐져나와요 ---------- */
+.smk-room, .pb-room { background: transparent; overflow: hidden; padding: max(14px, env(safe-area-inset-top)) 0 max(14px, env(safe-area-inset-bottom)); box-sizing: border-box;
+    filter: drop-shadow(0 12px 22px rgba(160, 90, 110, .24)); }
+.smk-room.show, .pb-room.show { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.smk-room .smk-bar, .pb-room .pb-bar { position: relative; top: auto; flex: none; width: calc(100% - 40px); max-width: 440px; margin: 0; padding: 10px 10px 6px; border-radius: 16px 16px 0 0;
+    background-color: var(--win-fill, #fffdf8); background-image: radial-gradient(var(--dk-dot) 1.1px, transparent 1.3px); background-size: 15px 15px; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.smk-room .smk-wrap, .pb-room .pb-wrap { flex: 0 1 auto; width: calc(100% - 40px); max-width: 440px; min-height: 0; margin: 0; padding: 8px 16px 20px; border-radius: 0 0 16px 16px; box-shadow: none;
+    background-position: 0 -4px; overflow-y: auto; overscroll-behavior: contain; }
+.smk-wrap::before, .smk-wrap::after, .pb-wrap::before, .pb-wrap::after { display: none; }
+.smk-bar::before, .smk-bar::after, .pb-bar::before, .pb-bar::after { content: ''; position: absolute; top: -7px; width: 84px; height: 24px; opacity: .92; pointer-events: none; z-index: 0;
+    clip-path: polygon(0 8%,6% 0,12% 10%,18% 0,24% 8%,30% 0,36% 8%,42% 0,48% 8%,54% 0,60% 8%,66% 0,72% 8%,78% 0,84% 8%,90% 0,96% 10%,100% 0,100% 92%,94% 100%,88% 92%,82% 100%,76% 92%,70% 100%,64% 92%,58% 100%,52% 92%,46% 100%,40% 92%,34% 100%,28% 92%,22% 100%,16% 92%,10% 100%,4% 92%,0 100%); }
+.smk-bar::before, .pb-bar::before { left: -18px; transform: rotate(-16deg); background: repeating-linear-gradient(90deg, var(--dk-tape-a) 0 7px, var(--dk-tape-b) 7px 14px); }
+.smk-bar::after, .pb-bar::after { right: -18px; transform: rotate(14deg); background: repeating-linear-gradient(45deg, var(--dk-tape-c) 0 6px, var(--dk-tape-d) 6px 12px); }
+.smk-bar > *, .pb-bar > * { position: relative; z-index: 1; }   /* ‹ · ✕ 는 테이프 위에 */
+.smk-room .tpm-top { top: -8px; }

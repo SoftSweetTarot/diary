@@ -90,7 +90,7 @@
                     <p class="smk-hint">사진 가운데를 네모로 잘라서 테이프에 쭉 이어 붙여요</p>
                   </div>
                   <button type="button" class="smk-go" onclick="tpmFinish(true,this)">📌 다이어리에 붙이기</button>
-                  <button type="button" class="smk-go smk-sub" onclick="tpmFinish(false,this)">💾 내 마스킹테이프에 저장만</button>
+                  <button type="button" class="smk-go smk-sub" onclick="tpmFinish(false,this)">💾 마스킹테이프 만들기</button>
                 </section>
               </div>`;
             document.body.appendChild(el);
@@ -227,7 +227,7 @@
             tpmBuild();
             if (!tpmS.img && tpmS.m === 'i') tpmS.m = 'd';
             tpmDraw();
-            tpmq('tpmRoom').classList.add('show'); tpmq('tpmRoom').scrollTop = 0;
+            tpmq('tpmRoom').classList.add('show'); tpmq('tpmRoom').querySelector('.smk-wrap').scrollTop = 0;
             document.body.classList.add('fc-lock');
         }
         function closeTapeMaker() {

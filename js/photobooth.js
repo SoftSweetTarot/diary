@@ -67,7 +67,7 @@
             [1, 2, 3].forEach(i => { pbq('pbStep' + i).hidden = i !== n; });
             pbq('pbBack').hidden = n === 1; pbq('pbSp').hidden = n !== 1;
             if (n !== 2) pbStopCamera();
-            pbq('boothRoom').scrollTop = 0;
+            pbq('boothRoom').querySelector('.pb-wrap').scrollTop = 0;
         }
         function pbBackStep() { if (!pbq('pbStep3').hidden || !pbq('pbStep2').hidden) { pb.shots = []; pbStep(1); } }
         function pbSetLayout(k) { pb.layout = k; document.querySelectorAll('#pbLayouts button').forEach(b => b.classList.toggle('on', b.dataset.l === k)); }

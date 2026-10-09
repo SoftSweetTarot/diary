@@ -306,9 +306,9 @@
         function smTextNext() {
             if (!(smS.text || '').trim()) { showMsg('스티커에 쓸 글씨를 먼저 써 주세요.'); return; }
             if (!smS.fontsBuilt) { smS.fontsBuilt = true; smFillFonts(); smSetFont(smS.font); }   // 글꼴 목록은 2단계에 들어갈 때 만들어요 (처음 화면이 가볍게)
-            smS.step = 2; smPhase(); smq('smText').blur(); smq('smRoom').scrollTop = 0;
+            smS.step = 2; smPhase(); smq('smText').blur(); smq('smRoom').querySelector('.smk-wrap').scrollTop = 0;
         }
-        function smTextPrev() { smS.step = 1; smPhase(); smq('smRoom').scrollTop = 0; if (window.matchMedia && matchMedia('(pointer: fine)').matches) setTimeout(() => smq('smText').focus(), 50); }
+        function smTextPrev() { smS.step = 1; smPhase(); smq('smRoom').querySelector('.smk-wrap').scrollTop = 0; if (window.matchMedia && matchMedia('(pointer: fine)').matches) setTimeout(() => smq('smText').focus(), 50); }
         /* 글꼴 후보 : 설정창 글꼴 목록(fontList · js/app.js) 중 웹폰트 전부 (기기마다 다른 (Local) · (Apple) 글꼴은 빼요) */
         function smFillFonts() {
             const L = fontList.filter(f => /\[/.test(f.name)), box = smq('smFonts'); if (!box) return;
@@ -539,7 +539,7 @@
         function smOpenText() { smBuild(); smStartText(); }
         function smShow() {
             smBuild();
-            smq('smRoom').classList.add('show'); smq('smRoom').scrollTop = 0;
+            smq('smRoom').classList.add('show'); smq('smRoom').querySelector('.smk-wrap').scrollTop = 0;
             document.body.classList.add('fc-lock');
         }
         function closeStickerMaker() {
