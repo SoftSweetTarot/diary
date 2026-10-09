@@ -95,7 +95,7 @@
         function pelPick(o) { const S = pelS; S.a = o.a; S.st = o.st; S.src = o.src; }
 
         /* src : 그림 하나 또는 여러 개 [src, …] */
-        async function openStickerPeel(src) {
+        async function openStickerPeel(src, opt) {                       // opt.ts : 🔤 글씨스티커 (붙인 뒤 📷 사진 꾸미기 창이 안 떠요)
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return false; }
             const list = Array.isArray(src) ? src : [src];
             let imgs;
@@ -105,7 +105,7 @@
             const S = pelS;
             S.cv = pelq('pelCv'); S.ctx = S.cv.getContext('2d');
             S.items = imgs.map((im, i) => ({ a: pelAsset(im), src: list[i], st: { state: 'on' } })); pelPick(S.items[0]);
-            S.drag = null; S.gone = 0; S.mv = { x: 0, y: 0 }; S.on = true;
+            S.ts = !!(opt && opt.ts); S.drag = null; S.gone = 0; S.mv = { x: 0, y: 0 }; S.on = true;
             pelLayout();
             pelq('pelRoom').classList.add('show'); document.body.classList.add('fc-lock');
             S.hint = '';
@@ -273,6 +273,7 @@
             const cx = Math.min(r.right, Math.max(r.left, st.cx)), cy = Math.min(r.bottom, Math.max(r.top, st.cy));
             if (!addImage(S.src)) { closeStickerPeel(); return; }
             const el = pg.querySelector('.element-box:last-child');
+            if (el && S.ts) el.dataset.ts = 1;
             if (el) {
                 const w = (a.w - a.m * 2) * st.s / k, h = (a.h - a.m * 2) * st.s / k, PADB = 14;     // .element-box 안쪽 여백 6px · 테두리 1px (양쪽)
                 const deg = Math.round(st.rot * 180 / Math.PI * 10) / 10;

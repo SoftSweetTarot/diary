@@ -58,7 +58,7 @@
         /* 📷 사진 틀을 씌울 수 있는 사진 (SVG 그림 · 스티커 · 테이프 · 펜 그림은 제외) */
         function getSelectedPhoto() {
             const img = selectedElement && !selectedElement.querySelector('textarea') ? selectedElement.querySelector('img') : null;
-            if (!img || typeof setFrame !== 'function') return null;
+            if (!img || typeof setFrame !== 'function' || selectedElement.dataset.ts) return null;   // 🔤 글씨스티커는 글씨가 이미 정해져 있어서 꾸미기 창이 안 떠요
             if (typeof showRead === 'function' && showRead().photo === 0) return null;      // ⚙ 설정 → 👀 페이지에 보이는 것 → 📷 사진 꾸미기 창 (js/show.js)
             return /^data:image\/svg/i.test(img.dataset.src || '') ? null : img;
         }
@@ -250,7 +250,7 @@
             return { type: ({ i: 'image', t: 'text', s: 'sticker', d: 'doll' })[d.t] || 'sticker', content: d.t === 'i' ? slimDec(d.c) : d.c,
                 posX: d.x || 0, posY: d.y || 0, scale: d.s || 1, rotation: d.r || 0,
                 width: d.w ? d.w + 'px' : '', height: d.h ? d.h + 'px' : '', zIndex: d.z || 1,
-                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp, frame: d.fr, caption: d.cp, float: d.fm, tk: d.tk, tb: d.tb && slimDec(d.tb) };
+                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp, frame: d.fr, caption: d.cp, float: d.fm, ts: d.ts, tk: d.tk, tb: d.tb && slimDec(d.tb) };
         }
 
         function readDayData(date) {

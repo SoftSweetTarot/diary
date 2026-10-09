@@ -464,11 +464,11 @@
             try { return [await pmMakeSheet(srcs)]; } catch (e) { showMsg('모조지를 만들지 못했어요.'); return null; }
         }
         /* 📌 붙이기 : 씰은 하얀 종이째 · 조각은 봉투째 · 모조지는 모조지째 꺼내요 (내스티커에도 저장돼요) */
-        function smStickAs(k, srcs, r) {
+        function smStickAs(k, srcs, r, ts) {                              // ts : 🔤 글씨스티커 (페이지에서 눌러도 📷 사진 꾸미기 창이 안 떠요)
             smAddMsg(r, k, true); closeStickerMaker();
             if (k === 'piece' && window.openPieceBag) openPieceBag(srcs);
             else if (k === 'paper' && window.openPaperSheet) openPaperSheet(srcs[0]);
-            else if (k === 'seal' && window.openStickerPeel) openStickerPeel(srcs.length > 1 ? srcs : srcs[0]);
+            else if (k === 'seal' && window.openStickerPeel) openStickerPeel(srcs.length > 1 ? srcs : srcs[0], { ts });
             else srcs.forEach(smStick);
         }
         async function smDoFinish(act) {
@@ -479,7 +479,7 @@
             if (k === 'paper') { const o = await smPaperSheet([src]); if (!o) return; src = o[0]; }
             const r = await smAdd(src, k, smS.mode === 'text' ? smS.text : '');
             if (SM_STICK[act]) return smStickAs(k, [src], r);
-            if (act === 'text') { smAddMsg(r, k, true); smStick(src); return; }
+            if (act === 'text') return smStickAs('seal', [src], r, true);      // 🔤 글씨스티커도 하얀 스티커 대지째 나와서 떼어 붙여요
             if (r === 'ok') closeStickerMaker();
             smAddMsg(r, k, false);
         }
@@ -513,7 +513,7 @@
         }
         function smUse(i) {
             const s = smS.list && smS.list[i]; if (!s) return;
-            if (s.k === 'seal' && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.ss || s.src); }   // 여러 장 한 칸은 종이째
+            if (s.k === 'seal' && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.ss || s.src, { ts: !!s.t }); }   // 여러 장 한 칸은 종이째 · t(글씨)가 있으면 🔤 글씨스티커
             else if (s.k === 'piece' && window.openPieceBag) {               // 🧩 봉투 : 늘 새 봉투로 나와요 (뜯어서 꺼내요)
                 closeModal('stickerModal');
                 openPieceBag(s.ss || [s.src]);
