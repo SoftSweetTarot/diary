@@ -304,11 +304,9 @@
             const start = libPage * per;
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
             const frag = document.createDocumentFragment();
-            view.slice(start, start + per).forEach(({ u: url }, j) => {
-                const i = start + j;
+            view.slice(start, start + per).forEach(({ u: url }) => {
                 const item = document.createElement('div');
                 item.className = 'lib-item';
-                item.innerHTML = `<span class="lib-num">${i + 1}</span>`;
                 const img = document.createElement('img');
                 img.loading = 'lazy';
                 img.src = url.includes('lh3.googleusercontent.com/d/') ? url + '=w' + thumbW : url;
