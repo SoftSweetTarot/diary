@@ -2958,5 +2958,4 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 @media (prefers-reduced-motion: reduce) { .snb-cover { transition: none; } }
 .snb-cv-tip { position: absolute; bottom: 30px; left: 40px; right: 20px; font-size: 12px; color: #8a6a75; background: rgba(255,255,255,.9); border-radius: 10px; padding: 5px 8px; }
 .modal.snb-on .sticker-grid > div:not(.sticker-item), .modal.snb-on .sticker-grid > p { grid-column: 1 / -1; }   /* 🍭 미니시트 카드 · 내 스티커 · 안내 칸은 한 줄 전체로 */
-.modal.snb-on .modal-title, .modal.snb-on .snb-rings { cursor: grab; touch-action: none; }   /* ✋ 끌어서 수첩 옮기기 */
-.modal.snb-on .snb-rings { pointer-events: auto; }
+.modal.snb-on .modal-title { cursor: grab; touch-action: none; }   /* ✋ 펼친 수첩은 제목 줄을 끌어 옮겨요 */

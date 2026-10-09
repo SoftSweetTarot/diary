@@ -58,10 +58,11 @@
             box.style.left = box.style.top = box.style.width = box.style.height = '';
         }
 
-        /* ✋ 수첩 옮기기 : 제목 줄 · 왼쪽 링 · 겉표지를 누른 채 끌면 수첩이 따라와요 (화면 밖으로는 안 나가요 · 아홉 창이 같은 자리를 써요) */
+        /* ✋ 수첩 옮기기 : 펼친 뒤 위 제목 줄을 누른 채 끌면 수첩이 따라와요 · 겉표지일 땐 고정 (도련 · 2026-10-09)
+           화면 밖으로는 안 나가요 · 아홉 창이 같은 자리를 써요 */
         function snbMovable(m, box) {
             let st = null;
-            const grip = e => e.target.closest && (e.target.closest('.snb-cover') || (e.target.closest('.modal-title, .snb-rings') && !e.target.closest('button')));
+            const grip = e => { const c = m.querySelector('.snb-cover'); return (!c || c.hidden) && e.target.closest && e.target.closest('.modal-title') && !e.target.closest('button'); };
             box.addEventListener('pointerdown', e => {
                 if (e.button > 0 || !m.classList.contains('snb-on') || !grip(e)) return;
                 st = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: snb.pos.x, oy: snb.pos.y, on: false };
@@ -132,7 +133,7 @@
             const t = (m.querySelector('.modal-title .mt-text') || m.querySelector('.modal-title') || {}).textContent || '';
             const sp = t.trim().match(/^(\S+)\s+(.+)$/) || ['', '📒', t.trim()];
             const esc = s => s.replace(/[<>&"]/g, '');
-            c.innerHTML = `<i class="snb-lace top"></i><i class="snb-lace bot"></i><span class="snb-cv-card"><b>${esc(sp[2])}</b><small>나의 스티커 수첩</small></span><span class="snb-cv-ic">${esc(sp[1])}</span><em>톡 눌러 펼쳐요</em><small class="snb-cv-tip">스티커를 꾹 눌러 끌어다 다이어리에 놓으면 붙어요</small>`;
+            c.innerHTML = `<i class="snb-lace top"></i><i class="snb-lace bot"></i><span class="snb-cv-card"><b>${esc(sp[2])}</b><small>나의 스티커 수첩</small></span><span class="snb-cv-ic">${esc(sp[1])}</span><em>톡 눌러 펼쳐요</em><small class="snb-cv-tip">스티커를 꾹 누른 뒤 끌어다 다이어리에 놓으면 붙어요</small>`;
             c.classList.remove('open'); c.hidden = false;
         }
         function snbOpenCover(c) {
@@ -263,12 +264,12 @@
         }
         function snbBind(m, body) {
             body.addEventListener('dragstart', e => e.preventDefault());
-            body.addEventListener('pointerdown', e => {                       // 먼저 들어요 (🧻 떡메 칸처럼 눌림을 스스로 막는 칸도 있어서)
-                if (e.button > 0) return;
+            body.parentElement.addEventListener('pointerdown', e => {         // 먼저 들어요 (🧻 떡메 칸처럼 눌림을 스스로 막는 칸도 있어서) · 제목 줄 아래 어디서든
+                if (e.button > 0 || !m.classList.contains('snb-on') || !e.target.closest || e.target.closest('.modal-title, .snb-cover, .snb-ear')) return;
                 if (snb.press) { if (snb.press.drag) return; clearTimeout(snb.press.timer); }
                 const it = snbItemOf(e.target, body);
                 const p = snb.press = { body, id: e.pointerId, x: e.clientX, y: e.clientY, t: e.target, it, mouse: e.pointerType === 'mouse', touch: e.pointerType === 'touch', drag: false, timer: 0 };
-                if (it && !p.mouse) p.timer = setTimeout(() => { if (snb.press === p && !p.gone) snbLift(e, body); }, SNB_HOLD);
+                if (it) p.timer = setTimeout(() => { if (snb.press === p && !p.gone) snbLift(e, body); }, SNB_HOLD);
             }, true);
             window.addEventListener('pointermove', e => {
                 const p = snb.press; if (!p || p.id !== e.pointerId || p.body !== body) return;
@@ -276,8 +277,7 @@
                 if (p.drag) { snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }
                 if (p.curl) { snbCurlAt((p.curl > 0 ? -dx : dx) - (p.ear ? 0 : 8)); e.preventDefault(); return; }
                 if (d > 8) { clearTimeout(p.timer); p.gone = true; }
-                if (p.mouse && p.it && d > 6 && !p.swipe) snbLift(e, body);           // 마우스는 스티커를 누른 채 움직이면 바로 · 빈 곳을 밀면 넘기기
-                else if (d > 8 && !p.swipe) {
+                if (d > 8 && !p.swipe) {                                       // 제목 아래는 어디를 밀어도 장 넘기기 · 스티커는 꾹 누른 뒤 끌어요 (마우스도 같아요)
                     p.swipe = true;
                     if (Math.abs(dx) > Math.abs(dy) && snbCurlBegin(dx < 0 ? 1 : -1)) { p.curl = dx < 0 ? 1 : -1; p.t0 = performance.now(); }
                 }
@@ -336,7 +336,7 @@
             return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
         }
         function snbDrop(p, x, y, cancel) {
-            const m = snb.m, g = p.ghost, ok = !cancel && snbOver(x, y);
+            const m = snb.m, g = p.ghost, ok = !cancel && Math.hypot(x - p.x, y - p.y) > 12 && snbOver(x, y);   // 꾹 누르고 그대로 떼면 붙이지 않아요
             if (g) {
                 g.classList.add(ok ? 'stick' : 'back');
                 if (!ok) { const r = p.it.getBoundingClientRect(); g.style.transform = `translate(${r.left + r.width / 2 - p.gw / 2}px, ${r.top + r.height / 2 - p.gh / 2}px)`; }
