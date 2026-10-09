@@ -123,6 +123,7 @@
         if (window.ResizeObserver) new ResizeObserver(fit).observe(box);
         addEventListener('resize', fit);
         box.addEventListener('dk-move', fit);                      // 창을 끌어서 옮기면 테이프도 같이 (js/skins.js setupSkinWindows)
+        box.addEventListener('animationend', fit);                 // 창이 톡 뜨는 애니메이션(winPop)이 끝난 자리에 다시 붙이기
         fit();
     }
 
