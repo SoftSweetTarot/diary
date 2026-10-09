@@ -83,7 +83,16 @@
             box.innerHTML = list.map(([k, n]) => `<button type="button" class="tk-chip${k === cur ? ' on' : ''}" data-k="${k}">${n}</button>`).join('');
             box.querySelectorAll('.tk-chip').forEach(b => b.onclick = () => { box.querySelectorAll('.tk-chip').forEach(x => x.classList.toggle('on', x === b)); fn(b.dataset.k); });
         }
+        /* ✏️ 톡 누르기 : 애플펜슬로 누르면 펜 끝이 살짝 밀려 click 이 안 올 때가 있어서, 누른 자리에서 조금만 움직이고 떼면 눌린 걸로 */
+        function tkTap(el, fn) {
+            let at = null;
+            el.addEventListener('pointerdown', e => { at = [e.clientX, e.clientY]; e.stopPropagation(); });
+            el.addEventListener('pointerup', e => { if (at && Math.hypot(e.clientX - at[0], e.clientY - at[1]) < 16) { e.preventDefault(); fn(); } at = null; });
+            el.addEventListener('pointercancel', () => { at = null; });
+        }
         function openTteok() {
+            const pad = document.querySelector('#tteokModal .tk-pad');
+            if (pad && !pad.dataset.tap) { pad.dataset.tap = 1; tkTap(pad, spawnTteok); }
             tkChips(lfq('tkPadPick'), TK_PADS, tk.pad, k => { tk.pad = k; lfq('tkTop').innerHTML = tkSheetHtml(k); });
             tkChips(lfq('tkEdgePick'), TK_EDGES, tk.edge, k => { tk.edge = k; });
             lfq('tkTop').innerHTML = tkSheetHtml(tk.pad);
@@ -166,9 +175,10 @@
             if (lfq('tkRoom')) return;
             const el = document.createElement('div');
             el.id = 'tkRoom'; el.className = 'pel-room tk-room';
-            el.innerHTML = `<div class="tk-rpad" id="tkRPad"><div class="tk-stack"></div><div class="tk-top" id="tkRTop"></div><div class="tk-stubs" id="tkRStubs"></div><div class="tk-glue"></div></div>`
-                + `<p class="pel-hint" id="tkHint"></p><button type="button" class="pel-x" onclick="closeTteokRoom()" aria-label="닫기">✕</button>`;
+            el.innerHTML = `<div class="tk-rpad" id="tkRPad"><div class="tk-stack"></div><div class="tk-top" id="tkRTop"></div><div class="tk-stubs" id="tkRStubs"></div><div class="tk-glue"></div><button type="button" class="tk-x" aria-label="닫기">✕</button></div>`
+                + `<p class="pel-hint" id="tkHint"></p>`;
             document.body.appendChild(el);
+            tkTap(el.querySelector('.tk-x'), closeTteokRoom);
             el.addEventListener('pointerdown', tkDown); el.addEventListener('pointermove', tkMove);
             el.addEventListener('pointerup', tkUp); el.addEventListener('pointercancel', tkUp);
             window.addEventListener('resize', () => { if (tkS.on) tkLayout(); });
@@ -193,7 +203,7 @@
             tkSay('맨 윗장을 잡고 <b>옆으로 쭉</b> 당겨서 뜯어 보세요');
         }
         function closeTteokRoom() {
-            tkS.on = false; tkS.drag = null; tkNoise(0); if (tkS.fly) { tkS.fly.remove(); tkS.fly = null; }
+            tkS.on = false; tkS.drag = null; clearTimeout(tkS.hush); tkNoise(0); if (tkS.fly) { tkS.fly.remove(); tkS.fly = null; }
             const r = lfq('tkRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
         }
@@ -202,7 +212,7 @@
         const tkLocal = P => [(P[0] - tkS.x) / tkS.k, (P[1] - tkS.y) / tkS.k];
 
         function tkDown(e) {
-            if (!tkS.on || tkS.drag || e.target.closest('.pel-x')) return;
+            if (!tkS.on || tkS.drag || e.target.closest('.tk-x')) return;
             const P = [e.clientX, e.clientY], [lx, ly] = tkLocal(P);
             const cap = () => { try { lfq('tkRoom').setPointerCapture(e.pointerId); } catch (er) {} };
             if (lx >= -4 && lx <= 154 && ly >= -6 && ly <= 16) { tkS.drag = { mode: 'pad', last: P }; cap(); return; }          // 분홍 풀칠 띠 → 묶음 옮기기
@@ -227,6 +237,7 @@
         function tkMove(e) {
             const d = tkS.drag; if (!d) return;
             const P = [e.clientX, e.clientY], now = performance.now();
+            if (P[0] === d.last[0] && P[1] === d.last[1]) return;              // ✏️ 펜슬은 제자리에서 누르는 힘만 바뀌어도 움직임이 와요 → 무시 (소리가 끊기지 않게)
             if (d.mode === 'pad') { tkS.mv[0] += P[0] - d.last[0]; tkS.mv[1] += P[1] - d.last[1]; d.last = P; tkLayout(); return; }
             const sp = Math.hypot(P[0] - d.last[0], P[1] - d.last[1]) / Math.max(1, now - d.lt); d.last = P; d.lt = now;
             if (d.mode === 'free') {
@@ -237,7 +248,8 @@
             const dx = P[0] - d.start[0], dy = P[1] - d.start[1];
             if (!d.dir) { if (Math.abs(dx) < 6) return; tkLift(d, Math.sign(dx)); }
             const p = Math.max(0, Math.min(1, d.dir * dx / TK_PULL));
-            if (p > d.p) tkNoise(Math.min(.4, .08 + sp * .3)); else tkNoise(0);
+            if (p > d.p) { tkNoise(Math.min(.4, .1 + sp * .3)); clearTimeout(tkS.hush); tkS.hush = setTimeout(() => tkNoise(0), 120); }   // 멈추면 조용히
+            else if (p < d.p) tkNoise(0);
             d.p = p;
             const rot = -d.dir * p * 24, ty = Math.max(-10, Math.min(24, dy * .25)) + p * 8, tx = d.dir * p * 14;
             tkS.fly.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg)`;
@@ -256,7 +268,7 @@
         }
         function tkUp() {
             const d = tkS.drag; if (!d) return;
-            tkS.drag = null; tkNoise(0);
+            tkS.drag = null; clearTimeout(tkS.hush); tkNoise(0);
             if (d.mode === 'pad') return;
             const f = tkS.fly;
             if (d.mode === 'tear') {
@@ -287,6 +299,7 @@
             put(x, y);
             const bb = el.getBoundingClientRect();
             put(Math.round(x + (cx - (bb.left + bb.width / 2)) / k), Math.round(y + (cy - (bb.top + bb.height / 2)) / k));
+            el.classList.remove('selected'); if (selectedElement === el) { selectedElement = null; if (typeof updateTextPanel === 'function') updateTextPanel(); }   // 그냥 놓이기만 · 톡 누르면 그때 골라져서 글쓰기
             if (typeof saveData === 'function') saveData(false);
             tkSay('붙었어요 ✨ 한 장 더 뜯어도 돼요');
         }
@@ -298,7 +311,7 @@
             el.classList.add('tk-note', 'tk-note-' + pad); el.dataset.tk = pad; el.dataset.tkSrc = src;
             const im = document.createElement('img'); im.className = 'tk-bg'; im.alt = ''; im.draggable = false; im.src = src;
             el.insertBefore(im, el.firstChild);
-            const ta = el.querySelector('textarea'); if (ta) ta.placeholder = '톡 눌러서 메모해요 ✍️';
+            const ta = el.querySelector('textarea'); if (ta) ta.placeholder = '메모를 입력하세요...';
         }
 
         /* ---------- 소리 : 찢는 동안 '찌이익'만 (당기는 빠르기만큼) ---------- */

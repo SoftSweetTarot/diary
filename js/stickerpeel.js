@@ -227,6 +227,7 @@
         function pelMove(e) {
             const S = pelS, d = S.drag; if (!d) return;
             const P = [e.clientX, e.clientY], now = performance.now();
+            if (P[0] === d.last[0] && P[1] === d.last[1]) return;              // ✏️ 펜슬은 제자리에서 누르는 힘만 바뀌어도 움직임이 와요 → 무시 (소리가 끊기지 않게)
             if (d.mode === 'board') { pelShift(P[0] - d.last[0], P[1] - d.last[1]); d.last = P; return; }
             const sp = Math.hypot(P[0] - d.last[0], P[1] - d.last[1]) / Math.max(1, now - d.lt); d.last = P; d.lt = now;
             if (d.mode === 'peel') {
