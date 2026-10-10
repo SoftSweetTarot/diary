@@ -70,6 +70,7 @@
             gen: 0,            // 다시 불러오기 할 때마다 증가 (예전 요청의 결과가 뒤늦게 섞이는 것 방지)
             inflight: null,    // 지금 업로드 중인 키
             settingsFile: null, cafeFile: null,   // { id, modifiedTime } : 마지막으로 읽거나 쓴 때의 드라이브 파일 (두 기기 확인용)
+            cafeBase: new Map(),         // ☕ 카페 기록 : 마지막으로 드라이브에서 읽거나 올린 값 (두 기기가 같은 항목을 고쳤을 때 합치는 기준)
             dayMeta: new Map(),          // 'diary_2026_10_09' → 읽거나 쓴 때의 드라이브 파일 수정 시각 ('' = 그때 파일이 없었음)
             full: false,                 // 구글 저장공간이 꽉 참
             dirtyKeys: new Set(),        // 아직 드라이브에 올리지 못한 변경 (날짜/설정 키)
@@ -485,7 +486,8 @@
             store.clear();
             drive.dirtyKeys.clear(); drive.loadedDays.clear(); drive.dayLoads.clear(); drive.dayMeta.clear();
             if (settings) Object.keys(settings).forEach(k => { if (isSettingKey(k) && keyFile(k) === 'settings') store.putLoaded(k, JSON.stringify(settings[k])); });
-            if (cafe) Object.keys(cafe).forEach(k => { if (keyFile(k) === 'cafe') store.putLoaded(k, JSON.stringify(cafe[k])); });
+            drive.cafeBase = new Map();
+            if (cafe) Object.keys(cafe).forEach(k => { if (keyFile(k) === 'cafe') { store.putLoaded(k, JSON.stringify(cafe[k])); drive.cafeBase.set(k, JSON.stringify(cafe[k])); } });
             if (typeof collLogin === 'function') await collLogin();          // 🎨 지금 쓰는 내 페이지 · 배경지 원본 (js/coll.js)
             drive.ready = true; drive.guest = false;
             drive.needAuth = false; drive.error = false; drive.full = false;
@@ -546,15 +548,89 @@
             const keep = k => mine.has(k) || drive.dirtyKeys.has(k);
             let changed = false;
             Object.keys(obj).forEach(k => {
-                if (!isSettingKey(k) || keyFile(k) !== which || keep(k)) return;
+                if (!isSettingKey(k) || keyFile(k) !== which) return;
                 const v = JSON.stringify(obj[k]);
+                if (keep(k)) {                                                  // 이 기기에서도 고친 값
+                    if (which === 'cafe' && v !== drive.cafeBase.get(k)) {       // ☕ 다른 기기도 고쳤어요 → 한쪽만 남기지 않고 합쳐요
+                        const mv = store.getItem(k), merged = cafeMerge(k, drive.cafeBase.get(k), mv, v);
+                        if (merged !== mv) { store.putLoaded(k, merged); changed = true; }
+                    }
+                    return;
+                }
                 if (store.getItem(k) !== v) { store.putLoaded(k, v); changed = true; }
             });
             store.keys().forEach(k => {
                 if (isSettingKey(k) && keyFile(k) === which && !(k in obj) && !keep(k)) { store.putLoaded(k, null); changed = true; }   // 다른 기기에서 지운 값
             });
             drive[KEY_FILES[which].prop] = cur;
+            if (which === 'cafe') { drive.cafeBase = new Map(); Object.keys(obj).forEach(k => { if (keyFile(k) === 'cafe') drive.cafeBase.set(k, JSON.stringify(obj[k])); }); }
             if (changed) applyRemoteSettings();
+        }
+
+        /* ☕ 카페 기록 합치기 : 두 기기가 같은 항목을 고쳤을 때 한쪽 기록이 사라지지 않게
+           base = 마지막으로 드라이브에서 읽거나 올린 값 · mine = 이 기기 · theirs = 지금 드라이브 (모두 JSON 글자)
+           - 출석 도장 : 양쪽 도장을 모두 (도장은 지우는 기능이 없어요)
+           - 오락실 최고 점수 : 게임마다 더 높은 점수
+           - 생리 달력 · 심리테스트 결과 : 날짜(테스트)마다 바뀐 쪽 · 둘 다 바꿨으면 이 기기 것
+           - D-day : 양쪽에서 더한 것은 모두 · 한쪽에서 지운 것은 지워요
+           - 행운 번호 : 드라이브에 있는 번호 (기기마다 다르면 안 돼요)
+           - 그 밖 : 한쪽만 바꿨으면 바꾼 쪽 · 둘 다 바꿨으면 이 기기 것 (예전과 같음)
+           읽을 수 없는 값이 섞여 있으면 이 기기 것을 그대로 둬요 */
+        function cafeMerge(k, base, mine, theirs) {
+            if (mine === theirs || theirs == null) return mine;
+            if (mine == null) return theirs;
+            const P = t => { if (t == null) return undefined; try { return JSON.parse(t); } catch (e) { return null; } };
+            const obj = x => x && typeof x === 'object' && !Array.isArray(x);
+            const pick = () => (mine === base ? theirs : mine);
+            const each3 = (b, m, t, both) => {                                 // 칸마다 : 한쪽만 바뀌었으면 바뀐 쪽
+                const out = {};
+                new Set([...Object.keys(b || {}), ...Object.keys(m), ...Object.keys(t)]).forEach(n => {
+                    const bv = b && n in b ? JSON.stringify(b[n]) : undefined, mv = n in m ? JSON.stringify(m[n]) : undefined, tv = n in t ? JSON.stringify(t[n]) : undefined;
+                    const r = mv === tv ? mv : mv === bv ? tv : tv === bv ? mv : both(m[n], t[n], mv);
+                    if (r !== undefined) out[n] = JSON.parse(r);
+                });
+                return out;
+            };
+            try {
+                if (k === VAULT_KEYS[0]) {                                     // 🔐 출석 도장 { "2026-10": [1, 2, 5] }
+                    const m = vaultOpen(P(mine)), t = vaultOpen(P(theirs));
+                    if (!obj(m) || !obj(t)) return mine;
+                    const out = {};
+                    new Set([...Object.keys(m), ...Object.keys(t)]).forEach(ym => {
+                        const days = new Set([...(Array.isArray(m[ym]) ? m[ym] : []), ...(Array.isArray(t[ym]) ? t[ym] : [])].filter(d => Number.isInteger(d)));
+                        if (days.size) out[ym] = [...days].sort((a, b) => a - b);
+                    });
+                    return JSON.stringify(vaultSeal(out));
+                }
+                if (k === 'diary_arcade_best') {
+                    const m = P(mine), t = P(theirs);
+                    if (!obj(m) || !obj(t)) return mine;
+                    const out = Object.assign({}, t);
+                    Object.keys(m).forEach(g => { const a = +m[g] || 0, b = +t[g] || 0; out[g] = Math.max(a, b); });
+                    return JSON.stringify(out);
+                }
+                if (k === 'diary_luck_seed') return P(theirs) ? theirs : mine;
+                if (k === 'diary_psy') {
+                    const m = P(mine), t = P(theirs), b = P(base);
+                    if (!obj(m) || !obj(t)) return mine;
+                    return JSON.stringify(each3(obj(b) ? b : {}, m, t, (x, y, mv) => mv));
+                }
+                if (k === 'diary_cycle') {
+                    const m = P(mine), t = P(theirs), b = P(base);
+                    if (!obj(m) || !obj(m.d) || !obj(t) || !obj(t.d)) return mine;
+                    return JSON.stringify(Object.assign({}, m, { d: each3(obj(b) && obj(b.d) ? b.d : {}, m.d, t.d, (x, y, mv) => mv) }));
+                }
+                if (k === 'diary_dday') {
+                    const m = P(mine), t = P(theirs), b = P(base);
+                    if (!Array.isArray(m) || !Array.isArray(t)) return mine;
+                    const S = a => a.map(x => JSON.stringify(x));
+                    const bs = new Set(Array.isArray(b) ? S(b) : []), ms = new Set(S(m)), ts = S(t);
+                    const out = ts.filter(x => !(bs.has(x) && !ms.has(x)));            // 드라이브 것 중 이 기기에서 지운 것은 빼고
+                    S(m).forEach(x => { if (!bs.has(x) && !out.includes(x)) out.push(x); });   // 이 기기에서 더한 것
+                    return '[' + out.join(',') + ']';
+                }
+            } catch (e) { console.warn('카페 기록을 합치지 못해서 이 기기 것으로 둬요:', k, e); return mine; }
+            return pick();
         }
         /* 다른 기기 설정이 들어왔을 때 화면에 바로 보이는 것만 다시 (글꼴 · 페이지 · 보이는 것 · D-day) */
         async function applyRemoteSettings() {
@@ -576,8 +652,10 @@
             let cur = known ? await driveMeta(known.id) : null;
             if (!cur) cur = await findFile(dir, F.name);                              // 처음이거나 지워졌으면 이름으로 한 번 더 찾기
             if (cur && (!known || cur.id !== known.id || cur.modifiedTime !== known.modifiedTime)) await mergeKeyFile(which, cur, mine);
-            const saved = await driveUpsert(dir, F.name, cur && cur.id, settingsBody(which));
+            const body = settingsBody(which);
+            const saved = await driveUpsert(dir, F.name, cur && cur.id, body);
             drive[F.prop] = { id: saved.id, name: F.name, modifiedTime: saved.modifiedTime };
+            if (which === 'cafe') { const o = JSON.parse(body); drive.cafeBase = new Map(Object.keys(o).map(k => [k, JSON.stringify(o[k])])); }
         }
 
         /* 일기 하루 올리기 : 다른 기기가 그 사이 같은 날을 고쳤으면 물어봐요 */
@@ -882,10 +960,17 @@
            ===================================================================== */
         function savePending() {
             try {
-                const items = {};
+                const items = {}, b = {}, bv = {};
                 drive.dirtyKeys.forEach(k => { items[k] = store.getItem(k); });          // null = 내용을 지운 날
                 if (drive.inflight && !(drive.inflight in items)) items[drive.inflight] = store.getItem(drive.inflight);
-                localStorage.setItem(PENDING_KEY, JSON.stringify({ savedAt: Date.now(), items }));
+                Object.keys(items).forEach(k => {                                         // 그때 드라이브 파일의 수정 시각 (기기 시계가 아니라 구글 시각)
+                    if (isDayKey(k)) { if (drive.dayMeta.has(k)) b[k] = drive.dayMeta.get(k); }
+                    else if (isSettingKey(k)) {
+                        const f = drive[KEY_FILES[keyFile(k)].prop]; b[k] = f && f.modifiedTime || '';
+                        if (keyFile(k) === 'cafe' && drive.cafeBase.has(k)) bv[k] = drive.cafeBase.get(k);   // ☕ 합칠 때 기준
+                    }
+                });
+                localStorage.setItem(PENDING_KEY, JSON.stringify({ savedAt: Date.now(), items, b, bv }));
             } catch (e) { /* 용량 초과 등: 임시 보관은 포기하고 업로드만 시도 */ }
         }
         function clearPending() { try { localStorage.removeItem(PENDING_KEY); } catch (e) {} }
@@ -899,38 +984,63 @@
             }
         }
 
-        /* 다음에 열었을 때, 업로드되지 못한 임시 보관본(변경된 날짜만)이 있으면 복구 */
+        /* 다음에 열었을 때, 업로드되지 못한 임시 보관본(변경된 날짜만)이 있으면 복구
+           - 기기 시계는 믿지 않아요 : 보관할 때 적어 둔 '그때 드라이브 파일의 수정 시각'과 지금 수정 시각을 비교해요
+             · 같으면 그 사이 아무도 안 고친 것 → 한 번에 "복구할까요?"
+             · 다르면 그 사이 다른 기기가 고친 것 → 일기는 날마다 "어느 쪽을 남길까요?" · 설정은 한 번에 물어요
+             · ☕ 카페 기록은 묻지 않고 양쪽을 합쳐요 (cafeMerge)
+           - 지금 드라이브 내용이 보관본과 같으면 (이미 올라감) 아무것도 안 해요 */
         async function recoverPendingBackup() {
             let p = null;
             try { const raw = localStorage.getItem(PENDING_KEY); p = raw ? JSON.parse(raw) : null; } catch (e) {}
             if (!p || !p.items || typeof p.items !== 'object') { clearPending(); return; }
-            const todo = [];
+            const B = p.b && typeof p.b === 'object' ? p.b : {}, BV = p.bv && typeof p.bv === 'object' ? p.bv : {};
+            const safe = [], cafe = [], askDays = [], askSet = [];
             for (const k of Object.keys(p.items)) {
                 const v = p.items[k];
-                if (!k.startsWith('diary_') || !(v === null || typeof v === 'string')) continue;
+                if (!k.startsWith('diary_') && !VAULT_KEYS.includes(k)) continue;
+                if (!(v === null || typeof v === 'string')) continue;
                 const dk = parseDayKey(k);
-                let driveTime = 0;
+                let now;
                 if (dk) {
                     await ensureDayLoaded(new Date(dk.y, dk.m - 1, dk.d));
                     if (!drive.loadedDays.has(k)) continue;                             // 드라이브 내용을 읽지 못하면 건드리지 않음
                     const idx = drive.monthIndex.get(`${dk.y}/${dk.m}`);
                     const f = idx && idx.files.get(dayFileName(dk.d));
-                    driveTime = f && f.modifiedTime ? Date.parse(f.modifiedTime) : 0;
+                    now = f ? f.modifiedTime || '' : '';
                 } else if (isSettingKey(k)) {
                     const sf = drive[KEY_FILES[keyFile(k)].prop];
-                    driveTime = sf && sf.modifiedTime ? Date.parse(sf.modifiedTime) : 0;
+                    now = sf && sf.modifiedTime || '';
                 } else continue;
-                if (driveTime && driveTime >= p.savedAt) continue;                      // 이미 드라이브에 반영됨(더 최신)
-                if (store.getItem(k) === v) continue;                                   // 내용이 같음
-                todo.push(k);
+                if (store.getItem(k) === v) continue;                                   // 내용이 같음 (이미 올라갔어요)
+                if (!dk && keyFile(k) === 'cafe') cafe.push(k);
+                else if (k in B && B[k] === now) safe.push(k);                          // 그 사이 아무도 안 고쳤어요
+                else (dk ? askDays : askSet).push(k);                                   // 그 사이 다른 기기가 고쳤어요
             }
             clearPending();
-            if (!todo.length) return;
+            if (!safe.length && !cafe.length && !askDays.length && !askSet.length) return;
+            const put = k => { const v = p.items[k]; if (v === null) store.removeItem(k); else store.setItem(k, v); };
+            let any = false;
             const when = new Date(p.savedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const yes = await showMsg('📴 ' + when + ' 화면이 꺼질 때의 변경 내용이<br>드라이브에 저장되지 못했어요. (' + todo.length + '건)<br>이 기기에 보관된 내용으로 복구할까요?<br><span style="font-size:12px;color:#777;">취소를 누르면 드라이브의 현재 내용을 유지해요.</span>', true);
-            if (!yes) return;
             try {
-                todo.forEach(k => { const v = p.items[k]; if (v === null) store.removeItem(k); else store.setItem(k, v); });
+                if (safe.length || cafe.length) {
+                    const yes = await showMsg('📴 ' + when + ' 화면이 꺼질 때의 변경 내용이<br>드라이브에 저장되지 못했어요. (' + (safe.length + cafe.length) + '건)<br>이 기기에 보관된 내용으로 복구할까요?<br><span style="font-size:12px;color:#777;">취소를 누르면 드라이브의 현재 내용을 유지해요.</span>', true);
+                    if (yes) {
+                        safe.forEach(put);
+                        cafe.forEach(k => { const m = cafeMerge(k, BV[k], p.items[k], store.getItem(k)); if (m !== store.getItem(k)) store.setItem(k, m); });
+                        any = true;
+                    }
+                }
+                for (const k of askDays) {
+                    const dk = parseDayKey(k);
+                    const mine = await showAsk(`📴 ${when} 화면이 꺼질 때 고친 <b>${dk.m}월 ${dk.d}일</b> 일기가 저장되지 못했는데,<br>그 사이 📱 다른 기기에서 이 날을 고쳤어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 사라져요.</span>`, '📝 이 기기 것', '📱 다른 기기 것');
+                    if (mine) { put(k); any = true; }
+                }
+                if (askSet.length) {
+                    const mine = await showAsk(`📴 ${when} 화면이 꺼질 때 바꾼 <b>설정 ${askSet.length}개</b>가 저장되지 못했는데,<br>그 사이 📱 다른 기기에서 설정을 바꿨어요.<br>어느 쪽을 남길까요?`, '📝 이 기기 것', '📱 다른 기기 것');
+                    if (mine) { askSet.forEach(put); any = true; }
+                }
+                if (!any) return;
                 applyLoadedData();
                 await flushUpload({ force: true });
             } catch (e) { showMsg('⚠ 복구에 실패했어요.'); }
