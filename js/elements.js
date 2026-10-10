@@ -9,7 +9,7 @@
             const at = window.tmPlace && tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
             if (!at) elCenter(el);
-            closeModal('stickerModal');
+            if (window.stkBlink) stkBlink();
         }
 
         function addText() {
@@ -287,9 +287,9 @@
         /* 그림 모음에서 고르면 : 🏷️ 씰스티커처럼 하얀 칼선 테두리를 둘러 하얀 종이째 나와요 → 떼어 붙여요 (js/stickerpeel.js)
            그림을 그릴 수 없으면(주소가 막힘) 예전처럼 페이지에 바로 붙어요 */
         async function libPick(url) {
-            closeModal('stickerModal');
-            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url), { back: 'stickerModal' })) return; } catch (e) {}
-            addImage(url);
+            if (window.stkLeave) stkLeave();
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url))) return; } catch (e) {}
+            addImage(url); if (window.stkReturn) stkReturn(700);
         }
         function renderLibrary() {
             const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');

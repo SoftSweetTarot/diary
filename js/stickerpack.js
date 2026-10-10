@@ -145,7 +145,7 @@
         async function openStickerPack(id) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
             const p = SPK_PACKS.find(q => q.id === id); if (!p) return;
-            if (typeof closeModal === 'function') closeModal('stickerModal');
+            if (window.stkLeave) stkLeave();
             spkBuild(); spkPutBack(); spkS.pack = p;
             const srcs = await spkSrcs(p);
             spkq('spkTitle').textContent = p.icon + ' ' + p.name;
@@ -157,7 +157,7 @@
             if (W - r.right >= b.offsetWidth + 12) spkPlace(r.right + 8, Math.max(80, r.top + 40));
             else spkPlace((W - b.offsetWidth) / 2, nt - b.offsetHeight - 10);
         }
-        function closeStickerPack() { spkPutBack(); const r = spkq('spkRoom'); if (r) r.classList.remove('show'); }
+        function closeStickerPack() { spkPutBack(); const r = spkq('spkRoom'); if (r) r.classList.remove('show'); if (window.stkReturn) stkReturn(); }   // ✨ 스티커 창에서 왔으면 다시 떠요
 
         /* ---------- 누르면 🏷️ 씰스티커처럼 떼어져서(js/peelfx.js) 떠오르기 · 끌기 → 붙이기 ---------- */
         /* 누른 채 끌면 🏷️ 씰스티커처럼 손가락을 따라 가장자리부터 떼어져요 (js/peelfx.js pfxSeal) · 톡 누르면 저절로 떼어져 떠올라요 */

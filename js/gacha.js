@@ -153,7 +153,7 @@
             if (!addImage(capsUrl(k))) return false;
             const box = document.querySelector('#canvasArea .element-box:last-child'); if (box) box.style.width = '120px';
             if (fromBox) closeGacha();
-            if (typeof closeModal === 'function') closeModal('stickerModal');
+            if (window.stkBlink) stkBlink();
             return true;
         }
 

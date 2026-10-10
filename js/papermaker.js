@@ -92,6 +92,7 @@
             const S = pmS; S.on = false; S.drag = null; S.edit = null; cancelAnimationFrame(S.raf);
             const r = pmq('pmRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
+            if (window.stkReturn) stkReturn();                                // ✨ 스티커 창에서 왔으면 다시 떠요
         }
         /* 모조지는 배경(화면) 한가운데 · 화면이 바뀌어도 (아이패드 돌리기 등) 가운데에 화면 안 크기로 */
         function pmLayout() {

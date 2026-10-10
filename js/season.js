@@ -120,7 +120,7 @@
             const s = (SEASON_STICKERS[k] || []).find(x => x.id === id); if (!s || typeof addImage !== 'function') return;
             if (!addImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.svg))) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '110px';
-            if (typeof closeModal === 'function') closeModal('stickerModal');
+            if (window.stkBlink) stkBlink();
         }
 
         (function seasonInit() {

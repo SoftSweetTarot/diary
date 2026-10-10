@@ -295,6 +295,7 @@
            목록을 불러오는 코드(loadXxx)는 stickerModal 안의 눈에 안 보이는 카테고리 버튼(.cat-btn)이 불러요 → 그 버튼을 대신 눌러 줘요 */
         const SL_KINDS = { emoji: ['🍭 미니시트', 'em-cat'], caps: ['🎁 캡슐스티커', 'cs-cat'], season: ['🌸 계절 스티커', 'ss-cat'] };
         function openStickerList(kind) {
+            stkBackOn = false;
             if (kind === 'tape') return openStickerKind('tape');
             const k = SL_KINDS[kind]; if (!k) return;
             closeModal('stickerMakeModal');
@@ -321,6 +322,7 @@
         const stkTabName = tab => STK_TABS.find(x => x[0] === tab)[1];
         let stkKind = 'tape';
         function openStickerKind(kind, tab) {
+            stkBackOn = false;
             const k = STK_KINDS[kind]; if (!k) return;
             stkKind = kind;
             closeModal('stickerMakeModal');
@@ -439,8 +441,27 @@
             if (!addImage(src)) return;
             const el = document.querySelector('#canvasArea .element-box:last-child'); if (el) el.style.width = '110px';
             closeStickerMaker();
-            if (typeof closeModal === 'function') closeModal('stickerModal');
+            stkBlink();
         }
+
+        /* ---------- ↩️ 스티커 창으로 다시 (도련 · 2026-10-10) : 스티커를 붙이면 사라졌던 ✨ 스티커 창이 보던 칸 그대로 다시 떠요 → 이어서 붙여요
+           붙이는 창(🏷️ 떼는 종이 · 🧩 봉투 · 📄 모조지 · 🍭 미니시트 판)으로 갔으면 그 창이 닫힐 때 · 바로 붙는 것(이모지 · 캡슐 · 계절 · 테이프)은 붙는 게 보이고 나서 ---------- */
+        const STK_BLINK = 700;
+        let stkBackOn = false;
+        function stkLeave() {                                              // ✨ 스티커 창 → 붙이는 창으로 (스티커 창이 떠 있을 때만 돌아올 자리로 기억)
+            const m = smq('stickerModal'); if (!m || m.style.display !== 'flex') return;
+            closeModal('stickerModal'); stkBackOn = true;
+        }
+        function stkReturn(delay) {
+            if (!stkBackOn) return; stkBackOn = false;
+            setTimeout(() => {
+                if (document.body.classList.contains('fc-lock') || [...document.querySelectorAll('.modal')].some(m => m.style.display === 'flex')) return;   // 그사이 다른 창이 떴으면 그대로
+                if (window.snbSkipCover) snbSkipCover('stickerModal');         // 📒 수첩이면 표지 없이 보던 장 그대로
+                openModal('stickerModal');
+            }, delay || 280);
+        }
+        function stkBlink() { stkLeave(); stkReturn(STK_BLINK); }          // 바로 붙는 스티커 : 잠깐 비켜 줬다가 다시
+        window.stkLeave = stkLeave; window.stkReturn = stkReturn; window.stkBlink = stkBlink;
 
         /* ---------- 내 스티커 (✨ 스티커 창 → 🧩 조각 · 🏷️ 씰 · 📄 모조지 → 내스티커) ---------- */
         const smKindOf = s => s.k === 'seal' || s.k === 'paper' ? s.k : 'piece';
@@ -459,11 +480,11 @@
             let s = null;
             try { s = await collItem(smColl(kind), id); } catch (e) {}
             if (!s) { showMsg('⚠ 이 스티커를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); return; }
-            if (s.k === 'seal' && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.ss || s.src, { ts: !!s.t, back: 'stickerModal' }); }   // 여러 장 한 칸은 종이째 · t(글씨)가 있으면 🔤 글씨스티커
+            if (s.k === 'seal' && window.openStickerPeel) { stkLeave(); openStickerPeel(s.ss || s.src, { ts: !!s.t }); }   // 여러 장 한 칸은 종이째 · t(글씨)가 있으면 🔤 글씨스티커
             else if (s.k === 'piece' && window.openPieceBag) {               // 🧩 봉투 : 늘 새 봉투로 나와요 (뜯어서 꺼내요)
-                closeModal('stickerModal');
+                stkLeave();
                 openPieceBag(s.ss || [s.src]);
-            } else if (s.k === 'paper' && window.openPaperSheet) { closeModal('stickerModal'); openPaperSheet(s.src); }   // 📄 모조지 : 늘 새 종이로 가운데 나와요 (오려서 붙여요)
+            } else if (s.k === 'paper' && window.openPaperSheet) { stkLeave(); openPaperSheet(s.src); }   // 📄 모조지 : 늘 새 종이로 가운데 나와요 (오려서 붙여요)
             else (s.ss || [s.src]).forEach(smStick);
         }
         async function smDel(kind, id) {

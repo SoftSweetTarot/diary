@@ -126,6 +126,7 @@
             const S = pcbS; S.on = false; S.drag = null; pcbNoise(0); cancelAnimationFrame(S.raf);
             const r = pcbq('pcbRoom'); if (r) r.classList.remove('show');
             document.body.classList.remove('fc-lock');
+            if (window.stkReturn) stkReturn();                                // ✨ 스티커 창에서 왔으면 다시 떠요
         }
         function pcbSay(h) { const e = pcbq('pcbHint'); if (!e || pcbS.hint === h) return; pcbS.hint = h; e.innerHTML = h; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); }
 

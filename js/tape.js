@@ -52,7 +52,7 @@
             if (!addImage(url)) return false;
             const el = document.querySelector('#canvasArea .element-box:last-child');
             if (el) { el.style.width = '170px'; el.style.height = '30px'; el.dataset.rotation = -8; el.style.transform = el.style.transform.replace(/rotate\([^)]*\)/, 'rotate(-8deg)'); selectElement(el); }
-            if (typeof closeModal === 'function') closeModal('stickerModal');
+            if (window.stkBlink) stkBlink();
             return true;
         }
 
