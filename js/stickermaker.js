@@ -320,10 +320,10 @@
            기본 = 처음부터 있는 것 · 내가만든 = 내가 만든 것 · 공유받은 = 다른 사람이 공유한 것 · 이벤트 = 개발자가 이벤트로 준 기간 있는 선물 · 문구점 = 🛍️ 문구점 */
         const STK_TABS = [['free', '기본'], ['mine', '내가만든'], ['share', '공유받은'], ['event', '이벤트'], ['shop', '문구점']];
         const stkTabName = tab => STK_TABS.find(x => x[0] === tab)[1];
-        /* 🆓 지금은 무료 앱으로 : 스티커 창의 🛍️ 문구점 · 🎁 이벤트 칸은 숨겨 둬요 (이 줄을 비우면 다시 보여요 · 도련 · 2026-10-10)
-           이벤트로 받은 테이프가 있으면 🎀 마스킹테이프의 이벤트 칸은 보여요 (받은 걸 쓸 곳이 없어지지 않게) */
+        /* 🆓 지금은 무료 앱으로 : 앱 전체(스티커 · 속지 · 떡메 · 페이지 · 배경지 창)의 🎁 이벤트 · 🛍️ 문구점 칸은 숨겨 둬요 (이 줄을 비우면 다시 보여요 · 도련 · 2026-10-10)
+           has(칸) : 이미 받은 게 든 칸은 보여요 (받은 걸 쓸 곳이 없어지지 않게) */
         const STK_HIDE = ['event', 'shop'];
-        const stkTabsOn = kind => STK_TABS.filter(([v]) => !STK_HIDE.includes(v) || (v === 'event' && kind === 'tape' && typeof tapeRecvHtml === 'function' && tapeRecvHtml()));
+        const stkTabsOn = has => STK_TABS.filter(([v]) => !STK_HIDE.includes(v) || (has && has(v)));
         let stkKind = 'tape';
         function openStickerKind(kind, tab) {
             stkBackOn = false;
@@ -334,7 +334,7 @@
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0] + ' ' + k[1];
             const bar = smq('stickerKindTabs');
             bar.classList.remove('two');
-            bar.innerHTML = stkTabsOn(kind).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
+            bar.innerHTML = stkTabsOn(v => v === 'event' && kind === 'tape' && typeof tapeRecvHtml === 'function' && tapeRecvHtml()).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
             bar.hidden = false;
             stkTab(tab || (kind === 'seal' ? 'free' : 'mine'));                 // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
         }

@@ -81,7 +81,7 @@
             }
             const p = findBgPattern(id);
             if (!p) return;
-            if (p.tier === 'paid' && !patHas(id)) { showMsg('🐷 말랑달콤 저금통에 마음을 넣어 준 분께 열리는 배경지예요 💕'); return; }
+            if (p.tier === 'paid' && !patHas(id)) { showMsg('🎁 선물로 열리는 배경지예요 💕'); return; }
             bgPattern = { id, scale: bgPattern ? bgPattern.scale : 1 };
             if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 배경지는 레시피도 같이 저장
             if (p.got) bgPattern.g = 1;
@@ -194,8 +194,9 @@
         function openPageList(tab) {
             closeModal('skinModal');
             const bar = document.getElementById('pageTabs');
-            if (!bar.childElementCount) bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="sklSetTab('${v}')">${n}</button>`).join('');
+            bar.innerHTML = stkTabsOn(v => sklItems(v).length).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="sklSetTab('${v}')">${n}</button>`).join('');   // 🆓 이벤트 · 문구점은 받은 게 있을 때만 (js/stickermaker.js STK_HIDE)
             sklTab = tab || sklTabOf(currentSkinId);
+            if (!bar.querySelector(`[data-tab="${sklTab}"]`)) sklTab = 'free';
             renderPageList();
             openModal('pageListModal');
         }
@@ -322,7 +323,8 @@
                 tier = id.startsWith('cm:') ? 'share' : mine ? (mine.got ? 'share' : 'mine') : (currentBgPattern() || {}).tier === 'paid' ? 'event' : 'free';
             }
             const bar = document.getElementById('patTabs');
-            if (bar && !bar.childElementCount) bar.innerHTML = STK_TABS.map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="setPatTab('${v}')">${n}</button>`).join('');
+            if (bar) bar.innerHTML = stkTabsOn(v => v === 'event' && BG_PATTERNS.some(p => p.tier === 'paid' && patHas(p.id))).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="setPatTab('${v}')">${n}</button>`).join('');   // 🆓 이벤트 · 문구점은 받은 게 있을 때만 (js/stickermaker.js STK_HIDE)
+            if (bar && !bar.querySelector(`[data-tab="${tier}"]`)) tier = 'free';
             closeModal('skinModal');
             setPatTab(tier);
             openModal('patternModal');
