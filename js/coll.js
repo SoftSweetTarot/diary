@@ -324,7 +324,18 @@
             if (ent) { if (i >= 0) items[i] = ent; else items.push(ent); }
             else if (i >= 0) items.splice(i, 1);
             else return;
-            const saved = await driveUpsert(listDir, name, cur && cur.id, JSON.stringify({ v: 1, items }));
+            let saved = await driveUpsert(listDir, name, cur && cur.id, JSON.stringify({ v: 1, items }));
+            if (!cur) {                                                               // 📄📄 다른 기기가 거의 동시에 같은 목록 파일을 먼저 만들었으면 : 그 파일에 합쳐서 하나로
+                const first = await findFile(listDir, name);
+                if (first && first.id !== saved.id) {
+                    let theirs = [];
+                    try { const o = JSON.parse(await readFileText(first.id) || '{}'); if (o && Array.isArray(o.items)) theirs = o.items; } catch (e) {}
+                    theirs.forEach(e => { if (e && e.id && !items.some(x => x.id === e.id)) items.push(e); });
+                    const fin = await driveUpsert(listDir, name, first.id, JSON.stringify({ v: 1, items }));
+                    await driveTrash(saved.id);
+                    saved = fin;
+                }
+            }
             L.f = { id: saved.id, name, modifiedTime: saved.modifiedTime };
             collPut('list', collKey(C, 'l' + L.n), { fid: saved.id, mt: saved.modifiedTime, items });
             if (typeof driveTell === 'function') driveTell({ t: 'coll', path: C.key });

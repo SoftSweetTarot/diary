@@ -102,7 +102,17 @@
                         Object.keys(rd).forEach(day => { if (!keep(day)) Y.d[day] = rd[day]; });
                         Object.keys(Y.d).forEach(day => { if (!(day in rd) && !keep(day)) delete Y.d[day]; });
                     }
-                    const saved = await driveUpsert(dir, name, cur && cur.id, JSON.stringify({ v: 1, d: Y.d }));
+                    let saved = await driveUpsert(dir, name, cur && cur.id, JSON.stringify({ v: 1, d: Y.d }));
+                    if (!cur) {                                                          // 📄📄 다른 기기가 거의 동시에 같은 해 목록을 먼저 만들었으면 : 그 파일에 합쳐서 하나로
+                        const first = await findFile(dir, name);
+                        if (first && first.id !== saved.id) {
+                            let rd = {}; try { const o = JSON.parse(await readFileText(first.id) || '{}'); if (o && o.d && typeof o.d === 'object') rd = o.d; } catch (e) {}
+                            Object.keys(rd).forEach(day => { if (!(day in Y.d)) Y.d[day] = rd[day]; });
+                            const fin = await driveUpsert(dir, name, first.id, JSON.stringify({ v: 1, d: Y.d }));
+                            await driveTrash(saved.id);
+                            saved = fin;
+                        }
+                    }
                     Y.fileId = saved.id; Y.mt = saved.modifiedTime || '';
                 } catch (e) { Y.dirty = true; mine.forEach(d => Y.touched.add(d)); if (e && e.code === 'gone') Y.fileId = null; srSchedule(); }
             }

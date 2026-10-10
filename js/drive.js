@@ -372,6 +372,30 @@
             return obj ? JSON.stringify(obj) : null;
         }
 
+        /* 📌 그날을 이번에 처음 고치기 직전 모습은 '오래 보관'으로 표시 (🕘 이전 버전 · js/day-history.js)
+           - 구글은 옛 버전을 보통 30일 · 최근 100개까지만 남겨요 → 몇 초마다 저장하면 100개가 금방 차서 오래된 버전이 지워질 수 있어요
+           - 그래서 앱을 켠 뒤 그날을 처음 고칠 때 (앱을 계속 켜 두면 6시간마다), 고치기 전 버전(지금 드라이브에 있는 것)을 지워지지 않게 표시해 둬요
+           - 6시간 안에 표시한 버전이 이미 있으면 또 하지 않아요 · 파일 하나에 DAY_KEEP_MAX 개까지 (구글 한도 200개 · 되돌리기용 자리 남김)
+           - 실패해도 저장은 그대로 해요 */
+        const DAY_KEEP_MAX = 150;
+        const dayKept = new Map();                                                  // 날짜 → 마지막으로 확인한 때 (앱을 오래 켜 두어도 6시간마다 다시)
+        async function dayKeepBefore(key, fileId) {
+            if (dayKept.has(key) && Date.now() - dayKept.get(key) < 6 * 3600e3) return;
+            dayKept.set(key, Date.now());
+            try {
+                const res = await gfetch(`${DRIVE_API}/${fileId}/revisions?pageSize=200&fields=${encodeURIComponent('revisions(id,modifiedTime,keepForever)')}`);
+                if (!res.ok) return;
+                const revs = (await res.json()).revisions || [];
+                if (!revs.length) return;
+                const kept = revs.filter(r => r.keepForever);
+                const head = revs.reduce((a, b) => (Date.parse(b.modifiedTime) >= Date.parse(a.modifiedTime) ? b : a));
+                if (head.keepForever || kept.length >= DAY_KEEP_MAX) return;
+                const newest = kept.reduce((t, r) => Math.max(t, Date.parse(r.modifiedTime) || 0), 0);
+                if (newest && Date.parse(head.modifiedTime) - newest < 6 * 3600e3) return;
+                await gfetch(`${DRIVE_API}/${fileId}/revisions/${head.id}?fields=id`, { method: 'PATCH', headers: { 'Content-Type': 'application/json; charset=UTF-8' }, body: JSON.stringify({ keepForever: true }) });
+            } catch (e) { console.warn('고치기 전 버전을 표시하지 못했어요 (저장은 그대로 해요):', key, e); }
+        }
+
         /* 📄📄 같은 날 일기 파일이 2개 이상 (두 기기가 거의 동시에 처음 만든 경우) → 하나로 정리
            - 내용이 모두 같으면 묻지 않고 나머지를 휴지통으로
            - 다르면 "어느 쪽을 남길까요?" → 고른 내용을 가장 먼저 만든 파일에 두고 나머지는 휴지통으로 (30일 안에 되살릴 수 있어요) */
@@ -666,6 +690,7 @@
                     }
                 }
             }
+            if (cur) await dayKeepBefore(key, cur.id);                              // 📌 고치기 전 모습 보관 (처음 한 번)
             if (val === null) {                                                     // 내용을 모두 지운 날 → 파일은 휴지통으로
                 if (cur) await driveTrash(cur.id);
                 idx.files.delete(name); drive.dayMeta.set(key, '');
@@ -855,7 +880,7 @@
 
         async function onBadgeClick() {
             if (drive.guest) {
-                const yes = await showMsg('로그인하면 지금 화면의 임시 내용은<br>드라이브에 저장된 내용으로 대체돼요.<br>계속할까요?', true);
+                const yes = await showMsg('구글 계정으로 로그인할까요?<br><span style="font-size:12px;color:#777;">게스트로 쓴 일기는 로그인한 뒤 내 드라이브로 옮길지 물어볼게요.</span>', true);
                 if (yes) showGate('login', '☁ 구글 계정으로 로그인해 주세요.');
             } else if (drive.needAuth) {
                 try { await requestToken('select_account'); await flushUpload({ force: true }); }
@@ -917,9 +942,46 @@
         }
 
         async function driveLogin() {
+            const guestDays = drive.guest ? guestSnapshot() : null;                 // 👤 게스트로 쓴 일기 (로그인하면 메모리가 드라이브 것으로 바뀌어서 먼저 챙겨요)
             showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
-            try { await requestToken('select_account'); await loadFromDrive(); hideGate(); postLoginTasks(); }
-            catch (e) { showGate('login', driveErrorText(e)); }
+            try { await requestToken('select_account'); await loadFromDrive(); hideGate(); await postLoginTasks(); }
+            catch (e) { showGate('login', driveErrorText(e)); if (guestDays) guestHold = guestDays; return; }
+            if (guestDays || guestHold) guestCarry(Object.assign({}, guestHold || {}, guestDays || {}));
+        }
+        /* 👤 게스트 일기 → 내 드라이브로 옮기기 (물어본 뒤 · 드라이브에도 있는 날은 "어느 쪽?") */
+        let guestHold = null;                                                       // 로그인이 실패했을 때 다음 로그인까지 들고 있어요
+        function guestSnapshot() {
+            try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
+            const o = {};
+            store.keys().forEach(k => { if (isDayKey(k)) o[k] = store.getItem(k); });
+            return Object.keys(o).length ? o : null;
+        }
+        async function guestCarry(days) {
+            guestHold = null;
+            const keys = Object.keys(days).filter(k => days[k] !== null).sort();
+            if (!keys.length) return;
+            if (!(await showMsg(`👤 게스트로 쓴 일기 <b>${keys.length}일치</b>가 있어요.<br>내 구글 드라이브에 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않으면 게스트 일기는 사라져요.</span>`, true))) return;
+            let moved = 0, left = keys.slice();
+            for (let round = 0; left.length && round < 3; round++) {
+                const next = [];
+                for (const k of left) {
+                    const dk = parseDayKey(k);
+                    await ensureDayLoaded(new Date(dk.y, dk.m - 1, dk.d));
+                    if (!drive.loadedDays.has(k)) { next.push(k); continue; }         // 드라이브 것을 못 읽으면 덮지 않고 다시 시도
+                    const cur = store.getItem(k), mine = days[k];
+                    if (cur === mine) continue;
+                    if (cur !== null && !(await showAsk(`📅 <b>${dk.m}월 ${dk.d}일</b>은 드라이브에도 일기가 있어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 사라져요 (드라이브 것은 🕘 이전 버전에 남아요).</span>`, '👤 게스트로 쓴 것', '☁ 드라이브 것'))) continue;
+                    store.setItem(k, mine); moved++;
+                }
+                left = next;
+                if (left.length && round === 2) {
+                    if (await showMsg(`⚠ ${left.length}일치는 드라이브를 읽지 못해서 아직 못 옮겼어요.<br>다시 시도할까요?<br><span style="font-size:12px;color:#777;">취소하면 그 날짜의 게스트 일기는 사라져요.</span>`, true)) round = -1;
+                } else if (left.length) await new Promise(r => setTimeout(r, 1500));
+            }
+            if (!moved) return;
+            applyLoadedData();
+            const ok = await flushUpload({ force: true });
+            showMsg(ok ? `☁ 게스트 일기 ${moved}일치를 내 드라이브에 옮겼어요!` : `☁ 게스트 일기 ${moved}일치를 옮기는 중이에요.<br><span style="font-size:12px;color:#777;">저장이 잠깐 실패해서 자동으로 다시 시도해요.</span>`);
         }
 
         function enterGuestMode() {
