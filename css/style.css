@@ -2939,8 +2939,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-ear.prev { left: 22px; } .snb-ear.prev::before { left: 0; border-radius: 0 0 0 6px; background: linear-gradient(225deg, #fff 0 50%, transparent 50%); filter: drop-shadow(2px -2px 2px rgba(0,0,0,.14)); }
 @media (hover: hover) { .snb-ear:hover::before { width: 28px; height: 28px; } }
 /* 겉표지 : 다이어리 겉표지처럼 스킨색 깅엄 + 레이스 · 톡 누르면 왼쪽 링을 축으로 펼쳐져요 */
-.snb-cover { position: absolute; inset: 0; z-index: 6; cursor: pointer; border-radius: inherit; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px 20px 30px 40px; text-align: center;
-    color: color-mix(in srgb, var(--primary-accent) 90%, #5a1a30 10%); transform-origin: 0 50%; transition: transform .55s cubic-bezier(.5,.1,.4,1);
+.snb-cover { position: absolute; inset: 0; z-index: 6; cursor: grab; border-radius: inherit; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px 20px 30px 40px; text-align: center;
+    color: color-mix(in srgb, var(--primary-accent) 90%, #5a1a30 10%);
     background:
         linear-gradient(90deg, rgba(0,0,0,.1), rgba(255,255,255,.2) 22px, transparent 30px),
         linear-gradient(90deg, color-mix(in srgb, var(--primary-accent) 30%, transparent) 50%, transparent 0) 0 0 / 34px 34px,
@@ -2949,7 +2949,6 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-cover { touch-action: none; }
 .snb-cvturn { position: absolute; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; border-radius: inherit; }
 .snb-cvflap { position: absolute; top: 0; bottom: 0; display: none; border-radius: 18px 0 0 18px; background: var(--curl-shade-next), color-mix(in srgb, var(--primary-accent) 10%, #fff); filter: drop-shadow(-6px 0 8px rgba(0,0,0,.25)); }
-.snb-cover.open { transform: perspective(1400px) rotateY(-105deg); }
 .snb-lace { position: absolute; left: 0; right: 0; height: 18px; pointer-events: none; background: radial-gradient(circle at 50% 0, #fff 8px, transparent 8.6px) 0 0 / 18px 18px; filter: drop-shadow(0 1.5px 0 rgba(0,0,0,.05)); }
 .snb-lace.top { top: 0; } .snb-lace.bot { bottom: 0; transform: scaleY(-1); }
 .snb-cv-card { display: block; background: #fff; border-radius: 18px; padding: 16px 26px 14px; box-shadow: 0 3px 0 rgba(0,0,0,.05), 0 8px 18px rgba(0,0,0,.08); transform: rotate(-2deg); }
@@ -2965,7 +2964,26 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-ghost > * { pointer-events: none; }
 .snb-ghost.stick { transition: transform .18s ease-in; transform-origin: center; }
 .snb-ghost.back { transition: transform .25s ease-out; }
-@media (prefers-reduced-motion: reduce) { .snb-cover { transition: none; } }
 .snb-cv-tip { position: absolute; bottom: 30px; left: 40px; right: 20px; font-size: 12px; color: #8a6a75; background: rgba(255,255,255,.9); border-radius: 10px; padding: 5px 8px; }
 .modal.snb-on .sticker-grid > div:not(.sticker-item), .modal.snb-on .sticker-grid > p { grid-column: 1 / -1; }   /* 🍭 미니시트 카드 · 내 스티커 · 안내 칸은 한 줄 전체로 */
 .modal.snb-on .modal-title { cursor: grab; touch-action: none; }   /* ✋ 펼친 수첩은 제목 줄을 끌어 옮겨요 */
+
+/* 🧾 스티커 수첩 · 시트 스타일 (js/stknote.js snbSheetSync) : 한 장에 세로로 긴 시트 하나 */
+.snb-style { display: inline-flex; flex-shrink: 0; gap: 2px; padding: 2px; margin: 0 6px 0 auto; border-radius: 999px; background: #fff; border: 1.5px solid var(--border-color); cursor: default; }
+.snb-style button { border: 0; background: none; border-radius: 999px; padding: 3px 8px; font: inherit; font-size: 12px; font-weight: bold; color: #a08a94; cursor: pointer; white-space: nowrap; }
+.snb-style button.on { background: var(--primary-accent); color: #fff; }
+.modal.snb-sheet .snb-body > :not(.snb-sheets) { position: absolute; left: 0; top: 0; width: 100%; visibility: hidden; pointer-events: none; }
+.snb-sheets { display: block; }
+.snb-sh { position: relative; box-sizing: border-box; height: calc(var(--snb-h, 560px) - 12px); margin: 4px 6px 8px; padding: 42px 12px 12px; border-radius: 16px; overflow: hidden;
+    background: linear-gradient(115deg, rgba(255,255,255,.95) 0 12%, rgba(255,255,255,0) 30% 62%, rgba(255,255,255,.55) 74%, rgba(255,255,255,0) 86%), color-mix(in srgb, var(--primary-accent) 7%, #fff);
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.95), inset 0 0 0 3px color-mix(in srgb, var(--primary-accent) 14%, transparent), 0 2px 0 rgba(0,0,0,.04), 0 6px 14px rgba(0,0,0,.1); }
+.snb-sh-head { position: absolute; top: 10px; left: 14px; right: 14px; display: flex; align-items: baseline; gap: 8px; }
+.snb-sh-head b { font-size: 14px; color: color-mix(in srgb, var(--primary-accent) 70%, #5a1a30); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.snb-sh-head small { font-size: 11px; color: #a08a94; white-space: nowrap; }
+.snb-sh-in { height: 100%; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 8px; overflow: hidden; }
+.snb-sh-wait { margin: auto; font-size: 12px; color: #a08a94; }
+.snb-pc { width: var(--pc, 64px); height: var(--pc, 64px); display: flex; align-items: center; justify-content: center; cursor: grab; }
+.snb-pc img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;
+    filter: drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff) drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
+.snb-pc b { font-size: calc(var(--pc, 64px) * .66); line-height: 1; font-weight: normal; pointer-events: none; }
+@media (hover: hover) { .snb-pc:hover { transform: scale(1.08); transition: transform .1s; } }

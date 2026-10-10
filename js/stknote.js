@@ -13,7 +13,7 @@
         const SNB_MODALS = ['stickerModal', 'paperModal', 'tteokModal', 'leafModal'];
         const SNB_KEEP = '.modal-title, .stk-tabs, .sticker-categories, .sub-modal-btns, .snb-rings, .snb-cover, .snb-ear, .snb-under, .snb-flaps';   // 수첩 몸통 밖에 남는 것
         const SNB_HOLD = 260;                               // 손가락으로 꾹 : 이만큼 누르면 스티커가 떠요
-        const snb = { pos: { x: 0, y: 0 }, moved: 0, dropping: false, m: null, page: 0, pages: [[0, 0]], press: null, noClick: 0, fire: false, libSaved: null, lastLib: -1, skipCover: false, tm: 0 };
+        const snb = { pos: { x: 0, y: 0 }, moved: 0, dropping: false, m: null, page: 0, pages: [[0, 0]], press: null, noClick: 0, seq: 0, sheetSig: '', sheetFirst: null, fire: false, libSaved: null, lastLib: -1, skipCover: false, tm: 0 };
         const snbq = id => document.getElementById(id);
 
         function snbSync() { return typeof drive !== 'undefined' && drive.ready && !drive.guest && typeof store !== 'undefined'; }
@@ -42,9 +42,9 @@
             const rings = document.createElement('div'); rings.className = 'snb-rings'; rings.innerHTML = '<i></i>'.repeat(9);
             const ears = ['prev', 'next'].map(k => { const e = document.createElement('div'); e.className = 'snb-ear ' + k; e.dataset.dir = k === 'next' ? 1 : -1; e.setAttribute('aria-label', k === 'next' ? '다음 장' : '앞 장'); return e; });
             const cover = document.createElement('div'); cover.className = 'snb-cover'; cover.hidden = true;
-            cover.onclick = () => { if (Date.now() > snb.moved && Date.now() > snb.noClick) snbOpenCover(cover); };
             snbCoverDrag(cover);
             box.prepend(rings); box.append(...ears, cover);
+            snbStyleBtn(m);
             snbBind(m, body);
             snbMovable(m, box);
             new MutationObserver(snbSoon).observe(body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
@@ -54,7 +54,8 @@
         function snbUnwrap(m) {
             const box = m.querySelector('.modal-content'), body = box.querySelector(':scope > .snb-body'); if (!body) return;
             [...body.children].forEach(c => box.insertBefore(c, body));
-            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover').forEach(e => e.remove());
+            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover, .snb-style, .snb-sheets').forEach(e => e.remove());
+            m.classList.remove('snb-sheet');
             m.classList.remove('snb-on', 'snb-away');
             box.style.left = box.style.top = box.style.width = box.style.height = '';
         }
@@ -134,10 +135,10 @@
             const t = (m.querySelector('.modal-title .mt-text') || m.querySelector('.modal-title') || {}).textContent || '';
             const sp = t.trim().match(/^(\S+)\s+(.+)$/) || ['', '📒', t.trim()];
             const esc = s => s.replace(/[<>&"]/g, '');
-            c.innerHTML = `<i class="snb-lace top"></i><i class="snb-lace bot"></i><span class="snb-cv-card"><b>${esc(sp[2])}</b><small>나의 스티커 수첩</small></span><span class="snb-cv-ic">${esc(sp[1])}</span><em>밀어 넘기거나 톡 눌러 펼쳐요</em><small class="snb-cv-tip">스티커를 꾹 누른 뒤 끌어다 다이어리에 놓으면 붙어요</small>`;
-            c.classList.remove('open'); c.hidden = false;
+            c.innerHTML = `<i class="snb-lace top"></i><i class="snb-lace bot"></i><span class="snb-cv-card"><b>${esc(sp[2])}</b><small>나의 스티커 수첩</small></span><span class="snb-cv-ic">${esc(sp[1])}</span><em>표지를 왼쪽으로 넘겨 펼쳐요</em><small class="snb-cv-tip">스티커를 꾹 누른 뒤 끌어다 다이어리에 놓으면 붙어요</small>`;
+            c.hidden = false;
         }
-        /* 📔 겉표지 끌어 넘기기 : 속장처럼 손가락을 따라 오른쪽 끝부터 접히며 넘어가요 (톡 눌러도 펼쳐져요) */
+        /* 📔 겉표지 끌어 넘기기 : 속장처럼 손가락을 따라 오른쪽 끝부터 접히며 넘어가요 (톡 누르기로는 안 펼쳐져요) */
         function snbCoverDrag(c) {
             let p = null;
             const at = d => {
@@ -162,7 +163,7 @@
                 requestAnimationFrame(step);
             };
             c.addEventListener('pointerdown', e => {
-                if (e.button > 0 || p || c.classList.contains('open')) return;
+                if (e.button > 0 || p) return;
                 p = { id: e.pointerId, x: e.clientX, y: e.clientY, W: c.clientWidth, d: 0, on: false, t0: 0 };
             });
             window.addEventListener('pointermove', e => {
@@ -188,12 +189,6 @@
                 end(e.type !== 'pointercancel' && (p.d > p.W * .3 || fast));
             };
             window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);
-        }
-        function snbOpenCover(c) {
-            if (c.classList.contains('open')) return;
-            c.classList.add('open');
-            if (window.sfx) try { sfx('page'); } catch (e) {}
-            setTimeout(() => { c.hidden = true; c.classList.remove('open'); }, 560);
         }
 
         /* ---------- 📄 장 나누기 : 몸통 안의 작은 칸들을 줄 단위로 모아 한 장에 들어가는 만큼씩 ---------- */
@@ -222,16 +217,17 @@
                 if (typeof libCat !== 'undefined' && libCat && typeof libItems !== 'undefined' && libItems) { libCat = ''; libPage = 0; renderLibrary(); return; }   // 그림 모음 칸 줄이 숨어 있으니 늘 🌈 전체
                 if (snbLibFit(body)) return;                                   // 다시 그려지면 또 불려요
             }
+            const sheets = snbSheetSync(m, body);
             const H = body.clientHeight, top0 = body.getBoundingClientRect().top - body.scrollTop, atoms = [];
             const walk = el => {
                 for (const c of el.children) {
                     if (c.hidden) continue;
                     const r = c.getBoundingClientRect();
                     if (!r.height || !r.width) { if (getComputedStyle(c).display === 'contents') walk(c); continue; }   // .cg-host (모음 칸) 은 껍데기만
-                    if (r.height <= H * .6 || !c.children.length) atoms.push([r.top - top0, r.bottom - top0]); else walk(c);
+                    if (r.height <= H * .6 || !c.children.length || c.classList.contains('snb-sh')) atoms.push([r.top - top0, r.bottom - top0]); else walk(c);
                 }
             };
-            walk(body);
+            if (sheets) walk(sheets); else walk(body);
             atoms.sort((a, b) => a[0] - b[0]);
             const pages = [], end = atoms.reduce((v, a) => Math.max(v, a[1]), 0);
             let s = atoms.length ? Math.max(0, atoms[0][0] - 4) : 0;
@@ -255,6 +251,7 @@
             const cut = snbCut(snb.page, body.clientHeight);
             body.style.clipPath = cut ? `inset(0 0 ${cut}px 0)` : '';
             m.querySelectorAll('.snb-ear').forEach(e => { const n = snb.page + +e.dataset.dir; e.hidden = n < 0 || n >= snb.pages.length; });
+            snbSheetNear(body);
         }
         function snbGo(d) { if (snbCurlBegin(d)) snbCurlTo(snb.curl.W, true); }
 
@@ -312,7 +309,7 @@
         /* ---------- ✋ 밀어서 넘기기 · 꾹 눌러 끌어 붙이기 ---------- */
         function snbItemOf(t, body) {
             if (!t.closest || t.closest('.smk-it > i, .shx-bar, .cs-empty, .smk-empty, .cg-more, .stk-go, input, select, textarea, a')) return null;
-            const it = t.closest('.lib-item, .sticker-item, .smk-it, .spk-card') || t.closest('button, [onclick], img, canvas');   // 칸 단위가 먼저
+            const it = t.closest('.snb-pc, .lib-item, .sticker-item, .smk-it, .spk-card') || t.closest('button, [onclick], img, canvas');   // 칸 단위가 먼저
             return it && it !== body && body.contains(it) && !it.classList.contains('empty') ? it : null;
         }
         function snbBind(m, body) {
@@ -350,6 +347,13 @@
             window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);   // 몸통 밖에서 떼도 끝나요
             body.addEventListener('touchend', e => { if (Date.now() < snb.noClick) e.stopPropagation(); }, true);   // 밀기 · 끌어 붙이기는 수첩이 맡아요 (그림 모음이 한 번 더 넘기지 않게)
             body.addEventListener('contextmenu', e => e.preventDefault());
+            body.addEventListener('click', e => {                              // 🧾 시트의 그림을 톡 : 그 그림 하나만 붙여요
+                const pc = e.target.closest && e.target.closest('.snb-pc'); if (!pc) return;
+                e.stopPropagation(); e.preventDefault();
+                if (!pc._src) { snbPcStick(pc); return; }
+                const o = pc._src, t = o.matches('[onclick]') ? o : (o.querySelector('button, [onclick]') || o);
+                snb.fire = true; try { t.click(); } finally { snb.fire = false; }
+            });
             m.querySelectorAll('.snb-ear').forEach(ear => ear.addEventListener('pointerdown', e => {   // 📄 아래 귀퉁이 : 잡아 넘기기 · 톡 눌러 넘기기 (마우스로도 쉽게)
                 if (e.button > 0 || snb.curl) return;
                 e.preventDefault();
@@ -419,7 +423,11 @@
             });
             mo.observe(cv, { childList: true });
             setTimeout(() => { if (found) return; mo.disconnect(); snbBack(m, false); }, 2500);
-            const it = p.it;
+            let it = p.it;
+            if (it.classList.contains('snb-pc')) {                             // 🧾 시트의 그림 하나
+                if (!it._src) { snbPcStick(it); return; }
+                it = p.it = it._src; p.t = null;                                // 낱장 모음 시트 : 원래 칸을 누른 것과 같아요
+            }
             if (it.classList.contains('lib-item')) {
                 const im = it.querySelector('img'); if (!im) return;
                 const url = im.src.replace(/=w\d+$/, '');
@@ -463,6 +471,121 @@
             const img = el.querySelector('img');
             if (img && !img.complete) { img.addEventListener('load', later, { once: true }); img.addEventListener('error', later, { once: true }); }
             else later();
+        }
+
+        /* ---------- 🧾 시트 스타일 : 진짜 스티커첩처럼 한 장에 세로로 긴 시트 하나 (도련 · 2026-10-10)
+           여러 그림이 든 스티커(내 씰 · 조각 여러 장 · 공유받은 것 · 미니시트)는 시트 한 장씩
+           그림이 하나뿐인 스티커는 '낱장 모음 시트'로 한 장에 모아요 · 시트의 그림은 하나씩 떼어 붙여요
+           원래 목록은 몸통 안에 숨겨 두고(눌렀을 때 하는 일 · 더 불러오기는 그대로) 시트만 보여요 ---------- */
+        const SNB_STYLE = 'malang_stk_sheet';
+        const SNB_SRC = '.lib-item:not(.empty), .sticker-item, .smk-it, .spk-card, .cs-it';
+        function snbStyle() { try { return localStorage.getItem(SNB_STYLE) === 'sheet' ? 'sheet' : 'list'; } catch (e) { return 'list'; } }
+        function snbStyleSet(v) {
+            try { localStorage.setItem(SNB_STYLE, v === 'sheet' ? 'sheet' : 'list'); } catch (e) {}
+            document.querySelectorAll('.snb-style button').forEach(b => b.classList.toggle('on', b.dataset.v === snbStyle()));
+            snb.page = 0; snb.sheetSig = ''; snbMeasure();
+        }
+        function snbStyleBtn(m) {
+            if (m.id !== 'stickerModal') return;
+            const t = m.querySelector('.modal-title'); if (!t || t.querySelector('.snb-style')) return;
+            const s = document.createElement('span'); s.className = 'snb-style';
+            s.innerHTML = [['list', '📋 목록'], ['sheet', '🧾 시트']].map(([v, n]) => `<button type="button" data-v="${v}" class="${snbStyle() === v ? 'on' : ''}">${n}</button>`).join('');
+            s.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { e.stopPropagation(); snbStyleSet(b.dataset.v); } });
+            const x = t.querySelector('.mt-x'); if (x) t.insertBefore(s, x); else t.appendChild(s);
+        }
+        /* 여러 그림이 든 칸인지 : 미니시트 묶음 · 'N장 / Npcs' 표시가 2 이상인 내 스티커 · 공유받은 스티커 */
+        function snbMulti(e) {
+            if (e.classList.contains('spk-card')) { const id = ((e.getAttribute('onclick') || '').match(/'([^']+)'/) || [])[1]; return id ? { pack: id } : null; }
+            if (!e.classList.contains('smk-it') || !e.dataset.id) return null;
+            const n = parseInt((e.querySelector('.smk-n') || {}).textContent, 10) || 1; if (n < 2) return null;
+            const sh = e.closest('[data-share]'), mi = e.closest('[data-mine]');
+            const kind = sh ? sh.dataset.share : mi && mi.dataset.mine; if (!kind) return null;
+            return { id: e.dataset.id, kind, got: !!sh, n };
+        }
+        function snbSheetSync(m, body) {
+            let wrap = body.querySelector(':scope > .snb-sheets');
+            const src = m.id === 'stickerModal' && snbStyle() === 'sheet' ? [...body.querySelectorAll(SNB_SRC)].filter(e => e.offsetParent && !e.closest('.snb-sheets')) : [];
+            m.classList.toggle('snb-sheet', src.length > 0);
+            if (!src.length) { if (wrap) wrap.remove(); snb.sheetSig = ''; return null; }
+            const sig = src.map(e => e._snbN || (e._snbN = ++snb.seq)).join(',') + '|' + body.clientWidth + 'x' + body.clientHeight;
+            if (wrap && sig === snb.sheetSig) return wrap;
+            if (src[0] !== snb.sheetFirst) snb.page = 0;                        // 다른 칸으로 바뀌면 첫 장부터
+            snb.sheetSig = sig; snb.sheetFirst = src[0];
+            if (!wrap) { wrap = document.createElement('div'); wrap.className = 'snb-sheets'; body.prepend(wrap); }
+            wrap.textContent = '';
+            const multi = [], single = [];
+            src.forEach(e => { const mu = snbMulti(e); if (mu) multi.push([e, mu]); else single.push(e); });
+            const sheet = (name, sub) => {
+                const sh = document.createElement('div'); sh.className = 'snb-sh';
+                sh.innerHTML = `<div class="snb-sh-head"><b></b><small></small></div><div class="snb-sh-in"></div>`;
+                sh.querySelector('b').textContent = name; sh.querySelector('small').textContent = sub || '';
+                wrap.appendChild(sh); return sh;
+            };
+            multi.forEach(([e, mu]) => {
+                const im = e.querySelector('img'), b = e.querySelector('b:not(.smk-n)');
+                const name = mu.pack ? (b ? b.textContent : '미니시트') : ((im && im.alt) || '내 스티커 시트');
+                const sh = sheet(name, mu.pack ? (e.querySelector('small') || {}).textContent : (e.querySelector('.smk-n') || {}).textContent);
+                sh._mu = mu; sh.querySelector('.snb-sh-in').innerHTML = '<small class="snb-sh-wait">시트를 펼치는 중…</small>';
+            });
+            const W = body.clientWidth - 8 - 24, H = body.clientHeight - 12 - 50, PC = 64, GAP = 8;
+            const per = Math.max(1, Math.floor((W + GAP) / (PC + GAP)) * Math.floor((H + GAP) / (PC + GAP)));
+            for (let i = 0, k = 1; i < single.length; i += per, k++) {
+                const sh = sheet('낱장 모음 시트' + (single.length > per ? ' ' + k : ''), '');
+                const g = sh.querySelector('.snb-sh-in');
+                single.slice(i, i + per).forEach(o => {
+                    const pc = document.createElement('span'); pc.className = 'snb-pc'; pc._src = o;
+                    const im = o.querySelector('img'), cv = o.querySelector('canvas');
+                    if (im) { const c = document.createElement('img'); c.src = im.currentSrc || im.src; c.alt = ''; c.draggable = false; pc.appendChild(c); }
+                    else if (cv) { try { const c = document.createElement('img'); c.src = cv.toDataURL(); pc.appendChild(c); } catch (er) {} }
+                    else { const t = document.createElement('b'); t.textContent = (o.textContent || '').trim().slice(0, 4); pc.appendChild(t); }
+                    g.appendChild(pc);
+                });
+            }
+            return wrap;
+        }
+        /* 지금 장과 앞뒤 장의 시트만 그림을 읽어요 (시트가 수백 장이어도 가볍게) */
+        function snbSheetNear(body) {
+            const wrap = body.querySelector(':scope > .snb-sheets'); if (!wrap) return;
+            const [s, e] = snb.pages[snb.page] || [0, 0], H = body.clientHeight, top0 = wrap.offsetTop;
+            wrap.querySelectorAll(':scope > .snb-sh').forEach(sh => {
+                if (!sh._mu || sh._ld) return;
+                const t = sh.offsetTop - top0;
+                if (t < e + H && t + sh.offsetHeight > s - H) snbSheetFill(sh);
+            });
+        }
+        async function snbSheetFill(sh) {
+            sh._ld = 1;
+            const mu = sh._mu, g = sh.querySelector('.snb-sh-in');
+            let urls = [], k = 'pack';
+            try {
+                if (mu.pack) { const P = typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack); urls = P ? await spkSrcs(P) : []; }
+                else {
+                    let o = await collItem(stkColl(mu.kind, mu.got), mu.id);
+                    if (mu.got && typeof shxItem === 'function') o = shxItem(mu.kind, o);
+                    if (o) { urls = o.ss || [o.src]; k = o.k || mu.kind; }
+                }
+            } catch (e) {}
+            if (!sh.isConnected) return;
+            if (!urls.length) { sh._ld = 0; g.innerHTML = '<small class="snb-sh-wait">⚠ 시트를 불러오지 못했어요</small>'; return; }
+            const W = g.clientWidth, H = g.clientHeight, GAP = 8;
+            let pc = Math.floor(Math.sqrt(W * H / urls.length)) - GAP;          // 시트 한 장에 다 들어가는 크기
+            while (pc > 28 && Math.floor((W + GAP) / (pc + GAP)) * Math.floor((H + GAP) / (pc + GAP)) < urls.length) pc -= 2;
+            g.style.setProperty('--pc', Math.max(28, Math.min(120, pc)) + 'px');
+            g.textContent = '';
+            urls.forEach(u => {
+                const p = document.createElement('span'); p.className = 'snb-pc'; p._url = u; p._k = k;
+                const im = document.createElement('img'); im.src = u; im.alt = ''; im.draggable = false; p.appendChild(im);
+                g.appendChild(p);
+            });
+        }
+        /* 시트에서 뗀 그림 하나 붙이기 : 🏷️ 씰은 하얀 테두리를 둘러서 · 나머지는 그림 그대로 */
+        async function snbPcStick(pc) {
+            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
+            let s = pc._url;
+            if (pc._k === 'seal' && window.pelBake) try { s = await pelBake(s); } catch (e) {}
+            if (!addImage(s)) return;
+            const el = document.querySelector('#canvasArea > .element-box:last-child'); if (el) el.style.width = (pc._k === 'pack' ? 80 : 110) + 'px';
+            if (typeof saveData === 'function') saveData(false);
         }
 
         window.snbState = () => ({ page: snb.page, pages: snb.pages.length, curl: !!snb.curl }); window.snbMode = snbMode; window.snbSet = snbSet; window.snbRender = snbRender; window.snbGo = snbGo;
