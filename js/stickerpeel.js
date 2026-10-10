@@ -10,7 +10,7 @@
 
         const PEL_GRAB = 28, PEL_GRAB_OUT = 10, PEL_PAD = 22, PEL_M = 7, PEL_EDGE = 6, PEL_MAX = 360;
         /* items : 종이 위 스티커들 [{ a, src, st }] · a · st · src 는 지금 손에 잡은 스티커 */
-        const pelS = { on: false, cv: null, ctx: null, fl: null, items: [], a: null, st: null, drag: null, board: null, mv: { x: 0, y: 0 }, gone: 0, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '' };
+        const pelS = { on: false, cv: null, ctx: null, fl: null, items: [], a: null, st: null, drag: null, board: null, mv: { x: 0, y: 0 }, gone: 0, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '', back: '' };
         const pelq = id => document.getElementById(id);
         const pelMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
         const pelLoad = src => new Promise((ok, no) => { const im = new Image(); if (/^https?:/i.test(src)) im.crossOrigin = 'anonymous'; im.onload = () => ok(im); im.onerror = no; im.src = src; });   // 주소 그림은 하얀 테두리를 그리려고 CORS 로
@@ -95,7 +95,7 @@
         function pelPick(o) { const S = pelS; S.a = o.a; S.st = o.st; S.src = o.src; }
 
         /* src : 그림 하나 또는 여러 개 [src, …] */
-        async function openStickerPeel(src, opt) {                       // opt.ts : 🔤 글씨스티커 (붙인 뒤 📷 사진 꾸미기 창이 안 떠요)
+        async function openStickerPeel(src, opt) {                       // opt.ts : 🔤 글씨스티커 (붙인 뒤 📷 사진 꾸미기 창이 안 떠요) · opt.back : 다 붙이면 다시 뜰 창 (✨ 스티커 창)
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return false; }
             const list = Array.isArray(src) ? src : [src];
             let imgs;
@@ -105,13 +105,22 @@
             const S = pelS;
             S.cv = pelq('pelCv'); S.ctx = S.cv.getContext('2d');
             S.items = imgs.map((im, i) => ({ a: pelAsset(im), src: list[i], st: { state: 'on' } })); pelPick(S.items[0]);
-            S.ts = !!(opt && opt.ts); S.drag = null; S.gone = 0; S.mv = { x: 0, y: 0 }; S.on = true;
+            S.ts = !!(opt && opt.ts); S.back = (opt && opt.back) || ''; S.drag = null; S.gone = 0; S.mv = { x: 0, y: 0 }; S.on = true;
             pelLayout();
             pelq('pelRoom').classList.add('show'); document.body.classList.add('fc-lock');
             S.hint = '';
             pelSay(S.items.length > 1 ? `씰이 <b>${S.items.length}개</b> 있어요! <b>가장자리</b>를 집어 하나씩 떼어 보세요` : '스티커 <b>가장자리</b>를 손톱으로 집듯이 잡고 천천히 떼어 보세요');
             cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(pelFrame);
             return true;
+        }
+        /* 종이의 씰을 다 붙이면 골랐던 창(✨ 스티커 → 🏷️ 씰스티커)이 그 자리 그대로 다시 떠요 → 이어서 또 붙여요 (도련 · 2026-10-10) */
+        function pelBack() {
+            const id = pelS.back; pelS.back = ''; if (!id) return;
+            setTimeout(() => {
+                if (pelS.on || [...document.querySelectorAll('.modal')].some(m => m.style.display === 'flex')) return;   // 그사이 다른 창이 떴으면 그대로
+                if (window.snbSkipCover) snbSkipCover(id);                     // 📒 수첩이면 표지 없이 보던 장 그대로
+                openModal(id);
+            }, 280);
         }
         function closeStickerPeel() {
             const S = pelS; S.on = false; S.drag = null; pelNoise(0); cancelAnimationFrame(S.raf);
@@ -287,7 +296,7 @@
             st.state = 'done';
             if (typeof saveData === 'function') saveData(false);
             const left = S.items.filter(o => o.st.state === 'on');
-            if (!left.length) { closeStickerPeel(); return; }
+            if (!left.length) { closeStickerPeel(); pelBack(); return; }
             pelPick(left[0]);                                                    // 종이에 남은 스티커는 계속 떼어 붙여요
             S.hint = ''; pelSay(`붙었어요 ✨ 종이에 <b>${left.length}개</b> 남았어요`);
         }

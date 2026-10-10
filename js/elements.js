@@ -288,7 +288,7 @@
            그림을 그릴 수 없으면(주소가 막힘) 예전처럼 페이지에 바로 붙어요 */
         async function libPick(url) {
             closeModal('stickerModal');
-            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url))) return; } catch (e) {}
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url), { back: 'stickerModal' })) return; } catch (e) {}
             addImage(url);
         }
         function renderLibrary() {

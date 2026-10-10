@@ -620,7 +620,7 @@
             if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}
         }
 
-        window.snbState = () => ({ page: snb.page, pages: snb.pages.length, curl: !!snb.curl }); window.snbMode = snbMode; window.snbSet = snbSet; window.snbRender = snbRender; window.snbGo = snbGo;
+        window.snbSkipCover = id => { if (snb.m && snb.m.id === id) snb.skipCover = true; }; window.snbState = () => ({ page: snb.page, pages: snb.pages.length, curl: !!snb.curl }); window.snbMode = snbMode; window.snbSet = snbSet; window.snbRender = snbRender; window.snbGo = snbGo;
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['stknote'] = true;

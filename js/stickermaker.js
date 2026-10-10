@@ -459,7 +459,7 @@
             let s = null;
             try { s = await collItem(smColl(kind), id); } catch (e) {}
             if (!s) { showMsg('⚠ 이 스티커를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); return; }
-            if (s.k === 'seal' && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.ss || s.src, { ts: !!s.t }); }   // 여러 장 한 칸은 종이째 · t(글씨)가 있으면 🔤 글씨스티커
+            if (s.k === 'seal' && window.openStickerPeel) { closeModal('stickerModal'); openStickerPeel(s.ss || s.src, { ts: !!s.t, back: 'stickerModal' }); }   // 여러 장 한 칸은 종이째 · t(글씨)가 있으면 🔤 글씨스티커
             else if (s.k === 'piece' && window.openPieceBag) {               // 🧩 봉투 : 늘 새 봉투로 나와요 (뜯어서 꺼내요)
                 closeModal('stickerModal');
                 openPieceBag(s.ss || [s.src]);

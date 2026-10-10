@@ -152,7 +152,7 @@
             if (kind === 'leaf') { if (window.pickLeaf) pickLeaf('my', s.src); return; }
             if (kind === 'tk') { if (window.tkUseMy) tkUseMy(s); return; }
             closeModal('stickerModal');
-            if (kind === 'seal' && window.openStickerPeel) openStickerPeel(s.ss || s.src, { ts: !!s.t });
+            if (kind === 'seal' && window.openStickerPeel) openStickerPeel(s.ss || s.src, { ts: !!s.t, back: 'stickerModal' });
             else if (kind === 'paper' && window.openPaperSheet) openPaperSheet(s.src);
             else if (s.k === 'piece' && window.openPieceBag) openPieceBag(s.ss || [s.src]);
             else if (typeof smStick === 'function') (s.ss || [s.src]).forEach(smStick);
