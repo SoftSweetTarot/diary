@@ -44,7 +44,6 @@
             const cover = document.createElement('div'); cover.className = 'snb-cover'; cover.hidden = true;
             snbCoverDrag(cover);
             box.prepend(rings); box.append(...ears, cover);
-            snbStyleBtn(m);
             snbBind(m, body);
             snbMovable(m, box);
             new MutationObserver(snbSoon).observe(body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
@@ -54,7 +53,7 @@
         function snbUnwrap(m) {
             const box = m.querySelector('.modal-content'), body = box.querySelector(':scope > .snb-body'); if (!body) return;
             [...body.children].forEach(c => box.insertBefore(c, body));
-            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover, .snb-style, .snb-sheets').forEach(e => e.remove());
+            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover, .snb-sheets').forEach(e => e.remove());
             m.classList.remove('snb-sheet');
             m.classList.remove('snb-on');
             box.style.left = box.style.top = box.style.width = box.style.height = '';
@@ -321,7 +320,7 @@
                 const it = snbItemOf(e.target, body);
                 const p = snb.press = { body, id: e.pointerId, x: e.clientX, y: e.clientY, t: e.target, it, mouse: e.pointerType === 'mouse', touch: e.pointerType === 'touch', drag: false, timer: 0 };
                 if (it && it.classList.contains('snb-pc')) p.pc = true;            // 🧾 시트의 그림 : 기다리지 않고 바로 돌돌 말려 떼어져요
-                else if (it) p.timer = setTimeout(() => { if (snb.press === p && !p.gone) snbLift(e, body); }, SNB_HOLD);
+                else if (it && m.id !== 'stickerModal') p.timer = setTimeout(() => { if (snb.press === p && !p.gone) snbLift(e, body); }, SNB_HOLD);
             }, true);
             window.addEventListener('pointermove', e => {
                 const p = snb.press; if (!p || p.id !== e.pointerId || p.body !== body) return;
@@ -329,7 +328,7 @@
                 if (p.drag) { snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }
                 if (p.pc) { if (p.seal || (d > 3 && snbPeelStart(p))) { p.seal.move(e.clientX, e.clientY); e.preventDefault(); return; } if (d <= 3) return; }
                 if (p.curl) { snbCurlAt((p.curl > 0 ? -dx : dx) - (p.ear ? 0 : 8)); e.preventDefault(); return; }
-                if (d > 8 && p.it && !p.swipe && Math.abs(dy) * 2 >= Math.abs(dx)) { clearTimeout(p.timer); snbLift(e, body); snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }   // 스티커를 누른 채 옆으로만 밀지 않고 끌면 기다리지 않고 바로 떼어져요
+                if (d > 8 && p.it && !p.pc && m.id !== 'stickerModal' && !p.swipe && Math.abs(dy) * 2 >= Math.abs(dx)) { clearTimeout(p.timer); snbLift(e, body); snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }   // 스티커를 누른 채 옆으로만 밀지 않고 끌면 기다리지 않고 바로 떼어져요
                 if (d > 8) { clearTimeout(p.timer); p.gone = true; }
                 if (d > 8 && !p.swipe) {                                       // 제목 아래는 어디를 밀어도 장 넘기기 · 스티커는 꾹 누른 뒤 끌어요 (마우스도 같아요)
                     p.swipe = true;
@@ -355,7 +354,7 @@
                 const pc = e.target.closest && e.target.closest('.snb-pc'); if (!pc) return;
                 e.stopPropagation(); e.preventDefault();
                 if (!pc._src) { snbPcStick(pc); return; }
-                const o = pc._src, t = o.matches('[onclick]') ? o : (o.querySelector('button, [onclick]') || o);
+                const t = snbTap(pc._src);
                 snb.fire = true; try { t.click(); } finally { snb.fire = false; }
             });
             m.querySelectorAll('.snb-ear').forEach(ear => ear.addEventListener('pointerdown', e => {   // 📄 아래 귀퉁이 : 잡아 넘기기 · 톡 눌러 넘기기 (마우스로도 쉽게)
@@ -431,7 +430,7 @@
             let it = p.it;
             if (it.classList.contains('snb-pc')) {                             // 🧾 시트의 그림 하나
                 if (!it._src) { snbPcStick(it); return; }
-                it = p.it = it._src; p.t = null;                                // 낱장 모음 시트 : 원래 칸을 누른 것과 같아요
+                p.t = snbTap(it._src); it = p.it = it._src;                                // 낱장 모음 시트 : 원래 칸을 누른 것과 같아요
             }
             if (it.classList.contains('lib-item')) {
                 const im = it.querySelector('img'); if (!im) return;
@@ -479,23 +478,9 @@
         /* ---------- 🧾 시트 스타일 : 진짜 스티커첩처럼 한 장에 세로로 긴 시트 하나 (도련 · 2026-10-10)
            여러 그림이 든 스티커(내 씰 · 조각 여러 장 · 공유받은 것 · 미니시트)는 시트 한 장씩
            그림이 하나뿐인 스티커는 '낱장 모음 시트'로 한 장에 모아요 · 시트의 그림은 하나씩 떼어 붙여요
-           원래 목록은 몸통 안에 숨겨 두고(눌렀을 때 하는 일 · 더 불러오기는 그대로) 시트만 보여요 ---------- */
-        const SNB_STYLE = 'malang_stk_sheet';
-        const SNB_SRC = '.lib-item:not(.empty), .sticker-item, .smk-it, .spk-card, .cs-it';
-        function snbStyle() { try { return localStorage.getItem(SNB_STYLE) === 'sheet' ? 'sheet' : 'list'; } catch (e) { return 'list'; } }
-        function snbStyleSet(v) {
-            try { localStorage.setItem(SNB_STYLE, v === 'sheet' ? 'sheet' : 'list'); } catch (e) {}
-            document.querySelectorAll('.snb-style button').forEach(b => b.classList.toggle('on', b.dataset.v === snbStyle()));
-            snb.page = 0; snb.sheetSig = ''; snbMeasure();
-        }
-        function snbStyleBtn(m) {
-            if (m.id !== 'stickerModal') return;
-            const t = m.querySelector('.modal-title'); if (!t || t.querySelector('.snb-style')) return;
-            const s = document.createElement('span'); s.className = 'snb-style';
-            s.innerHTML = [['list', '📋 목록'], ['sheet', '🧾 시트']].map(([v, n]) => `<button type="button" data-v="${v}" class="${snbStyle() === v ? 'on' : ''}">${n}</button>`).join('');
-            s.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { e.stopPropagation(); snbStyleSet(b.dataset.v); } });
-            const x = t.querySelector('.mt-x'); if (x) t.insertBefore(s, x); else t.appendChild(s);
-        }
+           원래 목록은 몸통 안에 숨겨 두고(눌렀을 때 하는 일 · 더 불러오기는 그대로) 시트만 보여요
+           ✨ 스티커 창 수첩은 늘 시트로만 보여요 (목록으로 보기 · 목록에서 끌어 붙이기 없음 · 도련 · 2026-10-10) ---------- */
+        const SNB_SRC = '.lib-item:not(.empty), .sticker-item, .smk-it, .spk-card, .cs-it, .tpm-it';
         /* 여러 그림이 든 칸인지 : 미니시트 묶음 · 'N장 / Npcs' 표시가 2 이상인 내 스티커 · 공유받은 스티커 */
         function snbMulti(e) {
             if (e.classList.contains('spk-card')) { const id = ((e.getAttribute('onclick') || '').match(/'([^']+)'/) || [])[1]; return id ? { pack: id } : null; }
@@ -507,7 +492,7 @@
         }
         function snbSheetSync(m, body) {
             let wrap = body.querySelector(':scope > .snb-sheets');
-            const src = m.id === 'stickerModal' && snbStyle() === 'sheet' ? [...body.querySelectorAll(SNB_SRC)].filter(e => e.offsetParent && !e.closest('.snb-sheets')) : [];
+            const src = m.id === 'stickerModal' ? [...body.querySelectorAll(SNB_SRC)].filter(e => e.offsetParent && !e.closest('.snb-sheets')) : [];
             m.classList.toggle('snb-sheet', src.length > 0);
             if (!src.length) { if (wrap) wrap.remove(); snb.sheetSig = ''; return null; }
             const sig = src.map(e => e._snbN || (e._snbN = ++snb.seq)).join(',') + '|' + body.clientWidth + 'x' + body.clientHeight;
@@ -537,8 +522,10 @@
                 const g = sh.querySelector('.snb-sh-in');
                 single.slice(i, i + per).forEach(o => {
                     const pc = document.createElement('span'); pc.className = 'snb-pc'; pc._src = o;
-                    const im = o.querySelector('img'), cv = o.querySelector('canvas');
-                    if (im) { const c = document.createElement('img'); c.src = im.currentSrc || im.src; c.alt = ''; c.draggable = false; pc.appendChild(c); }
+                    const im = o.querySelector('img'), cv = o.querySelector('canvas'), bg = o.querySelector('[style*="background-image"]');
+                    const bu = bg && (bg.style.backgroundImage.match(/url\(["']?(.*?)["']?\)$/) || [])[1];
+                    if (bu) { const c = document.createElement('img'); c.src = bu; c.alt = ''; c.draggable = false; c.className = 'snb-tape'; pc.appendChild(c); }
+                    else if (im) { const c = document.createElement('img'); c.src = im.currentSrc || im.src; c.alt = ''; c.draggable = false; pc.appendChild(c); }
                     else if (cv) { try { const c = document.createElement('img'); c.src = cv.toDataURL(); pc.appendChild(c); } catch (er) {} }
                     else { const t = document.createElement('b'); t.textContent = (o.textContent || '').trim().slice(0, 4); pc.appendChild(t); }
                     g.appendChild(pc);
@@ -615,11 +602,12 @@
             if (navigator.vibrate) try { navigator.vibrate(6); } catch (er) {}
             return true;
         }
+        const snbTap = o => o.matches('[onclick]') ? o : (o.querySelector('button, [onclick]') || o);   // 원래 칸에서 눌리는 곳
         function snbPeelBack(p) { p.it.classList.remove('out'); }
         async function snbPeelStick(p, cx, cy, rot, r) {
             const pc = p.it;
             setTimeout(() => { pc.classList.remove('out'); pc.classList.add('again'); setTimeout(() => pc.classList.remove('again'), 500); }, 350);   // 스티커첩은 다시 채워져요
-            if (pc._src) { snbPut({ it: pc._src, t: null }, cx, cy); return; }      // 낱장 모음 시트 : 원래 칸과 같은 방법으로 그 자리에
+            if (pc._src) { snbPut({ it: pc._src, t: snbTap(pc._src) }, cx, cy); return; }      // 낱장 모음 시트 : 원래 칸과 같은 방법으로 그 자리에
             let s = pc._url;
             if (pc._k === 'seal' && window.pelBake) try { s = await pelBake(s); } catch (e) {}
             if (!addImage(s)) return;
