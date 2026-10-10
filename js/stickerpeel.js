@@ -91,6 +91,9 @@
             for (const o of S.items) if (o.st.state === 'on') { o.st.cx += dx; o.st.cy += dy; }
         }
         const pelKeep = () => pelShift(0, 0);
+        /* 📱 폰 (화면 폭 700 미만) : 스티커 창 · 하얀 종이 · 페이지가 늘 겹쳐서, 뗀 스티커를 붙일 동안 하얀 종이가 비켜 줘요
+           💻 PC · 아이패드는 하얀 종이가 그대로 있어요 (진짜처럼) · 도련 · 2026-10-10 */
+        const pelPhone = () => innerWidth < 700;
         const pelLeft = () => pelS.items.filter(o => o.st.state === 'on').length;
         function pelPick(o) { const S = pelS; S.a = o.a; S.st = o.st; S.src = o.src; }
 
@@ -105,7 +108,7 @@
             const S = pelS;
             S.cv = pelq('pelCv'); S.ctx = S.cv.getContext('2d');
             S.items = imgs.map((im, i) => ({ a: pelAsset(im), src: list[i], st: { state: 'on' } })); pelPick(S.items[0]);
-            S.ts = !!(opt && opt.ts); S.drag = null; S.gone = 0; S.mv = { x: 0, y: 0 }; S.on = true;
+            S.ts = !!(opt && opt.ts); S.drag = null; S.gone = 0; S.back = 0; S.mv = { x: 0, y: 0 }; S.on = true;
             pelLayout();
             pelq('pelRoom').classList.add('show'); document.body.classList.add('fc-lock');
             S.hint = '';
@@ -163,7 +166,8 @@
             const S = pelS; if (!S.on) return;
             const ctx = S.ctx, st = S.st, a = S.a;
             ctx.setTransform(S.DPR, 0, 0, S.DPR, 0, 0); ctx.clearRect(0, 0, S.W, S.H);
-            const bo = S.gone ? Math.max(0, 1 - (t - S.gone) / 260) : 1;        // 마지막 스티커를 떼어 내면 스르르 사라져요
+            const bo = S.gone ? Math.max(0, 1 - (t - S.gone) / 260)              // 마지막 스티커를 떼어 내면 스르르 사라져요 (📱 폰은 뗄 때마다)
+                : S.back ? Math.min(1, (t - S.back) / 260) : 1;                  // 📱 붙이고 나면 남은 스티커와 같이 다시 스르르
             if (bo > 0) {                                                        // 어둡게 깔기 + 🏷️ 하얀 네모 (스티커 종이)
                 ctx.save(); ctx.globalAlpha = bo; ctx.fillStyle = 'rgba(90,60,70,.10)'; ctx.fillRect(0, 0, S.W, S.H); ctx.restore();
                 const B = S.board, bx = B.cx - B.w / 2, by = B.cy - B.h / 2;
@@ -175,7 +179,9 @@
             for (const o of S.items) {                                           // 종이 위에 남은 스티커들 (잡은 건 맨 위에)
                 if (o.st.state !== 'on') continue;
                 if (o === cur && ((d && d.mode === 'peel') || o.st.snap)) continue;
+                if (bo < 1) { if (bo <= 0) continue; ctx.save(); ctx.globalAlpha = bo; }
                 if (o.st.snap) pelSnap(ctx, o, t); else pelDraw(ctx, o.a.front, o.st, 1, 1, PEL_FLAT);
+                if (bo < 1) ctx.restore();
             }
             if (cur && d && d.mode === 'peel') pelDrawPeel(ctx, cur, d.C, d.F);
             else if (cur && st.state === 'on' && st.snap) pelSnap(ctx, cur, t);
@@ -246,7 +252,7 @@
         function pelDetach(P) {
             const S = pelS, st = S.st, d = S.drag, [lx, ly] = pelToLocal(st, d.C[0], d.C[1]);
             st.state = 'free'; st.t0 = performance.now();
-            if (!pelLeft()) S.gone = performance.now();                          // 마지막 스티커면 하얀 종이도 사라져요
+            if (!pelLeft() || pelPhone()) { S.gone = performance.now(); S.back = 0; }   // 마지막 스티커면 하얀 종이도 사라져요 · 📱 폰은 페이지가 가려서 뗄 때마다 비켜 줘요
             const [gx, gy] = pelToStage(st, lx, ly);
             S.drag = { mode: 'free', off: [gx - st.cx, gy - st.cy], baseRot: st.rot, last: P, lt: performance.now() };
             st.cx = P[0] - S.drag.off[0]; st.cy = P[1] - S.drag.off[1];
@@ -289,6 +295,7 @@
             if (typeof saveData === 'function') saveData(false);
             const left = S.items.filter(o => o.st.state === 'on');
             if (!left.length) { closeStickerPeel(); return; }
+            if (S.gone) { S.gone = 0; S.back = performance.now(); }              // 📱 하얀 종이가 남은 스티커와 다시 나타나요
             pelPick(left[0]);                                                    // 종이에 남은 스티커는 계속 떼어 붙여요
             S.hint = ''; pelSay(`붙었어요 ✨ 종이에 <b>${left.length}개</b> 남았어요`);
         }

@@ -2989,3 +2989,5 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-pc.again { animation: snbAgain .45s ease-out; }
 @keyframes snbAgain { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
 .pfx-stage.snb-top { z-index: 5000; }
+.spk-board { transition: opacity .25s; }
+.spk-board.away { opacity: 0; pointer-events: none; }

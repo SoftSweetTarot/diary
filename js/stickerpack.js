@@ -174,12 +174,14 @@
             const img = p.it.querySelector('img'), r = img.getBoundingClientRect(), it = p.it;
             it.classList.add('out');
             p.seal = pfxSeal({ src: img, cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height, rot: 0, x: p.x, y: p.y,
-                onCancel: () => it.classList.remove('out'),
+                onDetach: () => spkAway(true),
+                onCancel: () => { it.classList.remove('out'); spkAway(false); },
                 onDrop: (cx, cy, rot) => {                                                  // 페이지 위면 붙이고 · 판 위나 바깥이면 제자리로
                     const pg = spkq('canvasArea'), pr = pg && pg.getBoundingClientRect(), b = spkq('spkBoard').getBoundingClientRect();
                     const onBoard = cx > b.left && cx < b.right && cy > b.top && cy < b.bottom;
-                    if (pr && !onBoard && cx > pr.left && cx < pr.right && cy > pr.top && cy < pr.bottom) spkStick({ it, src: img.src, w: r.width, h: r.height, cx, cy, rot });
-                    else it.classList.remove('out');
+                    const onB = onBoard && !spkq('spkBoard').classList.contains('away');   // 📱 비켜 준 판 자리는 페이지예요
+                    if (pr && !onB && cx > pr.left && cx < pr.right && cy > pr.top && cy < pr.bottom) spkStick({ it, src: img.src, w: r.width, h: r.height, cx, cy, rot });
+                    else { it.classList.remove('out'); spkAway(false); }
                 } });
             p.seal.move(e.clientX, e.clientY);
         }
@@ -217,7 +219,7 @@
         function spkMove(e) {
             const L = spkS.lift; if (!L || !L.down) return;
             if (!L.moved && Math.hypot(e.clientX - L.start[0], e.clientY - L.start[1]) < 5) return;
-            L.moved = true; L.last = [e.clientX, e.clientY];
+            L.moved = true; L.last = [e.clientX, e.clientY]; spkAway(true);
             if (L.peel) return;                                                       // 떼어지는 동안은 제자리
             L.f.classList.add('drag'); spkFly(e.clientX - L.off[0], e.clientY - L.off[1]);
         }
@@ -230,11 +232,14 @@
         }
         function spkDrop(L) {
             const pg = spkq('canvasArea'), r = pg && pg.getBoundingClientRect(), b = spkq('spkBoard').getBoundingClientRect();
-            const onBoard = L.cx > b.left && L.cx < b.right && L.cy > b.top && L.cy < b.bottom;
+            const onBoard = L.cx > b.left && L.cx < b.right && L.cy > b.top && L.cy < b.bottom && !spkq('spkBoard').classList.contains('away');
             if (r && !onBoard && L.cx > r.left && L.cx < r.right && L.cy > r.top && L.cy < r.bottom) spkStick(L); else spkPutBack();
         }
         /* 제자리로 */
+        /* 📱 폰 (화면 폭 700 미만) : 판이 페이지를 가려서, 뗀 스티커를 붙일 동안 판이 비켜 줘요 · 💻 PC · 아이패드는 그대로 (도련 · 2026-10-10) */
+        function spkAway(on) { const b = spkq('spkBoard'); if (b) b.classList.toggle('away', !!on && innerWidth < 700); }
         function spkPutBack() {
+            spkAway(false);
             const L = spkS.lift; if (!L) return; spkS.lift = null;
             if (typeof L.peel === 'function') L.peel(); L.peel = null;
             L.f.classList.remove('flat'); L.f.classList.add('back'); L.s = 1; L.rot = 0; L.f.style.transform = `translate(${L.home[0] - L.w / 2}px, ${L.home[1] - L.h / 2}px) scale(1)`;
@@ -242,7 +247,7 @@
         }
         /* 붙이기 : 작아지며 꾹 → 페이지 스티커가 돼요 (빨간 점선으로 골라 둬요) */
         function spkStick(L) {
-            spkS.lift = null;
+            spkS.lift = null; setTimeout(() => spkAway(false), 200);
             if (L.f) { L.f.classList.add('back'); L.f.style.transform = `translate(${L.cx - L.w / 2}px, ${L.cy - L.h / 2}px) scale(1) rotate(${L.rot}rad)`; }
             setTimeout(() => {
                 if (L.f) L.f.remove(); L.it.classList.remove('out');
