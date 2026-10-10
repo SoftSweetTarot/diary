@@ -12,7 +12,6 @@
                       / 다이어리 / 페이지 / 2026년 / 10월 / 9일.json   📔 하루에 파일 1개
                       / 다이어리 / 검색 / 검색-2026.json              🔍 (js/search.js)
            - 폴더가 없으면 저장할 때 자동으로 만들어요 · 같은 이름 폴더가 둘이면 먼저 만든 쪽으로 합쳐요
-           - 폴더 찾기는 📂 폴더 지도(앱이 만든 폴더 전부를 요청 1번에 받기)로 해요 → 폴더가 깊어도 한 단계씩 묻지 않아요 (loadFolderTree)
            - 두 기기에서 같이 써도 : 덮어쓰기 전에 드라이브 파일의 '마지막 수정 시각'을 보고
              바뀌었으면 다른 기기 내용 위에 내가 고친 것만 얹어요 (같은 날 일기는 물어봐요)
            ===================================================================== */
@@ -78,7 +77,6 @@
             dayLoads: new Map(),         // 읽는 중인 날짜 요청
             folderIds: new Map(),        // 폴더 경로 → 폴더 id 캐시
             folderBusy: new Map(),
-            tree: null, treeBusy: null, treeEpoch: 0, treeFailAt: 0,   // 📂 폴더 지도 (앱이 만든 폴더 전부 · 아래 loadFolderTree)
             monthIndex: new Map(),       // '2026/9' → { folderId, files: Map(파일명 → 파일정보) } 캐시
             monthBusy: new Map(),
             get dirty() { return this.dirtyKeys.size > 0; }
@@ -260,79 +258,8 @@
 
         async function findFolder(name, parentId) {
             const files = await driveList(`name='${qName(name)}' and mimeType='${FOLDER_MIME}' and '${parentId || DRIVE_PARENT_DEFAULT}' in parents and trashed=false`, 'id,name');
-            if (files.length > 1) { mergeFolders(files[0].id, files.slice(1).map(f => f.id)); treeMerge(files[0].id, files.slice(1).map(f => f.id)); }   // 두 기기가 동시에 만든 같은 폴더 → 먼저 만든 쪽으로 합치기 (기다리지 않음)
-            if (files[0]) treeAdd(name, parentId, files[0].id);
+            if (files.length > 1) mergeFolders(files[0].id, files.slice(1).map(f => f.id));   // 두 기기가 동시에 만든 같은 폴더 → 먼저 만든 쪽으로 합치기 (기다리지 않음)
             return files[0] ? files[0].id : null;
-        }
-
-        /* ---------- 📂 폴더 지도 : 앱이 만든 폴더 전부를 한 번에 받아서(요청 1번) 경로 → id 를 앱 안에서 찾아요 ----------
-           - 예전처럼 한 단계씩 묻지 않아요 (말랑달콤 / 다이어리 / 페이지 / 2026년 / 10월 = 5번 → 1번)
-           - drive.file 권한이라 앱이 만든 폴더만 와요 · 휴지통에 있는 폴더는 빼고 받아요
-           - 지도는 TREE_FRESH_MS 동안만 믿어요 → 그 뒤에 처음 찾는 경로가 있으면 지도를 새로 받아요 (다른 기기가 만든 폴더도 보여요)
-           - 지도에 없는 폴더를 만든 뒤에는 드라이브에 직접 한 번 더 물어봐요 → 다른 기기가 그 사이 같은 폴더를 만들었으면 먼저 만든 쪽을 쓰고 내 것은 합쳐요
-           - 지도를 못 받으면(인터넷 · 권한) 예전 방식(한 단계씩 묻기)으로 그대로 해요 */
-        const TREE_FRESH_MS = 30000;
-        function loadFolderTree(force) {
-            const t = drive.tree;
-            if (!force && t && Date.now() - t.at < TREE_FRESH_MS) return Promise.resolve(t);
-            if (drive.treeBusy) return drive.treeBusy;
-            if (!force && drive.treeFailAt && Date.now() - drive.treeFailAt < TREE_FRESH_MS) return Promise.reject(new Error('tree-wait'));   // 방금 못 받았으면 잠깐은 예전 방식으로만
-            const epoch = drive.treeEpoch;
-            const p = (async () => {
-                const [top, all] = await Promise.all([                        // 두 요청을 같이 보내요 (기다리는 시간은 한 번)
-                    driveList(`name='${qName(TOP_FOLDER_NAME)}' and mimeType='${FOLDER_MIME}' and '${DRIVE_PARENT_DEFAULT}' in parents and trashed=false`, 'id'),
-                    driveList(`mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name,parents')       // 만든 순서대로 와요 (먼저 만든 폴더가 앞)
-                ]);
-                const kids = new Map();
-                all.forEach(f => (f.parents || []).forEach(pid => {
-                    let m = kids.get(pid); if (!m) kids.set(pid, m = new Map());
-                    let a = m.get(f.name); if (!a) m.set(f.name, a = []);
-                    a.push(f.id);
-                }));
-                const nt = { top: top.map(f => f.id), kids, at: Date.now() };
-                if (drive.treeEpoch === epoch) drive.tree = nt;               // 그 사이 다시 불러오기 · 로그아웃을 했으면 버려요
-                return nt;
-            })();
-            drive.treeBusy = p;
-            const clear = () => { if (drive.treeBusy === p) drive.treeBusy = null; };
-            p.then(() => { drive.treeFailAt = 0; clear(); }, () => { if (drive.treeEpoch === epoch) drive.treeFailAt = Date.now(); clear(); });
-            return p;
-        }
-        function treeIds(t, name, parentId) {
-            if (!parentId) return name === TOP_FOLDER_NAME ? t.top : null;    // 맨 위는 '말랑달콤' 만 지도로
-            const m = t.kids.get(parentId);
-            return (m && m.get(name)) || [];
-        }
-        /* 지도에서 찾기 : id · null(확실히 없음) · undefined(지도로는 모름 → 드라이브에 직접) */
-        async function treeFind(name, parentId) {
-            let t;
-            try { t = await loadFolderTree(); } catch (e) { if (e.message !== 'tree-wait') console.warn('폴더 지도를 받지 못해서 한 단계씩 찾아요:', e); return undefined; }
-            const ids = treeIds(t, name, parentId);
-            if (!ids) return undefined;
-            if (ids.length > 1) {                                             // 같은 이름 폴더가 둘 → 먼저 만든 쪽으로 합치기 (예전과 같은 규칙)
-                const rest = ids.slice(1);
-                mergeFolders(ids[0], rest); treeMerge(ids[0], rest);
-            }
-            return ids.length ? ids[0] : null;                                // 없음 (만들 때는 만든 뒤에 다시 확인해서, 다른 기기가 먼저 만들었으면 그쪽으로 합쳐요)
-        }
-        /* 지도 고치기 : 새로 찾거나 만든 폴더 넣기 / 합쳐진 폴더의 안쪽을 남는 폴더로 */
-        function treeAdd(name, parentId, id) {
-            const t = drive.tree; if (!t || !id) return;
-            if (!parentId) { if (name === TOP_FOLDER_NAME && !t.top.includes(id)) t.top.push(id); return; }
-            let m = t.kids.get(parentId); if (!m) t.kids.set(parentId, m = new Map());
-            const a = m.get(name); if (!a) m.set(name, [id]); else if (!a.includes(id)) a.push(id);
-        }
-        function treeMerge(keepId, otherIds) {
-            const t = drive.tree; if (!t) return;
-            const drop = new Set(otherIds);
-            if (t.top.some(id => drop.has(id))) t.top = t.top.filter(id => !drop.has(id));
-            t.kids.forEach(m => m.forEach((a, n) => { if (a.some(id => drop.has(id))) m.set(n, a.filter(id => !drop.has(id))); }));
-            let keep = t.kids.get(keepId); if (!keep) t.kids.set(keepId, keep = new Map());
-            otherIds.forEach(o => {
-                const m = t.kids.get(o); if (!m) return;
-                m.forEach((a, n) => { const k = keep.get(n) || []; a.forEach(id => { if (!k.includes(id)) k.push(id); }); keep.set(n, k); });
-                t.kids.delete(o);
-            });
         }
         /* 같은 이름 폴더 합치기 : 나중 폴더 안의 것을 모두 먼저 폴더로 옮기고, 빈 폴더는 휴지통으로
            (옮긴 것 중 또 같은 이름 폴더가 생기면 그 폴더를 열 때 다시 합쳐져요) */
@@ -379,13 +306,11 @@
                     if (!parentId) return null;
                 }
                 const name = names[names.length - 1];
-                let id = await treeFind(name, parentId);                            // 📂 지도에서 (요청 없음)
-                if (id === undefined) id = await findFolder(name, parentId);        // 지도로 모르면 드라이브에 직접
+                let id = await findFolder(name, parentId);
                 if (!id && create) {
-                    const made = await createFolder(name, parentId);
-                    const again = await findFolder(name, parentId);                // 그 사이 다른 기기도 만들었으면 먼저 만든 쪽을 써요 (내 것은 합쳐져요)
-                    id = again || made;
-                    treeAdd(name, parentId, id);
+                    id = await createFolder(name, parentId);
+                    const again = await findFolder(name, parentId);                // 그 사이 다른 기기도 만들었으면 먼저 만든 쪽을 써요
+                    if (again) id = again;
                 }
                 if (id) drive.folderIds.set(key, id);
                 return id || null;
@@ -418,7 +343,6 @@
 
         function resetDriveCaches() {
             drive.folderIds.clear(); drive.folderBusy.clear();
-            drive.tree = null; drive.treeBusy = null; drive.treeEpoch++; drive.treeFailAt = 0;
             drive.monthIndex.clear(); drive.monthBusy.clear();
             drive.settingsFile = null; drive.cafeFile = null;
         }
@@ -762,19 +686,10 @@
             const rootId = await getFolder(DAY_PATH, false);
             const out = new Map();
             if (!rootId) return [];
-            /* 년 · 달 폴더는 📂 폴더 지도에서 (새로 받아요 · 요청 1번) — 지도를 못 받으면 예전처럼 폴더마다 묻기 */
-            let tree = null;
-            try { tree = await loadFolderTree(true); } catch (e) { tree = null; }
-            const subFolders = async id => {
-                if (!tree) return await driveList(`'${id}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name');
-                const out = [], m = tree.kids.get(id);
-                if (m) m.forEach((a, name) => a.forEach(fid => out.push({ id: fid, name })));
-                return out;
-            };
-            const years = (await subFolders(rootId))
+            const years = (await driveList(`'${rootId}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name'))
                 .map(f => ({ f, r: /^(\d{4})년$/.exec(f.name) })).filter(x => x.r);
             const monthGroups = await Promise.all(years.map(async yx => {
-                const ms = await subFolders(yx.f.id);
+                const ms = await driveList(`'${yx.f.id}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`, 'id,name');
                 return ms.map(f => ({ f, y: +yx.r[1], r: /^(\d{1,2})월$/.exec(f.name) })).filter(x => x.r);
             }));
             await Promise.all([].concat(...monthGroups).map(async mx => {
