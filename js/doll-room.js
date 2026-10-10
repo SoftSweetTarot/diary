@@ -9,7 +9,7 @@
    - 만드는 중인 인형은 이 기기에 자동 임시 저장 (창을 닫아도 이어서 만들기)
    - 📷 사진으로 저장(자랑 카드 PNG) · 💾 인형 파일로 저장(.malang.txt) · 📂 인형 불러오기 · 📔 일기에 붙이기
    - 일기에 붙인 인형은 페이지 요소 {"t":"d","c":{인형 데이터}} 로 저장되고, 두 번 누르면 표정·옷을 바로 고칠 수 있어요
-   ※ 파일 불러오는 순서: … → pattern-maker → doll-render → doll-store → doll-room → service */
+   ※ 파일 불러오는 순서: … → pattern-maker → doll-render → doll-store → doll-room → doll-move → service */
 
         const DOLL_DRAFT_KEY = 'malang_doll_draft';
 
@@ -1179,6 +1179,7 @@
                 grp('눈', ch('eyes', [['basic', '기본'], ['sparkle', '반짝'], ['smile', '웃음'], ['wink', '윙크'], ['sleepy', '졸림'], ['heart', '하트']])) +
                 grp('입', ch('mouth', [['cat', '고양이'], ['smile', '스마일'], ['open', '활짝'], ['o', '오!'], ['pout', '뽀뽀']])) +
                 grp('눈썹', ch('brows', [['basic', '기본'], ['worried', '시무룩'], ['strong', '씩씩'], ['none', '없음']])) +
+                grp('움직임', `<div class="chips">${DMV_STYLES.map(([v, l]) => `<button type="button" class="chip${d.motion.s === v ? ' on' : ''}" data-qmove="${v}">${l}</button>`).join('')}</div>`) +
                 grp('그 밖에', `<div class="chips"><button type="button" class="chip${d.blushA > 0 ? ' on' : ''}" data-qblush="1">볼터치</button><button type="button" class="chip${d.flip ? ' on' : ''}" data-qflip="1">↔ 좌우 반전</button></div>`) +
                 (d.layers.some(L => L.slot === 'face') ? '<p class="dr-note">직접 그린 얼굴 조각은 그대로 있고, 고른 표정이 함께 보여요.</p>' : '');
         }
@@ -1190,6 +1191,7 @@
             const d = quickDoll();
             if (!d) return;
             if (b.dataset.qk) d[b.dataset.qk] = b.dataset.qv;
+            else if (b.dataset.qmove) d.motion.s = b.dataset.qmove;
             else if (b.dataset.qblush) d.blushA = d.blushA > 0 ? 0 : 0.55;
             else if (b.dataset.qflip) d.flip = !d.flip;
             else return;

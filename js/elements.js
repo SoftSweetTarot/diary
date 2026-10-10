@@ -670,6 +670,7 @@
                 item.z = parseInt(el.style.zIndex) || 1;
                 item.bw = el.offsetWidth; item.bh = el.offsetHeight;
                 if (img && el.dataset.float) item.fm = 1;
+                if (img && el.dataset.cm) { try { item.cm = JSON.parse(el.dataset.cm); } catch (e) {} }   // 🪄 움직이는 캐릭터 : 칠한 곳 · 움직임 설정 (js/char-move.js)
                 if (img && el.dataset.ts) item.ts = 1;                          // 🔤 글씨스티커 : 📷 사진 꾸미기 창이 안 떠요 (js/page.js getSelectedPhoto)                       // 📄 모조지 : 옮길 때 떼지 않고 살짝 떠서 (아래 makeTransformable)
                 if (img && el.dataset.frame) {                                  // 📷 사진 틀 (js/frame.js)
                     item.fr = el.dataset.frame;
@@ -734,6 +735,7 @@
                 el.appendChild(img);
                 if (data.float) el.dataset.float = 1;
                 if (data.ts) el.dataset.ts = 1;
+                if (data.cm && window.cmvDress) cmvDress(el, img, data.cm);    // 🪄 움직이는 캐릭터 (js/char-move.js) : 그림 위에 움직이는 캔버스를 겹쳐요
                 if (data.frame && /^[a-z0-9]{1,10}$/.test(data.frame)) {
                     el.classList.add('fr-' + data.frame); el.dataset.frame = data.frame;
                     if (data.caption) el.dataset.caption = String(data.caption).slice(0, 40);

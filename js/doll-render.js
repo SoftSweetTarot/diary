@@ -33,6 +33,7 @@
             patch: [],        // 🧷 옷에 붙인 것 { k, c, x, y, s, r }
             hairPaint: [],    // 🎨 머리 염색 붓 (머리 안에만 보여요)
             layers: [],
+            motion: { s: 'idle', v: 1, a: 1 },      // 💃 움직임 : s 스타일 · v 속도 · a 세기 (js/doll-move.js)
             stats: { ms: 0, hard: false, created: 0 }
         };
 
@@ -52,6 +53,18 @@
         const DOLL_ACCS = ['bow', 'headband', 'crown', 'glasses', 'beret', 'flower', 'tie'];
         const DOLL_PATS = ['none', 'diag', 'stripe', 'dot', 'check', 'heart', 'flower', 'star'];
         const DOLL_SLOTS = ['back', 'cloth', 'face', 'hair', 'top'];
+        /* 💃 움직임 스타일 : 값은 모두 '도(°)' · 배율 · 칸 이동량이고, 시간(T)은 초예요. 속도 v 로 나누고 세기 a 를 곱해서 써요.
+             nod 고개 기울기 · hair 머리카락 끝 살랑 · breath 숨쉬기(가로 세로 배율) · rot 몸 전체 기울기(발이 축) · mv 몸 전체 이동 · blink 눈 깜빡(값 · 시간 비율) */
+        const DOLL_BLINK = { vals: '1 1;1 1;1 .08;1 1;1 1', kt: '0;.9;.93;.96;1' };
+        const DOLL_MOVES = {
+            idle:   { nod: [0, 1.6, 0, -1.6, 0], nodT: 7, hair: [0, 2.2, 0, -2.2, 0], hairT: 5.2, breath: [[1, 1], [1.004, 1.012], [1, 1]], breathT: 3.6, blinkT: 4.6, blink: DOLL_BLINK },
+            bounce: { nod: [0, 2.6, 0, -2.6, 0], nodT: 1.8, hair: [0, 3.6, 0, -3.6, 0], hairT: 1.8, breath: [[1, 1], [1.014, .982], [1, 1]], breathT: .9, mv: [[0, 0], [0, -10], [0, 0]], mvT: .9, blinkT: 3.8, blink: DOLL_BLINK },
+            sway:   { nod: [0, 3, 0, -3, 0], nodT: 4.8, hair: [0, 4.2, 0, -4.2, 0], hairT: 4.8, breath: [[1, 1], [1.004, 1.012], [1, 1]], breathT: 3.6, rot: [0, 2.4, 0, -2.4, 0], rotT: 4.8, blinkT: 4.2, blink: DOLL_BLINK },
+            shy:    { nod: [0, 5, 5, 0], nodT: 6, hair: [0, 1.6, 0, -1.6, 0], hairT: 6, breath: [[1, 1], [1.004, 1.012], [1, 1]], breathT: 3.2, rot: [0, -1.6, -1.6, 0], rotT: 6, blinkT: 2.6, blink: DOLL_BLINK },
+            dance:  { nod: [0, -4, 0, 4, 0], nodT: 1.6, hair: [0, 5, 0, -5, 0], hairT: 1.6, breath: [[1, 1], [1.01, .99], [1, 1]], breathT: .8, rot: [0, 3.6, 0, -3.6, 0], rotT: 1.6, mv: [[0, 0], [3, -7], [0, 0], [-3, -7], [0, 0]], mvT: 1.6, blinkT: 3.6, blink: DOLL_BLINK },
+            sleepy: { nod: [0, 6.5, 6.5, 0], nodT: 6.5, hair: [0, 1.2, 0, -1.2, 0], hairT: 8, breath: [[1, 1], [1.007, 1.02], [1, 1]], breathT: 5, blinkT: 6.5, blink: { vals: '1 1;1 1;1 .08;1 .08;1 1;1 1', kt: '0;.5;.58;.86;.94;1' } }
+        };
+        const DOLL_MOVE_NAMES = Object.keys(DOLL_MOVES);
 
         const dollClone = o => JSON.parse(JSON.stringify(o));
         function dollNewMannequin() { const d = dollClone(DOLL_MANNEQUIN); d.stats.created = Date.now(); return d; }
@@ -114,6 +127,8 @@
                     name: dollText(L.name, 12), hidden: !!L.hidden
                 });
             });
+            const mo = d.motion && typeof d.motion === 'object' ? d.motion : {};
+            out.motion = { s: DOLL_MOVE_NAMES.includes(mo.s) ? mo.s : 'idle', v: Math.round(dollNum(mo.v, [0.5, 2], 1) * 10) / 10, a: Math.round(dollNum(mo.a, [0.4, 1.8], 1) * 10) / 10 };
             const st = d.stats || {};
             out.stats = { ms: dollNum(st.ms, [0, 1e10], 0), hard: !!st.hard || out.layers.length > 0, created: dollNum(st.created, [0, 1e14], 0) };
             if (JSON.stringify(out).length > DOLL_MAX_JSON) return null;
@@ -635,14 +650,17 @@
             const ease = n => `calcMode="spline" keyTimes="${[...Array(n)].map((_, i) => dN(i / (n - 1))).join(';')}" keySplines="${Array(n - 1).fill('.45 0 .55 1').join(';')}"`;
             const anim = (type, values, dur, extra = ease(values.split(';').length)) => `<animateTransform attributeName="transform" type="${type}" values="${values}" dur="${dur}s" repeatCount="indefinite" ${extra}/>`;
             const around = (x, y, a, s) => live ? `<g transform="translate(${x} ${y})"><g>${a}<g transform="translate(${-x} ${-y})">${s}</g></g></g>` : s;
+            /* 💃 움직임 스타일 (D.motion) : 정해진 표(DOLL_MOVES)에서 값을 꺼내 속도 · 세기만 맞춰요 */
+            const MO = D.motion || {}, MV = DOLL_MOVES[MO.s] || DOLL_MOVES.idle, MS = MO.v || 1, MA = MO.a || 1;
+            const r2 = v => Math.round(v * 100) / 100, tt = t => r2(t / MS);
             const NX = dN(DOLL_ART_X + 426 * DOLL_ART_K), NY = dN(650 * DOLL_ART_K);
-            const nod = s => s && live ? `<g>${anim('rotate', `0 ${NX} ${NY};1.6 ${NX} ${NY};0 ${NX} ${NY};-1.6 ${NX} ${NY};0 ${NX} ${NY}`, 7)}${s}</g>` : s;   // 고개 살랑 (목이 축)
-            const blink = s => ['basic', 'sparkle', 'heart'].includes(D.eyes) ? around(0, 476, anim('scale', '1 1;1 1;1 .08;1 1;1 1', 4.6, 'keyTimes="0;.9;.93;.96;1"'), s) : s;   // 눈 깜빡
+            const nod = s => s && live ? `<g>${anim('rotate', MV.nod.map(a => `${r2(a * MA)} ${NX} ${NY}`).join(';'), tt(MV.nodT))}${s}</g>` : s;   // 고개 살랑 (목이 축)
+            const blink = s => ['basic', 'sparkle', 'heart'].includes(D.eyes) ? around(0, 476, anim('scale', MV.blink.vals, tt(MV.blinkT), `keyTimes="${MV.blink.kt}"`), s) : s;   // 눈 깜빡
             let hb = P.hairBack();
             if (hb) {
                 if (D.hairGrow !== 1 || D.hairSway || live) {
                     defs.push(`<clipPath id="${pfx}-hUp"><rect x="-400" y="-400" width="1700" height="${HT + 402}"/></clipPath><clipPath id="${pfx}-hDn"><rect x="-400" y="${HT - 1}" width="1700" height="3000"/></clipPath>`);
-                    hb = `<g clip-path="url(#${pfx}-hUp)">${hb}</g><g clip-path="url(#${pfx}-hDn)">${around(426, HT, anim('skewX', '0;2.2;0;-2.2;0', 5.2), `<g transform="translate(426 ${HT}) skewX(${dN(-D.hairSway * 16)}) scale(1 ${D.hairGrow}) translate(-426 -${HT})">${hb}</g>`)}</g>`;   // 귀 아래만 살랑
+                    hb = `<g clip-path="url(#${pfx}-hUp)">${hb}</g><g clip-path="url(#${pfx}-hDn)">${around(426, HT, anim('skewX', MV.hair.map(a => r2(a * MA)).join(';'), tt(MV.hairT)), `<g transform="translate(426 ${HT}) skewX(${dN(-D.hairSway * 16)}) scale(1 ${D.hairGrow}) translate(-426 -${HT})">${hb}</g>`)}</g>`;   // 귀 아래만 살랑
                 }
                 if (D.hairCut < 1844) hb = `<g ${cutClip('hCut', D.hairCut)}>${hb}</g>`;
             }
@@ -668,7 +686,9 @@
             body += nod(A(P.skinArt('head') + blink(P.eyes()) + P.mouth() + P.makeup()) + layers('face') +
                 A(P.glasses() + hf) + dye(hf, 'mHF') + A(P.brows()) + layers('hair') + A(P.accessories()));
             body += layers('top');
-            if (live) body = around(150, 462, anim('scale', '1 1;1.004 1.012;1 1', 3.6), body);   // 숨쉬기 (발이 축)
+            if (live) body = around(150, 462, anim('scale', MV.breath.map(([x, y]) => `${r2(1 + (x - 1) * MA)} ${r2(1 + (y - 1) * MA)}`).join(';'), tt(MV.breathT)), body);   // 숨쉬기 (발이 축)
+            if (live && MV.rot) body = around(150, 462, anim('rotate', MV.rot.map(a => `${r2(a * MA)} 0 0`).join(';'), tt(MV.rotT)), body);   // 몸 기울이기 (발이 축)
+            if (live && MV.mv) body = `<g>${anim('translate', MV.mv.map(([x, y]) => `${r2(x * MA)} ${r2(y * MA)}`).join(';'), tt(MV.mvT))}${body}</g>`;   // 통통 · 춤 (몸 전체 이동)
             if (live && opts.hop) body = `<g>${anim('translate', '0 0;0 -16;0 0;0 -5;0 0', 0.7, 'keyTimes="0;.3;.6;.8;1" repeatCount="1"').replace('repeatCount="indefinite" ', '')}${body}</g>`;   // 💕 콩 뛰기 (한 번)
             if (D.flip) body = `<g transform="translate(${DOLL_W} 0) scale(-1 1)">${body}</g>`;
             const vb = opts.crop ? '46 0 208 470' : `0 0 ${DOLL_W} ${DOLL_H}`;

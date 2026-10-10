@@ -42,11 +42,11 @@
         async function listDolls(force) {
             const mode = dollUseDrive() ? 'drive' : 'guest';            // 게스트 → 로그인으로 바뀌면 다시 읽기
             if (dollCache.list && !force && dollCache.mode === mode) return dollCache.list;
+            if (!dollUseDrive()) { dollCache.mode = mode; dollCache.list = readGuestDolls(); return dollCache.list; }   // 게스트는 기다릴 게 없어서 바로 (예전엔 '읽는 중' 표시가 안 풀려 새로 읽어도 첫 결과가 나왔어요)
             if (dollCache.loading) return dollCache.loading;
             dollCache.loading = (async () => {
                 try {
                     dollCache.mode = mode;
-                    if (!dollUseDrive()) { dollCache.list = readGuestDolls(); return dollCache.list; }
                     const folderId = await getFolder(DOLL_FOLDERS.deco, false);
                     const out = [];
                     if (folderId) {
