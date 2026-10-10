@@ -1,7 +1,8 @@
 /* 말랑달콤 다이어리 - js/letter.js
    💌 익명 편지함 (카페 → 함께하기 → 💌 익명 편지함)
-   - ✉️ 편지 쓰기 : 이름 없이 '어딘가의 말랑이'에게 편지를 보내요 (하루 3통 · 300자 · 편지지 5가지 · 스티커)
-   - 📬 받은 편지 : 편지함을 열면 누군가의 편지가 하루 2통까지 도착해요 → 💌 답장 한 번 · 📌 다이어리에 붙이기 · 🚨 신고
+   - ✉️ 편지 쓰기 : 이름 없이 '어딘가의 다꾸러'에게 편지를 보내요 (하루 3통 · 300자 · 편지지 5가지 · 스티커)
+   - 📬 받은 편지 : 마음의 준비가 되면 '📬 편지 받기'를 눌러요 → 누군가의 편지가 하루 2통까지 도착해요 → 💌 답장 한 번 · 📌 다이어리에 붙이기 · 🚨 신고
+                   (편지함을 열기만 하면 받은 편지 · 보낸 편지만 보여요 · 새 편지는 버튼을 눌러야 와요)
    - 📤 보낸 편지 : 날아가는 중 / 도착했어요 / 답장이 왔어요
    - 편지는 '익명 편지함 서버'(구글 앱스크립트 · 익명편지함_앱스크립트.gs)가 배달해요. 배포 주소를 LB_API_URL 에 넣어요.
    - 로그인한 사람만 쓸 수 있어요 (구글 계정으로 진짜 사용자인지만 확인 · 이메일이나 이름은 보내지 않아요)
@@ -34,7 +35,7 @@
             reply: '이 편지에는 답장할 수 없어요.', replied: '이미 답장을 보낸 편지예요.',
             network: '편지함 서버와 연결하지 못했어요. 잠시 후 다시 해 주세요.', server: '편지함 서버에 문제가 생겼어요. 잠시 후 다시 해 주세요.'
         };
-        const lb = { built: false, tab: 'in', data: null, busy: false, paper: 'pink', sticker: '💌', replyTo: null, open: null };
+        const lb = { built: false, tab: 'in', data: null, busy: false, paper: 'pink', sticker: '💌', replyTo: null, open: null, getting: false, just: 0, empty: false };
         const lbq = id => document.getElementById(id);
         const lbLogged = () => typeof drive !== 'undefined' && drive.ready && !drive.guest && !!drive.token;
         const lbEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -65,7 +66,7 @@
             el.innerHTML = `
               <div class="lb-bar"><button class="lb-x" type="button" id="lbBack" onclick="lbBackTo()" aria-label="뒤로" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span id="lbSp">${typeof sndFxBtn === 'function' ? sndFxBtn('lb-x') : ''}</span><b>💌 익명 편지함</b><button class="lb-x" type="button" onclick="closeLetterBox()" aria-label="닫기">✕</button></div>
               <div class="lb-wrap">
-                <div class="lb-head"><span class="lb-post">📮</span><p>이름 없이 마음을 주고받는<br><b>말랑이들의 우체통</b></p></div>
+                <div class="lb-head"><span class="lb-post">📮</span><p>이름 없이 마음을 주고받는<br><b>다꾸러들의 우체통</b></p></div>
                 <div class="lb-tabs" id="lbTabs">
                   <button type="button" data-t="in" onclick="lbTab('in')">📬 받은 편지<i id="lbNew" hidden></i></button>
                   <button type="button" data-t="write" onclick="lbTab('write')">✉️ 편지 쓰기</button>
@@ -76,9 +77,9 @@
                   <div class="lb-replyto" id="lbReplyTo" hidden></div>
                   <div class="lb-sheet" id="lbSheet">
                     <span class="lb-stk" id="lbStk">💌</span>
-                    <p class="lb-to" id="lbToLine">어딘가의 말랑이에게</p>
+                    <p class="lb-to" id="lbToLine">어딘가의 다꾸러에게</p>
                     <textarea id="lbText" maxlength="${LB_MAX}" placeholder="이름 없이 마음을 전해 보세요.&#10;누군가에게 따뜻한 하루가 될 거예요."></textarea>
-                    <p class="lb-from">— 익명의 말랑이가</p>
+                    <p class="lb-from">— 익명의 다꾸러가</p>
                   </div>
                   <div class="lb-count"><span id="lbLen">0</span> / ${LB_MAX}</div>
                   <div class="lb-ideas" id="lbIdeas">${LB_IDEAS.map(([t], i) => `<button type="button" onclick="lbIdea(${i})">${t}</button>`).join('')}</div>
@@ -104,7 +105,7 @@
         function lbTab(t) {
             lb.tab = t; lb.replyTo = null;
             document.querySelectorAll('#lbTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-            if (t === 'write') { lbq('lbReplyTo').hidden = true; lbq('lbToLine').textContent = '어딘가의 말랑이에게'; lbq('lbIdeas').hidden = false; lbq('lbSendBtn').textContent = '🕊️ 편지 보내기'; lbSecs('lbWrite'); return; }
+            if (t === 'write') { lbq('lbReplyTo').hidden = true; lbq('lbToLine').textContent = '어딘가의 다꾸러에게'; lbq('lbIdeas').hidden = false; lbq('lbSendBtn').textContent = '🕊️ 편지 보내기'; lbSecs('lbWrite'); return; }
             lbSecs(t === 'in' ? 'lbIn' : 'lbSent');
             lbRender();
         }
@@ -118,16 +119,37 @@
             lb.data = r;
             lbRender();
         }
+        /* 📬 편지 받기 : 누른 사람에게만 새 편지를 배달해요 (두근두근 기다리는 시간도 조금) */
+        async function lbGet() {
+            if (lb.getting || !lb.data) return;
+            lb.getting = true;
+            lbq('lbIn').innerHTML = '<div class="lb-wait lb-getting"><span>📮</span><p>우체통을 열어 보는 중…</p><small>어떤 다꾸러의 편지가 와 있을까요?</small></div>';
+            const [r] = await Promise.all([lbCall('get'), new Promise(ok => setTimeout(ok, 1800))]);
+            lb.getting = false;
+            if (!r || !r.ok) {
+                lbq('lbIn').innerHTML = `<div class="lb-empty">⚠️ ${LB_ERR[r && r.error] || LB_ERR.server}<br><button type="button" onclick="lbRender()">◀ 돌아가기</button></div>`;
+                return;
+            }
+            lb.data = r; lb.just = r.got || 0; lb.empty = !r.got && r.gotLeft > 0;
+            if (lb.just) lbSfx('open');
+            lbRender();
+        }
         function lbRender() {
             const d = lb.data; if (!d) return;
             const unread = d.inbox.filter(x => !x.read).length;
             lbq('lbNew').hidden = !unread; lbq('lbNew').textContent = unread;
-            lbq('lbIn').innerHTML = d.inbox.length ? `<div class="lb-list">${d.inbox.map((x, i) => {
+            const left = d.gotLeft != null ? d.gotLeft : 0, just = lb.just; lb.just = 0;
+            const getBox = (just ? `<p class="lb-arrived">✨ 새 편지 <b>${just}통</b>이 도착했어요!</p>` : '') +
+                (left > 0
+                    ? `<div class="lb-get"><button type="button" class="lb-get-btn" onclick="lbGet()">📬 편지 받기</button><small>오늘 받을 수 있는 편지 <b>${left}통</b> · 마음의 준비가 되면 눌러 주세요</small></div>`
+                    : `<div class="lb-get done"><small>💌 오늘 받을 편지는 다 받았어요. 내일 또 열어 봐요!</small></div>`);
+            const noneNow = lb.empty; lb.empty = false;
+            lbq('lbIn').innerHTML = getBox + (noneNow ? '<p class="lb-arrived quiet">🕊️ 지금은 우체통이 비어 있어요. 조금 뒤에 다시 열어 봐요.</p>' : '') + (d.inbox.length ? `<div class="lb-list">${d.inbox.map((x, i) => {
                 const p = lbPaper(x.paper);
                 return `<button type="button" class="lb-env${x.read ? ' read' : ''}" style="--bg:${p.bg};--ac:${p.ac};--d:${i * .06}s" onclick="lbOpen('${x.id}')">
                     <span class="lb-seal">${x.read ? x.sticker : '💗'}</span>
-                    <span class="lb-env-t"><b>${x.reply ? '💌 내 편지에 온 답장' : x.read ? '어딘가의 말랑이' : '✨ 새 편지가 도착했어요'}</b><small>${lbWhen(x.at)}${x.replied ? ' · 답장 보냄' : ''}</small></span></button>`;
-            }).join('')}</div>` : `<div class="lb-empty"><span>🕊️</span>아직 도착한 편지가 없어요.<br>편지는 매일 조금씩 배달돼요.<br>먼저 누군가에게 편지를 써 볼까요?<br><button type="button" onclick="lbTab('write')">✉️ 편지 쓰기</button></div>`;
+                    <span class="lb-env-t"><b>${x.reply ? '💌 내 편지에 온 답장' : x.read ? '어딘가의 다꾸러' : '✨ 새 편지가 도착했어요'}</b><small>${lbWhen(x.at)}${x.replied ? ' · 답장 보냄' : ''}</small></span></button>`;
+            }).join('')}</div>` : `<div class="lb-empty"><span>🕊️</span>아직 받은 편지가 없어요.<br>위의 📬 편지 받기를 누르면 편지가 와요.<br>먼저 누군가에게 편지를 써 볼까요?<br><button type="button" onclick="lbTab('write')">✉️ 편지 쓰기</button></div>`);
             const ST = { flying: ['🕊️', '날아가는 중'], arrived: ['📬', '도착했어요'], replied: ['💌', '답장이 왔어요'] };
             lbq('lbSent').innerHTML = (d.left != null ? `<p class="lb-left">오늘 더 보낼 수 있는 편지 <b>${d.left}통</b></p>` : '') + (d.sent.length ? `<div class="lb-list">${d.sent.map(x => {
                 const p = lbPaper(x.paper), s = ST[x.state] || ST.flying;
@@ -146,9 +168,9 @@
                 <article class="lb-letter" style="--bg:${p.bg};--line:${p.line};--ac:${p.ac}">
                   <span class="lb-stk">${x.sticker}</span>
                   ${x.reply ? `<p class="lb-orig">↪ 내가 보낸 편지 : “${lbEsc(x.orig)}${x.orig.length >= 60 ? '…' : ''}”</p>` : ''}
-                  <p class="lb-to">${x.reply ? '편지를 보낸 말랑이에게' : '어딘가의 말랑이에게'}</p>
+                  <p class="lb-to">${x.reply ? '편지를 보낸 다꾸러에게' : '어딘가의 다꾸러에게'}</p>
                   <div class="lb-body">${lbEsc(x.text).replace(/\n/g, '<br>')}</div>
-                  <p class="lb-from">— 익명의 말랑이가 · ${lbWhen(x.at)}</p>
+                  <p class="lb-from">— 익명의 다꾸러가 · ${lbWhen(x.at)}</p>
                 </article>
               </div>
               <div class="lb-acts">
@@ -168,7 +190,7 @@
             document.querySelectorAll('#lbTabs button').forEach(b => b.classList.remove('on'));
             lbq('lbReplyTo').hidden = false;
             lbq('lbReplyTo').innerHTML = `↪ 받은 편지 : “${lbEsc(x.text.slice(0, 50))}${x.text.length > 50 ? '…' : ''}”`;
-            lbq('lbToLine').textContent = '편지를 보내 준 말랑이에게';
+            lbq('lbToLine').textContent = '편지를 보내 준 다꾸러에게';
             lbq('lbIdeas').hidden = true;
             lbq('lbSendBtn').textContent = '💌 답장 보내기';
             lbSecs('lbWrite');
@@ -232,9 +254,9 @@
 <rect x="4" y="4" width="272" height="10" rx="5" fill="${p.ac}" opacity=".55"/>
 ${rules}
 <text x="246" y="54" font-size="30" text-anchor="middle" font-family="${EF}">${x.sticker}</text>
-<text x="24" y="60" font-size="14" fill="${p.ac}" font-family="${F}" font-weight="bold">${x.reply ? '편지를 보낸 말랑이에게' : '어딘가의 말랑이에게'}</text>
+<text x="24" y="60" font-size="14" fill="${p.ac}" font-family="${F}" font-weight="bold">${x.reply ? '편지를 보낸 다꾸러에게' : '어딘가의 다꾸러에게'}</text>
 ${lines.map((l, i) => `<text x="26" y="${top + i * gap}" font-size="15" fill="#5a3d4a" font-family="${F}">${lbEsc(l)}</text>`).join('')}
-<text x="256" y="336" font-size="12" text-anchor="end" fill="#9a7a88" font-family="${F}">— 익명의 말랑이가 · ${lbEsc(lbWhen(x.at))}</text>
+<text x="256" y="336" font-size="12" text-anchor="end" fill="#9a7a88" font-family="${F}">— 익명의 다꾸러가 · ${lbEsc(lbWhen(x.at))}</text>
 </svg>`;
         }
         function lbStick() {
@@ -247,7 +269,7 @@ ${lines.map((l, i) => `<text x="26" y="${top + i * gap}" font-size="15" fill="#5
 
         function openLetterBox() {
             if (!LB_API_URL) { comingSoon('💌 익명 편지함'); return; }
-            if (!lbLogged()) { showMsg('💌 익명 편지함은 구글 로그인을 해야 쓸 수 있어요.<br><span style="font-size:12px;color:#777;">편지를 주고받으려면 진짜 말랑이인지 확인이 필요해요.<br>(이메일이나 이름은 보내지 않아요)</span>'); return; }
+            if (!lbLogged()) { showMsg('💌 익명 편지함은 구글 로그인을 해야 쓸 수 있어요.<br><span style="font-size:12px;color:#777;">편지를 주고받으려면 진짜 다꾸러인지 확인이 필요해요.<br>(이메일이나 이름은 보내지 않아요)</span>'); return; }
             if (typeof closeModal === 'function') closeModal('serviceModal');
             lbBuild();
             lbq('lbRoom').classList.add('show');
