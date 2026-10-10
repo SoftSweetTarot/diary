@@ -1,24 +1,24 @@
 /* 말랑달콤 다이어리 - js/doll-render.js
    👧 인형 그리기 엔진 (인형방 · 일기 페이지에 붙인 인형 공용)
    - 인형은 이미지가 아니라 '설정값(인형 데이터)'으로 저장되고, 보여줄 때마다 이 파일이 SVG 그림으로 그려요.
-       예) {"v":1,"gender":"girl","eyes":"smile","hairBack":"twin", ..., "layers":[직접 그린 조각들], "stats":{...}}
-   - 쉬움 버전 : 정해진 부품을 고르고 슬라이더로 조절 (eyes, hairBack, top ... )
-   - 어려움 버전 : 펜·붓으로 직접 그린 조각(layers) — 점 좌표로 저장
+       예) {"v":2,"skin":"#fdead9","eyes":"basic","hairBack":"long", ..., "layers":[직접 그린 조각들], "stats":{...}}
+   - 바탕 몸은 js/doll-art.js 의 그림(853 × 1844 칸)을 부위별로 색만 바꿔 그리고,
+     머리·옷·신발·소품은 DOLL_FIT 기준선에 맞춰 이 파일이 그려요.
+   - 어려움 버전 : 펜·붓으로 직접 그린 조각(layers) — 300 × 470 칸 점 좌표로 저장
    - 다른 사람이 만든 인형 파일도 sanitizeDoll()로 검사한 뒤에만 그려요 (정해진 값만 통과)
-   ※ 파일 불러오는 순서: … → pattern-maker → doll-render → doll-room → service */
+   ※ 파일 불러오는 순서: … → pattern-maker → doll-art → doll-render → doll-store → doll-room → service */
 
         const DOLL_W = 300, DOLL_H = 470, DOLL_CX = 150;
         const DOLL_MAX_JSON = Infinity;        // 인형 하나 용량 제한 없음
         const DOLL_MAX_LAYERS = 400, DOLL_MAX_PTS = 800;
+        const DOLL_ART_K = DOLL_H / 1844, DOLL_ART_X = (DOLL_W - 853 * DOLL_ART_K) / 2;   // 바탕 그림 → 300 × 470 칸
 
-        /* ---------- 처음 모습 : 마네킹 (눈·코·입·머리·옷 없음) ---------- */
+        /* ---------- 처음 모습 : 맨몸 인형 (머리·옷 없음) ---------- */
         const DOLL_MANNEQUIN = {
-            v: 1, name: '', by: '', gender: 'girl',
-            skin: '#efe4de', face: 'round', head: 1, body: 'normal', height: 0.5,
-            eyes: 'none', eyeColor: '#7a4b3a', eyeSize: 1, eyeGap: 1, brows: 'none', nose: 'none', mouth: 'none',
-            blushStyle: 'oval', blush: '#ff8fa3', blushA: 0, lip: '#ff5c7a', lipA: 0,
-            shadow: '#c9a7ff', shadowA: 0, lashes: false, freckles: false,
-            hairBack: 'none', hairFront: 'none', hairColor: '#7a4b3a',
+            v: 2, name: '', by: '',
+            skin: '#fdead9', eyes: 'basic', eyeColor: '#8c564c', brows: 'basic', mouth: 'cat',
+            blush: '#ff8fa3', blushA: 0, lip: '#ff5c7a', lipA: 0, shadow: '#c9a7ff', shadowA: 0, lashes: false, freckles: false,
+            hairBack: 'none', hairFront: 'none', hairColor: '#7a4b3a', inner: '#fdbed1',
             top: 'none', bottom: 'none', dress: 'none', shoes: 'none',
             acc: { bow: false, headband: false, crown: false, glasses: false, beret: false, flower: false, tie: false },
             accColor: '#ff6b8f', bg: 'dots', flip: false,
@@ -33,15 +33,14 @@
         };
 
         const DOLL_ENUMS = {
-            gender: ['girl', 'boy'], face: ['round', 'oval', 'slim', 'chubby'], body: ['slim', 'normal', 'chubby'],
-            eyes: ['none', 'sparkle', 'smile', 'cat', 'sleepy', 'heart'], brows: ['none', 'arc', 'flat', 'worried', 'strong'],
-            nose: ['none', 'dot', 'line'], mouth: ['none', 'smile', 'open', 'cat', 'o', 'pout'], blushStyle: ['oval', 'lines', 'heart'],
+            eyes: ['basic', 'sparkle', 'smile', 'wink', 'sleepy', 'heart'], brows: ['basic', 'worried', 'strong', 'none'],
+            mouth: ['cat', 'smile', 'open', 'o', 'pout'],
             hairBack: ['none', 'long', 'bob', 'twin', 'pony', 'bun', 'short'], hairFront: ['none', 'blunt', 'wispy', 'side', 'part', 'up', 'spiky'],
             top: ['none', 'tee', 'blouse', 'shirt', 'hoodie', 'cardigan'], bottom: ['none', 'skirt', 'suspender', 'pants'],
             dress: ['none', 'aline', 'princess', 'hanbok'], shoes: ['none', 'mary', 'sneaker', 'boots'], bg: ['dots', 'sky', 'check', 'room', 'none']
         };
-        const DOLL_COLORS = ['skin', 'eyeColor', 'blush', 'lip', 'shadow', 'hairColor', 'accColor'];
-        const DOLL_NUMS = { head: [0.9, 1.1], height: [0, 1], eyeSize: [0.8, 1.25], eyeGap: [0.85, 1.15], blushA: [0, 1], lipA: [0, 1], shadowA: [0, 0.8] };
+        const DOLL_COLORS = ['skin', 'eyeColor', 'blush', 'lip', 'shadow', 'hairColor', 'accColor', 'inner'];
+        const DOLL_NUMS = { blushA: [0, 1], lipA: [0, 1], shadowA: [0, 0.8] };
         const DOLL_BOOLS = ['lashes', 'freckles', 'flip'];
         const DOLL_ACCS = ['bow', 'headband', 'crown', 'glasses', 'beret', 'flower', 'tie'];
         const DOLL_PATS = ['none', 'diag', 'stripe', 'dot', 'check', 'heart', 'flower', 'star'];
@@ -119,25 +118,70 @@
         function dMix(a, b, t) { const A = dRgb(a), B = dRgb(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
         const dDark = (c, t = 0.35) => dMix(c, '#4a2f35', t);
         const dLight = (c, t = 0.4) => dMix(c, '#ffffff', t);
-
-        function dollGeo(D) {
-            const boy = D.gender === 'boy';
-            const R = 72 * D.head, cy = 46 + R;
-            const ry = { round: R * 0.95, oval: R * 1.02, slim: R * 0.98, chubby: R * 0.9 }[D.face];
-            const chin = cy + ry;
-            const b = { slim: 0.88, normal: 1, chubby: 1.16 }[D.body];
-            const sy = chin + 12;
-            const torso = 56 + D.height * 14 + (boy ? 4 : 0);
-            const wy = sy + torso, hipY = wy + 16;
-            const legLen = 62 + D.height * 74 + (boy ? 4 : 0);
-            const footY = hipY + legLen;
-            const sw = 32 * b * (boy ? 1.12 : 1), ww = 24 * b * (boy ? 1.08 : 1), hw = 31 * b * (boy ? 0.92 : 1);
-            return { R, cy, ry, chin, b, sy, torso, wy, hipY, legLen, footY, sw, ww, hw,
-                legX: hw * 0.5, legW: 15 * b * (boy ? 1.06 : 1), armW: 13.5 * b * (boy ? 1.08 : 1), armLen: torso + 16 + D.height * 10 };
+        function dHsl(hex) {
+            const [r, g, b] = dRgb(hex).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+            let h = 0, s = 0; const l = (mx + mn) / 2;
+            if (mx !== mn) {
+                const d = mx - mn; s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+                h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6;
+            }
+            return [h, s, l];
+        }
+        function dHex([h, s, l]) {
+            const f = n => { const k = (n + h * 12) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0'); };
+            return '#' + f(0) + f(8) + f(4);
+        }
+        /* 바탕 그림 색 바꾸기 : base 색이 to 색이 되도록 색상·채도·밝기를 같이 옮김 */
+        function dRecolor(c, base, to) {
+            if (base === to) return c;
+            const [h, s, l] = dHsl(c), [hb, sb, lb] = dHsl(base), [ht, st, lt] = dHsl(to);
+            const nl = lt >= lb ? l + (1 - l) * (lt - lb) / Math.max(0.01, 1 - lb) : l * lt / Math.max(0.01, lb);
+            if (s < 0.08) return dHex([h, s, Math.max(0, Math.min(1, nl))]);
+            return dHex([(h + ht - hb + 1) % 1, Math.max(0, Math.min(1, s * st / Math.max(0.05, sb))), Math.max(0, Math.min(1, nl))]);
+        }
+        /* 피부색 : 채널마다 같은 비율로 (선·그림자까지 자연스럽게 따라옴) */
+        function dTone(c, to) {
+            if (to === DOLL_MANNEQUIN.skin) return c;
+            const A = dRgb(c), B = dRgb(DOLL_MANNEQUIN.skin), T = dRgb(to);
+            return '#' + A.map((v, i) => Math.max(0, Math.min(255, Math.round(v * T[i] / B[i]))).toString(16).padStart(2, '0')).join('');
         }
 
-        function dollPatternDef(id, c) {
-            const s = Math.round(7 + 8 * c.patSize), h = s / 2, p = c.patColor, base = c.color || c.fill;
+        /* 기준선 읽기 (DOLL_FIT) */
+        function dFitRow(rows, y) {
+            if (y <= rows[0][0]) return [rows[0][1], rows[0][2]];
+            for (let i = 1; i < rows.length; i++) if (rows[i][0] >= y) {
+                const a = rows[i - 1], b = rows[i], t = (y - a[0]) / (b[0] - a[0]);
+                return [a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+            }
+            const z = rows[rows.length - 1]; return [z[1], z[2]];
+        }
+        const dTorso = y => dFitRow(DOLL_FIT.torso, y);
+        const dLeg = (s, y) => dFitRow(s < 0 ? DOLL_FIT.legL : DOLL_FIT.legR, y);       // [왼쪽 끝, 오른쪽 끝]
+        function dArm(s, t) {
+            const rows = (s < 0 ? DOLL_FIT.armL : DOLL_FIT.armR).rows;
+            let a = rows[0], b = rows[rows.length - 1];
+            for (let i = 1; i < rows.length; i++) if (rows[i][0] >= t) { a = rows[i - 1]; b = rows[i]; break; }
+            const k = b[0] === a[0] ? 0 : Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0])));
+            const P = j => a[j] + (b[j] - a[j]) * k, p = [P(1), P(2)], q = [P(3), P(4)];
+            return Math.abs(p[0] - 426) < Math.abs(q[0] - 426) ? { i: p, o: q } : { i: q, o: p };
+        }
+        const dN = v => Math.round(v * 10) / 10;
+        const dPt = p => `${dN(p[0])} ${dN(p[1])}`;
+        const dMx = p => [852 - p[0], p[1]];
+        /* 점들을 부드럽게 잇는 곡선 (지금 위치가 pts[0]) */
+        function dCurveTo(pts) {
+            let d = '';
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+                d += ` C${dPt([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6])} ${dPt([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6])} ${dPt(p2)}`;
+            }
+            return d;
+        }
+        const dLine = pts => pts.map(p => ' L' + dPt(p)).join('');
+        function dOff(p, from, e) { const dx = p[0] - from[0], dy = p[1] - from[1], n = Math.hypot(dx, dy) || 1; return [p[0] + dx / n * e, p[1] + dy / n * e]; }
+
+        function dollPatternDef(id, c, k = 1) {
+            const s = Math.round((7 + 8 * c.patSize) * k), h = s / 2, p = c.patColor, base = c.color || c.fill;
             let inner = `<rect width="${s}" height="${s}" fill="${base}"/>`, rot = '';
             switch (c.pat) {
                 case 'diag': inner += `<rect width="${h}" height="${s}" fill="${p}"/>`; rot = ' patternTransform="rotate(45)"'; break;
@@ -151,294 +195,316 @@
             return `<pattern id="${id}" width="${s}" height="${s}" patternUnits="userSpaceOnUse"${rot}>${inner}</pattern>`;
         }
 
-        /* 인형 그림 하나 만들기 : 그리는 동안만 쓰는 도우미들을 한데 묶음 */
-        function dollParts(D, pfx) {
-            const CX = DOLL_CX, g = dollGeo(D);
-            const fillOf = part => D.cloth[part].pat === 'none' ? D.cloth[part].color : `url(#${pfx}-pat-${part})`;
-            const lineOf = part => dDark(D.cloth[part].color, 0.38);
-            const clothSt = part => `fill="${fillOf(part)}" stroke="${lineOf(part)}" stroke-width="2.2" stroke-linejoin="round"`;
-            const armPts = s => { const ax = CX + s * (g.sw - 3), ay = g.sy + 8; return { ax, ay, hx: CX + s * (g.sw + 15), hy: ay + g.armLen }; };
+        /* 인형 그림 하나 만들기 : 그리는 동안만 쓰는 도우미들을 한데 묶음 (좌표는 바탕 그림 853 × 1844 칸) */
+        function dollParts(D, pfx, defs) {
+            const C = 426;
+            const cl = part => D.cloth[part];
+            const fillOf = part => cl(part).pat === 'none' ? cl(part).color : `url(#${pfx}-pat-${part})`;
+            const lineOf = c => dDark(c, 0.45);
+            const piece = (d, fill, color, extra = '') => `<path d="${d}" fill="${fill}" stroke="${lineOf(color)}" stroke-width="5" stroke-linejoin="round"${extra}/><path d="${d}" fill="url(#${pfx}-shade)"/>`;
+            const clothPiece = (d, part) => piece(d, fillOf(part), cl(part).color);
+            const both = f => f(-1) + f(1);
 
-            function hairBack() {
-                if (D.hairBack === 'none') return '';
-                const { R, cy, sy } = g, H = D.hairColor, L = dDark(H, 0.3);
-                const st = `fill="${H}" stroke="${L}" stroke-width="2.2" stroke-linejoin="round"`;
-                const cap = `<ellipse cx="${CX}" cy="${cy - 6}" rx="${R + 7}" ry="${R + 5}" ${st}/>`;
-                const x0 = CX - R - 7, x1 = CX + R + 7;
-                switch (D.hairBack) {
-                    case 'long': return `<path ${st} d="M${x0} ${cy - 6} C${x0 - 8} ${cy + 60} ${x0 + 2} ${sy + 66} ${x0 + 12} ${sy + 96} Q${x0 + 26} ${sy + 106} ${x0 + 36} ${sy + 94} L${x1 - 36} ${sy + 94} Q${x1 - 26} ${sy + 106} ${x1 - 12} ${sy + 96} C${x1 - 2} ${sy + 66} ${x1 + 8} ${cy + 60} ${x1} ${cy - 6}Z"/>` + cap;
-                    case 'bob': return `<path ${st} d="M${x0 - 2} ${cy - 6} C${x0 - 6} ${cy + 40} ${x0 + 2} ${cy + R * 0.86} ${x0 + 18} ${cy + R * 0.92} L${x1 - 18} ${cy + R * 0.92} C${x1 - 2} ${cy + R * 0.86} ${x1 + 6} ${cy + 40} ${x1 + 2} ${cy - 6}Z"/>` + cap;
-                    case 'twin': {
-                        let out = '';
-                        [-1, 1].forEach(s => {
-                            const tx = CX + s * (R - 2), ty = cy - 30;
-                            out += `<path ${st} d="M${tx} ${ty} C${tx + s * 44} ${ty + 6} ${tx + s * 50} ${sy + 40} ${tx + s * 26} ${sy + 92} C${tx + s * 30} ${sy + 50} ${tx + s * 14} ${ty + 46} ${tx - s * 2} ${ty + 22}Z"/>`;
-                            out += `<circle cx="${tx + s * 6}" cy="${ty + 6}" r="7" fill="${D.accColor}" stroke="${dDark(D.accColor)}" stroke-width="2"/>`;
-                        });
-                        return out + cap;
-                    }
-                    case 'pony': return `<path ${st} d="M${CX + R * 0.45} ${cy - R * 0.85} C${CX + R + 58} ${cy - R * 0.7} ${CX + R + 36} ${sy + 34} ${CX + R - 2} ${sy + 66} C${CX + R + 10} ${sy + 14} ${CX + R + 10} ${cy} ${CX + R * 0.25} ${cy - R * 0.55}Z"/>` + cap +
-                        `<circle cx="${CX + R * 0.62}" cy="${cy - R * 0.82}" r="7" fill="${D.accColor}" stroke="${dDark(D.accColor)}" stroke-width="2"/>`;
-                    case 'bun': return [-1, 1].map(s => `<circle cx="${CX + s * R * 0.62}" cy="${cy - R * 0.8}" r="${R * 0.36}" ${st}/>`).join('') + cap;
-                    default: return cap;
-                }
+            /* ---------- 바탕 몸 (doll-art.js) ---------- */
+            function art(name, map, clip) {
+                const L = DOLL_ART[name];
+                if (!L) return '';
+                const cid = `${pfx}-c-${name}`;
+                defs.push(`<clipPath id="${cid}"><path d="${L[0][1]}"/></clipPath>`);
+                const out = L.map(([c, d, f]) => {
+                    const col = map('#' + c);
+                    if (f === 2) return `<path d="${d}" fill="${col}" fill-rule="evenodd"/>`;
+                    if (f === 1) return `<path d="${d}" fill="${col}" fill-rule="evenodd" filter="url(#${pfx}-soft)" clip-path="url(#${cid})"/>`;
+                    return `<path d="${d}" fill="${col}" stroke="${col}" stroke-width="1" stroke-linejoin="round" fill-rule="evenodd"/>`;
+                }).join('');
+                return clip ? `<g clip-path="url(#${clip})">${out}</g>` : out;
+            }
+            const skin = c => dTone(c, D.skin);
+            const skinArt = name => art(name, skin);
+            const inner = name => art(name, c => dRecolor(c, DOLL_MANNEQUIN.inner, D.inner));
+            function innerWear() {
+                const ln = dDark(D.inner, 0.3);
+                return inner('bottom') + inner('top') +
+                    `<path d="M300 990 Q426 1000 552 990" fill="none" stroke="${ln}" stroke-width="3" opacity=".7"/>` +
+                    `<path d="M426 764 C410 750 396 754 398 766 C400 778 414 776 426 768 C438 776 452 778 454 766 C456 754 442 750 426 764Z" fill="${dLight(D.inner, 0.2)}" stroke="${ln}" stroke-width="2.5"/>` +
+                    `<path d="M426 768 Q420 780 414 792 M426 768 Q432 780 438 792" fill="none" stroke="${ln}" stroke-width="3" stroke-linecap="round"/>` +
+                    `<path d="M420 930 Q426 946 432 930" fill="none" stroke="${dTone('#d9a593', D.skin)}" stroke-width="3" stroke-linecap="round"/>`;
             }
 
+            /* ---------- 얼굴 ---------- */
+            const EYE_INK = '#3d1911';
+            const EYE_SKIN = ['#f6c7b2', '#d08a81', '#fde1ce', '#fdead9'];
+            const eyeArt = clip => art('eyes', c => EYE_SKIN.includes(c) ? dTone(c, D.skin) : dRecolor(c, DOLL_MANNEQUIN.eyeColor, D.eyeColor), clip);
+            const clipRect = (id, x, y, w, h) => { defs.push(`<clipPath id="${pfx}-${id}"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath>`); return `${pfx}-${id}`; };
+            const arcEye = s => { const P = p => s < 0 ? p : dMx(p); return `<path d="M${dPt(P([262, 488]))} Q${dPt(P([314, 430]))} ${dPt(P([370, 482]))}" fill="none" stroke="${EYE_INK}" stroke-width="10" stroke-linecap="round"/><path d="M${dPt(P([264, 486]))} l${s * 18} -8" stroke="${EYE_INK}" stroke-width="7" stroke-linecap="round"/>`; };
+            function eyes() {
+                const star = (x, y, r) => `<path d="M${x} ${y - r} Q${x + r * 0.18} ${y - r * 0.18} ${x + r} ${y} Q${x + r * 0.18} ${y + r * 0.18} ${x} ${y + r} Q${x - r * 0.18} ${y + r * 0.18} ${x - r} ${y} Q${x - r * 0.18} ${y - r * 0.18} ${x} ${y - r}Z" fill="#fff"/>`;
+                const heart = (x, y, k) => `<path transform="translate(${x} ${y}) scale(${k})" d="M0 8 C-14 -2 -11 -14 0 -7 C11 -14 14 -2 0 8Z" fill="#ff5c8a" stroke="#fff" stroke-width=".6"/>`;
+                switch (D.eyes) {
+                    case 'sparkle': return eyeArt() + star(302, 452, 20) + star(526, 452, 20) + `<circle cx="340" cy="500" r="6" fill="#fff"/><circle cx="564" cy="500" r="6" fill="#fff"/>`;
+                    case 'heart': return eyeArt() + heart(322, 482, 2.4) + heart(530, 482, 2.4);
+                    case 'smile': return arcEye(-1) + arcEye(1);
+                    case 'wink': return eyeArt(clipRect('wk', 426, 380, 300, 200)) + arcEye(-1);
+                    case 'sleepy': return eyeArt(clipRect('sl', 200, 462, 460, 120)) +
+                        both(s => { const P = p => s < 0 ? p : dMx(p); return `<path d="M${dPt(P([254, 466]))} Q${dPt(P([314, 452]))} ${dPt(P([376, 464]))}" fill="none" stroke="${EYE_INK}" stroke-width="10" stroke-linecap="round"/>`; });
+                    default: return eyeArt();
+                }
+            }
+            function brows() {
+                const col = D.hairFront !== 'none' || D.hairBack !== 'none' ? dDark(D.hairColor, 0.25) : '#6e3f36';
+                const br = (d, w) => both(s => `<path d="${s < 0 ? d : d.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, x, y) => `${852 - x} ${y}`)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`);
+                switch (D.brows) {
+                    case 'none': return '';
+                    case 'worried': return br('M288 370 Q322 360 354 342', 9);
+                    case 'strong': return br('M284 350 Q322 348 358 370', 12);
+                    default: return art('brows', c => dRecolor(c, '#6e3f36', col));
+                }
+            }
+            function mouth() {
+                const lipMix = c => D.lipA > 0 ? dMix(c, D.lip, D.lipA * 0.8) : c;
+                switch (D.mouth) {
+                    case 'smile': return `<path d="M404 546 Q426 572 448 546" fill="none" stroke="${lipMix('#9c4a48')}" stroke-width="6" stroke-linecap="round"/>`;
+                    case 'open': return `<path d="M400 543 Q426 550 452 543 Q448 584 426 586 Q404 584 400 543Z" fill="${lipMix('#c84b5c')}" stroke="#9c4a48" stroke-width="4" stroke-linejoin="round"/><path d="M410 570 Q426 560 442 570 Q436 583 426 584 Q416 583 410 570Z" fill="#ff9aae"/>`;
+                    case 'o': return `<ellipse cx="426" cy="558" rx="11" ry="14" fill="${lipMix('#c84b5c')}" stroke="#9c4a48" stroke-width="4"/>`;
+                    case 'pout': return `<path d="M410 553 Q418 541 426 550 Q434 541 442 553 Q426 568 410 553Z" fill="${lipMix('#e8667e')}" stroke="#b44a5c" stroke-width="3" stroke-linejoin="round"/>`;
+                    default: return (D.lipA > 0 ? `<ellipse cx="426" cy="555" rx="15" ry="6" fill="${D.lip}" opacity="${dN(D.lipA * 0.7)}" filter="url(#${pfx}-soft)"/>` : '') + art('mouth', c => dTone(dMix(c, '#9c4a48', 0.35), D.skin));
+                }
+            }
+            function makeup() {
+                let o = '';
+                if (D.shadowA > 0) o += both(s => { const P = p => s < 0 ? p : dMx(p); return `<path d="M${dPt(P([256, 470]))} Q${dPt(P([314, 386]))} ${dPt(P([378, 462]))} Q${dPt(P([316, 418]))} ${dPt(P([256, 470]))}Z" fill="${D.shadow}" opacity="${dN(D.shadowA)}" filter="url(#${pfx}-soft)"/>`; });
+                if (D.blushA > 0) o += `<g fill="${D.blush}" opacity="${dN(D.blushA * 0.75)}" filter="url(#${pfx}-blush)"><ellipse cx="304" cy="548" rx="50" ry="25"/><ellipse cx="548" cy="548" rx="50" ry="25"/></g>`;
+                if (D.freckles) o += `<g fill="${dTone('#c98d72', D.skin)}" opacity=".7">${both(s => [[286, 520], [306, 532], [324, 520], [298, 546]].map(p => { const q = s < 0 ? p : dMx(p); return `<circle cx="${q[0]}" cy="${q[1]}" r="4"/>`; }).join(''))}</g>`;
+                if (D.lashes && !['smile'].includes(D.eyes)) o += both(s => { if (D.eyes === 'wink' && s < 0) return ''; const P = p => s < 0 ? p : dMx(p); return `<path d="M${dPt(P([262, 452]))} l${s * 22} -16 M${dPt(P([258, 468]))} l${s * 24} -5 M${dPt(P([270, 440]))} l${s * 14} -20" fill="none" stroke="${EYE_INK}" stroke-width="6" stroke-linecap="round"/>`; });
+                return o;
+            }
+
+            /* ---------- 머리카락 ---------- */
+            const HC = D.hairColor, HL = dDark(HC, 0.5), HD = dDark(HC, 0.22);
+            defs.push(`<linearGradient id="${pfx}-hgF" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="440"><stop offset="0" stop-color="${dLight(HC, 0.22)}"/><stop offset=".55" stop-color="${HC}"/><stop offset="1" stop-color="${HD}"/></linearGradient>`);
+            defs.push(`<linearGradient id="${pfx}-hgB" gradientUnits="userSpaceOnUse" x1="0" y1="150" x2="0" y2="1060"><stop offset="0" stop-color="${HC}"/><stop offset="1" stop-color="${HD}"/></linearGradient>`);
+            const hairSt = g => `fill="url(#${pfx}-${g})" stroke="${HL}" stroke-width="5" stroke-linejoin="round"`;
+            const BANGS = {
+                blunt: [[632, 382], [606, 350], [572, 338], [548, 346], [516, 336], [484, 344], [452, 334], [426, 342], [400, 334], [368, 344], [336, 336], [304, 346], [280, 338], [246, 350], [220, 382]],
+                wispy: [[632, 382], [612, 330], [590, 362], [560, 272], [530, 356], [494, 266], [456, 352], [426, 256], [396, 352], [358, 266], [322, 356], [292, 272], [262, 362], [240, 330], [220, 382]],
+                side: [[632, 384], [614, 376], [590, 372], [560, 330], [530, 350], [490, 300], [452, 318], [410, 268], [372, 286], [330, 240], [296, 262], [262, 226], [240, 300], [220, 382]],
+                part: [[632, 384], [616, 356], [588, 318], [548, 262], [500, 216], [446, 194], [426, 208], [406, 194], [352, 216], [304, 262], [264, 318], [236, 356], [220, 384]],
+                up: [[632, 384], [620, 320], [586, 254], [526, 208], [460, 192], [426, 194], [392, 192], [326, 208], [266, 254], [232, 320], [220, 384]],
+                spiky: [[632, 382], [606, 330], [584, 372], [554, 300], [520, 368], [486, 290], [456, 372], [426, 286], [396, 372], [366, 290], [332, 368], [298, 300], [268, 372], [246, 330], [220, 382]]
+            };
             function hairFront() {
                 if (D.hairFront === 'none') return '';
-                const { R, cy } = g, H = D.hairColor, L = dDark(H, 0.3);
-                const st = `fill="${H}" stroke="${L}" stroke-width="2.2" stroke-linejoin="round"`;
-                const xl = CX - R - 7, xr = CX + R + 7;
-                const top = y => `M${xl} ${y} L${xl} ${cy - 4} A${R + 7} ${R + 10} 0 0 1 ${xr} ${cy - 4} L${xr} ${y}`;
-                let d;
-                switch (D.hairFront) {
-                    case 'blunt': d = `${top(cy + 30)} L${xr - 11} ${cy + 32} L${CX + R - 8} ${cy - 18} Q${CX} ${cy - 24} ${CX - R + 8} ${cy - 18} L${xl + 11} ${cy + 32}Z`; break;
-                    case 'wispy':
-                    case 'spiky': {
-                        const n = D.hairFront === 'spiky' ? 6 : 7, span = (R - 8) * 2, deep = D.hairFront === 'spiky' ? 16 : 6;
-                        let pts = '';
-                        for (let i = 0; i <= n; i++) {
-                            const x = CX + R - 8 - (span / n) * i;
-                            pts += i === 0 ? `L${x} ${cy - 22}` : (D.hairFront === 'spiky'
-                                ? `L${x + span / n / 2} ${cy - 22 + deep} L${x} ${cy - 22}`
-                                : `Q${x + span / n / 2} ${cy - 4 - (i % 2) * 6} ${x} ${cy - 20}`);
-                        }
-                        d = `${top(cy + (D.hairFront === 'spiky' ? 14 : 30))} L${xr - 11} ${cy + 16} ${pts} L${xl + 11} ${cy + 16}Z`; break;
-                    }
-                    case 'side': d = `${top(cy + 30)} L${xr - 11} ${cy + 32} L${CX + R - 6} ${cy - 34} Q${CX + 10} ${cy - 30} ${CX - R + 14} ${cy - 2} L${xl + 11} ${cy + 32}Z`; break;
-                    case 'part': d = `${top(cy + 34)} L${xr - 11} ${cy + 36} Q${CX + R - 14} ${cy - 30} ${CX + 4} ${cy - R + 12} L${CX - 4} ${cy - R + 12} Q${CX - R + 14} ${cy - 30} ${xl + 11} ${cy + 36}Z`; break;
-                    default: d = `${top(cy + 8)} L${xr - 6} ${cy + 8} Q${CX} ${cy - R * 0.96} ${xl + 6} ${cy + 8}Z`;
+                const edge = BANGS[D.hairFront], up = D.hairFront === 'up';
+                const lockLen = up ? 470 : 600;
+                const lockR = [[662, 400], [660, 470], [648, lockLen - 60], [622, lockLen]], lockRi = [[622, lockLen], [630, lockLen - 70], [634, 450], [636, 392]];
+                const lockLi = [[216, 392], [218, 450], [222, lockLen - 70], [230, lockLen]], lockL = [[230, lockLen], [204, lockLen - 60], [192, 470], [190, 400]];
+                let d = `M${dPt(lockL[0])}${dCurveTo(lockL)} C186 200 290 102 426 102 C562 102 666 200 662 400${dCurveTo(lockR)}${dCurveTo(lockRi)} L${dPt(edge[0])}`;
+                d += D.hairFront === 'spiky' ? dLine(edge.slice(1)) : dCurveTo(edge);
+                d += ` L${dPt(lockLi[0])}${dCurveTo(lockLi)}Z`;
+                defs.push(`<clipPath id="${pfx}-hcF"><path d="${d}"/></clipPath>`);
+                const tips = edge.filter((p, i) => i > 0 && i < edge.length - 1 && p[1] > edge[i - 1][1] && p[1] > edge[i + 1][1]);
+                const strands = tips.map(p => `M${dPt([C + (p[0] - C) * 0.55, 170])} Q${dPt([C + (p[0] - C) * 0.9, (p[1] + 170) / 2])} ${dPt([p[0], p[1] - 14])}`).join(' ');
+                return `<path d="${d}" ${hairSt('hgF')}/>` +
+                    `<g clip-path="url(#${pfx}-hcF)"><path d="${strands} M214 420 Q206 500 226 ${lockLen - 20} M638 420 Q646 500 626 ${lockLen - 20}" fill="none" stroke="${HD}" stroke-width="4" stroke-linecap="round" opacity=".55"/>` +
+                    `<path d="M262 236 Q426 150 590 236" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="46 22" opacity=".28"/></g>`;
+            }
+            function hairBack() {
+                if (D.hairBack === 'none') return '';
+                const st = hairSt('hgB');
+                const SHORT = 'M196 470 C188 330 260 112 426 110 C592 112 664 330 656 470 C652 560 624 606 586 618 C520 640 332 640 266 618 C228 606 200 560 196 470Z';
+                const tie = (x, y) => `<circle cx="${x}" cy="${y}" r="22" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="4"/><circle cx="${x - 6}" cy="${y - 7}" r="6" fill="#fff" opacity=".6"/>`;
+                const strand = d => `<path d="${d}" fill="none" stroke="${HD}" stroke-width="4" stroke-linecap="round" opacity=".55"/>`;
+                switch (D.hairBack) {
+                    case 'long': return `<path ${st} d="M184 430 C180 290 252 102 426 100 C600 102 672 290 668 430 C676 560 700 660 704 780 C708 880 728 950 700 1010 C680 1050 640 1030 620 1050 C600 1070 560 1050 540 1060 L312 1060 C292 1050 252 1070 232 1050 C212 1030 172 1050 152 1010 C124 950 144 880 148 780 C152 660 176 560 184 430Z"/>` +
+                        strand('M180 620 C170 760 180 880 160 980 M672 620 C682 760 672 880 692 980 M200 700 C200 820 220 920 210 1030 M652 700 C652 820 632 920 642 1030');
+                    case 'bob': return `<path ${st} d="M184 440 C180 300 252 104 426 102 C600 104 672 300 668 440 C672 540 690 610 662 660 C640 696 590 688 560 664 C500 676 352 676 292 664 C262 688 212 696 190 660 C162 610 180 540 184 440Z"/>` +
+                        strand('M196 520 C192 590 200 640 214 670 M656 520 C660 590 652 640 638 670');
+                    case 'twin': return both(s => {
+                        const P = d => s < 0 ? d : d.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, x, y) => `${852 - x} ${y}`);
+                        return `<path ${st} d="${P('M214 300 C140 320 116 420 136 520 C152 600 116 680 128 760 C138 840 108 900 150 952 C150 900 192 860 188 790 C184 720 216 650 208 570 C200 480 238 400 252 330Z')}"/>` +
+                            strand(P('M188 380 C150 470 168 560 150 660 C140 760 150 840 140 900'));
+                    }) + `<path ${st} d="${SHORT}"/>` + tie(222, 318) + tie(630, 318);
+                    case 'pony': return `<path ${st} d="M560 160 C660 150 760 230 742 360 C730 450 770 540 744 640 C726 720 760 790 720 842 C716 780 690 740 694 680 C700 600 662 520 676 440 C690 340 640 250 560 220Z"/>` +
+                        strand('M640 220 C710 300 700 420 712 520 C722 620 716 700 724 790') + `<path ${st} d="${SHORT}"/>` + tie(584, 196);
+                    case 'bun': return `<circle cx="426" cy="96" r="84" ${st}/>` + strand('M372 84 Q426 30 478 88 Q456 136 410 116') + `<path ${st} d="${SHORT}"/>`;
+                    default: return `<path ${st} d="${SHORT}"/>`;
                 }
-                const shine = ['part', 'up'].includes(D.hairFront) ? '' : `<path d="M${CX - R * 0.55} ${cy - R * 0.62} Q${CX} ${cy - R * 0.9} ${CX + R * 0.55} ${cy - R * 0.62}" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".28"/>`;
-                return `<path ${st} d="${d}"/>${shine}`;
             }
 
-            function facePath() {
-                const { R, cy } = g;
-                switch (D.face) {
-                    case 'oval': return `<ellipse cx="${CX}" cy="${cy}" rx="${R * 0.93}" ry="${R * 1.02}"/>`;
-                    case 'slim': return `<path d="M${CX - R} ${cy - 6} C${CX - R} ${cy - R * 1.06} ${CX + R} ${cy - R * 1.06} ${CX + R} ${cy - 6} C${CX + R} ${cy + R * 0.55} ${CX + 20} ${cy + R * 0.94} ${CX} ${cy + R * 0.98} C${CX - 20} ${cy + R * 0.94} ${CX - R} ${cy + R * 0.55} ${CX - R} ${cy - 6}Z"/>`;
-                    case 'chubby': return `<ellipse cx="${CX}" cy="${cy + 2}" rx="${R * 1.05}" ry="${R * 0.9}"/>`;
-                    default: return `<ellipse cx="${CX}" cy="${cy}" rx="${R}" ry="${R * 0.95}"/>`;
+            /* ---------- 옷 ---------- */
+            const sleeveT = { short: 0.42, puff: 0.36, long: 0.78 };
+            function sleeve(s, kind, fill, color) {
+                if (!sleeveT[kind]) return '';
+                const t1 = sleeveT[kind], N = 12, outer = [], inn = [];
+                for (let k = 0; k <= N; k++) {
+                    const t = t1 * k / N, a = dArm(s, t), e = kind === 'puff' ? 10 + 30 * Math.sin(Math.PI * Math.min(1, k / N * 1.05)) : 9;
+                    outer.push(dOff(a.o, a.i, e));
+                    if (t >= 0.3) inn.unshift(dOff(a.i, a.o, kind === 'puff' ? e * 0.6 : e));
                 }
+                const pit = [s < 0 ? 300 : 552, 872], top = [s < 0 ? 318 : 534, 700], cap = [s < 0 ? 318 : 534, 660], cc = [s < 0 ? 272 : 580, 652];
+                const d = `M${dPt(cap)} Q${dPt(cc)} ${dPt(outer[0])}${dCurveTo(outer)} L${dPt(inn[0])}${dCurveTo(inn)} L${dPt(pit)} L${dPt(top)}Z`;
+                const c1 = dArm(s, t1 - 0.035);
+                const cuff = kind === 'puff'
+                    ? `<path d="M${dPt(dOff(c1.o, c1.i, 12))} L${dPt(dOff(c1.i, c1.o, 8))}" stroke="${lineOf(color)}" stroke-width="4" fill="none"/>` +
+                      [0.3, 0.5, 0.7].map(f => { const a = dArm(s, t1 * 0.84), b = dArm(s, t1 * 0.97); const p = [a.o[0] + (a.i[0] - a.o[0]) * f, a.o[1] + (a.i[1] - a.o[1]) * f], q = [b.o[0] + (b.i[0] - b.o[0]) * f, b.o[1] + (b.i[1] - b.o[1]) * f]; return `<path d="M${dPt(p)} L${dPt(q)}" stroke="${lineOf(color)}" stroke-width="3" opacity=".5"/>`; }).join('')
+                    : `<path d="M${dPt(dOff(c1.o, c1.i, 9))} L${dPt(dOff(c1.i, c1.o, 9))}" stroke="${lineOf(color)}" stroke-width="4" fill="none"/>`;
+                return piece(d, fill, color) + cuff;
             }
-
-            function eye(x, y, s) {
-                if (D.eyes === 'none') return '';
-                const k = D.eyeSize, ec = D.eyeColor, ink = '#3a2622';
-                const e = {
-                    sparkle: `<ellipse rx="11" ry="14" fill="${ec}"/><ellipse cy="3" rx="7" ry="9" fill="#2a1a17" opacity=".5"/><circle cx="-4" cy="-6" r="4.2" fill="#fff"/><circle cx="4" cy="5" r="2" fill="#fff" opacity=".9"/><path d="M-13 -7 Q0 -19 13 -7" stroke="${ink}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`,
-                    smile: `<path d="M-11 3 Q0 -10 11 3" stroke="${ink}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`,
-                    cat: `<path d="M-13 2 Q-2 -14 14 -5 Q4 10 -13 2Z" fill="${ec}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/><ellipse cx="1" cy="-1" rx="3" ry="6" fill="#2a1a17" opacity=".6"/><circle cx="-4" cy="-3" r="2.4" fill="#fff"/>`,
-                    sleepy: `<path d="M-11 0 A11 11 0 0 0 11 0Z" fill="${ec}"/><circle cx="-3" cy="4" r="2.2" fill="#fff"/><path d="M-13 0 L13 0" stroke="${ink}" stroke-width="3.2" stroke-linecap="round"/>`,
-                    heart: `<path d="M0 9 C-14 0 -12 -12 0 -5 C12 -12 14 0 0 9Z" fill="#ff5c8a" stroke="#c2185b" stroke-width="2"/><circle cx="-5" cy="-3" r="2.2" fill="#fff"/>`
-                }[D.eyes];
-                const lashes = D.lashes && ['sparkle', 'cat', 'sleepy'].includes(D.eyes) ? `<path d="M11 -9 L16 -13 M13 -3 L18 -5" stroke="${ink}" stroke-width="2.2" stroke-linecap="round"/>` : '';
-                const shadow = D.shadowA > 0 ? `<ellipse cy="-9" rx="16" ry="8" fill="${D.shadow}" opacity="${D.shadowA}"/>` : '';
-                return `<g transform="translate(${x} ${y}) scale(${s * k} ${k})">${shadow}${e}${lashes}</g>`;
+            /* 몸판 : 목 → 어깨 → 옆구리 → 밑단 */
+            function bodice(hem, sleeveless, neck) {
+                const L = [];
+                for (let y = 900; y < hem; y += 25) L.push([dTorso(y)[0] - 8, y]);
+                L.push([dTorso(hem)[0] - 8, hem]);
+                const sh = sleeveless ? [[330, 672], [318, 700], [306, 790], [300, 880]] : [[296, 690], [290, 730], [296, 810], [300, 880]];
+                const left = sh.concat(L), right = left.map(dMx).reverse();
+                const nL = [386, 644], nR = [466, 644];
+                const nk = neck === 'v' ? ` L426 760 L${dPt(nL)}` : neck === 'square' ? ` L460 700 L392 700 L${dPt(nL)}` : ` Q426 ${neck === 'deep' ? 730 : 704} ${dPt(nL)}`;
+                return `M${dPt(nL)} Q${dPt([336, 644])} ${dPt(left[0])}${dCurveTo(left)} Q426 ${hem + 16} ${dPt(right[0])}${dCurveTo(right)} Q${dPt([516, 644])} ${dPt(nR)}${nk}Z`;
             }
-
-            function brow(x, y, s) {
-                if (D.brows === 'none') return '';
-                const d = { arc: 'M-10 2 Q0 -5 10 2', flat: 'M-10 0 L10 -1', worried: 'M-10 -4 Q0 -2 10 2', strong: 'M-10 2 Q0 -2 10 -4' }[D.brows];
-                return `<path transform="translate(${x} ${y}) scale(${-s} 1)" d="${d}" stroke="${dDark(D.hairColor, 0.25)}" stroke-width="3" stroke-linecap="round" fill="none"/>`;
-            }
-
-            function head() {
-                const { R, cy } = g, skin = D.skin, line = dDark(skin, 0.35);
-                return [-1, 1].map(s => `<ellipse cx="${CX + s * (R - 2)}" cy="${cy + 14}" rx="10" ry="14" fill="${skin}" stroke="${line}" stroke-width="2"/>`).join('')
-                    + `<g fill="${skin}" stroke="${line}" stroke-width="2.2">${facePath()}</g>`;
-            }
-
-            function faceFeatures() {
-                const { cy } = g, skin = D.skin, ex = 30 * D.eyeGap, ey = cy + 16;
+            function skirt(part, len, o) {
+                const wy = o.wy || 975, hem = (o.base || 1060) + len * (o.range || 360), fl = o.flare || 0.42;
+                const [wl, wr] = dTorso(wy), l = wl - 6, r = wr + 6, hl = l - (hem - wy) * fl, hr = r + (hem - wy) * fl;
+                const n = 9, step = (hr - hl) / n;
+                let wave = '';
+                for (let i = 1; i <= n; i++) wave += ` Q${dN(hr - step * (i - 0.5))} ${dN(hem + 16)} ${dN(hr - step * i)} ${dN(hem)}`;
+                const d = `M${dN(l)} ${wy} L${dN(r)} ${wy} Q${dN(r + (hr - r) * 0.3 + 12)} ${dN((wy + hem) / 2)} ${dN(hr)} ${dN(hem)}${wave} Q${dN(l + (hl - l) * 0.3 - 12)} ${dN((wy + hem) / 2)} ${dN(l)} ${wy}Z`;
+                const fill = o.fill || fillOf(part), color = o.color || cl(part).color;
                 let out = '';
-                if (D.blushA > 0) [-1, 1].forEach(s => {
-                    const bx = CX + s * (ex + 16), by = cy + 38;
-                    if (D.blushStyle === 'oval') out += `<ellipse cx="${bx}" cy="${by}" rx="13" ry="7" fill="${D.blush}" opacity="${D.blushA}"/>`;
-                    if (D.blushStyle === 'lines') out += `<path d="M${bx - 8} ${by + 4} l4 -8 M${bx - 1} ${by + 4} l4 -8 M${bx + 6} ${by + 4} l4 -8" stroke="${D.blush}" stroke-width="2.4" stroke-linecap="round" opacity="${Math.min(1, D.blushA + 0.3)}"/>`;
-                    if (D.blushStyle === 'heart') out += `<path transform="translate(${bx} ${by})" d="M0 6 C-9 0 -8 -8 0 -3 C8 -8 9 0 0 6Z" fill="${D.blush}" opacity="${D.blushA}"/>`;
-                });
-                if (D.freckles) [-1, 1].forEach(s => { const bx = CX + s * (ex + 6); out += `<g fill="${dDark(skin, 0.4)}" opacity=".6"><circle cx="${bx - 5}" cy="${cy + 32}" r="1.4"/><circle cx="${bx + 2}" cy="${cy + 29}" r="1.4"/><circle cx="${bx + 5}" cy="${cy + 35}" r="1.4"/></g>`; });
-                out += eye(CX - ex, ey, -1) + eye(CX + ex, ey, 1);
-                out += brow(CX - ex, cy - 6, -1) + brow(CX + ex, cy - 6, 1);
-                if (D.nose === 'dot') out += `<ellipse cx="${CX}" cy="${cy + 32}" rx="2.6" ry="2" fill="${dDark(skin, 0.3)}"/>`;
-                if (D.nose === 'line') out += `<path d="M${CX} ${cy + 27} Q${CX + 4} ${cy + 32} ${CX - 1} ${cy + 35}" stroke="${dDark(skin, 0.35)}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
-                if (D.mouth !== 'none') {
-                    const mc = dMix('#9b4a46', D.lip, D.lipA), mf = dMix('#c2405a', D.lip, D.lipA);
-                    const m = {
-                        smile: `<path d="M-9 -2 Q0 7 9 -2" stroke="${mc}" stroke-width="3" fill="none" stroke-linecap="round"/>`,
-                        open: `<path d="M-10 -3 Q0 -3 10 -3 Q8 10 0 11 Q-8 10 -10 -3Z" fill="${mf}" stroke="${mc}" stroke-width="2" stroke-linejoin="round"/><path d="M-5 6 Q0 3 5 6 Q3 10 0 10 Q-3 10 -5 6Z" fill="#ff9aae"/>`,
-                        cat: `<path d="M-10 -1 Q-5 5 0 0 Q5 5 10 -1" stroke="${mc}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
-                        o: `<ellipse rx="4" ry="5" fill="${mf}" stroke="${mc}" stroke-width="2"/>`,
-                        pout: `<path d="M-6 0 Q-3 -4 0 -1 Q3 -4 6 0 Q3 5 0 5 Q-3 5 -6 0Z" fill="${dMix('#e86a7f', D.lip, D.lipA)}" stroke="${mc}" stroke-width="1.6"/>`
-                    }[D.mouth];
-                    out += `<g transform="translate(${CX} ${cy + 45})">${m}</g>`;
+                if (o.petticoat) {
+                    const ph = hem + 26, pl = l - (ph - wy) * fl, pr = r + (ph - wy) * fl, ps = (pr - pl) / 12;
+                    let pw = ''; for (let i = 1; i <= 12; i++) pw += ` Q${dN(pr - ps * (i - 0.5))} ${dN(ph + 18)} ${dN(pr - ps * i)} ${dN(ph)}`;
+                    out += piece(`M${dN(l)} ${wy + 40} L${dN(r)} ${wy + 40} L${dN(pr)} ${dN(ph)}${pw} L${dN(l)} ${wy + 40}Z`, '#ffffff', '#f3d6de');
                 }
-                return out;
+                out += piece(d, fill, color);
+                const pleat = [1, 2, 3, 4].map(k => `M${dN(l + (r - l) * k / 5)} ${wy + 30} Q${dN(l + (r - l) * k / 5 + (hl + (hr - hl) * k / 5 - l - (r - l) * k / 5) * 0.4)} ${dN((wy + hem) / 2)} ${dN(hl + (hr - hl) * k / 5)} ${dN(hem + 6)}`).join(' ');
+                out += `<path d="${pleat}" fill="none" stroke="${lineOf(color)}" stroke-width="4" opacity=".35"/>`;
+                return { svg: out, hem, wy, l, r };
             }
-
-            function bodySkin() {
-                const skin = D.skin, line = dDark(skin, 0.35);
-                let out = '';
-                [-1, 1].forEach(s => {
-                    const a = armPts(s);
-                    out += `<line x1="${a.ax}" y1="${a.ay}" x2="${a.hx}" y2="${a.hy}" stroke="${line}" stroke-width="${g.armW + 4}" stroke-linecap="round"/>`;
-                    out += `<line x1="${a.ax}" y1="${a.ay}" x2="${a.hx}" y2="${a.hy}" stroke="${skin}" stroke-width="${g.armW}" stroke-linecap="round"/>`;
-                    const lx = CX + s * g.legX;
-                    out += `<rect x="${lx - g.legW / 2}" y="${g.hipY - 12}" width="${g.legW}" height="${g.footY - g.hipY + 12}" rx="${g.legW / 2}" fill="${skin}" stroke="${line}" stroke-width="2"/>`;
-                });
-                out += `<path d="M${CX - g.sw} ${g.sy + 6} Q${CX} ${g.sy - 6} ${CX + g.sw} ${g.sy + 6} L${CX + g.ww + 2} ${g.hipY} L${CX - g.ww - 2} ${g.hipY}Z" fill="${skin}" stroke="${line}" stroke-width="2"/>`;
-                out += `<path d="M${CX - 10} ${g.chin - 14} L${CX - 10} ${g.sy + 4} Q${CX} ${g.sy + 10} ${CX + 10} ${g.sy + 4} L${CX + 10} ${g.chin - 14}Z" fill="${skin}" stroke="${line}" stroke-width="2"/>`;
-                return out;
+            function waistband(y, part) {
+                const [wl, wr] = dTorso(y);
+                return clothPiece(`M${dN(wl - 7)} ${y} L${dN(wr + 7)} ${y} L${dN(wr + 8)} ${y + 28} L${dN(wl - 8)} ${y + 28}Z`, part);
             }
-            const hands = () => [-1, 1].map(s => { const a = armPts(s); return `<circle cx="${a.hx}" cy="${a.hy}" r="${8 * g.b}" fill="${D.skin}" stroke="${dDark(D.skin, 0.35)}" stroke-width="2"/>`; }).join('');
-
-            const topShape = hem => { const { sy, sw, ww, wy } = g; return `M${CX - sw - 2} ${sy + 6} Q${CX - sw + 2} ${sy - 4} ${CX - 11} ${sy - 4} Q${CX} ${sy + 8} ${CX + 11} ${sy - 4} Q${CX + sw - 2} ${sy - 4} ${CX + sw + 2} ${sy + 6} L${CX + ww + 4} ${wy + hem} Q${CX} ${wy + hem + 6} ${CX - ww - 4} ${wy + hem}Z`; };
-
-            function sleeves(part, kind) {
-                if (kind === 'none') return '';
-                const f = { short: 0.38, puff: 0.32, long: 0.86 }[kind];
-                let out = '';
-                [-1, 1].forEach(s => {
-                    const a = armPts(s), ex = a.ax + (a.hx - a.ax) * f, ey = a.ay + (a.hy - a.ay) * f, w = g.armW + 7;
-                    out += `<line x1="${a.ax}" y1="${a.ay}" x2="${ex}" y2="${ey}" stroke="${lineOf(part)}" stroke-width="${w + 4}" stroke-linecap="round"/>`;
-                    out += `<line x1="${a.ax}" y1="${a.ay}" x2="${ex}" y2="${ey}" stroke="${fillOf(part)}" stroke-width="${w}" stroke-linecap="round"/>`;
-                    if (kind === 'puff') out += `<circle cx="${a.ax + s * 2}" cy="${a.ay + 4}" r="${13 * g.b}" fill="${fillOf(part)}" stroke="${lineOf(part)}" stroke-width="2"/>`;
-                });
-                return out;
+            function pants() {
+                const len = cl('bottom').len, hem = Math.min(1770, 1180 + len * 590), wy = 975;
+                const oL = [[dTorso(wy)[0] - 6, wy]], iL = [], oR = [], iR = [];
+                for (let y = 1040; y < hem; y += 30) oL.push([dLeg(-1, y)[0] - 10, y]);
+                oL.push([dLeg(-1, hem)[0] - 12, hem]);
+                for (let y = hem; y > 1150; y -= 30) iL.push([dLeg(-1, y)[1] + 6, y]);
+                iL.push([dLeg(-1, 1150)[1] + 4, 1150]);
+                for (let y = 1150; y < hem; y += 30) iR.push([dLeg(1, y)[0] - 6, y]);
+                iR.push([dLeg(1, hem)[0] - 6, hem]);
+                for (let y = hem; y > 1040; y -= 30) oR.push([dLeg(1, y)[1] + (y === hem ? 12 : 10), y]);
+                oR.push([dTorso(wy)[1] + 6, wy]);
+                const d = `M${dPt(oL[0])}${dCurveTo(oL)} L${dPt(iL[0])}${dCurveTo(iL)} L426 1128 L${dPt(iR[0])}${dCurveTo(iR)} L${dPt(oR[0])}${dCurveTo(oR)}Z`;
+                const ln = lineOf(cl('bottom').color);
+                return clothPiece(d, 'bottom') + waistband(wy, 'bottom') +
+                    `<path d="M436 1003 Q438 1060 428 1110 M300 1010 Q330 1040 342 1004 M552 1010 Q522 1040 510 1004" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>` +
+                    (hem > 1300 ? `<path d="M${dPt(dOff([dLeg(-1, hem)[0] - 12, hem - 24], [dLeg(-1, hem)[1], hem - 24], 0))} L${dPt([dLeg(-1, hem)[1] + 6, hem - 24])} M${dPt([dLeg(1, hem)[0] - 6, hem - 24])} L${dPt([dLeg(1, hem)[1] + 12, hem - 24])}" stroke="${ln}" stroke-width="4" opacity=".6"/>` : '');
             }
-
-            function bottomWear() {
-                if (D.bottom === 'none') return { under: '', over: '' };
-                const c = D.cloth.bottom, { wy, hipY, ww, hw, legX, legW, legLen } = g;
-                let under = '', over = '';
-                if (D.bottom === 'skirt' || D.bottom === 'suspender') {
-                    const hem = wy + 30 + c.len * 62, fl = hw + 12 + c.len * 14;
-                    under += `<path ${clothSt('bottom')} d="M${CX - ww - 1} ${wy - 2} L${CX + ww + 1} ${wy - 2} L${CX + fl} ${hem} Q${CX} ${hem + 10} ${CX - fl} ${hem}Z"/>`;
-                    [-0.5, 0, 0.5].forEach(t => { under += `<path d="M${CX + t * ww * 1.4} ${wy + 4} L${CX + t * fl * 1.5} ${hem + 2}" stroke="${lineOf('bottom')}" stroke-width="1.6" opacity=".45"/>`; });
-                    if (D.bottom === 'suspender') {
-                        over += `<path ${clothSt('bottom')} d="M${CX - 16} ${wy - 26} L${CX + 16} ${wy - 26} L${CX + 18} ${wy + 2} L${CX - 18} ${wy + 2}Z"/>`;
-                        [-1, 1].forEach(s => {
-                            over += `<path d="M${CX + s * 14} ${wy - 24} L${CX + s * (g.sw - 8)} ${g.sy + 2}" stroke="${lineOf('bottom')}" stroke-width="8" stroke-linecap="round"/><path d="M${CX + s * 14} ${wy - 24} L${CX + s * (g.sw - 8)} ${g.sy + 2}" stroke="${fillOf('bottom')}" stroke-width="5" stroke-linecap="round"/>`;
-                            over += `<circle cx="${CX + s * 13}" cy="${wy - 20}" r="2.6" fill="#fff" stroke="${lineOf('bottom')}" stroke-width="1.4"/>`;
-                        });
-                    }
-                } else if (D.bottom === 'pants') {
-                    const end = hipY + 16 + c.len * (legLen - 22), o = legW / 2 + 5;
-                    under += `<path ${clothSt('bottom')} d="M${CX - ww - 1} ${wy - 2} L${CX + ww + 1} ${wy - 2} L${CX + legX + o} ${end} L${CX + legX - o} ${end} L${CX + 1} ${hipY + 10} L${CX - 1} ${hipY + 10} L${CX - legX + o} ${end} L${CX - legX - o} ${end}Z"/>`;
-                }
-                under += `<rect x="${CX - ww - 2}" y="${wy - 4}" width="${(ww + 2) * 2}" height="6" rx="3" fill="${dDark(c.color, 0.15)}"/>`;
-                return { under, over };
-            }
-
+            const btn = (x, y, c, r = 9) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="${lineOf(c)}" stroke-width="3"/>`;
             function topWear() {
-                if (D.top === 'none') return '';
-                const p = 'top', { sy, ww, wy } = g;
-                let out = '';
-                if (['tee', 'blouse', 'shirt'].includes(D.top)) out += `<path ${clothSt(p)} d="${topShape(8)}"/>`;
-                if (D.top === 'blouse') {
-                    [-1, 1].forEach(s => { out += `<path d="M${CX} ${sy + 2} C${CX + s * 6} ${sy + 16} ${CX + s * 24} ${sy + 12} ${CX + s * 22} ${sy - 3}Z" fill="#fff" stroke="${lineOf(p)}" stroke-width="1.8"/>`; });
-                    out += `<path d="M${CX - 7} ${sy + 4} L${CX} ${sy + 9} L${CX + 7} ${sy + 4} L${CX + 7} ${sy + 12} L${CX} ${sy + 9} L${CX - 7} ${sy + 12}Z" fill="${D.accColor}"/>`;
-                    [20, 32, 44].forEach(dy => { if (sy + dy < wy) out += `<circle cx="${CX}" cy="${sy + dy}" r="2.2" fill="${lineOf(p)}"/>`; });
+                const t = D.top, color = cl('top').color, ln = lineOf(color), white = color === '#ffffff' ? '#ffeef3' : '#ffffff';
+                const hem = t === 'hoodie' ? 1030 : t === 'cardigan' ? 1020 : 1000;
+                let o = clothPiece(bodice(hem, cl('top').sleeve === 'none', t === 'cardigan' ? 'v' : 'round'), 'top');
+                switch (t) {
+                    case 'tee': o += `<path d="M396 664 Q426 690 456 664" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`; break;
+                    case 'blouse':
+                        o += both(s => { const P = p => s < 0 ? p : dMx(p); return piece(`M${dPt(P([426, 690]))} Q${dPt(P([390, 652]))} ${dPt(P([372, 656]))} Q${dPt(P([344, 700]))} ${dPt(P([372, 728]))} Q${dPt(P([406, 736]))} ${dPt(P([426, 690]))}Z`, white, white); });
+                        o += `<path d="M426 696 C402 670 384 688 398 702 C408 712 420 704 426 698 C432 704 444 712 454 702 C468 688 450 670 426 696Z" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3"/>`;
+                        break;
+                    case 'shirt':
+                        o += `<path d="M426 700 L426 ${hem}" stroke="${ln}" stroke-width="4"/>` + [760, 830, 900, 970].map(y => btn(440, y, white, 7)).join('');
+                        o += both(s => { const P = p => s < 0 ? p : dMx(p); return piece(`M${dPt(P([426, 698]))} L${dPt(P([384, 650]))} L${dPt(P([360, 662]))} L${dPt(P([376, 722]))}Z`, white, white); });
+                        break;
+                    case 'hoodie':
+                        o += `<path d="M406 690 L398 800 M446 690 L454 800" stroke="${white}" stroke-width="6" stroke-linecap="round"/>` + btn(398, 804, white, 6) + btn(454, 804, white, 6);
+                        o += clothPiece('M340 880 L512 880 L548 990 L304 990Z', 'top') + `<path d="M296 ${hem - 26} Q426 ${hem - 12} 556 ${hem - 26}" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`;
+                        break;
+                    case 'cardigan':
+                        o += piece(`M392 652 L460 652 L438 760 L438 ${hem} L414 ${hem} L414 760Z`, white, white);
+                        o += [790, 860, 930].map(y => btn(448, y, dLight(color, 0.5), 8)).join('') + `<path d="M298 ${hem - 24} Q426 ${hem - 10} 554 ${hem - 24}" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`;
+                        break;
                 }
-                if (D.top === 'shirt') {
-                    out += `<path d="M${CX} ${sy + 4} L${CX} ${wy + 10}" stroke="${lineOf(p)}" stroke-width="1.6"/>`;
-                    [-1, 1].forEach(s => { out += `<path d="M${CX} ${sy + 5} L${CX + s * 15} ${sy - 4} L${CX + s * 18} ${sy + 12}Z" fill="${dLight(D.cloth.top.color, 0.5)}" stroke="${lineOf(p)}" stroke-width="1.8" stroke-linejoin="round"/>`; });
-                    [22, 34, 46].forEach(dy => { if (sy + dy < wy + 4) out += `<circle cx="${CX + 3}" cy="${sy + dy}" r="1.9" fill="${lineOf(p)}"/>`; });
-                }
-                if (D.top === 'hoodie') {
-                    out += `<path ${clothSt(p)} d="${topShape(16)}"/>`;
-                    out += `<path d="M${CX - 22} ${sy - 2} Q${CX} ${sy + 16} ${CX + 22} ${sy - 2}" stroke="${lineOf(p)}" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M${CX - 22} ${sy - 2} Q${CX} ${sy + 16} ${CX + 22} ${sy - 2}" stroke="${fillOf(p)}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-                    out += `<path d="M${CX - 5} ${sy + 8} L${CX - 7} ${sy + 26} M${CX + 5} ${sy + 8} L${CX + 7} ${sy + 26}" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
-                    out += `<path d="M${CX - ww + 2} ${wy - 6} L${CX + ww - 2} ${wy - 6} L${CX + ww - 6} ${wy + 10} L${CX - ww + 6} ${wy + 10}Z" fill="none" stroke="${lineOf(p)}" stroke-width="1.8"/>`;
-                }
-                if (D.top === 'cardigan') {
-                    out += `<path d="M${CX - 11} ${sy - 3} L${CX} ${sy + 26} L${CX + 11} ${sy - 3}Z" fill="#fff"/>`;
-                    out += `<path ${clothSt(p)} d="${topShape(10)}"/>`;
-                    out += `<path d="M${CX - 11} ${sy - 3} L${CX - 1} ${sy + 26} L${CX - 1} ${wy + 14} M${CX + 11} ${sy - 3} L${CX + 1} ${sy + 26}" stroke="${lineOf(p)}" stroke-width="1.8" fill="none"/>`;
-                    out += `<path d="M${CX - 11} ${sy - 3} L${CX} ${sy + 26} L${CX + 11} ${sy - 3}" fill="#fff" stroke="${lineOf(p)}" stroke-width="1.8"/>`;
-                    [34, 46, 58].forEach(dy => { if (sy + dy < wy + 8) out += `<circle cx="${CX - 5}" cy="${sy + dy}" r="2.4" fill="#fff" stroke="${lineOf(p)}" stroke-width="1.2"/>`; });
-                }
-                return out;
+                return o;
             }
-
-            function dressWear() {
-                const p = 'dress', c = D.cloth.dress, { sy, sw, ww, hw, wy, footY } = g;
-                const accent = c.patColor === '#ffffff' ? D.accColor : c.patColor;
-                const bodice = `M${CX - sw - 2} ${sy + 6} Q${CX - sw + 2} ${sy - 4} ${CX - 11} ${sy - 4} Q${CX} ${sy + 8} ${CX + 11} ${sy - 4} Q${CX + sw - 2} ${sy - 4} ${CX + sw + 2} ${sy + 6}`;
-                let out = '';
-                if (D.dress === 'aline' || D.dress === 'princess') {
-                    const hem = wy + 34 + c.len * 80;
-                    if (D.dress === 'aline') {
-                        const fl = hw + 16 + c.len * 18;
-                        out += `<path ${clothSt(p)} d="${bodice} L${CX + ww + 2} ${wy} L${CX + fl} ${hem} Q${CX} ${hem + 10} ${CX - fl} ${hem} L${CX - ww - 2} ${wy}Z"/>`;
-                    } else {
-                        const fl = hw + 34 + c.len * 16, n = 7;
-                        let sc = '';
-                        for (let i = 0; i < n; i++) { const x0 = CX + fl - (2 * fl / n) * i, x1 = x0 - 2 * fl / n; sc += ` Q${(x0 + x1) / 2} ${hem + 14} ${x1} ${hem}`; }
-                        out += `<path ${clothSt(p)} d="${bodice} L${CX + ww + 2} ${wy} C${CX + hw + 24} ${wy + 16} ${CX + fl - 4} ${hem - 26} ${CX + fl} ${hem}${sc} C${CX - fl + 4} ${hem - 26} ${CX - hw - 24} ${wy + 16} ${CX - ww - 2} ${wy}Z"/>`;
-                        out += `<path d="M${CX - fl + 8} ${hem - 6} Q${CX} ${hem + 4} ${CX + fl - 8} ${hem - 6}" stroke="#fff" stroke-width="3" fill="none" opacity=".7" stroke-dasharray="2 5" stroke-linecap="round"/>`;
+            function cuffBand(s, t0, t1, color) {
+                const a = dArm(s, t0), b = dArm(s, t1);
+                return piece(`M${dPt(dOff(a.o, a.i, 9))} L${dPt(dOff(b.o, b.i, 9))} L${dPt(dOff(b.i, b.o, 9))} L${dPt(dOff(a.i, a.o, 9))}Z`, color, color);
+            }
+            const sleeves = (kind, fill, color) => sleeve(-1, kind, fill, color) + sleeve(1, kind, fill, color);
+            function hood() {
+                if (D.dress !== 'none' || D.top !== 'hoodie') return '';
+                return clothPiece('M296 676 C292 596 352 572 426 572 C500 572 560 596 556 676 C540 708 500 712 426 712 C352 712 312 708 296 676Z', 'top');
+            }
+            function bottomWear() {
+                const b = D.bottom, c = cl('bottom');
+                if (b === 'pants') return pants();
+                if (b === 'skirt' || b === 'suspender') { const sk = skirt('bottom', c.len, {}); return sk.svg + waistband(975, 'bottom'); }
+                return '';
+            }
+            function straps() {
+                if (D.dress !== 'none' || D.bottom !== 'suspender') return '';
+                const c = cl('bottom').color;
+                return [[-1, 370], [1, 482]].map(([s, x]) => piece(`M${x - 13} 980 L${x + 13} 980 L${x + 13 - s * 8} 662 L${x - 13 - s * 8} 662Z`, fillOf('bottom'), c) + btn(x, 962, '#ffe08a', 9)).join('');
+            }
+            function dressWear(stage) {
+                const dr = D.dress, c = cl('dress');
+                if (dr === 'hanbok') {
+                    const jeo = c.patColor, ln = lineOf(jeo);
+                    if (stage === 'skirt') {
+                        const sk = skirt('dress', c.len, { wy: 850, base: 1500, range: 260, flare: 0.5 });
+                        return sk.svg + piece(`M${dN(sk.l)} 850 L${dN(sk.r)} 850 L${dN(sk.r + 2)} 880 L${dN(sk.l - 2)} 880Z`, '#ffffff', '#ffffff');
                     }
-                    out += `<rect x="${CX - ww - 3}" y="${wy - 4}" width="${(ww + 3) * 2}" height="7" rx="3" fill="${accent}" stroke="${lineOf(p)}" stroke-width="1.4"/>`;
-                    out += `<g transform="translate(${CX} ${wy})" fill="${accent}" stroke="${lineOf(p)}" stroke-width="1.4"><path d="M0 0 C-6 -9 -16 -6 -13 2 C-11 7 -4 4 0 0Z"/><path d="M0 0 C6 -9 16 -6 13 2 C11 7 4 4 0 0Z"/><circle r="3"/></g>`;
+                    return piece(bodice(870, false, 'v'), jeo, jeo) + sleeves('long', jeo, jeo) + both(s => cuffBand(s, 0.68, 0.78, c.color)) +
+                        `<path d="M462 652 L404 790" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/><path d="M462 652 L404 790" stroke="${ln}" stroke-width="3" opacity=".5"/>` +
+                        `<path d="M444 800 C420 770 396 790 410 806 C420 816 436 808 444 802 C452 808 470 816 480 806 C494 790 468 770 444 800Z M440 806 Q430 900 418 990 L436 992 Q446 900 448 806 M448 806 Q462 900 470 960 L488 956 Q472 880 456 806" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3" stroke-linejoin="round"/>`;
                 }
-                if (D.dress === 'hanbok') {
-                    const top = sy + 22, jc = c.patColor === '#ffffff' ? '#fff3c4' : c.patColor;
-                    out += `<path ${clothSt(p)} d="M${CX - sw + 2} ${top} L${CX + sw - 2} ${top} C${CX + hw + 30} ${top + 50} ${CX + hw + 40} ${footY - 30} ${CX + hw + 36} ${footY - 2} Q${CX} ${footY + 8} ${CX - hw - 36} ${footY - 2} C${CX - hw - 40} ${footY - 30} ${CX - hw - 30} ${top + 50} ${CX - sw + 2} ${top}Z"/>`;
-                    out += `<path d="${bodice} L${CX + sw - 2} ${top + 4} Q${CX} ${top + 10} ${CX - sw + 2} ${top + 4}Z" fill="${jc}" stroke="${dDark(jc)}" stroke-width="2.2" stroke-linejoin="round"/>`;
-                    out += `<path d="M${CX - 12} ${sy - 3} L${CX + 6} ${top + 2}" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`;
-                    out += `<path d="M${CX + 4} ${top} C${CX + 2} ${top + 20} ${CX - 6} ${top + 40} ${CX - 2} ${top + 58} M${CX + 6} ${top} C${CX + 10} ${top + 18} ${CX + 16} ${top + 34} ${CX + 12} ${top + 52}" stroke="${D.accColor}" stroke-width="5" stroke-linecap="round" fill="none"/>`;
-                    out += `<circle cx="${CX + 5}" cy="${top}" r="4" fill="${D.accColor}"/>`;
-                }
-                return out;
+                const princess = dr === 'princess';
+                if (stage === 'skirt') return skirt('dress', c.len, princess ? { wy: 962, base: 1150, range: 380, flare: 0.85, petticoat: true } : { wy: 962, base: 1100, range: 420, flare: 0.5 }).svg;
+                let o = clothPiece(bodice(975, c.sleeve === 'none', princess ? 'deep' : 'round'), 'dress') + sleeves(c.sleeve, fillOf('dress'), c.color);
+                if (princess) o += `<path d="M426 972 C384 930 350 954 368 984 C380 1004 412 994 426 980 C440 994 472 1004 484 984 C502 954 468 930 426 972Z M418 984 L396 1050 L414 1046 L426 990 L438 1046 L456 1050 L434 984" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3" stroke-linejoin="round"/>`;
+                else o += `<path d="M${dN(dTorso(950)[0] - 8)} 950 Q426 962 ${dN(dTorso(950)[1] + 8)} 950" fill="none" stroke="${lineOf(c.color)}" stroke-width="4" opacity=".6"/>`;
+                return o;
             }
-            function hanbokSleeves() {
-                const c = D.cloth.dress, jc = c.patColor === '#ffffff' ? '#fff3c4' : c.patColor;
-                let out = '';
-                [-1, 1].forEach(s => {
-                    const a = armPts(s), ex = a.ax + (a.hx - a.ax) * 0.86, ey = a.ay + (a.hy - a.ay) * 0.86, w = g.armW + 9;
-                    out += `<line x1="${a.ax}" y1="${a.ay}" x2="${ex}" y2="${ey}" stroke="${dDark(jc)}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="${a.ax}" y1="${a.ay}" x2="${ex}" y2="${ey}" stroke="${jc}" stroke-width="${w}" stroke-linecap="round"/>`;
-                    const cx2 = a.ax + (a.hx - a.ax) * 0.76, cy2 = a.ay + (a.hy - a.ay) * 0.76;
-                    out += `<line x1="${cx2}" y1="${cy2}" x2="${ex}" y2="${ey}" stroke="${c.color}" stroke-width="${w}" stroke-linecap="round"/>`;
-                });
-                return out;
-            }
-
             function shoes() {
-                const c = D.cloth.shoes.color, ln = dDark(c, 0.38), skin = D.skin;
-                let out = '';
-                [-1, 1].forEach(s => {
-                    const x = CX + s * g.legX, y = g.footY;
-                    switch (D.shoes) {
-                        case 'none': out += `<ellipse cx="${x + s * 2}" cy="${y + 2}" rx="10" ry="6" fill="${skin}" stroke="${dDark(skin, 0.35)}" stroke-width="2"/>`; break;
-                        case 'sneaker': out += `<path d="M${x - 10} ${y - 8} Q${x - 12} ${y + 6} ${x + s * 4} ${y + 7} Q${x + s * 16} ${y + 7} ${x + s * 14} ${y - 1} Q${x + s * 6} ${y - 4} ${x + s * 4} ${y - 10}Z" fill="${c}" stroke="${ln}" stroke-width="2" stroke-linejoin="round"/><path d="M${x - 10} ${y + 3} Q${x + s * 4} ${y + 8} ${x + s * 14} ${y + 2}" stroke="#fff" stroke-width="3" fill="none"/><circle cx="${x + s * 2}" cy="${y - 4}" r="1.6" fill="#fff"/>`; break;
-                        case 'mary': out += `<ellipse cx="${x + s * 3}" cy="${y + 2}" rx="12" ry="7" fill="${c}" stroke="${ln}" stroke-width="2"/><path d="M${x - 7} ${y - 6} L${x + 7} ${y - 6}" stroke="${c}" stroke-width="3"/><circle cx="${x + s * 6}" cy="${y - 6}" r="2" fill="#fff"/>`; break;
-                        case 'boots': out += `<path d="M${x - 10} ${y - 34} L${x + 10} ${y - 34} L${x + 10} ${y - 4} Q${x + s * 18} ${y - 2} ${x + s * 16} ${y + 6} L${x - s * 10} ${y + 6}Z" fill="${c}" stroke="${ln}" stroke-width="2" stroke-linejoin="round"/><path d="M${x - 10} ${y - 30} L${x + 10} ${y - 30}" stroke="${dLight(c, 0.5)}" stroke-width="4"/>`; break;
-                    }
+                const k = D.shoes, c = cl('shoes').color, ln = lineOf(c);
+                if (k === 'none') return '';
+                return both(s => {
+                    const out = y => s < 0 ? dLeg(s, y)[0] - 7 : dLeg(s, y)[1] + 7, inn = y => s < 0 ? dLeg(s, y)[1] + 6 : dLeg(s, y)[0] - 6;
+                    const top = k === 'boots' ? 1540 : k === 'sneaker' ? 1688 : 1714;
+                    const side = []; for (let y = top; y <= 1770; y += 20) side.push([out(y), y]);
+                    const iside = []; for (let y = 1770; y >= top; y -= 20) iside.push([inn(y), y]);
+                    const bx0 = side[side.length - 1][0], bx1 = iside[0][0];
+                    let d = `M${dPt(side[0])}${dCurveTo(side)} Q${dN(bx0 - s * 2)} 1806 ${dN((bx0 + bx1) / 2)} 1808 Q${dN(bx1 + s * 4)} 1806 ${dPt(iside[0])}${dCurveTo(iside)}Z`;
+                    let o = piece(d, c, c);
+                    if (k === 'mary') o += piece(`M${dN(out(1694) + s * 2)} 1694 L${dN(inn(1694) - s * 2)} 1694 L${dN(inn(1708))} 1710 L${dN(out(1708))} 1710Z`, c, c) + btn(dN(out(1702) - s * 6), 1702, '#ffe08a', 7);
+                    if (k === 'sneaker') o += piece(`M${dN(bx0 - s * 2)} 1784 L${dN(bx1 + s * 2)} 1784 L${dN(bx1 + s * 4)} 1806 Q${dN((bx0 + bx1) / 2)} 1814 ${dN(bx0 - s * 4)} 1806Z`, '#ffffff', '#eeeeee') +
+                        `<path d="M${dN(out(1712) - s * 18)} 1716 L${dN(inn(1730) + s * 18)} 1730 M${dN(out(1735) - s * 18)} 1740 L${dN(inn(1752) + s * 18)} 1752" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>`;
+                    if (k === 'boots') o += piece(`M${dN(out(1540) - s * 4)} 1534 L${dN(inn(1540) + s * 4)} 1534 L${dN(inn(1580) + s * 2)} 1580 L${dN(out(1580) - s * 2)} 1580Z`, dLight(c, 0.35), c);
+                    o += `<ellipse cx="${dN((bx0 + bx1) / 2 - s * 10)}" cy="1780" rx="14" ry="7" fill="#fff" opacity=".45"/>`;
+                    return o;
                 });
-                return out;
             }
 
+            /* ---------- 소품 ---------- */
+            function accessories() {
+                const a = D.acc, c = D.accColor, ln = dDark(c, 0.4);
+                let o = '';
+                if (a.headband) o += `<path d="M206 330 A232 258 0 0 1 646 330" fill="none" stroke="${ln}" stroke-width="34" stroke-linecap="round"/><path d="M206 330 A232 258 0 0 1 646 330" fill="none" stroke="${c}" stroke-width="26" stroke-linecap="round"/><path d="M250 250 A220 246 0 0 1 400 136" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".5"/>`;
+                if (a.beret) o += `<g transform="rotate(-8 440 150)"><ellipse cx="440" cy="150" rx="214" ry="70" fill="${c}" stroke="${ln}" stroke-width="5"/><path d="M440 82 q-6 -26 10 -30" fill="none" stroke="${ln}" stroke-width="10" stroke-linecap="round"/><ellipse cx="380" cy="128" rx="90" ry="20" fill="#fff" opacity=".2"/></g>`;
+                if (a.crown) o += `<path d="M356 132 L344 56 L390 92 L426 40 L462 92 L508 56 L496 132Z" fill="#ffd54f" stroke="#c99a2e" stroke-width="5" stroke-linejoin="round"/><circle cx="426" cy="104" r="12" fill="${c}"/><circle cx="380" cy="112" r="8" fill="#b9dcff"/><circle cx="472" cy="112" r="8" fill="#b9dcff"/>`;
+                if (a.bow) o += `<g transform="translate(600 182) rotate(18)"><path d="M0 0 C-30 -60 -96 -44 -84 6 C-74 44 -24 24 0 0Z M0 0 C30 -60 96 -44 84 6 C74 44 24 24 0 0Z" fill="${c}" stroke="${ln}" stroke-width="5" stroke-linejoin="round"/><path d="M-6 6 L-30 70 L-10 64 L0 12 L10 64 L30 70 L6 6" fill="${c}" stroke="${ln}" stroke-width="5" stroke-linejoin="round"/><ellipse rx="18" ry="16" fill="${dLight(c, 0.15)}" stroke="${ln}" stroke-width="5"/></g>`;
+                if (a.flower) o += `<g transform="translate(262 262)">${[0, 72, 144, 216, 288].map(r => `<circle cx="0" cy="-26" r="22" transform="rotate(${r})" fill="${dLight(c, 0.3)}" stroke="${ln}" stroke-width="4"/>`).join('')}<circle r="15" fill="#ffd54f" stroke="#c99a2e" stroke-width="4"/></g>`;
+                return o;
+            }
+            const glasses = () => D.acc.glasses ? `<g fill="#fff" fill-opacity=".14" stroke="#5a3d3d" stroke-width="7"><circle cx="316" cy="474" r="70"/><circle cx="536" cy="474" r="70"/></g><path d="M386 466 Q426 448 466 466 M246 462 L206 448 M606 462 L646 448" fill="none" stroke="#5a3d3d" stroke-width="7" stroke-linecap="round"/>` : '';
             function tie() {
                 if (!D.acc.tie) return '';
-                const { sy } = g, a = D.accColor, ln = dDark(a);
-                return `<path d="M${CX - 5} ${sy + 4} L${CX + 5} ${sy + 4} L${CX + 3} ${sy + 10} L${CX + 7} ${sy + 36} L${CX} ${sy + 44} L${CX - 7} ${sy + 36} L${CX - 3} ${sy + 10}Z" fill="${a}" stroke="${ln}" stroke-width="1.8" stroke-linejoin="round"/>`;
+                const c = D.accColor, ln = dDark(c, 0.4);
+                return `<path d="M410 664 L442 664 L436 690 L416 690Z" fill="${c}" stroke="${ln}" stroke-width="4" stroke-linejoin="round"/><path d="M416 690 L436 690 L452 810 L426 840 L400 810Z" fill="${c}" stroke="${ln}" stroke-width="4" stroke-linejoin="round"/>`;
             }
 
-            function accessories() {
-                const { R, cy } = g, a = D.accColor, ln = dDark(a, 0.35), ex = 30 * D.eyeGap, ey = cy + 16;
-                let out = '';
-                if (D.acc.headband) out += `<path d="M${CX - R - 3} ${cy + 2} A${R + 3} ${R + 4} 0 0 1 ${CX + R + 3} ${cy + 2}" stroke="${ln}" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M${CX - R - 3} ${cy + 2} A${R + 3} ${R + 4} 0 0 1 ${CX + R + 3} ${cy + 2}" stroke="${a}" stroke-width="7" fill="none" stroke-linecap="round"/>`;
-                if (D.acc.beret) out += `<g transform="rotate(-12 ${CX} ${cy - R})"><ellipse cx="${CX + 8}" cy="${cy - R + 6}" rx="${R * 0.86}" ry="${R * 0.3}" fill="${a}" stroke="${ln}" stroke-width="2.2"/><circle cx="${CX + 8}" cy="${cy - R - 16}" r="4" fill="${ln}"/></g>`;
-                if (D.acc.crown) out += `<path d="M${CX - 22} ${cy - R + 2} L${CX - 24} ${cy - R - 22} L${CX - 11} ${cy - R - 10} L${CX} ${cy - R - 28} L${CX + 11} ${cy - R - 10} L${CX + 24} ${cy - R - 22} L${CX + 22} ${cy - R + 2}Z" fill="#ffd54f" stroke="#c9a227" stroke-width="2.2" stroke-linejoin="round"/><circle cx="${CX}" cy="${cy - R - 8}" r="3.4" fill="${a}"/>`;
-                if (D.acc.bow) out += `<g transform="translate(${CX + R * 0.58} ${cy - R * 0.78}) rotate(18)" fill="${a}" stroke="${ln}" stroke-width="2.2" stroke-linejoin="round"><path d="M0 0 C-10 -16 -30 -12 -24 4 C-20 14 -8 8 0 0Z"/><path d="M0 0 C10 -16 30 -12 24 4 C20 14 8 8 0 0Z"/><path d="M-3 3 L-10 22 M3 3 L11 21" fill="none" stroke-width="5" stroke="${a}" stroke-linecap="round"/><circle r="5"/></g>`;
-                if (D.acc.flower) out += `<g transform="translate(${CX - R * 0.68} ${cy - R * 0.5})"><g fill="#fff" stroke="${ln}" stroke-width="1.6"><circle cy="-7" r="6"/><circle cx="6.7" cy="-2" r="6"/><circle cx="4.1" cy="5.7" r="6"/><circle cx="-4.1" cy="5.7" r="6"/><circle cx="-6.7" cy="-2" r="6"/></g><circle r="4.4" fill="#ffd54f"/></g>`;
-                if (D.acc.glasses) out += `<g fill="#ffffff" fill-opacity=".18" stroke="#5a3d3d" stroke-width="2.6"><circle cx="${CX - ex}" cy="${ey}" r="${16 * D.eyeSize}"/><circle cx="${CX + ex}" cy="${ey}" r="${16 * D.eyeSize}"/></g><path d="M${CX - ex + 16 * D.eyeSize} ${ey - 2} Q${CX} ${ey - 8} ${CX + ex - 16 * D.eyeSize} ${ey - 2}" stroke="#5a3d3d" stroke-width="2.6" fill="none"/>`;
-                return out;
-            }
-
-            return { g, hairBack, hairFront, head, faceFeatures, bodySkin, hands, sleeves, bottomWear, topWear, dressWear, hanbokSleeves, shoes, tie, accessories };
+            return { skinArt, innerWear, eyes, brows, mouth, makeup, hairFront, hairBack, hood, topWear, sleeves, bottomWear, straps, dressWear, shoes, accessories, glasses, tie, fillOf };
         }
 
         /* ---------- 직접 그린 조각 (어려움 버전) ---------- */
@@ -478,31 +544,33 @@
            opts.pfx   : 무늬 id 앞머리 (한 화면에 인형이 여러 개일 때 겹치지 않게)
            opts.upto  : 다시보기용 (몇 번째 조각까지 그릴지) */
         function dollSVG(D, opts = {}) {
-            const pfx = opts.pfx || 'dl', P = dollParts(D, pfx), g = P.g, defs = [];
-            ['top', 'bottom', 'dress'].forEach(p => defs.push(dollPatternDef(`${pfx}-pat-${p}`, D.cloth[p])));
+            const pfx = opts.pfx || 'dl', defs = [], P = dollParts(D, pfx, defs);
+            const PK = 1 / DOLL_ART_K;
+            ['top', 'bottom', 'dress'].forEach(p => defs.push(dollPatternDef(`${pfx}-pat-${p}`, D.cloth[p], PK)));
+            defs.push(`<filter id="${pfx}-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>`,
+                `<filter id="${pfx}-blush" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>`,
+                `<linearGradient id="${pfx}-shade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a3040" stop-opacity=".16"/><stop offset=".22" stop-color="#5a3040" stop-opacity="0"/><stop offset=".78" stop-color="#5a3040" stop-opacity="0"/><stop offset="1" stop-color="#5a3040" stop-opacity=".16"/></linearGradient>`);
             const upto = opts.upto == null ? D.layers.length : opts.upto;
-            const layers = slot => D.layers.map((L, i) => (i < upto && L.slot === slot) ? dollLayerSVG(L, i, pfx, defs) : '').join('');
-            const usingDress = D.dress !== 'none';
-            const bw = usingDress ? { under: '', over: '' } : P.bottomWear();
-            let body = '';
-            body += `<ellipse cx="${DOLL_CX}" cy="${g.footY + 10}" rx="62" ry="9" fill="#000" opacity=".08"/>`;
-            body += `<g class="dl-slot" data-slot="back">${layers('back')}</g>`;
-            body += P.hairBack() + P.bodySkin() + P.shoes();
-            if (usingDress) body += P.dressWear() + (D.dress === 'hanbok' ? P.hanbokSleeves() : P.sleeves('dress', D.cloth.dress.sleeve));
-            else body += bw.under + P.topWear() + P.tie() + bw.over + (D.top !== 'none' ? P.sleeves('top', D.cloth.top.sleeve) : '');
-            body += `<g class="dl-slot" data-slot="cloth">${layers('cloth')}</g>`;
-            body += P.hands() + P.head() + P.faceFeatures();
-            body += `<g class="dl-slot" data-slot="face">${layers('face')}</g>`;
-            body += P.hairFront();
-            body += `<g class="dl-slot" data-slot="hair">${layers('hair')}</g>`;
-            body += P.accessories();
-            body += `<g class="dl-slot" data-slot="top">${layers('top')}</g>`;
+            const layers = slot => `<g class="dl-slot" data-slot="${slot}">${D.layers.map((L, i) => (i < upto && L.slot === slot) ? dollLayerSVG(L, i, pfx, defs) : '').join('')}</g>`;
+            const A = s => s ? `<g transform="translate(${DOLL_ART_X.toFixed(2)} 0) scale(${DOLL_ART_K.toFixed(5)})">${s}</g>` : '';
+            const dress = D.dress !== 'none', tucked = !['hoodie', 'cardigan'].includes(D.top);
+            const top = !dress && D.top !== 'none' ? P.topWear() : '';
+            const topSleeves = !dress && D.top !== 'none' ? P.sleeves(D.cloth.top.sleeve, P.fillOf('top'), D.cloth.top.color) : '';
+            let body = A('<ellipse cx="426" cy="1802" rx="240" ry="30" fill="#000" opacity=".08"/>');
+            body += layers('back');
+            body += A(P.hairBack() + P.hood() + P.skinArt('ears') + P.skinArt('body') + P.skinArt('legs') + P.innerWear() + P.shoes() +
+                (dress ? P.dressWear('skirt') : (tucked ? top : '') + P.bottomWear()) +
+                P.skinArt('arms') +
+                (dress ? P.dressWear('top') : (tucked ? '' : top) + topSleeves + P.straps()) + P.tie());
+            body += layers('cloth');
+            body += A(P.skinArt('head') + P.eyes() + P.mouth() + P.makeup());
+            body += layers('face');
+            body += A(P.glasses() + P.hairFront() + P.brows());
+            body += layers('hair');
+            body += A(P.accessories());
+            body += layers('top');
             if (D.flip) body = `<g transform="translate(${DOLL_W} 0) scale(-1 1)">${body}</g>`;
-            let vb = `0 0 ${DOLL_W} ${DOLL_H}`;
-            if (opts.crop) {
-                const top = Math.max(0, g.cy - g.R - 40), bottom = Math.min(DOLL_H, g.footY + 22);
-                vb = `30 ${top} 240 ${bottom - top}`;
-            }
+            const vb = opts.crop ? '46 0 208 470' : `0 0 ${DOLL_W} ${DOLL_H}`;
             const bg = opts.bg === false ? '' : (DOLL_BGS(pfx)[D.bg] || '');
             return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"${opts.attrs ? ' ' + opts.attrs : ''}><defs>${defs.join('')}</defs>${bg}${body}</svg>`;
         }

@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/doll-room.js
-   👧 인형방 : 마네킹에서 시작해 단계별로 인형 만들기 (쉬움 · 어려움)
-   - ① 체형 → ② 피부 → ③ 눈·코·입 → ④ 헤어 → ⑤ 화장 → ⑥ 옷 → ⑦ 소품 → ⑧ 완성
+   👧 인형방 : 맨몸 인형에서 시작해 단계별로 인형 만들기 (쉬움 · 어려움)
+   - ① 피부 → ② 눈·코·입 → ③ 헤어 → ④ 화장 → ⑤ 옷 → ⑥ 소품 → ⑦ 완성 (맨몸 인형에서 시작)
    - 쉬움 : 고르기 · 슬라이더 / 어려움 : 펜(점 찍어 잇기 → 닫으면 색 채우기)·붓·고르기 도구로 조각을 하나씩 직접 그리기
    - 내 인형들 : 인형마다 파일 1개 → 구글 드라이브 '말랑달콤 / 인형 / 인형이름.json' (js/doll-store.js, 개수 제한 없음)
    - 만드는 중인 인형은 이 기기에 자동 임시 저장 (창을 닫아도 이어서 만들기)
@@ -21,15 +21,15 @@
         };
 
         const DOLL_STEPS = [
-            { id: 'body',   label: '① 체형' },
-            { id: 'skin',   label: '② 피부' },
-            { id: 'face',   label: '③ 눈·코·입', hard: true, slot: 'face' },
-            { id: 'hair',   label: '④ 헤어',     hard: true, slot: 'hair' },
-            { id: 'makeup', label: '⑤ 화장',     hard: true, slot: 'face' },
-            { id: 'cloth',  label: '⑥ 옷',       hard: true, slot: 'cloth' },
-            { id: 'acc',    label: '⑦ 소품',     hard: true, slot: 'top' },
-            { id: 'done',   label: '⑧ 완성' }
+            { id: 'skin',   label: '① 피부' },
+            { id: 'face',   label: '② 눈·코·입', hard: true, slot: 'face' },
+            { id: 'hair',   label: '③ 헤어',     hard: true, slot: 'hair' },
+            { id: 'makeup', label: '④ 화장',     hard: true, slot: 'face' },
+            { id: 'cloth',  label: '⑤ 옷',       hard: true, slot: 'cloth' },
+            { id: 'acc',    label: '⑥ 소품',     hard: true, slot: 'top' },
+            { id: 'done',   label: '⑦ 완성' }
         ];
+        const DOLL_LAST = DOLL_STEPS.length - 1;
         /* 어려움 버전 부품 : [이름, 그릴 위치(slot), 추천 도구, 추천 색(함수 또는 값)] */
         const DOLL_PARTS = {
             face:   [['흰자', 'face', 'pen', '#ffffff'], ['눈동자', 'face', 'pen', d => d.eyeColor], ['동공', 'face', 'pen', '#2a1a17'], ['반짝이', 'face', 'pen', '#ffffff'],
@@ -42,9 +42,9 @@
             acc:    [['머리 리본', 'top', 'pen', '#ff6b8f'], ['머리핀', 'top', 'pen', '#ffd54f'], ['목걸이', 'top', 'line', '#ffd54f'], ['가방', 'top', 'pen', '#c9b6ff'], ['반짝이 효과', 'top', 'brush', '#ffffff']]
         };
         const DOLL_SWATCH = ['#ffffff', '#2a1a17', '#7a4b3a', '#ffd1dc', '#ff9fb6', '#ff6b8f', '#ffe08a', '#c9f0d6', '#b9dcff', '#c9b6ff', '#3b3b55', '#efe4de'];
-        const SKIN_SW = ['#efe4de', '#fff0e6', '#ffe2d2', '#f6cfb5', '#e8b48f', '#c98d66', '#9c6646'];
+        const SKIN_SW = ['#fdead9', '#fff0e6', '#ffe2d2', '#f6cfb5', '#e8b48f', '#c98d66', '#9c6646'];
         const HAIR_SW = ['#2e221f', '#7a4b3a', '#c48a55', '#f2d27a', '#f5a3c0', '#a7c7ff', '#b49cff', '#e8e4f0'];
-        const EYE_SW = ['#7a4b3a', '#2e221f', '#4a8bd6', '#3fa37a', '#9b6bd6', '#e0557a'];
+        const EYE_SW = ['#8c564c', '#2e221f', '#4a8bd6', '#3fa37a', '#9b6bd6', '#e0557a'];
         const CLOTH_SW = ['#ffffff', '#ffd1dc', '#ff9fb6', '#ff6b8f', '#ffe08a', '#c9f0d6', '#b9dcff', '#c9b6ff', '#3b3b55', '#f2e3c9'];
         const MAKE_SW = ['#ff8fa3', '#ff5c7a', '#ffb07a', '#e86a9a', '#c9a7ff', '#8fd3ff'];
 
@@ -158,7 +158,7 @@
                 return;
             }
             grid.innerHTML = '';
-            if (!list.length) { grid.innerHTML = '<div class="doll-empty">아직 만든 인형이 없어요.<br>✏️ 새 인형 만들기를 눌러 마네킹부터 시작해 보세요!</div>'; return; }
+            if (!list.length) { grid.innerHTML = '<div class="doll-empty">아직 만든 인형이 없어요.<br>✏️ 새 인형 만들기를 눌러 맨몸 인형부터 시작해 보세요!</div>'; return; }
             list.forEach((ent, i) => {
                 const d = ent.doll;
                 const card = document.createElement('div');
@@ -190,7 +190,7 @@
             const ent = id ? (dollCache.list || []).find(e => e.id === id) : null;
             DR.editId = ent ? ent.id : (doll && id ? id : null);
             DR.doll = doll ? dollClone(doll) : (ent ? dollClone(ent.doll) : dollNewMannequin());
-            DR.step = step != null ? Math.max(0, Math.min(7, step)) : (ent ? 7 : 0);
+            DR.step = step != null ? Math.max(0, Math.min(DOLL_LAST, step)) : (ent ? DOLL_LAST : 0);
             DR.mode = {}; DR.history = []; DR.future = []; DR.sel = -1; DR.drawing = null; DR.dirty = !!doll;
             DR.lastAct = Date.now(); DR.zoom = 1; DR.part = null;
             closeModal('dollPicker');
@@ -215,7 +215,7 @@
             const d = sanitizeDoll(DR.doll);
             if (!d) { showMsg('⚠ 인형이 너무 커서 저장할 수 없어요.<br>조각 수를 조금 줄여 주세요.'); return false; }
             if (!d.name) {
-                DR.step = 7; renderDollRoom();
+                DR.step = DOLL_LAST; renderDollRoom();
                 await showMsg('👧 먼저 인형 이름을 지어 주세요.<br><span style="font-size:12px;color:#777;">이름이 그대로 파일 이름이 돼요. (예: 로라 → 로라.json)</span>');
                 const n = document.getElementById('drName'); if (n) n.focus();
                 return false;
@@ -282,8 +282,8 @@
             document.getElementById('drSteps').innerHTML = DOLL_STEPS.map((s, i) => `<button type="button" class="dr-step${i === DR.step ? ' on' : ''}${i < DR.step ? ' passed' : ''}" onclick="dollGoStep(${i - DR.step})">${s.label}</button>`).join('');
             document.getElementById('drPrev').disabled = DR.step === 0;
             const next = document.getElementById('drNext');
-            next.style.display = DR.step === 7 ? 'none' : '';
-            next.textContent = DR.step === 6 ? '완성하기 ▶' : '다음 단계 ▶';
+            next.style.display = DR.step === DOLL_LAST ? 'none' : '';
+            next.textContent = DR.step === DOLL_LAST - 1 ? '완성하기 ▶' : '다음 단계 ▶';
             const c = dollCounts(DR.doll);
             document.getElementById('drStats').textContent = `⏱ ${dollTimeText(DR.doll.stats.ms)} · 🧩 조각 ${c.pieces} · 📍 점 ${c.pts}${c.pieces ? ' · 🔥 어려움' : ''}`;
             document.getElementById('drHint').textContent = isHardStep() ? hardHint() : '';
@@ -295,7 +295,7 @@
         function dollGoStep(delta) {
             stopDollReplay();
             if (DR.drawing) finishDrawing(false);
-            DR.step = Math.max(0, Math.min(7, DR.step + delta));
+            DR.step = Math.max(0, Math.min(DOLL_LAST, DR.step + delta));
             DR.sel = -1; DR.part = null;
             dollChanged();
             renderDollRoom();
@@ -557,26 +557,17 @@
                 if (m === 'hard') { P.innerHTML = h + hardPanel(st); return; }
             }
             switch (st.id) {
-                case 'body':
-                    h += `<p class="dr-intro">마네킹에서 시작해요. 먼저 몸의 모양을 정해 주세요.</p>`;
-                    h += grp('체형', chipsD('gender', [['girl', '👧 여자 체형'], ['boy', '👦 남자 체형']]));
-                    h += grp('몸매', chipsD('body', [['slim', '날씬'], ['normal', '보통'], ['chubby', '통통']]));
-                    h += grp('키', rangeD('height', 0, 1, 0.05, 'h'));
-                    h += grp('머리 크기', rangeD('head', 0.9, 1.1, 0.02, 'pct'));
-                    h += grp('얼굴형', chipsD('face', [['round', '동글'], ['oval', '계란'], ['slim', '갸름'], ['chubby', '볼살 통통']]));
-                    h += grp('배경', chipsD('bg', [['dots', '딸기우유 도트'], ['sky', '맑은 하늘'], ['check', '민트 체크'], ['room', '내 방']]));
-                    break;
                 case 'skin':
-                    h += grp('피부색', colorsD('skin', SKIN_SW), '첫 번째 색은 마네킹 색이에요.');
+                    h += `<p class="dr-intro">맨몸 인형에서 시작해요. 피부색부터 골라 주세요.</p>`;
+                    h += grp('피부색', colorsD('skin', SKIN_SW), '첫 번째 색이 기본 피부색이에요.');
+                    h += grp('속옷 색', colorsD('inner', ['#fdbed1'].concat(CLOTH_SW)));
+                    h += grp('배경', chipsD('bg', [['dots', '딸기우유 도트'], ['sky', '맑은 하늘'], ['check', '민트 체크'], ['room', '내 방'], ['none', '없음']]));
                     break;
                 case 'face':
-                    h += grp('눈', chipsD('eyes', [['none', '없음'], ['sparkle', '반짝눈'], ['smile', '웃는눈'], ['cat', '고양이눈'], ['sleepy', '졸린눈'], ['heart', '하트눈']]));
+                    h += grp('눈', chipsD('eyes', [['basic', '기본'], ['sparkle', '반짝눈'], ['smile', '웃는눈'], ['wink', '윙크'], ['sleepy', '졸린눈'], ['heart', '하트눈']]));
                     h += grp('눈동자 색', colorsD('eyeColor', EYE_SW));
-                    h += grp('눈 크기', rangeD('eyeSize', 0.8, 1.25, 0.05, 'pct'));
-                    h += grp('눈 사이 간격', rangeD('eyeGap', 0.85, 1.15, 0.05, 'pct'));
-                    h += grp('눈썹', chipsD('brows', [['none', '없음'], ['arc', '둥근'], ['flat', '일자'], ['worried', '시무룩'], ['strong', '씩씩']]));
-                    h += grp('코', chipsD('nose', [['none', '없음'], ['dot', '콕'], ['line', '선']]));
-                    h += grp('입', chipsD('mouth', [['none', '없음'], ['smile', '스마일'], ['open', '활짝'], ['cat', '고양이'], ['o', '오!'], ['pout', '뽀뽀']]));
+                    h += grp('눈썹', chipsD('brows', [['basic', '기본'], ['worried', '시무룩'], ['strong', '씩씩'], ['none', '없음']]));
+                    h += grp('입', chipsD('mouth', [['cat', '고양이'], ['smile', '스마일'], ['open', '활짝'], ['o', '오!'], ['pout', '뽀뽀']]));
                     break;
                 case 'hair':
                     h += grp('머리 색', colorsD('hairColor', HAIR_SW));
@@ -584,7 +575,6 @@
                     h += grp('뒷머리', chipsD('hairBack', [['none', '없음'], ['short', '짧은 머리'], ['bob', '단발'], ['long', '긴 생머리'], ['twin', '양갈래'], ['pony', '포니테일'], ['bun', '똥머리']]));
                     break;
                 case 'makeup':
-                    h += grp('볼터치 모양', chipsD('blushStyle', [['oval', '동글'], ['lines', '빗금'], ['heart', '하트']]));
                     h += grp('볼터치 색', colorsD('blush', MAKE_SW));
                     h += grp('볼터치 진하기', rangeD('blushA', 0, 1, 0.05, 'pct'));
                     h += grp('립 색', colorsD('lip', MAKE_SW));
@@ -768,13 +758,13 @@
         /* ---------- ▶ 만드는 과정 다시보기 ---------- */
         function dollReplayFrames(D) {
             const base = dollNewMannequin();
-            ['gender', 'body', 'height', 'head', 'face', 'bg'].forEach(k => { base[k] = D[k]; });
+            base.bg = D.bg;
             const frames = [dollClone(base)];
             const step = keys => { const f = dollClone(frames[frames.length - 1]); keys.forEach(k => { f[k] = dollClone(D[k]); }); frames.push(f); };
-            step(['skin']);
-            step(['eyes', 'eyeColor', 'eyeSize', 'eyeGap', 'brows', 'nose', 'mouth']);
+            step(['skin', 'inner']);
+            step(['eyes', 'eyeColor', 'brows', 'mouth']);
             step(['hairBack', 'hairFront', 'hairColor']);
-            step(['blushStyle', 'blush', 'blushA', 'lip', 'lipA', 'shadow', 'shadowA', 'lashes', 'freckles']);
+            step(['blush', 'blushA', 'lip', 'lipA', 'shadow', 'shadowA', 'lashes', 'freckles']);
             step(['top', 'bottom', 'dress', 'shoes', 'cloth']);
             step(['acc', 'accColor']);
             const last = frames[frames.length - 1];
@@ -940,9 +930,9 @@
             const ch = (key, opts) => `<div class="chips">${opts.map(([v, l]) => `<button type="button" class="chip${d[key] === v ? ' on' : ''}" data-qk="${key}" data-qv="${v}">${l}</button>`).join('')}</div>`;
             document.getElementById('dollQuickBody').innerHTML =
                 `<img class="dq-preview" alt="인형 미리보기" src="${dollDataUrl(d, { bg: true, pfx: 'qk' })}">` +
-                grp('눈', ch('eyes', [['sparkle', '반짝'], ['smile', '웃음'], ['cat', '고양이'], ['sleepy', '졸림'], ['heart', '하트']])) +
-                grp('입', ch('mouth', [['smile', '스마일'], ['open', '활짝'], ['cat', '고양이'], ['o', '오!'], ['pout', '뽀뽀']])) +
-                grp('눈썹', ch('brows', [['arc', '둥근'], ['flat', '일자'], ['worried', '시무룩'], ['strong', '씩씩']])) +
+                grp('눈', ch('eyes', [['basic', '기본'], ['sparkle', '반짝'], ['smile', '웃음'], ['wink', '윙크'], ['sleepy', '졸림'], ['heart', '하트']])) +
+                grp('입', ch('mouth', [['cat', '고양이'], ['smile', '스마일'], ['open', '활짝'], ['o', '오!'], ['pout', '뽀뽀']])) +
+                grp('눈썹', ch('brows', [['basic', '기본'], ['worried', '시무룩'], ['strong', '씩씩'], ['none', '없음']])) +
                 grp('그 밖에', `<div class="chips"><button type="button" class="chip${d.blushA > 0 ? ' on' : ''}" data-qblush="1">볼터치</button><button type="button" class="chip${d.flip ? ' on' : ''}" data-qflip="1">↔ 좌우 반전</button></div>`) +
                 (d.layers.some(L => L.slot === 'face') ? '<p class="dr-note">직접 그린 얼굴 조각은 그대로 있고, 고른 표정이 함께 보여요.</p>' : '');
         }
@@ -964,7 +954,7 @@
             const d = quickDoll();
             closeModal('dollQuick');
             if (!d) return;
-            openDollRoom(null, d, 7);
+            openDollRoom(null, d, DOLL_LAST);
             DR.attachEl = quickEl;
             DR.dirty = false;
             renderDollPanel();
