@@ -4,8 +4,6 @@
         let currentDate = new Date();
         let isCoverOpen = false;
         let selectedElement = null;
-        let autoSaveTimer = null;
-        let autoSaveMinutes = 5;
         let zIndexCounter = 10;
 
         let customSkins = {};
@@ -156,7 +154,6 @@ let fontList = [
             loadPageSize();
             setupLayout();
             setupPageMove();
-            startAutoSave();
             initDrive();
             loadCoverNotice();
         };

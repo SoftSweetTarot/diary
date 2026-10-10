@@ -853,8 +853,8 @@
         }
         function hideGate() { document.getElementById('driveGate').style.display = 'none'; }
 
-        /* ☁ 저장 알림 : 평소엔 숨김 · 저장 기록(글)이 바뀔 때만 부드럽게 나왔다가 사라짐
-           (로그인 만료 · 저장 실패처럼 눌러야 하는 경고는 해결될 때까지 떠 있음) */
+        /* ☁ 경고 알림 : 평소 저장은 알리지 않아요 · 게스트 · 로그인 만료 · 공간 꽉 참 · 저장 실패처럼 눌러야 하는 것만 떠요
+           (로그인 만료 · 공간 · 실패 경고는 해결될 때까지 떠 있음) */
         let badgeLast = null, badgeTimer = null;
         function updateBadge() {
             const el = document.getElementById('driveBadge');
@@ -864,11 +864,9 @@
             else if (!drive.ready) { return; }
             else if (drive.needAuth) { text = '⚠ 로그인이 만료됐어요 · 눌러서 다시 연결'; warn = true; stay = true; }
             else if (drive.full) { text = '⚠ 드라이브 공간이 꽉 찼어요 · 이 기기에 보관 중'; warn = true; stay = true; }
-            else if (drive.uploading) text = '☁ 드라이브에 저장 중…';
             else if (drive.error) { text = '⚠ 저장 실패 · 눌러서 다시 시도'; warn = true; stay = true; }
-            else if (drive.dirty) text = '☁ 저장 대기 중…';
-            else if (drive.lastSaved) text = '☁ 드라이브에 저장됨 ' + drive.lastSaved.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-            else text = '☁ 드라이브 연결됨';
+            /* 평소 저장(저장 중 · 대기 · 저장됨)은 알리지 않아요 : 몇 초마다 저장해서 자꾸 떠요 → 손이 필요한 문제만 보여요 */
+            if (!text) { badgeLast = ''; clearTimeout(badgeTimer); el.classList.remove('show'); return; }
             if (text === badgeLast) return;                       // 바뀐 게 없으면 가만히
             badgeLast = text;
             el.textContent = text;

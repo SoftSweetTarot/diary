@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/settings.js
-   PC 백업/불러오기 · PNG 저장 · 용량 확인 · 페이지 · 자동 저장 주기 · 창 열기/닫기
+   PC 백업/불러오기 · PNG 저장 · 용량 확인 · 페이지 · 창 열기/닫기
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → service (index.html 참고) */
         async function exportJSON() {
             saveData(false);
@@ -518,12 +518,6 @@
                 if (o && o.malang_sticker) { showMsg('✨ 스티커 파일이에요.<br><b>✨ 스티커 → 그 종류 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
                 addReceivedSkin(parseSkinText(t));
             });
-        }
-
-        function updateAutoSaveInterval(val) { autoSaveMinutes = val; startAutoSave(); }
-        function startAutoSave() {
-            if (autoSaveTimer) clearInterval(autoSaveTimer);
-            autoSaveTimer = setInterval(() => { if (!turn) saveData(false); }, autoSaveMinutes * 60 * 1000);
         }
 
         /* ---------- 창 제목 줄 : 왼쪽 ‹ 앞 화면 이름 · 가운데 제목 리본 · 오른쪽 ✕ (닫기) · 모양은 css/dakku.css ----------
