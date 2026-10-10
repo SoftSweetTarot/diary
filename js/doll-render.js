@@ -33,7 +33,7 @@
             patch: [],        // 🧷 옷에 붙인 것 { k, c, x, y, s, r }
             hairPaint: [],    // 🎨 머리 염색 붓 (머리 안에만 보여요)
             layers: [],
-            motion: { s: 'idle', v: 1, a: 1 },      // 💃 움직임 : s 스타일 · v 속도 · a 세기 (js/doll-move.js)
+            motion: { s: 'idle', v: 1, a: 1, T: 2.4, i: 1, k: [] },      // 💃 움직임 : s 스타일(또는 'custom') · v 속도 · a 세기 · T 길이(초) · i 기본 숨쉬기·깜빡임 같이 · k 내가 만든 포즈들 [{t, p:{뼈대:[회전,가로,세로,가로배율,세로배율]}}] (js/doll-move.js)
             stats: { ms: 0, hard: false, created: 0 }
         };
 
@@ -128,7 +128,21 @@
                 });
             });
             const mo = d.motion && typeof d.motion === 'object' ? d.motion : {};
-            out.motion = { s: DOLL_MOVE_NAMES.includes(mo.s) ? mo.s : 'idle', v: Math.round(dollNum(mo.v, [0.5, 2], 1) * 10) / 10, a: Math.round(dollNum(mo.a, [0.4, 1.8], 1) * 10) / 10 };
+            const mT = Math.round(dollNum(mo.T, [0.5, 10], 2.4) * 10) / 10, mk = [];
+            (Array.isArray(mo.k) ? mo.k : []).slice(0, DOLL_MAX_POSES).forEach(q => {                 // 🦴 내가 만든 포즈 : 알려진 부위 · 정해진 범위만
+                if (!q || typeof q !== 'object') return;
+                const src = q.p && typeof q.p === 'object' ? q.p : {}, p = {};
+                DOLL_BONES.forEach(b => {
+                    const a = src[b.id]; if (!Array.isArray(a)) return;
+                    const v = DOLL_POSE_DEF.map((df, i) => Math.round(dollNum(a[i], DOLL_POSE_LIM[i], df) * 100) / 100);
+                    if (v.some((x, i) => x !== DOLL_POSE_DEF[i])) p[b.id] = v;
+                });
+                mk.push({ t: Math.round(dollNum(q.t, [0, mT], 0) * 100) / 100, p });
+            });
+            mk.sort((a, b) => a.t - b.t);
+            const mkk = mk.filter((q, i) => (i === 0 ? true : q.t > mk[i - 1].t) && q.t < mT);
+            if (mkk.length) mkk[0].t = 0;
+            out.motion = { s: DOLL_MOVE_NAMES.includes(mo.s) || (mo.s === 'custom' && mkk.length >= 2) ? mo.s : 'idle', v: Math.round(dollNum(mo.v, [0.5, 2], 1) * 10) / 10, a: Math.round(dollNum(mo.a, [0.4, 1.8], 1) * 10) / 10, T: mT, i: mo.i === 0 ? 0 : 1, k: mkk };
             const st = d.stats || {};
             out.stats = { ms: dollNum(st.ms, [0, 1e10], 0), hard: !!st.hard || out.layers.length > 0, created: dollNum(st.created, [0, 1e14], 0) };
             if (JSON.stringify(out).length > DOLL_MAX_JSON) return null;
@@ -199,6 +213,39 @@
             return Math.abs(p[0] - 426) < Math.abs(q[0] - 426) ? { i: p, o: q } : { i: q, o: p };
         }
         const dN = v => Math.round(v * 10) / 10;
+        /* ---------- 🦴 직접 만든 움직임(custom) : 움직이는 부위(뼈대)와 축 위치 ----------
+           좌표는 300 × 470 칸 · 축(pv) 은 그 부위가 돌고 커지는 중심 · up 은 위 뼈대(위가 움직이면 같이 움직여요)
+           side -1 = 화면 왼쪽 · 1 = 화면 오른쪽 (오른쪽 부위는 '바깥쪽이 +'가 되도록 회전 방향을 뒤집어요) */
+        const dA2 = (x, y) => [Math.round((DOLL_ART_X + x * DOLL_ART_K) * 10) / 10, Math.round(y * DOLL_ART_K * 10) / 10];
+        const dMid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+        const DOLL_ELBOW = s => { const e = dArm(s, 0.5), c = dMid(e.i, e.o), arm = s < 0 ? DOLL_FIT.armL : DOLL_FIT.armR, dx = arm.tip[0] - arm.sh[0], dy = arm.tip[1] - arm.sh[1], n = Math.hypot(dx, dy) || 1; return { c, d: [dx / n, dy / n] }; };
+        const DOLL_KNEE_Y = 1410, DOLL_HIP_Y = 1040;
+        const dLegC = (s, y) => { const l = dLeg(s, y); return (l[0] + l[1]) / 2; };
+        const DOLL_BONES = [
+            { id: 'root',  name: '🧍 전체',      up: null,    pv: [150, 462] },
+            { id: 'upper', name: '👕 상체',      up: 'root',  pv: dA2(426, 960) },
+            { id: 'head',  name: '🙂 머리',      up: 'upper', pv: dA2(426, 650) },
+            { id: 'hairF', name: '💇 앞머리',    up: 'head',  pv: dA2(426, 250) },
+            { id: 'hairB', name: '💇 뒷머리',    up: 'head',  pv: dA2(426, 250) },
+            { id: 'acc',   name: '🎀 머리 소품', up: 'head',  pv: dA2(426, 250) },
+            { id: 'eyes',  name: '👀 눈',        up: 'head',  pv: dA2(426, 476) },
+            { id: 'brow',  name: '🤨 눈썹',      up: 'head',  pv: dA2(426, 360) },
+            { id: 'mouth', name: '👄 입',        up: 'head',  pv: dA2(426, 555) },
+            { id: 'armL',  name: '💪 왼팔',      up: 'upper', pv: dA2(DOLL_FIT.armL.sh[0], DOLL_FIT.armL.sh[1]), side: -1 },
+            { id: 'foreL', name: '🖐 왼 아래팔', up: 'armL',  pv: dA2(DOLL_ELBOW(-1).c[0], DOLL_ELBOW(-1).c[1]), side: -1 },
+            { id: 'armR',  name: '💪 오른팔',    up: 'upper', pv: dA2(DOLL_FIT.armR.sh[0], DOLL_FIT.armR.sh[1]), side: 1 },
+            { id: 'foreR', name: '🖐 오른 아래팔', up: 'armR', pv: dA2(DOLL_ELBOW(1).c[0], DOLL_ELBOW(1).c[1]), side: 1 },
+            { id: 'hip',   name: '🩲 하체(허리)', up: 'root',  pv: dA2(426, 975) },
+            { id: 'skirt', name: '👗 치마',      up: 'hip',   pv: dA2(426, 975) },
+            { id: 'legL',  name: '🦵 왼다리',    up: 'hip',   pv: dA2(dLegC(-1, DOLL_HIP_Y), DOLL_HIP_Y), side: -1 },
+            { id: 'shinL', name: '🦶 왼 종아리·발', up: 'legL', pv: dA2(dLegC(-1, DOLL_KNEE_Y), DOLL_KNEE_Y), side: -1 },
+            { id: 'legR',  name: '🦵 오른다리',  up: 'hip',   pv: dA2(dLegC(1, DOLL_HIP_Y), DOLL_HIP_Y), side: 1 },
+            { id: 'shinR', name: '🦶 오른 종아리·발', up: 'legR', pv: dA2(dLegC(1, DOLL_KNEE_Y), DOLL_KNEE_Y), side: 1 }
+        ];
+        const DOLL_BONE = Object.fromEntries(DOLL_BONES.map(b => [b.id, b]));
+        const DOLL_POSE_DEF = [0, 0, 0, 1, 1];                                  // [회전°, 가로, 세로, 가로배율, 세로배율]
+        const DOLL_POSE_LIM = [[-120, 120], [-60, 60], [-60, 60], [0.3, 2], [0.3, 2]];
+        const DOLL_MAX_POSES = 12;
         const dPt = p => `${dN(p[0])} ${dN(p[1])}`;
         const dMx = p => [852 - p[0], p[1]];
         /* 점들을 부드럽게 잇는 곡선 (지금 위치가 pts[0]) */
@@ -299,13 +346,13 @@
             const skin = c => dTone(c, D.skin);
             const skinArt = name => art(name, skin);
             const inner = name => art(name, c => dRecolor(c, DOLL_MANNEQUIN.inner, D.inner));
-            function innerWear() {
+            function innerWear(part) {
                 const ln = dDark(D.inner, 0.3);
-                return inner('bottom') + inner('top') +
+                return (part === 'top' ? '' : inner('bottom')) + (part === 'bottom' ? '' : inner('top') +
                     `<path d="M300 990 Q426 1000 552 990" fill="none" stroke="${ln}" stroke-width="3" opacity=".7"/>` +
                     `<path d="M426 764 C410 750 396 754 398 766 C400 778 414 776 426 768 C438 776 452 778 454 766 C456 754 442 750 426 764Z" fill="${dLight(D.inner, 0.2)}" stroke="${ln}" stroke-width="2.5"/>` +
                     `<path d="M426 768 Q420 780 414 792 M426 768 Q432 780 438 792" fill="none" stroke="${ln}" stroke-width="3" stroke-linecap="round"/>` +
-                    `<path d="M420 930 Q426 946 432 930" fill="none" stroke="${dTone('#d9a593', D.skin)}" stroke-width="3" stroke-linecap="round"/>`;
+                    `<path d="M420 930 Q426 946 432 930" fill="none" stroke="${dTone('#d9a593', D.skin)}" stroke-width="3" stroke-linecap="round"/>`);
             }
 
             /* ---------- 얼굴 ---------- */
@@ -525,7 +572,7 @@
                 const c = cl('bottom').color;
                 return [[-1, 370], [1, 482]].map(([s, x]) => piece(`M${x - 13} 980 L${x + 13} 980 L${x + 13 - s * 8} 662 L${x - 13 - s * 8} 662Z`, fillOf('bottom'), c) + btn(x, 962, '#ffe08a', 9)).join('');
             }
-            function dressWear(stage) {
+            function dressWear(stage, bare) {
                 const dr = D.dress, c = cl('dress');
                 if (dr === 'hanbok') {
                     const jeo = c.patColor, ln = lineOf(jeo);
@@ -533,21 +580,29 @@
                         const sk = skirt('dress', c.len, DOLL_SKIRT.hanbok);
                         return sk.svg + piece(`M${dN(sk.l)} 850 L${dN(sk.r)} 850 L${dN(sk.r + 2)} 880 L${dN(sk.l - 2)} 880Z`, '#ffffff', '#ffffff');
                     }
-                    return piece(bodice(870, false, 'v'), jeo, jeo) + sleeves('long', jeo, jeo) + both(s => cuffBand(s, 0.68, 0.78, c.color)) +
+                    return piece(bodice(870, false, 'v'), jeo, jeo) + (bare ? '' : sleeves('long', jeo, jeo) + both(s => cuffBand(s, 0.68, 0.78, c.color))) +
                         `<path d="M462 652 L404 790" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/><path d="M462 652 L404 790" stroke="${ln}" stroke-width="3" opacity=".5"/>` +
                         `<path d="M444 800 C420 770 396 790 410 806 C420 816 436 808 444 802 C452 808 470 816 480 806 C494 790 468 770 444 800Z M440 806 Q430 900 418 990 L436 992 Q446 900 448 806 M448 806 Q462 900 470 960 L488 956 Q472 880 456 806" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3" stroke-linejoin="round"/>`;
                 }
                 const princess = dr === 'princess';
                 if (stage === 'skirt') return skirt('dress', c.len, DOLL_SKIRT[dr]).svg;
-                let o = clothPiece(bodice(975, c.sleeve === 'none', princess ? 'deep' : 'round'), 'dress') + sleeves(c.sleeve, fillOf('dress'), c.color, c.slen);
+                let o = clothPiece(bodice(975, c.sleeve === 'none', princess ? 'deep' : 'round'), 'dress') + (bare ? '' : sleeves(c.sleeve, fillOf('dress'), c.color, c.slen));
                 if (princess) o += `<path d="M426 972 C384 930 350 954 368 984 C380 1004 412 994 426 980 C440 994 472 1004 484 984 C502 954 468 930 426 972Z M418 984 L396 1050 L414 1046 L426 990 L438 1046 L456 1050 L434 984" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3" stroke-linejoin="round"/>`;
                 else o += `<path d="M${dN(dTorso(950)[0] - 8)} 950 Q426 962 ${dN(dTorso(950)[1] + 8)} 950" fill="none" stroke="${lineOf(c.color)}" stroke-width="4" opacity=".6"/>`;
                 return o;
             }
-            function shoes() {
+            /* 🦴 직접 만든 움직임용 : 한쪽 소매 (지금 입은 옷 기준) */
+            function outfitSleeve(s) {
+                if (D.dress !== 'none') {
+                    const c = cl('dress');
+                    return D.dress === 'hanbok' ? sleeve(s, 'long', c.patColor, c.patColor) + cuffBand(s, 0.68, 0.78, c.color) : sleeve(s, c.sleeve, fillOf('dress'), c.color, c.slen);
+                }
+                return D.top !== 'none' ? sleeve(s, cl('top').sleeve, fillOf('top'), cl('top').color, cl('top').slen) : '';
+            }
+            function shoes(only) {
                 const k = D.shoes, c = cl('shoes').color, ln = lineOf(c);
                 if (k === 'none') return '';
-                return both(s => {
+                return (only ? f => f(only) : both)(s => {
                     const out = y => s < 0 ? dLeg(s, y)[0] - 7 : dLeg(s, y)[1] + 7, inn = y => s < 0 ? dLeg(s, y)[1] + 6 : dLeg(s, y)[0] - 6;
                     const top = k === 'boots' ? 1540 : k === 'sneaker' ? 1688 : 1714;
                     const side = []; for (let y = top; y <= 1770; y += 20) side.push([out(y), y]);
@@ -582,7 +637,7 @@
                 return `<path d="M410 664 L442 664 L436 690 L416 690Z" fill="${c}" stroke="${ln}" stroke-width="4" stroke-linejoin="round"/><path d="M416 690 L436 690 L452 810 L426 840 L400 810Z" fill="${c}" stroke="${ln}" stroke-width="4" stroke-linejoin="round"/>`;
             }
 
-            return { skinArt, innerWear, eyes, brows, mouth, makeup, hairFront, hairBack, hood, topWear, sleeves, bottomWear, straps, dressWear, shoes, accessories, glasses, tie, fillOf };
+            return { skinArt, innerWear, eyes, brows, mouth, makeup, hairFront, hairBack, hood, topWear, sleeves, outfitSleeve, bottomWear, straps, dressWear, shoes, accessories, glasses, tie, fillOf };
         }
 
         /* ---------- 직접 그린 조각 (어려움 버전) ---------- */
@@ -646,15 +701,19 @@
             const cutClip = (id, y) => { defs.push(`<clipPath id="${pfx}-${id}"><rect x="-400" y="-400" width="1700" height="${y + 400}"/></clipPath>`); return `clip-path="url(#${pfx}-${id})"`; };
             const HT = DOLL_HAIR_TOP;
             /* ✨ 움직임 : 겉 g 에 animateTransform 만 (같은 시간이라 나눠 그린 조각끼리 맞춰 움직여요) */
-            const live = !!opts.live && !(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            const MO = D.motion || {}, MK = MO.k || [];
+            const liveOK = !!opts.live && !(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            const rig = !!opts.pose || (MO.s === 'custom' && MK.length >= 2 && liveOK);              // 🦴 직접 만든 움직임 (또는 편집기의 정지 포즈 미리보기)
+            const rigLive = rig && liveOK && !opts.pose;
+            const live = liveOK && !opts.pose && (!rig || MO.i !== 0);                               // 기본 숨쉬기 · 깜빡임 · 머리카락 살랑
             const ease = n => `calcMode="spline" keyTimes="${[...Array(n)].map((_, i) => dN(i / (n - 1))).join(';')}" keySplines="${Array(n - 1).fill('.45 0 .55 1').join(';')}"`;
             const anim = (type, values, dur, extra = ease(values.split(';').length)) => `<animateTransform attributeName="transform" type="${type}" values="${values}" dur="${dur}s" repeatCount="indefinite" ${extra}/>`;
             const around = (x, y, a, s) => live ? `<g transform="translate(${x} ${y})"><g>${a}<g transform="translate(${-x} ${-y})">${s}</g></g></g>` : s;
             /* 💃 움직임 스타일 (D.motion) : 정해진 표(DOLL_MOVES)에서 값을 꺼내 속도 · 세기만 맞춰요 */
-            const MO = D.motion || {}, MV = DOLL_MOVES[MO.s] || DOLL_MOVES.idle, MS = MO.v || 1, MA = MO.a || 1;
+            const MV = DOLL_MOVES[MO.s] || DOLL_MOVES.idle, MS = rig ? 1 : (MO.v || 1), MA = rig ? 1 : (MO.a || 1);
             const r2 = v => Math.round(v * 100) / 100, tt = t => r2(t / MS);
             const NX = dN(DOLL_ART_X + 426 * DOLL_ART_K), NY = dN(650 * DOLL_ART_K);
-            const nod = s => s && live ? `<g>${anim('rotate', MV.nod.map(a => `${r2(a * MA)} ${NX} ${NY}`).join(';'), tt(MV.nodT))}${s}</g>` : s;   // 고개 살랑 (목이 축)
+            const nod = s => s && live && !rig ? `<g>${anim('rotate', MV.nod.map(a => `${r2(a * MA)} ${NX} ${NY}`).join(';'), tt(MV.nodT))}${s}</g>` : s;   // 고개 살랑 (목이 축)
             const blink = s => ['basic', 'sparkle', 'heart'].includes(D.eyes) ? around(0, 476, anim('scale', MV.blink.vals, tt(MV.blinkT), `keyTimes="${MV.blink.kt}"`), s) : s;   // 눈 깜빡
             let hb = P.hairBack();
             if (hb) {
@@ -673,10 +732,120 @@
                 tip = `<rect x="-60" y="-60" width="420" height="600" fill="url(#${pfx}-hTip)"/>`;
             }
             const dye = (s, id) => s && (tip || D.hairPaint.length) ? `<g ${mask(id, wh(s))}>${tip}${dollPaintSVG(D.hairPaint)}</g>` : '';
+            /* ---------- 🦴 직접 만든 움직임 : 부위(뼈대)마다 따로 움직이게 조각내서 그려요 ----------
+               조각마다 '위 뼈대 → 아래 뼈대' 순서로 겉 g 를 겹쳐 싸요 (같은 시간표라 서로 맞춰 움직여요) */
+            function rigBody() {
+                const DEF = DOLL_POSE_DEF, RV = MO.v || 1, RA = MO.a || 1, T = MO.T || 2.4, DUR = r2(T / RV);
+                const f4 = v => Math.round(v * 10000) / 10000;
+                const amp = p => [p[0] * RA, p[1] * RA, p[2] * RA, Math.max(0.1, 1 + (p[3] - 1) * RA), Math.max(0.1, 1 + (p[4] - 1) * RA)];
+                const isDef = p => p.every((x, i) => x === DEF[i]);
+                const boneG = {};
+                const kt = rigLive ? [...MK.map(q => f4(q.t / T)), 1].join(';') : '', spl = Array(MK.length).fill('.42 0 .58 1').join(';');
+                DOLL_BONES.forEach(b => {
+                    const sg = b.side === 1 ? -1 : 1;
+                    if (!rigLive) {
+                        const p = opts.pose && opts.pose[b.id];
+                        if (p && !isDef(p)) boneG[b.id] = { attr: ` transform="translate(${r2(p[1] * sg)} ${r2(p[2])}) rotate(${r2(p[0] * sg)}) scale(${p[3]} ${p[4]})"`, an: '' };
+                        return;
+                    }
+                    const pv = MK.map(q => amp(q.p[b.id] || DEF));
+                    if (pv.every(p => p.every((x, i) => Math.abs(x - DEF[i]) < 1e-6))) return;
+                    pv.push(pv[0]);
+                    const mk = (type, vals) => `<animateTransform attributeName="transform" type="${type}" additive="sum" values="${vals}" keyTimes="${kt}" calcMode="spline" keySplines="${spl}" dur="${DUR}s" repeatCount="indefinite"/>`;
+                    let an = '';
+                    if (pv.some(p => p[1] || p[2])) an += mk('translate', pv.map(p => `${r2(p[1] * sg)} ${r2(p[2])}`).join(';'));
+                    if (pv.some(p => p[0])) an += mk('rotate', pv.map(p => r2(p[0] * sg)).join(';'));
+                    if (pv.some(p => p[3] !== 1 || p[4] !== 1)) an += mk('scale', pv.map(p => `${r2(p[3])} ${r2(p[4])}`).join(';'));
+                    boneG[b.id] = { attr: '', an };
+                });
+                const W = (id, str) => {
+                    if (!str) return '';
+                    for (let b = DOLL_BONE[id]; b; b = DOLL_BONE[b.up]) {
+                        const g = boneG[b.id];
+                        if (g) str = `<g transform="translate(${dPt(b.pv)})"><g${g.attr}>${g.an}<g transform="translate(${dN(-b.pv[0])} ${dN(-b.pv[1])})">${str}</g></g></g>`;
+                    }
+                    return str;
+                };
+                const Z = [], put = (id, str) => { if (!str) return; const l = Z[Z.length - 1]; if (l && l[0] === id) l[1] += str; else Z.push([id, str]); };
+                const use = (id, clip) => `<use xlink:href="#${pfx}-${id}"${clip ? ` clip-path="url(#${pfx}-${clip})"` : ''}/>`;
+                const grp = (id, str) => defs.push(`<g id="${pfx}-${id}">${str}</g>`);
+                const rect = (id, x0, y0, x1, y1) => { defs.push(`<clipPath id="${pfx}-${id}"><rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}"/></clipPath>`); return id; };
+                const poly = (id, pts) => { defs.push(`<clipPath id="${pfx}-${id}"><polygon points="${pts.map(dPt).join(' ')}"/></clipPath>`); return id; };
+                const SIDE = s => s < 0 ? [-100, 426] : [426, 1000], K = s => s < 0 ? 'L' : 'R';
+                /* 몸통 */
+                const iwB = P.innerWear('bottom'), iwT = P.innerWear('top');
+                const lowerStr = dress ? P.dressWear('skirt') : (D.bottom === 'skirt' || D.bottom === 'suspender' ? P.bottomWear() : '');
+                const pantsStr = !dress && D.bottom === 'pants' ? P.bottomWear() : '';
+                const frontStr = (dress ? P.dressWear('top', true) : (tucked ? '' : top) + P.straps()) + P.tie();
+                const sl = P.outfitSleeve(-1) + P.outfitSleeve(1);
+                put('root', A('<ellipse cx="426" cy="1802" rx="240" ry="30" fill="#000" opacity=".08"/>') + layers('back'));
+                put('hairB', A(hb) + dye(hb, 'mHB'));
+                put('head', A(P.skinArt('ears')));
+                put('upper', A(P.hood() + P.skinArt('body')));
+                /* 다리 : 허벅지 · 종아리(무릎 아래) */
+                grp('lS', P.skinArt('legs'));
+                [-1, 1].forEach(s => {
+                    const [x0, x1] = SIDE(s), k = K(s);
+                    put('leg' + k, A(use('lS', rect('lu' + k, x0, 1000, x1, 1424))));
+                    put('shin' + k, A(use('lS', rect('ls' + k, x0, 1410, x1, 2000)) + P.shoes(s)));
+                });
+                put('hip', A(iwB));
+                put('upper', A(iwT));
+                put('skirt', A(lowerStr.indexOf('<') >= 0 && dress ? lowerStr : ''));
+                if (!dress) {
+                    put('upper', A(tucked ? top : ''));
+                    put('skirt', A(D.bottom === 'skirt' || D.bottom === 'suspender' ? lowerStr : ''));
+                    if (pantsStr) {
+                        grp('pn', pantsStr);
+                        put('hip', A(use('pn', rect('ph', -100, 900, 1000, 1060))));
+                        [-1, 1].forEach(s => {
+                            const [x0, x1] = SIDE(s), k = K(s);
+                            put('leg' + k, A(use('pn', rect('pu' + k, x0, 1040, x1, 1424))));
+                            put('shin' + k, A(use('pn', rect('ps' + k, x0, 1410, x1, 2000))));
+                        });
+                    }
+                }
+                /* 팔 : 어깨 → 팔꿈치 (소매가 있으면 옷 위에 · 없으면 옷 아래에) */
+                grp('aS', P.skinArt('arms'));
+                [-1, 1].forEach(s => {
+                    const [x0, x1] = SIDE(s), k = K(s);
+                    /* 바탕 그림 팔에 붙어 있는 떨어진 가는 조각(겨드랑이 쪽)은 팔이 움직이면 따로 보여서 잘라내요 */
+                    const hole = [[270, 912], [330, 912], [330, 1010], [250, 1010]].map(pt => s < 0 ? pt : dMx(pt));
+                    defs.push(`<clipPath id="${pfx}-ax${k}"><path clip-rule="evenodd" d="M-200 -200H1200V2200H-200ZM${hole.map(dPt).join('L')}Z"/></clipPath>`);
+                    grp('a' + k, `<g clip-path="url(#${pfx}-${rect('as' + k, x0, -100, x1, 2000)})"><g clip-path="url(#${pfx}-ax${k})">${use('aS')}</g></g>` + P.outfitSleeve(s));
+                });
+                const arms = () => [-1, 1].forEach(s => {
+                    const e = DOLL_ELBOW(s), c = e.c, d = e.d, n = [-d[1], d[0]], k = K(s);
+                    const q = (a, b) => [c[0] + n[0] * a + d[0] * b, c[1] + n[1] * a + d[1] * b];
+                    put('arm' + k, A(use('a' + k, poly('au' + k, [q(-900, 16), q(900, 16), q(900, -2500), q(-900, -2500)]))));
+                    put('fore' + k, A(use('a' + k, poly('af' + k, [q(-900, 0), q(900, 0), q(900, 2500), q(-900, 2500)]))));
+                });
+                if (!sl) arms();
+                put('upper', A(frontStr));
+                if (sl) arms();
+                if (D.paint.length) put('upper', `<g ${mask('mCl', wh(iwB + iwT + lowerStr + (dress ? '' : (tucked ? top : '') + pantsStr) + frontStr))}>${dollPaintSVG(D.paint)}</g>`);
+                if (D.patch.length) put('upper', `<g class="dl-patches">${D.patch.map(dollPatchSVG).join('')}</g>`);
+                put('upper', layers('cloth'));
+                /* 머리 */
+                put('head', A(P.skinArt('head')));
+                put('eyes', A(blink(P.eyes())));
+                put('mouth', A(P.mouth()));
+                put('head', A(P.makeup()) + layers('face') + A(P.glasses()));
+                put('hairF', A(hf) + dye(hf, 'mHF'));
+                put('brow', A(P.brows()));
+                put('head', layers('hair'));
+                put('acc', A(P.accessories()));
+                put('root', layers('top'));
+                return Z.map(([id, str]) => W(id, str)).join('');
+            }
+            let body;
+            if (rig) {
+                body = rigBody();
+            } else {
             /* 👗 옷 (팔 앞 · 뒤) */
             const clothBack = P.innerWear() + P.shoes() + (dress ? P.dressWear('skirt') : (tucked ? top : '') + P.bottomWear());
             const clothFront = (dress ? P.dressWear('top') : (tucked ? '' : top) + topSleeves + P.straps()) + P.tie();
-            let body = A('<ellipse cx="426" cy="1802" rx="240" ry="30" fill="#000" opacity=".08"/>');
+            body = A('<ellipse cx="426" cy="1802" rx="240" ry="30" fill="#000" opacity=".08"/>');
             body += layers('back');
             body += nod(A(hb) + dye(hb, 'mHB'));
             body += A(P.hood() + P.skinArt('ears') + P.skinArt('body') + P.skinArt('legs') + clothBack + P.skinArt('arms') + clothFront);
@@ -686,14 +855,15 @@
             body += nod(A(P.skinArt('head') + blink(P.eyes()) + P.mouth() + P.makeup()) + layers('face') +
                 A(P.glasses() + hf) + dye(hf, 'mHF') + A(P.brows()) + layers('hair') + A(P.accessories()));
             body += layers('top');
+            }
             if (live) body = around(150, 462, anim('scale', MV.breath.map(([x, y]) => `${r2(1 + (x - 1) * MA)} ${r2(1 + (y - 1) * MA)}`).join(';'), tt(MV.breathT)), body);   // 숨쉬기 (발이 축)
             if (live && MV.rot) body = around(150, 462, anim('rotate', MV.rot.map(a => `${r2(a * MA)} 0 0`).join(';'), tt(MV.rotT)), body);   // 몸 기울이기 (발이 축)
             if (live && MV.mv) body = `<g>${anim('translate', MV.mv.map(([x, y]) => `${r2(x * MA)} ${r2(y * MA)}`).join(';'), tt(MV.mvT))}${body}</g>`;   // 통통 · 춤 (몸 전체 이동)
             if (live && opts.hop) body = `<g>${anim('translate', '0 0;0 -16;0 0;0 -5;0 0', 0.7, 'keyTimes="0;.3;.6;.8;1" repeatCount="1"').replace('repeatCount="indefinite" ', '')}${body}</g>`;   // 💕 콩 뛰기 (한 번)
             if (D.flip) body = `<g transform="translate(${DOLL_W} 0) scale(-1 1)">${body}</g>`;
-            const vb = opts.crop ? '46 0 208 470' : `0 0 ${DOLL_W} ${DOLL_H}`;
+            const vb = opts.crop ? (rig ? '0 -12 300 482' : '46 0 208 470') : `0 0 ${DOLL_W} ${DOLL_H}`;   // 직접 만든 움직임은 팔다리가 넓게 움직여서 옆을 덜 잘라요
             const bg = opts.bg === false ? '' : (DOLL_BGS(pfx)[D.bg] || '');
-            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"${opts.attrs ? ' ' + opts.attrs : ''}><defs>${defs.join('')}</defs>${bg}${body}</svg>`;
+            return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${vb}"${opts.attrs ? ' ' + opts.attrs : ''}><defs>${defs.join('')}</defs>${bg}${body}</svg>`;
         }
 
         function dollDataUrl(D, opts) { return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(dollSVG(D, opts)); }

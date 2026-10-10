@@ -1179,7 +1179,7 @@
                 grp('눈', ch('eyes', [['basic', '기본'], ['sparkle', '반짝'], ['smile', '웃음'], ['wink', '윙크'], ['sleepy', '졸림'], ['heart', '하트']])) +
                 grp('입', ch('mouth', [['cat', '고양이'], ['smile', '스마일'], ['open', '활짝'], ['o', '오!'], ['pout', '뽀뽀']])) +
                 grp('눈썹', ch('brows', [['basic', '기본'], ['worried', '시무룩'], ['strong', '씩씩'], ['none', '없음']])) +
-                grp('움직임', `<div class="chips">${DMV_STYLES.map(([v, l]) => `<button type="button" class="chip${d.motion.s === v ? ' on' : ''}" data-qmove="${v}">${l}</button>`).join('')}</div>`) +
+                grp('움직임', `<div class="chips">${DMV_STYLES.map(([v, l]) => `<button type="button" class="chip${d.motion.s === v ? ' on' : ''}" data-qmove="${v}">${l}</button>`).join('')}${d.motion.k.length >= 2 ? `<button type="button" class="chip${d.motion.s === 'custom' ? ' on' : ''}" data-qmove="custom">✏️ 내가 만든 움직임</button>` : ''}</div>`) +
                 grp('그 밖에', `<div class="chips"><button type="button" class="chip${d.blushA > 0 ? ' on' : ''}" data-qblush="1">볼터치</button><button type="button" class="chip${d.flip ? ' on' : ''}" data-qflip="1">↔ 좌우 반전</button></div>`) +
                 (d.layers.some(L => L.slot === 'face') ? '<p class="dr-note">직접 그린 얼굴 조각은 그대로 있고, 고른 표정이 함께 보여요.</p>' : '');
         }

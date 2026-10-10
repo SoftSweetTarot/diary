@@ -2987,7 +2987,9 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .dmv-card { font: inherit; padding: 0; cursor: pointer; text-align: center; }
 .dmv-main, .cmv-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
 @media (max-width: 560px) { .dmv-main, .cmv-main { grid-template-columns: minmax(0, 1fr); } }
-.dmv-stage { width: min(100%, calc(46vh * 300 / 470)); margin: 0 auto; aspect-ratio: 300 / 470; border: 3px solid var(--border-color); border-radius: 18px; overflow: hidden; background: #fff; cursor: pointer; touch-action: manipulation; }
+.dmv-stagewrap { position: relative; width: min(100%, calc(46vh * 300 / 470)); margin: 0 auto; }
+.dmv-stage { width: 100%; aspect-ratio: 300 / 470; border: 3px solid var(--border-color); border-radius: 18px; overflow: hidden; background: #fff; cursor: pointer; touch-action: manipulation; box-sizing: border-box; }
+.dmv-stagewrap.dmv-edit .dmv-stage { cursor: default; }
 .dmv-stage svg { display: block; width: 100%; height: 100%; }
 .cmv-stage { position: relative; width: min(100%, calc(var(--cmv-ar, 1) * 46vh)); margin: 0 auto; border: 3px solid var(--border-color); border-radius: 18px; overflow: hidden; background: #fff
     repeating-conic-gradient(#f6eef1 0 25%, #fff 0 50%) 0 0 / 18px 18px; }
@@ -3009,10 +3011,34 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .dmv-btns .btn-primary, .cmv-btns .btn-primary { grid-column: 1 / -1; }
 .dmv-box .btn-primary, .cmv-box .btn-primary { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
 .dmv-close, .cmv-close { width: 100%; justify-content: center; margin-top: 12px; }
+/* ✏️ 인형 직접 만들기 (포즈 · 부위 고르기 · 슬라이더) */
+.dmv-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.dmv-tab { flex: 1; font: inherit; font-size: 13.5px; padding: 8px 6px; border-radius: 14px; border: 2px solid var(--border-color); background: #fff; color: #666; cursor: pointer; }
+.dmv-tab.on { background: #fff0f5; border-color: var(--primary-accent); color: var(--primary-accent); font-weight: bold; }
+.dmv-dots { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.dmv-dot { position: absolute; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; padding: 0; border-radius: 50%; border: 2px solid #fff; background: rgba(255, 107, 143, .55); box-shadow: 0 0 0 1px rgba(90, 60, 70, .5); pointer-events: auto; cursor: pointer; }
+.dmv-dot.used { background: rgba(79, 168, 255, .8); }
+.dmv-dot.on { background: #ff4f7e; z-index: 2; box-shadow: 0 0 0 1px rgba(90, 60, 70, .5), 0 0 0 4px rgba(255, 79, 126, .35); }
+.dmv-row2 { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.dmv-chip:disabled { opacity: .4; cursor: default; }
+.dmv-chip.used:not(.on) { background: #eef6ff; border-color: #8cc0ff; color: #3b82c4; }
+.dmv-pose { min-width: 38px; justify-content: center; }
+.dmv-sl { display: grid; grid-template-columns: 82px minmax(0, 1fr) 46px; gap: 6px; align-items: center; margin-bottom: 4px; }
+.dmv-sl label { font-size: 12.5px; color: #666; white-space: nowrap; }
+.dmv-sl input { min-width: 0; accent-color: var(--primary-accent); }
+.dmv-sl output, .dmv-timeRow output { font-size: 12px; color: #888; text-align: right; }
+.dmv-grp h4 small { font-weight: normal; color: #999; margin-left: 4px; }
+.dmv-how { margin: 0 0 10px; color: #777; background: #fff8fb; border-radius: 10px; padding: 7px 9px; }
+.dmv-check { display: flex; gap: 6px; align-items: center; margin: 0 0 12px; font-size: 12.5px; color: #666; cursor: pointer; }
+.dmv-check input { accent-color: var(--primary-accent); margin: 0; }
+.dmv-btns #dmvPlay { grid-column: 1 / -1; }
 /* 🪄 일기 안의 움직이는 캐릭터 : 그림은 그대로 두고 (투명하게) 그 위에 움직이는 캔버스를 겹쳐요 */
 .element-box > canvas.cmv-live { position: absolute; left: 6px; top: 6px; width: calc(100% - 12px); height: calc(100% - 12px); pointer-events: none; display: block; }
 #canvasArea .element-box > canvas.cmv-live { filter: drop-shadow(0 1px .8px rgba(90, 60, 70, .2)) drop-shadow(0 2px 3px rgba(90, 60, 70, .08)); }
 @media (max-width: 560px) {
-    .dmv-stage { width: min(100%, calc(36vh * 300 / 470)); }
+    .dmv-stagewrap { width: min(100%, calc(36vh * 300 / 470)); }
+    .dmv-main { display: block; overflow-x: clip; }
+    .dmv-main > .dmv-stagewrap { position: sticky; top: 0; z-index: 6; margin-bottom: 10px; width: min(100%, calc(32vh * 300 / 470)); border-radius: 18px; }
+    .dmv-main > .dmv-stagewrap::before { content: ''; position: absolute; z-index: -1; left: -100vw; right: -100vw; top: -6px; bottom: -6px; background: #fffdf9; border-bottom: 1px solid var(--border-color); }
     .cmv-stage { width: min(100%, calc(var(--cmv-ar, 1) * 36vh)); }
 }
