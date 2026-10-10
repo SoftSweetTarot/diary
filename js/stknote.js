@@ -319,12 +319,14 @@
                 if (snb.press) { if (snb.press.drag) return; clearTimeout(snb.press.timer); }
                 const it = snbItemOf(e.target, body);
                 const p = snb.press = { body, id: e.pointerId, x: e.clientX, y: e.clientY, t: e.target, it, mouse: e.pointerType === 'mouse', touch: e.pointerType === 'touch', drag: false, timer: 0 };
-                if (it) p.timer = setTimeout(() => { if (snb.press === p && !p.gone) snbLift(e, body); }, SNB_HOLD);
+                if (it && it.classList.contains('snb-pc')) p.pc = true;            // 🧾 시트의 그림 : 기다리지 않고 바로 돌돌 말려 떼어져요
+                else if (it) p.timer = setTimeout(() => { if (snb.press === p && !p.gone) snbLift(e, body); }, SNB_HOLD);
             }, true);
             window.addEventListener('pointermove', e => {
                 const p = snb.press; if (!p || p.id !== e.pointerId || p.body !== body) return;
                 const dx = e.clientX - p.x, dy = e.clientY - p.y, d = Math.hypot(dx, dy);
                 if (p.drag) { snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }
+                if (p.pc) { if (p.seal || (d > 3 && snbPeelStart(p))) { p.seal.move(e.clientX, e.clientY); e.preventDefault(); return; } if (d <= 3) return; }
                 if (p.curl) { snbCurlAt((p.curl > 0 ? -dx : dx) - (p.ear ? 0 : 8)); e.preventDefault(); return; }
                 if (d > 8 && p.it && !p.swipe && Math.abs(dy) * 2 >= Math.abs(dx)) { clearTimeout(p.timer); snbLift(e, body); snbGhostAt(e.clientX, e.clientY); e.preventDefault(); return; }   // 스티커를 누른 채 옆으로만 밀지 않고 끌면 기다리지 않고 바로 떼어져요
                 if (d > 8) { clearTimeout(p.timer); p.gone = true; }
@@ -336,6 +338,7 @@
             const up = e => {
                 const p = snb.press; if (!p || p.id !== e.pointerId || p.body !== body) return;
                 clearTimeout(p.timer); snb.press = null;
+                if (p.seal) { snb.noClick = Date.now() + 500; if (e.type === 'pointercancel') { p.seal.kill(); snbPeelBack(p); } else p.seal.up(); return; }
                 if (p.drag) { snb.noClick = Date.now() + 500; snbDrop(p, e.clientX, e.clientY, e.type === 'pointercancel'); return; }
                 if (p.curl && snb.curl) {
                     snb.noClick = Date.now() + 400;
@@ -586,6 +589,48 @@
             if (!addImage(s)) return;
             const el = document.querySelector('#canvasArea > .element-box:last-child'); if (el) el.style.width = (pc._k === 'pack' ? 80 : 110) + 'px';
             if (typeof saveData === 'function') saveData(false);
+        }
+
+        /* ---------- 🧾 시트에서 돌돌 말려 떼기 (js/peelfx.js pfxSeal · 🍭 미니시트 판과 같은 떼기)
+           누른 채 끌면 가장자리부터 말려 올라오다 다 떼어지면 손가락을 따라와요 → 페이지 위에 놓으면 그 자리 · 그 각도로 붙어요
+           덜 떼고 놓거나 페이지 밖에 놓으면 시트로 착 돌아가요 ---------- */
+        function snbPeelStart(p) {
+            if (!window.pfxSeal) return false;
+            const pc = p.it, im = pc.querySelector('img');
+            let src = im, r;
+            if (im) { if (!im.complete || !im.naturalWidth) return false; r = im.getBoundingClientRect(); }
+            else {                                                                 // 😀 이모지 같은 글자 : 그림으로 그려서 떼요
+                const t = pc.querySelector('b'); if (!t) return false;
+                r = t.getBoundingClientRect(); const R = Math.min(3, window.devicePixelRatio || 1), c = document.createElement('canvas');
+                c.width = Math.ceil(r.width * R); c.height = Math.ceil(r.height * R);
+                const x = c.getContext('2d'); x.scale(R, R); x.font = getComputedStyle(t).font; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t.textContent, r.width / 2, r.height / 2 + 1);
+                src = c;
+            }
+            if (!r.width || !r.height) return false;
+            pc.classList.add('out');
+            p.seal = pfxSeal({ src, cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height, rot: 0, x: p.x, y: p.y,
+                onDetach: () => { if (snb.m) snb.m.classList.add('snb-away'); },   // 다 떼어지면 수첩이 비켜 줘요
+                onCancel: () => snbPeelBack(p),
+                onDrop: (cx, cy, rot) => { if (snbOver(cx, cy)) snbPeelStick(p, cx, cy, rot, r); else snbPeelBack(p); } });
+            const stage = document.querySelector('body > .pfx-stage:last-of-type'); if (stage) stage.classList.add('snb-top');   // 수첩 위에서 떼어져요
+            if (navigator.vibrate) try { navigator.vibrate(6); } catch (er) {}
+            return true;
+        }
+        function snbPeelBack(p) { p.it.classList.remove('out'); if (snb.m) snb.m.classList.remove('snb-away'); }
+        async function snbPeelStick(p, cx, cy, rot, r) {
+            const pc = p.it, m = snb.m;
+            setTimeout(() => { pc.classList.remove('out'); pc.classList.add('again'); setTimeout(() => pc.classList.remove('again'), 500); if (m) m.classList.remove('snb-away'); }, 350);   // 스티커첩은 다시 채워져요
+            if (pc._src) { snbPut({ it: pc._src, t: null }, cx, cy); return; }      // 낱장 모음 시트 : 원래 칸과 같은 방법으로 그 자리에
+            let s = pc._url;
+            if (pc._k === 'seal' && window.pelBake) try { s = await pelBake(s); } catch (e) {}
+            if (!addImage(s)) return;
+            const pg = snbq('canvasArea'), cr = pg.getBoundingClientRect(), k = cr.width / (pg.offsetWidth || cr.width) || 1, el = pg.querySelector(':scope > .element-box:last-child');
+            if (!el) return;
+            const deg = Math.round(rot * 180 / Math.PI * 10) / 10;
+            el.style.width = Math.round(r.width / k * (pc._k === 'seal' ? 1.12 : 1)) + 'px'; el.dataset.rotation = deg;
+            snbPlace(el, cx, cy);
+            if (typeof selectElement === 'function') selectElement(el);
+            if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}
         }
 
         window.snbState = () => ({ page: snb.page, pages: snb.pages.length, curl: !!snb.curl }); window.snbMode = snbMode; window.snbSet = snbSet; window.snbRender = snbRender; window.snbGo = snbGo;
