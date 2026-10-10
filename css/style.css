@@ -2598,7 +2598,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .stk-menu { gap: 10px; }
 .stk-menu .service-btn { padding: 14px 4px 12px; font-size: 13.5px; word-break: keep-all; }
 .stk-menu .service-icon { font-size: 1.9rem; }
-.stk-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 2px 0 8px; }
+.stk-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin: 2px 0 8px; }
 .stk-tabs[hidden] { display: none; }
 .stk-tab { padding: 6px 1px; border: 1.5px solid var(--border-color); border-radius: 12px; background: #fff; font: inherit; font-size: 12px; font-weight: bold; line-height: 1.2; color: #7a5a66; cursor: pointer; word-break: keep-all; letter-spacing: -.02em; }
 .stk-tab.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
