@@ -437,6 +437,12 @@
                 if (res.ok) return await res.json();
                 throw await driveFail(res, 'update');                           // 404 'gone' : 그 사이 지워짐 → 캐시를 비우고 다시 시도
             }
+            /* 새 파일을 만들기 전에 폴더가 살아 있는지 드라이브에 직접 확인 : 휴지통에 들어간 폴더에 만들면 일기가 안 보이게 돼요
+               → 폴더가 없거나 휴지통이면 기억해 둔 폴더를 모두 잊고 'gone' (부른 쪽이 폴더를 다시 찾아서 다시 저장해요) */
+            if (!(await driveMeta(folderId))) {
+                resetDriveCaches();
+                const er = new Error('folder gone'); er.code = 'gone'; throw er;
+            }
             const b = 'diary_boundary_' + Math.random().toString(36).slice(2);
             const meta = { name, mimeType: 'application/json', parents: [folderId] };
             const multipart =
@@ -488,7 +494,15 @@
             });
             drive[KEY_FILES[which].prop] = cur;
             if (which === 'cafe') { drive.cafeBase = new Map(); Object.keys(obj).forEach(k => { if (keyFile(k) === 'cafe') drive.cafeBase.set(k, JSON.stringify(obj[k])); }); }
-            if (changed) applyRemoteSettings();
+            if (changed) { applyRemoteSettings(); if (which === 'cafe') cafeShownAgain(); }
+        }
+        /* ☕ 열려 있는 카페 창이 옛 기록을 들고 있지 않게 : 합친 기록으로 다시 읽어서 다시 그려요
+           (창을 연 채로 고치면 창이 들고 있던 옛 기록이 그대로 저장되어, 다른 기기가 더한 것이 빠질 수 있어서) */
+        function cafeShownAgain() {
+            const open = id => { const e = document.getElementById(id); return !!e && e.classList.contains('show'); };
+            try { if (typeof atRead === 'function' && open('attendRoom')) { atS.d = atRead(); atRender(); } } catch (e) { console.warn(e); }
+            try { if (typeof cyRead === 'function' && open('cycleRoom')) { cy.d = cyRead(); cyRender(); } } catch (e) { console.warn(e); }
+            try { if (typeof arReadBest === 'function' && open('arcadeRoom')) ar.best = arReadBest(); } catch (e) { console.warn(e); }
         }
 
         /* ☕ 카페 기록 합치기 : 두 기기가 같은 항목을 고쳤을 때 한쪽 기록이 사라지지 않게
@@ -971,7 +985,7 @@
 
         /* =====================================================================
            📱💻 두 기기 · 두 탭에서 같이 쓸 때
-           - 앱으로 돌아올 때 · 켜 둔 동안 3분마다 : 설정 · 카페 파일과 펼쳐 둔 날(앞 · 뒤 포함 3일)이
+           - 앱으로 돌아올 때 · 켜 둔 동안 1분마다 : 설정 · 카페 파일과 펼쳐 둔 날(앞 · 뒤 포함 3일)이
              다른 기기에서 바뀌었는지 '마지막 수정 시각'만 보고, 바뀌었으면 그것만 다시 읽어요
            - 같은 기기의 다른 탭이 저장하면 BroadcastChannel 로 바로 알려 줘요
            ===================================================================== */
@@ -985,7 +999,7 @@
         };
         function checkRemote(force) {
             if (!drive.ready || drive.guest || document.hidden || drive.needAuth) return Promise.resolve();
-            if (!force && Date.now() - lastRemoteCheck < 60000) return Promise.resolve();
+            if (!force && Date.now() - lastRemoteCheck < 50000) return Promise.resolve();
             if (remoteChecking) return remoteChecking;
             lastRemoteCheck = Date.now();
             remoteChecking = (async () => {
@@ -1020,7 +1034,7 @@
             })().catch(e => console.warn('다른 기기 변경 확인 실패:', e)).finally(() => { remoteChecking = null; });
             return remoteChecking;
         }
-        setInterval(() => checkRemote(), 3 * 60 * 1000);
+        setInterval(() => checkRemote(), 60 * 1000);                     // 화면을 보는 동안 1분마다 (숨겨져 있으면 쉬어요)
 
         /* 화면 꺼짐 / 앱 전환 (아이폰·안드로이드·아이패드 공통) */
         document.addEventListener('visibilitychange', () => {

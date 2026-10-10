@@ -798,6 +798,17 @@
         }
         const pageStamps = { mo: '', we: '' };            // 지금 페이지의 기분 · 날씨 도장
 
+        /* ✍ 쓰거나 옮기고 손을 떼면 1.5초 뒤 화면 → 메모리 (그 3초 뒤 드라이브에 · js/drive.js)
+           → 앱이 갑자기 꺼져도 잃는 게 적고, 다른 기기에도 금방 보여요
+           - 바뀐 게 없으면 메모리 값이 같아서 드라이브에 올리지 않아요 · 아직 못 읽은 날짜는 saveData 가 저장하지 않아요 */
+        let pageQuickTimer = 0;
+        function pageQuickSave() {
+            if (typeof isCoverOpen === 'undefined' || !isCoverOpen) return;
+            clearTimeout(pageQuickTimer);
+            pageQuickTimer = setTimeout(() => { try { if (isCoverOpen && !turn) saveData(false); } catch (e) { console.warn(e); } }, 1500);
+        }
+        ['input', 'change', 'pointerup', 'keyup'].forEach(t => document.addEventListener(t, pageQuickSave, true));
+
         function clearCanvas() { document.getElementById('canvasArea').innerHTML = ''; }
 
 
