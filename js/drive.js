@@ -77,7 +77,7 @@
             dayLoads: new Map(),         // 읽는 중인 날짜 요청
             folderIds: new Map(),        // 폴더 경로 → 폴더 id 캐시
             folderBusy: new Map(),
-            tree: null, treeBusy: null, treeEpoch: 0, treeFailAt: 0, newFolders: new Set(),   // 📂 폴더 지도 (앱이 만든 폴더 전부 · 아래 loadFolderTree)
+            tree: null, treeBusy: null, treeEpoch: 0, treeFailAt: 0,   // 📂 폴더 지도 (앱이 만든 폴더 전부 · 아래 loadFolderTree)
             monthIndex: new Map(),       // '2026/9' → { folderId, files: Map(파일명 → 파일정보) } 캐시
             monthBusy: new Map(),
             get dirty() { return this.dirtyKeys.size > 0; }
@@ -269,7 +269,6 @@
            - drive.file 권한이라 앱이 만든 폴더만 와요 · 휴지통에 있는 폴더는 빼고 받아요
            - 지도는 TREE_FRESH_MS 동안만 믿어요 → 그 뒤에 처음 찾는 경로가 있으면 지도를 새로 받아요 (다른 기기가 만든 폴더도 보여요)
            - 지도에 없는 폴더를 만든 뒤에는 드라이브에 직접 한 번 더 물어봐요 → 다른 기기가 그 사이 같은 폴더를 만들었으면 먼저 만든 쪽을 쓰고 내 것은 합쳐요
-           - 방금 만든 폴더는 비어 있는 게 확실해서 안의 파일 목록을 묻지 않아요 (drive.newFolders)
            - 지도를 못 받으면(인터넷 · 권한) 예전 방식(한 단계씩 묻기)으로 그대로 해요 */
         const TREE_FRESH_MS = 30000;
         function loadFolderTree(force) {
@@ -385,7 +384,6 @@
                     const made = await createFolder(name, parentId);
                     const again = await findFolder(name, parentId);                // 그 사이 다른 기기도 만들었으면 먼저 만든 쪽을 써요 (내 것은 합쳐져요)
                     id = again || made;
-                    if (id === made) drive.newFolders.add(made);
                     treeAdd(name, parentId, id);
                 }
                 if (id) drive.folderIds.set(key, id);
@@ -407,7 +405,7 @@
             const p = (async () => {
                 const folderId = await getFolder([...DAY_PATH, yearFolderName(y), monthFolderName(m)], create);
                 if (!folderId) return null;
-                const files = drive.newFolders.has(folderId) ? [] : await driveList(`'${folderId}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,name,modifiedTime,size');   // 방금 만든 달 폴더는 비어 있어요
+                const files = await driveList(`'${folderId}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,name,modifiedTime,size');
                 const e = { folderId, files: new Map() };
                 files.forEach(f => { if (!e.files.has(f.name)) e.files.set(f.name, f); });   // 같은 이름이 여러 개면 가장 오래된 1개만 사용
                 drive.monthIndex.set(key, e);
@@ -419,7 +417,7 @@
 
         function resetDriveCaches() {
             drive.folderIds.clear(); drive.folderBusy.clear();
-            drive.tree = null; drive.treeBusy = null; drive.treeEpoch++; drive.treeFailAt = 0; drive.newFolders.clear();
+            drive.tree = null; drive.treeBusy = null; drive.treeEpoch++; drive.treeFailAt = 0;
             drive.monthIndex.clear(); drive.monthBusy.clear();
             drive.settingsFile = null; drive.cafeFile = null;
         }
