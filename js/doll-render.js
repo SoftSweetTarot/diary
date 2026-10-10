@@ -19,15 +19,19 @@
             skin: '#fdead9', eyes: 'basic', eyeColor: '#8c564c', brows: 'basic', mouth: 'cat',
             blush: '#ff8fa3', blushA: 0, lip: '#ff5c7a', lipA: 0, shadow: '#c9a7ff', shadowA: 0, lashes: false, freckles: false,
             hairBack: 'none', hairFront: 'none', hairColor: '#7a4b3a', inner: '#fdbed1',
+            hairCut: 1844, bangCut: 1844, hairGrow: 1, hairSway: 0, hairTip: '#f5a3c0', hairTipA: 0,      // 💇 미용실 : 자른 높이(바탕 그림 칸) · 기른 정도 · 빗질 · 끝 물들이기
             top: 'none', bottom: 'none', dress: 'none', shoes: 'none',
             acc: { bow: false, headband: false, crown: false, glasses: false, beret: false, flower: false, tie: false },
             accColor: '#ff6b8f', bg: 'dots', flip: false,
             cloth: {
-                top:    { color: '#ffffff', pat: 'none', patColor: '#ffd1dc', patSize: 1, sleeve: 'short', len: 0.5 },
-                bottom: { color: '#ff9fb6', pat: 'none', patColor: '#ffffff', patSize: 1, sleeve: 'short', len: 0.45 },
-                dress:  { color: '#b9dcff', pat: 'none', patColor: '#ffffff', patSize: 1, sleeve: 'puff', len: 0.55 },
-                shoes:  { color: '#ff6b8f', pat: 'none', patColor: '#ffffff', patSize: 1, sleeve: 'short', len: 0.5 }
-            },
+                top:    { color: '#ffffff', pat: 'none', patColor: '#ffd1dc', patSize: 1, sleeve: 'short', len: 0.5, slen: 0.42, fl: 1 },
+                bottom: { color: '#ff9fb6', pat: 'none', patColor: '#ffffff', patSize: 1, sleeve: 'short', len: 0.45, slen: 0.42, fl: 1 },
+                dress:  { color: '#b9dcff', pat: 'none', patColor: '#ffffff', patSize: 1, sleeve: 'puff', len: 0.55, slen: 0.36, fl: 1 },
+                shoes:  { color: '#ff6b8f', pat: 'none', patColor: '#ffffff', patSize: 1, sleeve: 'short', len: 0.5, slen: 0.42, fl: 1 }
+            },                                                                  // ✂️ 재단 : len 기장 · slen 소매 길이 · fl 퍼짐(1 = 기본)
+            paint: [],        // 🖌️ 옷에 칠한 것 (옷 안에만 보여요) { t:'b' 붓 [c, w, op, pts] | t:'s' 도장 [k, c, x, y, s] }
+            patch: [],        // 🧷 옷에 붙인 것 { k, c, x, y, s, r }
+            hairPaint: [],    // 🎨 머리 염색 붓 (머리 안에만 보여요)
             layers: [],
             stats: { ms: 0, hard: false, created: 0 }
         };
@@ -39,8 +43,11 @@
             top: ['none', 'tee', 'blouse', 'shirt', 'hoodie', 'cardigan'], bottom: ['none', 'skirt', 'suspender', 'pants'],
             dress: ['none', 'aline', 'princess', 'hanbok'], shoes: ['none', 'mary', 'sneaker', 'boots'], bg: ['dots', 'sky', 'check', 'room', 'none']
         };
-        const DOLL_COLORS = ['skin', 'eyeColor', 'blush', 'lip', 'shadow', 'hairColor', 'accColor', 'inner'];
-        const DOLL_NUMS = { blushA: [0, 1], lipA: [0, 1], shadowA: [0, 0.8] };
+        const DOLL_COLORS = ['skin', 'eyeColor', 'blush', 'lip', 'shadow', 'hairColor', 'accColor', 'inner', 'hairTip'];
+        const DOLL_NUMS = { blushA: [0, 1], lipA: [0, 1], shadowA: [0, 0.8], hairCut: [200, 1844], bangCut: [200, 1844], hairGrow: [0.5, 2.5], hairSway: [-1, 1], hairTipA: [0, 1] };
+        const DOLL_STAMPS = ['heart', 'star', 'dot', 'flower', 'sparkle'];
+        const DOLL_PATCHES = ['button', 'heart', 'star', 'bow', 'lace', 'pocket', 'flower'];
+        const DOLL_MAX_PAINT = 400;
         const DOLL_BOOLS = ['lashes', 'freckles', 'flip'];
         const DOLL_ACCS = ['bow', 'headband', 'crown', 'glasses', 'beret', 'flower', 'tie'];
         const DOLL_PATS = ['none', 'diag', 'stripe', 'dot', 'check', 'heart', 'flower', 'star'];
@@ -74,7 +81,18 @@
                 o.pat = DOLL_PATS.includes(s.pat) ? s.pat : 'none';
                 o.patSize = dollNum(s.patSize, [0.4, 2], 1); o.len = dollNum(s.len, [0, 1], o.len);
                 o.sleeve = ['none', 'short', 'puff', 'long'].includes(s.sleeve) ? s.sleeve : o.sleeve;
+                o.slen = dollNum(s.slen, [0.1, 1], o.slen); o.fl = dollNum(s.fl, [0.3, 2.2], 1);
             });
+            const xy = (v, lim) => Math.round(dollNum(v, lim, 0) * 10) / 10;
+            const strokes = a => (Array.isArray(a) ? a : []).slice(0, DOLL_MAX_PAINT).map(q => {
+                if (!q || typeof q !== 'object') return null;
+                if (q.t === 's') return DOLL_STAMPS.includes(q.k) ? { t: 's', k: q.k, c: dollColor(q.c, '#ffffff'), x: xy(q.x, [-60, 360]), y: xy(q.y, [-60, 530]), s: dollNum(q.s, [0.3, 4], 1) } : null;
+                const pts = (Array.isArray(q.pts) ? q.pts : []).slice(0, DOLL_MAX_PTS).filter(p => Array.isArray(p) && p.length >= 2).map(p => [xy(p[0], [-60, 360]), xy(p[1], [-60, 530])]);
+                return pts.length ? { t: 'b', c: dollColor(q.c, '#ffffff'), w: dollNum(q.w, [0.5, 40], 4), op: dollNum(q.op, [0.05, 1], 1), pts } : null;
+            }).filter(Boolean);
+            out.paint = strokes(d.paint); out.hairPaint = strokes(d.hairPaint);
+            out.patch = (Array.isArray(d.patch) ? d.patch : []).slice(0, 120).filter(q => q && DOLL_PATCHES.includes(q.k))
+                .map(q => ({ k: q.k, c: dollColor(q.c, '#ffffff'), x: xy(q.x, [-60, 360]), y: xy(q.y, [-60, 530]), s: dollNum(q.s, [0.3, 4], 1), r: Math.round(dollNum(q.r, [-180, 180], 0)) }));
             out.layers = [];
             (Array.isArray(d.layers) ? d.layers : []).slice(0, DOLL_MAX_LAYERS).forEach(L => {
                 if (!L || typeof L !== 'object' || !Array.isArray(L.pts)) return;
@@ -103,7 +121,7 @@
         }
 
         function dollCounts(d) {
-            return { pieces: d.layers.length, pts: d.layers.reduce((s, L) => s + L.pts.length, 0) };
+            return { pieces: d.layers.length, pts: d.layers.reduce((s, L) => s + L.pts.length, 0), paint: d.paint.length + d.hairPaint.length + d.patch.length };
         }
         function dollTimeText(ms) {
             const m = Math.round(ms / 60000);
@@ -196,6 +214,50 @@
         }
 
         /* 인형 그림 하나 만들기 : 그리는 동안만 쓰는 도우미들을 한데 묶음 (좌표는 바탕 그림 853 × 1844 칸) */
+        /* ---------- ✂️ 재단 기준 (그리기 · 인형방 손잡이 공용 · 바탕 그림 칸) ---------- */
+        const DOLL_SKIRT = {
+            skirt:    { wy: 975, base: 1060, range: 360, flare: 0.42 },
+            aline:    { wy: 962, base: 1100, range: 420, flare: 0.5 },
+            princess: { wy: 962, base: 1150, range: 380, flare: 0.85, petticoat: true },
+            hanbok:   { wy: 850, base: 1500, range: 260, flare: 0.5 }
+        };
+        const dollTopHem = len => Math.round(880 + len * 220);
+        const dollPantsHem = len => Math.min(1770, 1180 + len * 590);
+        const DOLL_HAIR_END = { long: 1060, bob: 690, twin: 952, pony: 842, bun: 640, short: 640 };   // 뒷머리 원래 끝
+        const DOLL_HAIR_TOP = 470;                                                                   // 이 아래부터 기르기 · 빗질
+        const dollHairEnd = D => D.hairBack === 'none' ? 600 : Math.min(D.hairCut, DOLL_HAIR_TOP + (DOLL_HAIR_END[D.hairBack] - DOLL_HAIR_TOP) * D.hairGrow);
+
+        /* ---------- 🖌️ 칠한 것 · 🧷 붙인 것 (300 × 470 칸) ---------- */
+        function dollStampPath(k) {
+            switch (k) {
+                case 'heart': return 'M0 4 C-7 -1 -5.5 -7 0 -3.5 C5.5 -7 7 -1 0 4Z';
+                case 'star': return 'M0 -6 L1.8 -1.9 L6 -1.9 L2.6 0.8 L3.8 5 L0 2.5 L-3.8 5 L-2.6 0.8 L-6 -1.9 L-1.8 -1.9Z';
+                case 'flower': return 'M0 -2.2 C-1.6 -7 1.6 -7 0 -2.2Z M2.1 -0.7 C6.8 -2.3 7.8 0.8 2.1 -0.7Z M1.3 1.8 C4.2 5.9 1.6 7.8 1.3 1.8Z M-1.3 1.8 C-1.6 7.8 -4.2 5.9 -1.3 1.8Z M-2.1 -0.7 C-7.8 0.8 -6.8 -2.3 -2.1 -0.7Z M0 -1.6 A1.6 1.6 0 1 0 0.01 -1.6Z';
+                case 'sparkle': return 'M0 -6 Q0.8 -0.8 6 0 Q0.8 0.8 0 6 Q-0.8 0.8 -6 0 Q-0.8 -0.8 0 -6Z';
+                default: return 'M0 -3 A3 3 0 1 0 0.01 -3Z';
+            }
+        }
+        function dollPaintSVG(list) {
+            return list.map(q => q.t === 's'
+                ? `<path transform="translate(${q.x} ${q.y}) scale(${q.s})" d="${dollStampPath(q.k)}" fill="${q.c}"/>`
+                : q.pts.length === 1 ? `<circle cx="${q.pts[0][0]}" cy="${q.pts[0][1]}" r="${q.w / 2}" fill="${q.c}" opacity="${q.op}"/>`
+                : `<polyline points="${q.pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${q.c}" stroke-width="${q.w}" stroke-linecap="round" stroke-linejoin="round" opacity="${q.op}"/>`).join('');
+        }
+        function dollPatchSVG(q, i) {
+            const c = q.c, ln = dDark(c, 0.45), lt = dLight(c, 0.5), w = 'stroke-width="0.9" stroke-linejoin="round"';
+            let g = '';
+            switch (q.k) {
+                case 'button': g = `<circle r="4" fill="${c}" stroke="${ln}" ${w}/><circle r="2.6" fill="none" stroke="${ln}" stroke-width=".5" opacity=".6"/>` + [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([x, y]) => `<circle cx="${x * 0.9}" cy="${y * 0.9}" r=".45" fill="${ln}"/>`).join(''); break;
+                case 'heart': g = `<path d="M0 6 C-10 -1 -8 -10 0 -5 C8 -10 10 -1 0 6Z" fill="${c}" stroke="${ln}" ${w}/><path d="M0 4.6 C-8 -1 -6.6 -8.2 0 -3.9 C6.6 -8.2 8 -1 0 4.6Z" fill="none" stroke="${lt}" stroke-width=".6" stroke-dasharray="1.2 1"/>`; break;
+                case 'star': g = `<path d="M0 -8 L2.4 -2.6 L8 -2.5 L3.5 1.1 L5 7 L0 3.6 L-5 7 L-3.5 1.1 L-8 -2.5 L-2.4 -2.6Z" fill="${c}" stroke="${ln}" ${w}/><circle cx="-1.6" cy="-1.6" r="1.1" fill="#fff" opacity=".6"/>`; break;
+                case 'bow': g = `<path d="M0 0 C-4 -5 -10 -5 -9 0 C-10 5 -4 5 0 0Z M0 0 C4 -5 10 -5 9 0 C10 5 4 5 0 0Z M-1 0 L-4 8 L-1.5 7.4 L0 1 L1.5 7.4 L4 8 L1 0Z" fill="${c}" stroke="${ln}" ${w}/><circle r="2" fill="${lt}" stroke="${ln}" ${w}/>`; break;
+                case 'lace': g = `<path d="M-14 -2 L14 -2 L14 1${[...Array(7)].map((_, j) => ` Q${12 - j * 4} 5 ${10 - j * 4} 1`).join('')} L-14 1Z" fill="${c}" stroke="${ln}" stroke-width=".6"/>` + [...Array(7)].map((_, j) => `<circle cx="${12 - j * 4}" cy="1.6" r=".7" fill="${ln}" opacity=".45"/>`).join(''); break;
+                case 'pocket': g = `<path d="M-6 -5 L6 -5 L6 3 Q6 6 3 6 L-3 6 Q-6 6 -6 3Z" fill="${c}" stroke="${ln}" ${w}/><path d="M-6 -2.4 L6 -2.4" stroke="${ln}" stroke-width=".6"/><path d="M-4.8 -1.2 L4.8 -1.2 L4.8 3 Q4.8 4.8 3 4.8 L-3 4.8 Q-4.8 4.8 -4.8 3Z" fill="none" stroke="${lt}" stroke-width=".5" stroke-dasharray="1 .8"/>`; break;
+                case 'flower': g = [0, 72, 144, 216, 288].map(a => `<ellipse cx="0" cy="-3.6" rx="2.6" ry="3.6" transform="rotate(${a})" fill="${c}" stroke="${ln}" stroke-width=".6"/>`).join('') + `<circle r="2.2" fill="#ffe08a" stroke="#d9a832" stroke-width=".6"/>`; break;
+            }
+            return `<g class="dl-patch" data-pi="${i}" transform="translate(${q.x} ${q.y}) rotate(${q.r}) scale(${q.s})">${g}</g>`;
+        }
+
         function dollParts(D, pfx, defs) {
             const C = 426;
             const cl = part => D.cloth[part];
@@ -333,13 +395,13 @@
 
             /* ---------- 옷 ---------- */
             const sleeveT = { short: 0.42, puff: 0.36, long: 0.78 };
-            function sleeve(s, kind, fill, color) {
+            function sleeve(s, kind, fill, color, len) {
                 if (!sleeveT[kind]) return '';
-                const t1 = sleeveT[kind], N = 12, outer = [], inn = [];
+                const t1 = len || sleeveT[kind], N = 12, outer = [], inn = [];
                 for (let k = 0; k <= N; k++) {
                     const t = t1 * k / N, a = dArm(s, t), e = kind === 'puff' ? 10 + 30 * Math.sin(Math.PI * Math.min(1, k / N * 1.05)) : 9;
                     outer.push(dOff(a.o, a.i, e));
-                    if (t >= 0.3) inn.unshift(dOff(a.i, a.o, kind === 'puff' ? e * 0.6 : e));
+                    if (t >= Math.min(0.3, t1 * 0.7)) inn.unshift(dOff(a.i, a.o, kind === 'puff' ? e * 0.6 : e));
                 }
                 const pit = [s < 0 ? 300 : 552, 872], top = [s < 0 ? 318 : 534, 700], cap = [s < 0 ? 318 : 534, 660], cc = [s < 0 ? 272 : 580, 652];
                 const d = `M${dPt(cap)} Q${dPt(cc)} ${dPt(outer[0])}${dCurveTo(outer)} L${dPt(inn[0])}${dCurveTo(inn)} L${dPt(pit)} L${dPt(top)}Z`;
@@ -362,7 +424,7 @@
                 return `M${dPt(nL)} Q${dPt([336, 644])} ${dPt(left[0])}${dCurveTo(left)} Q426 ${hem + 16} ${dPt(right[0])}${dCurveTo(right)} Q${dPt([516, 644])} ${dPt(nR)}${nk}Z`;
             }
             function skirt(part, len, o) {
-                const wy = o.wy || 975, hem = (o.base || 1060) + len * (o.range || 360), fl = o.flare || 0.42;
+                const wy = o.wy || 975, hem = (o.base || 1060) + len * (o.range || 360), fl = (o.flare || 0.42) * cl(part).fl;
                 const [wl, wr] = dTorso(wy), l = wl - 6, r = wr + 6, hl = l - (hem - wy) * fl, hr = r + (hem - wy) * fl;
                 const n = 9, step = (hr - hl) / n;
                 let wave = '';
@@ -385,15 +447,16 @@
                 return clothPiece(`M${dN(wl - 7)} ${y} L${dN(wr + 7)} ${y} L${dN(wr + 8)} ${y + 28} L${dN(wl - 8)} ${y + 28}Z`, part);
             }
             function pants() {
-                const len = cl('bottom').len, hem = Math.min(1770, 1180 + len * 590), wy = 975;
+                const len = cl('bottom').len, hem = dollPantsHem(len), wy = 975;
+                const wide = y => Math.max(0, (cl('bottom').fl - 1) * 90 * (y - 1040) / Math.max(1, hem - 1040));   // ✂️ 통 넓히기
                 const oL = [[dTorso(wy)[0] - 6, wy]], iL = [], oR = [], iR = [];
-                for (let y = 1040; y < hem; y += 30) oL.push([dLeg(-1, y)[0] - 10, y]);
-                oL.push([dLeg(-1, hem)[0] - 12, hem]);
+                for (let y = 1040; y < hem; y += 30) oL.push([dLeg(-1, y)[0] - 10 - wide(y), y]);
+                oL.push([dLeg(-1, hem)[0] - 12 - wide(hem), hem]);
                 for (let y = hem; y > 1150; y -= 30) iL.push([dLeg(-1, y)[1] + 6, y]);
                 iL.push([dLeg(-1, 1150)[1] + 4, 1150]);
                 for (let y = 1150; y < hem; y += 30) iR.push([dLeg(1, y)[0] - 6, y]);
                 iR.push([dLeg(1, hem)[0] - 6, hem]);
-                for (let y = hem; y > 1040; y -= 30) oR.push([dLeg(1, y)[1] + (y === hem ? 12 : 10), y]);
+                for (let y = hem; y > 1040; y -= 30) oR.push([dLeg(1, y)[1] + (y === hem ? 12 : 10) + wide(y), y]);
                 oR.push([dTorso(wy)[1] + 6, wy]);
                 const d = `M${dPt(oL[0])}${dCurveTo(oL)} L${dPt(iL[0])}${dCurveTo(iL)} L426 1128 L${dPt(iR[0])}${dCurveTo(iR)} L${dPt(oR[0])}${dCurveTo(oR)}Z`;
                 const ln = lineOf(cl('bottom').color);
@@ -404,7 +467,7 @@
             const btn = (x, y, c, r = 9) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="${lineOf(c)}" stroke-width="3"/>`;
             function topWear() {
                 const t = D.top, color = cl('top').color, ln = lineOf(color), white = color === '#ffffff' ? '#ffeef3' : '#ffffff';
-                const hem = t === 'hoodie' ? 1030 : t === 'cardigan' ? 1020 : 1000;
+                const hem = dollTopHem(cl('top').len);
                 let o = clothPiece(bodice(hem, cl('top').sleeve === 'none', t === 'cardigan' ? 'v' : 'round'), 'top');
                 switch (t) {
                     case 'tee': o += `<path d="M396 664 Q426 690 456 664" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`; break;
@@ -413,16 +476,16 @@
                         o += `<path d="M426 696 C402 670 384 688 398 702 C408 712 420 704 426 698 C432 704 444 712 454 702 C468 688 450 670 426 696Z" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3"/>`;
                         break;
                     case 'shirt':
-                        o += `<path d="M426 700 L426 ${hem}" stroke="${ln}" stroke-width="4"/>` + [760, 830, 900, 970].map(y => btn(440, y, white, 7)).join('');
+                        o += `<path d="M426 700 L426 ${hem}" stroke="${ln}" stroke-width="4"/>` + [760, 830, 900, 970].filter(y => y < hem - 20).map(y => btn(440, y, white, 7)).join('');
                         o += both(s => { const P = p => s < 0 ? p : dMx(p); return piece(`M${dPt(P([426, 698]))} L${dPt(P([384, 650]))} L${dPt(P([360, 662]))} L${dPt(P([376, 722]))}Z`, white, white); });
                         break;
                     case 'hoodie':
                         o += `<path d="M406 690 L398 800 M446 690 L454 800" stroke="${white}" stroke-width="6" stroke-linecap="round"/>` + btn(398, 804, white, 6) + btn(454, 804, white, 6);
-                        o += clothPiece('M340 880 L512 880 L548 990 L304 990Z', 'top') + `<path d="M296 ${hem - 26} Q426 ${hem - 12} 556 ${hem - 26}" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`;
+                        o += clothPiece(`M340 ${hem - 150} L512 ${hem - 150} L548 ${hem - 40} L304 ${hem - 40}Z`, 'top') + `<path d="M296 ${hem - 26} Q426 ${hem - 12} 556 ${hem - 26}" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`;
                         break;
                     case 'cardigan':
                         o += piece(`M392 652 L460 652 L438 760 L438 ${hem} L414 ${hem} L414 760Z`, white, white);
-                        o += [790, 860, 930].map(y => btn(448, y, dLight(color, 0.5), 8)).join('') + `<path d="M298 ${hem - 24} Q426 ${hem - 10} 554 ${hem - 24}" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`;
+                        o += [790, 860, 930].filter(y => y < hem - 20).map(y => btn(448, y, dLight(color, 0.5), 8)).join('') + `<path d="M298 ${hem - 24} Q426 ${hem - 10} 554 ${hem - 24}" fill="none" stroke="${ln}" stroke-width="4" opacity=".6"/>`;
                         break;
                 }
                 return o;
@@ -431,7 +494,7 @@
                 const a = dArm(s, t0), b = dArm(s, t1);
                 return piece(`M${dPt(dOff(a.o, a.i, 9))} L${dPt(dOff(b.o, b.i, 9))} L${dPt(dOff(b.i, b.o, 9))} L${dPt(dOff(a.i, a.o, 9))}Z`, color, color);
             }
-            const sleeves = (kind, fill, color) => sleeve(-1, kind, fill, color) + sleeve(1, kind, fill, color);
+            const sleeves = (kind, fill, color, len) => sleeve(-1, kind, fill, color, len) + sleeve(1, kind, fill, color, len);
             function hood() {
                 if (D.dress !== 'none' || D.top !== 'hoodie') return '';
                 return clothPiece('M296 676 C292 596 352 572 426 572 C500 572 560 596 556 676 C540 708 500 712 426 712 C352 712 312 708 296 676Z', 'top');
@@ -439,7 +502,7 @@
             function bottomWear() {
                 const b = D.bottom, c = cl('bottom');
                 if (b === 'pants') return pants();
-                if (b === 'skirt' || b === 'suspender') { const sk = skirt('bottom', c.len, {}); return sk.svg + waistband(975, 'bottom'); }
+                if (b === 'skirt' || b === 'suspender') { const sk = skirt('bottom', c.len, DOLL_SKIRT.skirt); return sk.svg + waistband(975, 'bottom'); }
                 return '';
             }
             function straps() {
@@ -452,7 +515,7 @@
                 if (dr === 'hanbok') {
                     const jeo = c.patColor, ln = lineOf(jeo);
                     if (stage === 'skirt') {
-                        const sk = skirt('dress', c.len, { wy: 850, base: 1500, range: 260, flare: 0.5 });
+                        const sk = skirt('dress', c.len, DOLL_SKIRT.hanbok);
                         return sk.svg + piece(`M${dN(sk.l)} 850 L${dN(sk.r)} 850 L${dN(sk.r + 2)} 880 L${dN(sk.l - 2)} 880Z`, '#ffffff', '#ffffff');
                     }
                     return piece(bodice(870, false, 'v'), jeo, jeo) + sleeves('long', jeo, jeo) + both(s => cuffBand(s, 0.68, 0.78, c.color)) +
@@ -460,8 +523,8 @@
                         `<path d="M444 800 C420 770 396 790 410 806 C420 816 436 808 444 802 C452 808 470 816 480 806 C494 790 468 770 444 800Z M440 806 Q430 900 418 990 L436 992 Q446 900 448 806 M448 806 Q462 900 470 960 L488 956 Q472 880 456 806" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3" stroke-linejoin="round"/>`;
                 }
                 const princess = dr === 'princess';
-                if (stage === 'skirt') return skirt('dress', c.len, princess ? { wy: 962, base: 1150, range: 380, flare: 0.85, petticoat: true } : { wy: 962, base: 1100, range: 420, flare: 0.5 }).svg;
-                let o = clothPiece(bodice(975, c.sleeve === 'none', princess ? 'deep' : 'round'), 'dress') + sleeves(c.sleeve, fillOf('dress'), c.color);
+                if (stage === 'skirt') return skirt('dress', c.len, DOLL_SKIRT[dr]).svg;
+                let o = clothPiece(bodice(975, c.sleeve === 'none', princess ? 'deep' : 'round'), 'dress') + sleeves(c.sleeve, fillOf('dress'), c.color, c.slen);
                 if (princess) o += `<path d="M426 972 C384 930 350 954 368 984 C380 1004 412 994 426 980 C440 994 472 1004 484 984 C502 954 468 930 426 972Z M418 984 L396 1050 L414 1046 L426 990 L438 1046 L456 1050 L434 984" fill="${D.accColor}" stroke="${dDark(D.accColor, 0.4)}" stroke-width="3" stroke-linejoin="round"/>`;
                 else o += `<path d="M${dN(dTorso(950)[0] - 8)} 950 Q426 962 ${dN(dTorso(950)[1] + 8)} 950" fill="none" stroke="${lineOf(c.color)}" stroke-width="4" opacity=".6"/>`;
                 return o;
@@ -555,17 +618,45 @@
             const A = s => s ? `<g transform="translate(${DOLL_ART_X.toFixed(2)} 0) scale(${DOLL_ART_K.toFixed(5)})">${s}</g>` : '';
             const dress = D.dress !== 'none', tucked = !['hoodie', 'cardigan'].includes(D.top);
             const top = !dress && D.top !== 'none' ? P.topWear() : '';
-            const topSleeves = !dress && D.top !== 'none' ? P.sleeves(D.cloth.top.sleeve, P.fillOf('top'), D.cloth.top.color) : '';
+            const topSleeves = !dress && D.top !== 'none' ? P.sleeves(D.cloth.top.sleeve, P.fillOf('top'), D.cloth.top.color, D.cloth.top.slen) : '';
+            /* 칠한 것을 그 모양 안에만 보이게 : 모양을 흰색(보임) · 검은색(가림)으로 바꾼 가리개 */
+            defs.push(`<filter id="${pfx}-wh"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/></filter>`,
+                `<filter id="${pfx}-bk"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter>`);
+            const mask = (id, inner) => { defs.push(`<mask id="${pfx}-${id}" maskUnits="userSpaceOnUse" x="-100" y="-100" width="500" height="700">${A(inner)}</mask>`); return `mask="url(#${pfx}-${id})"`; };
+            const wh = s => `<g filter="url(#${pfx}-wh)">${s}</g>`, bk = s => `<g filter="url(#${pfx}-bk)">${s}</g>`;
+            /* 💇 머리 : 기르기 · 빗질은 귀 아래(DOLL_HAIR_TOP)부터 · 자르기는 그 높이 아래를 잘라내요 */
+            const cutClip = (id, y) => { defs.push(`<clipPath id="${pfx}-${id}"><rect x="-400" y="-400" width="1700" height="${y + 400}"/></clipPath>`); return `clip-path="url(#${pfx}-${id})"`; };
+            const HT = DOLL_HAIR_TOP;
+            let hb = P.hairBack();
+            if (hb) {
+                if (D.hairGrow !== 1 || D.hairSway) {
+                    defs.push(`<clipPath id="${pfx}-hUp"><rect x="-400" y="-400" width="1700" height="${HT + 402}"/></clipPath><clipPath id="${pfx}-hDn"><rect x="-400" y="${HT - 1}" width="1700" height="3000"/></clipPath>`);
+                    hb = `<g clip-path="url(#${pfx}-hUp)">${hb}</g><g clip-path="url(#${pfx}-hDn)"><g transform="translate(426 ${HT}) skewX(${dN(-D.hairSway * 16)}) scale(1 ${D.hairGrow}) translate(-426 -${HT})">${hb}</g></g>`;
+                }
+                if (D.hairCut < 1844) hb = `<g ${cutClip('hCut', D.hairCut)}>${hb}</g>`;
+            }
+            let hf = P.hairFront();
+            if (hf && Math.min(D.bangCut, D.hairCut) < 1844) hf = `<g ${cutClip('fCut', Math.min(D.bangCut, D.hairCut))}>${hf}</g>`;
+            let tip = '';
+            if (D.hairTipA > 0 && (hb || hf)) {
+                const y0 = HT * DOLL_ART_K, y1 = dollHairEnd(D) * DOLL_ART_K;
+                defs.push(`<linearGradient id="${pfx}-hTip" gradientUnits="userSpaceOnUse" x1="0" y1="${dN(y0 - 30)}" x2="0" y2="${dN(Math.max(y0 + 10, y1))}"><stop offset=".25" stop-color="${D.hairTip}" stop-opacity="0"/><stop offset="1" stop-color="${D.hairTip}" stop-opacity="${D.hairTipA}"/></linearGradient>`);
+                tip = `<rect x="-60" y="-60" width="420" height="600" fill="url(#${pfx}-hTip)"/>`;
+            }
+            const dye = (s, id) => s && (tip || D.hairPaint.length) ? `<g ${mask(id, wh(s))}>${tip}${dollPaintSVG(D.hairPaint)}</g>` : '';
+            /* 👗 옷 (팔 앞 · 뒤) */
+            const clothBack = P.innerWear() + P.shoes() + (dress ? P.dressWear('skirt') : (tucked ? top : '') + P.bottomWear());
+            const clothFront = (dress ? P.dressWear('top') : (tucked ? '' : top) + topSleeves + P.straps()) + P.tie();
             let body = A('<ellipse cx="426" cy="1802" rx="240" ry="30" fill="#000" opacity=".08"/>');
             body += layers('back');
-            body += A(P.hairBack() + P.hood() + P.skinArt('ears') + P.skinArt('body') + P.skinArt('legs') + P.innerWear() + P.shoes() +
-                (dress ? P.dressWear('skirt') : (tucked ? top : '') + P.bottomWear()) +
-                P.skinArt('arms') +
-                (dress ? P.dressWear('top') : (tucked ? '' : top) + topSleeves + P.straps()) + P.tie());
+            body += A(hb) + dye(hb, 'mHB');
+            body += A(P.hood() + P.skinArt('ears') + P.skinArt('body') + P.skinArt('legs') + clothBack + P.skinArt('arms') + clothFront);
+            if (D.paint.length) body += `<g ${mask('mCl', wh(clothBack) + bk(P.skinArt('arms')) + wh(clothFront))}>${dollPaintSVG(D.paint)}</g>`;
+            if (D.patch.length) body += `<g class="dl-patches">${D.patch.map(dollPatchSVG).join('')}</g>`;
             body += layers('cloth');
             body += A(P.skinArt('head') + P.eyes() + P.mouth() + P.makeup());
             body += layers('face');
-            body += A(P.glasses() + P.hairFront() + P.brows());
+            body += A(P.glasses() + hf) + dye(hf, 'mHF') + A(P.brows());
             body += layers('hair');
             body += A(P.accessories());
             body += layers('top');

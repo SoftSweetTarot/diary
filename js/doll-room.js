@@ -1,7 +1,10 @@
 /* 말랑달콤 다이어리 - js/doll-room.js
    👧 인형방 : 맨몸 인형에서 시작해 단계별로 인형 만들기 (쉬움 · 어려움)
-   - ① 피부 → ② 눈·코·입 → ③ 헤어 → ④ 화장 → ⑤ 옷 → ⑥ 소품 → ⑦ 완성 (맨몸 인형에서 시작)
-   - 쉬움 : 고르기 · 슬라이더 / 어려움 : 펜(점 찍어 잇기 → 닫으면 색 채우기)·붓·고르기 도구로 조각을 하나씩 직접 그리기
+   - ① 피부 → ② 눈·코·입 → ③ 헤어 → ④ 화장 → ⑤ 옷 → ⑥ 옷 꾸미기 → ⑦ 소품 → ⑧ 완성 (맨몸 인형에서 시작)
+   - 쉬움 : 고르기 + 인형 위에서 직접 만지기 / 어려움 : 펜(점 찍어 잇기 → 닫으면 색 채우기)·붓·고르기 도구로 조각을 하나씩 직접 그리기
+       💇 미용실(③) : 가위로 자르기 · 끌어서 기르기 · 빗질 · 염색 붓 · 끝 물들이기
+       ✂️ 재단(⑤) : 인형 위 동그라미 손잡이를 끌어 기장 · 퍼짐 · 소매 길이 바꾸기
+       🖌️ 옷 꾸미기(⑥) : 붓 · 도장(옷 안에만 칠해져요) · 단추 · 와펜 · 레이스 붙이기
    - 내 인형들 : 인형마다 파일 1개 → 구글 드라이브 '말랑달콤 / 인형 / 인형이름.json' (js/doll-store.js, 개수 제한 없음)
    - 만드는 중인 인형은 이 기기에 자동 임시 저장 (창을 닫아도 이어서 만들기)
    - 📷 사진으로 저장(자랑 카드 PNG) · 💾 인형 파일로 저장(.malang.txt) · 📂 인형 불러오기 · 📔 일기에 붙이기
@@ -17,7 +20,10 @@
             doll: null, editId: null, step: 0, mode: {}, dirty: false, saving: false,
             tool: 'pen', part: null, drawing: null, pressed: null, hover: null, sel: -1, drag: null,
             color: '#ff9fb6', outline: 'auto', w: 3, op: 1, pat: 'none', patColor: '#ffffff', mirror: false,
-            zoom: 1, history: [], future: [], lastAct: 0, attachEl: null, replay: null, clothTarget: 'top'
+            zoom: 1, history: [], future: [], lastAct: 0, attachEl: null, replay: null, clothTarget: 'top',
+            salon: null, hcolor: '#f5a3c0', hw: 10,                                          // 💇 미용실 도구
+            deco: 'brush', pcolor: '#ff6b8f', pw: 5, stamp: 'heart', ps: 1.2, patchKind: 'button', psel: -1,   // 🖌️ 옷 꾸미기 도구
+            touch: null                                                                      // 손잡이 · 미용실 · 꾸미기 끌기 중
         };
 
         const DOLL_STEPS = [
@@ -26,8 +32,9 @@
             { id: 'hair',   label: '③ 헤어',     hard: true, slot: 'hair' },
             { id: 'makeup', label: '④ 화장',     hard: true, slot: 'face' },
             { id: 'cloth',  label: '⑤ 옷',       hard: true, slot: 'cloth' },
-            { id: 'acc',    label: '⑥ 소품',     hard: true, slot: 'top' },
-            { id: 'done',   label: '⑦ 완성' }
+            { id: 'deco',   label: '⑥ 옷 꾸미기' },
+            { id: 'acc',    label: '⑦ 소품',     hard: true, slot: 'top' },
+            { id: 'done',   label: '⑧ 완성' }
         ];
         const DOLL_LAST = DOLL_STEPS.length - 1;
         /* 어려움 버전 부품 : [이름, 그릴 위치(slot), 추천 도구, 추천 색(함수 또는 값)] */
@@ -113,6 +120,7 @@
             </div>`;
             document.body.appendChild(wrap);
             setupDollStage();
+            setupEasyTouch();
             window.addEventListener('resize', () => { if (document.getElementById('dollRoom').style.display === 'flex') applyDollZoom(); });
         }
 
@@ -251,19 +259,20 @@
                 try { localStorage.setItem(DOLL_DRAFT_KEY, JSON.stringify({ doll: DR.doll, editId: DR.editId, step: DR.step })); } catch (e) {}
             }, 700);
         }
-        function dollPush() { DR.history.push(JSON.stringify(DR.doll.layers)); if (DR.history.length > 80) DR.history.shift(); DR.future = []; }
+        /* 되돌리기 : 인형 전체(제작 기록 빼고)를 찍어 둬요 */
+        const dollSnap = () => JSON.stringify(Object.assign({}, DR.doll, { stats: undefined }));
+        function dollRestore(t) { const o = JSON.parse(t); Object.keys(o).forEach(k => { DR.doll[k] = o[k]; }); DR.sel = -1; DR.psel = -1; dollChanged(); renderDollRoom(); }
+        function dollPush() { DR.history.push(dollSnap()); if (DR.history.length > 80) DR.history.shift(); DR.future = []; }
         function dollUndo() {
             if (DR.drawing) { DR.drawing.pts.pop(); if (!DR.drawing.pts.length) DR.drawing = null; drawOverlay(); return; }
             if (!DR.history.length) return;
-            DR.future.push(JSON.stringify(DR.doll.layers));
-            DR.doll.layers = JSON.parse(DR.history.pop()); DR.sel = -1;
-            dollChanged(); renderDollRoom();
+            DR.future.push(dollSnap());
+            dollRestore(DR.history.pop());
         }
         function dollRedo() {
             if (!DR.future.length) return;
-            DR.history.push(JSON.stringify(DR.doll.layers));
-            DR.doll.layers = JSON.parse(DR.future.pop()); DR.sel = -1;
-            dollChanged(); renderDollRoom();
+            DR.history.push(dollSnap());
+            dollRestore(DR.future.pop());
         }
 
         /* =====================================================================
@@ -286,8 +295,8 @@
             next.textContent = DR.step === DOLL_LAST - 1 ? '완성하기 ▶' : '다음 단계 ▶';
             const c = dollCounts(DR.doll);
             document.getElementById('drStats').textContent = `⏱ ${dollTimeText(DR.doll.stats.ms)} · 🧩 조각 ${c.pieces} · 📍 점 ${c.pts}${c.pieces ? ' · 🔥 어려움' : ''}`;
-            document.getElementById('drHint').textContent = isHardStep() ? hardHint() : '';
-            document.getElementById('drOverlay').style.pointerEvents = isHardStep() && DR.tool !== 'select' ? 'auto' : 'none';
+            document.getElementById('drHint').textContent = isHardStep() ? hardHint() : easyHint();
+            document.getElementById('drOverlay').style.pointerEvents = (isHardStep() && DR.tool !== 'select') || easyTouch() ? 'auto' : 'none';
             renderDollStage();
             renderDollPanel();
         }
@@ -296,11 +305,20 @@
             stopDollReplay();
             if (DR.drawing) finishDrawing(false);
             DR.step = Math.max(0, Math.min(DOLL_LAST, DR.step + delta));
-            DR.sel = -1; DR.part = null;
+            DR.sel = -1; DR.part = null; DR.psel = -1; DR.salon = null;
             dollChanged();
             renderDollRoom();
         }
         const isHardStep = () => { const s = DOLL_STEPS[DR.step]; return !!(s.hard && DR.mode[s.id] === 'hard'); };
+        /* 쉬움에서 인형을 직접 만지는 단계 (💇 미용실 도구를 골랐을 때 · 🖌️ 옷 꾸미기) */
+        const easyTouch = () => !isHardStep() && !DR.replay && ((DOLL_STEPS[DR.step].id === 'hair' && !!DR.salon) || DOLL_STEPS[DR.step].id === 'deco');
+        function easyHint() {
+            const id = DOLL_STEPS[DR.step].id;
+            if (id === 'cloth') return '✂️ 인형 위 동그라미를 끌면 기장 · 퍼짐 · 소매가 바뀌어요';
+            if (id === 'hair') return ({ cut: '✂️ 머리 위를 가로로 쓱 그으면 거기서 싹둑!', grow: '🌱 머리 끝을 아래로 끌면 길어져요', comb: '🪮 좌우로 끌어 머리를 넘겨요', dye: '🎨 머리 위에 칠하면 그 부분만 물들어요' })[DR.salon] || '';
+            if (id === 'deco') return ({ brush: '🖌️ 옷 위에 칠해요 (옷 밖은 안 칠해져요)', stamp: '🔖 옷 위를 콩 누르면 도장이 찍혀요', patch: '🧷 누르면 붙고, 붙인 걸 끌면 옮겨져요', erase: '🧽 문지르면 칠한 것 · 붙인 것이 지워져요' })[DR.deco] || '';
+            return '';
+        }
         function hardHint() {
             if (DR.tool === 'pen') return DR.drawing ? '점을 이어 찍고, 첫 점을 누르면 닫혀서 색이 채워져요. 누른 채 끌면 곡선! (두 번 누르면 선으로 끝)' : '펜: 점을 찍어 시작하세요';
             if (DR.tool === 'brush') return '붓: 누른 채로 칠하세요';
@@ -352,9 +370,153 @@
                     h += `<circle class="dr-handle" data-h="${j}" cx="${p[0]}" cy="${p[1]}" r="${4.5 * k}" fill="#3d8bff" stroke="#fff" stroke-width="${1.4 * k}"/>`;
                 });
             }
+            if (!isHardStep()) h += easyOverlay(k);
             ov.innerHTML = h;
         }
         const mirrorPt = p => p.length >= 4 ? [300 - p[0], p[1], 300 - p[2], p[3]] : [300 - p[0], p[1]];
+
+        /* =====================================================================
+           ✋ 쉬움 : 인형 위에서 직접 만지기 (✂️ 재단 · 💇 미용실 · 🖌️ 옷 꾸미기)
+           - 화면 점(300 × 470)과 바탕 그림 칸(853 × 1844)을 오가요 · 좌우 뒤집은 인형도 같은 자리에 들어가게
+           ===================================================================== */
+        const toArt = p => [(p[0] - DOLL_ART_X) / DOLL_ART_K, p[1] / DOLL_ART_K];
+        const fromArt = p => [Math.round((DOLL_ART_X + p[0] * DOLL_ART_K) * 10) / 10, Math.round(p[1] * DOLL_ART_K * 10) / 10];
+        const unflip = p => DR.doll.flip ? [300 - p[0], p[1]] : p;
+        const dClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const SLEEVE_LEN = { short: 0.42, puff: 0.36, long: 0.78 };
+
+        /* ✂️ 재단 손잡이 : [{ tl: len|fl|sl, part, p(바탕 그림 칸), icon }] */
+        function tailorHandles() {
+            const D = DR.doll, out = [];
+            const sk = (part, o) => {
+                const c = D.cloth[part], hem = o.base + c.len * o.range, r = dTorso(o.wy)[1] + 6;
+                out.push({ tl: 'len', part, p: [426, hem], icon: '↕' }, { tl: 'fl', part, p: [r + (hem - o.wy) * o.flare * c.fl, hem], icon: '↔' });
+            };
+            const sl = part => { const c = D.cloth[part]; if (c.sleeve === 'none') return; const a = dArm(1, c.slen); out.push({ tl: 'sl', part, p: dOff(a.o, a.i, 14), icon: '✂' }); };
+            if (D.dress !== 'none') { sk('dress', DOLL_SKIRT[D.dress]); if (D.dress !== 'hanbok') sl('dress'); return out; }
+            if (D.top !== 'none') { out.push({ tl: 'len', part: 'top', p: [330, dollTopHem(D.cloth.top.len)], icon: '↕' }); sl('top'); }
+            if (D.bottom === 'skirt' || D.bottom === 'suspender') sk('bottom', DOLL_SKIRT.skirt);
+            if (D.bottom === 'pants') {
+                const c = D.cloth.bottom, hem = dollPantsHem(c.len), lg = dLeg(1, hem);
+                out.push({ tl: 'len', part: 'bottom', p: [(lg[0] + lg[1]) / 2, hem], icon: '↕' }, { tl: 'fl', part: 'bottom', p: [lg[1] + 12 + (c.fl - 1) * 90, hem], icon: '↔' });
+            }
+            return out;
+        }
+        function tailorSet(h, a) {
+            const D = DR.doll, c = D.cloth[h.part], r2 = v => Math.round(v * 100) / 100;
+            const o = h.part === 'dress' ? DOLL_SKIRT[D.dress] : DOLL_SKIRT.skirt;
+            if (h.tl === 'len') {
+                if (h.part === 'top') c.len = r2(dClamp((a[1] - 880) / 220, 0, 1));
+                else if (h.part === 'bottom' && D.bottom === 'pants') c.len = r2(dClamp((a[1] - 1180) / 590, 0, 1));
+                else c.len = r2(dClamp((a[1] - o.base) / o.range, 0, 1));
+            } else if (h.tl === 'fl') {
+                if (h.part === 'bottom' && D.bottom === 'pants') c.fl = r2(dClamp(1 + (a[0] - dLeg(1, dollPantsHem(c.len))[1] - 12) / 90, 1, 2.2));
+                else { const hem = o.base + c.len * o.range; c.fl = r2(dClamp((a[0] - dTorso(o.wy)[1] - 6) / Math.max(1, hem - o.wy) / o.flare, 0.3, 2.2)); }
+            } else {
+                let best = c.slen, bd = Infinity;
+                for (let t = 0.12; t <= 1.0001; t += 0.02) { const m = dArm(1, t), q = [(m.i[0] + m.o[0]) / 2, (m.i[1] + m.o[1]) / 2], dd = Math.hypot(q[0] - a[0], q[1] - a[1]); if (dd < bd) { bd = dd; best = t; } }
+                c.slen = r2(best);
+            }
+        }
+        function easyOverlay(k) {
+            const id = DOLL_STEPS[DR.step].id, D = DR.doll;
+            let h = '';
+            const fl = p => unflip(p);
+            if (id === 'cloth') tailorHandles().forEach(t => {
+                const [x, y] = fl(fromArt(t.p));
+                h += `<g class="dr-handle dr-tailor" data-tl="${t.tl}" data-part="${t.part}"><circle cx="${x}" cy="${y}" r="${8 * k}" fill="#ff6b8f" stroke="#fff" stroke-width="${2 * k}"/>` +
+                    `<text x="${x}" y="${y + 3.4 * k}" font-size="${10 * k}" text-anchor="middle" fill="#fff" font-weight="bold" style="pointer-events:none">${t.icon}</text></g>`;
+            });
+            const T = DR.touch;
+            if (T && T.pts && T.pts.length) {
+                const pts = T.pts.map(fl);
+                if (T.kind === 'cut') h += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="#ff3d7f" stroke-width="${2 * k}" stroke-dasharray="${5 * k} ${3 * k}"/>`;
+                if (T.kind === 'paint' || T.kind === 'dye') h += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${T.c}" stroke-width="${T.w}" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`;
+            }
+            if (id === 'deco' && DR.psel >= 0 && D.patch[DR.psel]) {
+                const q = D.patch[DR.psel], [x, y] = fl([q.x, q.y]);
+                h += `<circle cx="${x}" cy="${y}" r="${13 * q.s}" fill="none" stroke="#3d8bff" stroke-width="${1.4 * k}" stroke-dasharray="${4 * k} ${3 * k}"/>`;
+            }
+            return h;
+        }
+        const patchAt = p => { const P = DR.doll.patch; for (let i = P.length - 1; i >= 0; i--) if (Math.hypot(P[i].x - p[0], P[i].y - p[1]) < 11 * P[i].s) return i; return -1; };
+        function eraseAt(p) {
+            const D = DR.doll, near = q => q.t === 's' ? Math.hypot(q.x - p[0], q.y - p[1]) < 7 * q.s : q.pts.some(r => Math.hypot(r[0] - p[0], r[1] - p[1]) < 6 + q.w / 2);
+            const n = D.paint.length + D.patch.length;
+            D.paint = D.paint.filter(q => !near(q));
+            const i = patchAt(p); if (i >= 0) { D.patch.splice(i, 1); DR.psel = -1; }
+            return n !== D.paint.length + D.patch.length;
+        }
+        function setupEasyTouch() {
+            const ov = document.getElementById('drOverlay');
+            let raf = 0;
+            const redraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderDollStage(); }); };
+            /* ✂️ 재단 손잡이 */
+            ov.addEventListener('pointerdown', e => {
+                const g = e.target.closest('.dr-tailor');
+                if (!g || isHardStep()) return;
+                e.preventDefault(); e.stopPropagation(); dollActive();
+                try { ov.setPointerCapture(e.pointerId); } catch (err) {}
+                dollPush();
+                DR.touch = { kind: 'tailor', h: { tl: g.dataset.tl, part: g.dataset.part }, moved: false };
+            }, true);
+            ov.addEventListener('pointerdown', e => {
+                if (!easyTouch() || DR.touch) return;
+                e.preventDefault(); dollActive();
+                try { ov.setPointerCapture(e.pointerId); } catch (err) {}
+                const p = unflip(svgPoint(e)), id = DOLL_STEPS[DR.step].id, D = DR.doll;
+                if (id === 'hair') {
+                    if (DR.salon === 'dye') { DR.touch = { kind: 'dye', pts: [p], c: DR.hcolor, w: DR.hw }; drawOverlay(); return; }
+                    dollPush();
+                    DR.touch = { kind: DR.salon, pts: [p], start: p, sway: D.hairSway, front: toArt(p)[1] < 480 };
+                    return;
+                }
+                if (DR.deco === 'brush') { DR.touch = { kind: 'paint', pts: [p], c: DR.pcolor, w: DR.pw }; drawOverlay(); return; }
+                if (DR.deco === 'stamp') { dollPush(); D.paint.push({ t: 's', k: DR.stamp, c: DR.pcolor, x: p[0], y: p[1], s: DR.ps }); DR.touch = { kind: 'tap' }; dollChanged(); renderDollStage(); return; }
+                if (DR.deco === 'erase') { dollPush(); DR.touch = { kind: 'erase', hit: eraseAt(p) }; renderDollStage(); return; }
+                const i = patchAt(p);
+                dollPush();
+                if (i < 0) { D.patch.push({ k: DR.patchKind, c: DR.pcolor, x: p[0], y: p[1], s: DR.patchKind === 'button' ? 1.1 : 1.5, r: 0 }); DR.psel = D.patch.length - 1; DR.touch = { kind: 'tap' }; dollChanged(); renderDollRoom(); return; }
+                DR.psel = i;
+                DR.touch = { kind: 'patch', start: p, orig: [D.patch[i].x, D.patch[i].y], moved: false };
+                renderDollRoom();
+            });
+            ov.addEventListener('pointermove', e => {
+                const T = DR.touch; if (!T) return;
+                const p = unflip(svgPoint(e)), a = toArt(p), D = DR.doll;
+                if (T.kind === 'tailor') { tailorSet(T.h, a); T.moved = true; redraw(); return; }
+                if (T.kind === 'patch') { const q = D.patch[DR.psel]; q.x = Math.round((T.orig[0] + p[0] - T.start[0]) * 10) / 10; q.y = Math.round((T.orig[1] + p[1] - T.start[1]) * 10) / 10; T.moved = true; redraw(); return; }
+                if (T.kind === 'erase') { if (eraseAt(p)) { T.hit = true; redraw(); } return; }
+                if (T.pts) { const l = T.pts[T.pts.length - 1]; if (Math.hypot(p[0] - l[0], p[1] - l[1]) > 1.2 && T.pts.length < DOLL_MAX_PTS) T.pts.push([Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10]); }
+                if (T.kind === 'grow') {
+                    if (T.front) D.bangCut = a[1] > 560 ? 1844 : Math.round(dClamp(a[1], 260, 1844));
+                    else if (D.hairBack !== 'none') { D.hairCut = 1844; D.hairGrow = Math.round(dClamp((a[1] - DOLL_HAIR_TOP) / (DOLL_HAIR_END[D.hairBack] - DOLL_HAIR_TOP), 0.5, 2.5) * 100) / 100; }
+                    T.moved = true; redraw(); return;
+                }
+                if (T.kind === 'comb') { D.hairSway = Math.round(dClamp(T.sway + (p[0] - T.start[0]) / 60, -1, 1) * 100) / 100; T.moved = true; redraw(); return; }
+                drawOverlay();
+            });
+            const up = () => {
+                const T = DR.touch; if (!T) return;
+                DR.touch = null;
+                const D = DR.doll;
+                if (T.kind === 'paint' || T.kind === 'dye') { dollPush(); (T.kind === 'dye' ? D.hairPaint : D.paint).push({ t: 'b', c: T.c, w: T.w, op: T.kind === 'dye' ? 0.75 : 1, pts: T.pts }); dollChanged(); renderDollRoom(); return; }
+                if (T.kind === 'cut') {
+                    const xs = T.pts.map(q => q[0]), y = toArt([0, T.pts.reduce((s2, q) => s2 + q[1], 0) / T.pts.length])[1];
+                    if (Math.max(...xs) - Math.min(...xs) < 12) { DR.history.pop(); showMsg('✂️ 가위는 머리 위를 <b>가로로 쓱</b> 그어 주세요'); drawOverlay(); return; }
+                    if (y < 480 && D.hairFront !== 'none') D.bangCut = Math.round(dClamp(y, 260, 1844));
+                    else if (D.hairBack !== 'none' && y < dollHairEnd(D)) D.hairCut = Math.round(dClamp(y, 480, 1844));
+                    else { DR.history.pop(); drawOverlay(); return; }
+                    dollChanged(); renderDollRoom(); return;
+                }
+                if (['tailor', 'patch', 'grow', 'comb'].includes(T.kind) && !T.moved) DR.history.pop();
+                else if (T.kind === 'erase' && !T.hit) DR.history.pop();
+                else if (T.kind !== 'tap') dollChanged();
+                renderDollRoom();
+            };
+            ov.addEventListener('pointerup', up);
+            ov.addEventListener('pointercancel', up);
+        }
 
         /* =====================================================================
            ✏️ 어려움 버전 도구 (펜 · 붓 · 고르기)
@@ -459,7 +621,7 @@
             });
             ov.addEventListener('pointerdown', e => {
                 const hEl = e.target.closest('.dr-handle');
-                if (!hEl || DR.tool !== 'select' || DR.sel < 0) return;
+                if (!hEl || hEl.dataset.tl || DR.tool !== 'select' || DR.sel < 0) return;
                 e.preventDefault(); e.stopPropagation(); dollActive();
                 dollPush();
                 DR.drag = { mode: hEl.dataset.c ? 'ctrl' : 'pt', j: +hEl.dataset.h, moved: false };
@@ -526,6 +688,7 @@
         function dSet(path, v) {
             const ks = path.split('.'), last = ks.pop();
             ks.reduce((o, k) => o[k], DR.doll)[last] = v;
+            if (last === 'sleeve' && SLEEVE_LEN[v]) ks.reduce((o, k) => o[k], DR.doll).slen = SLEEVE_LEN[v];   // 소매 모양을 고르면 길이도 그 모양 기본으로
             dollActive(); dollChanged(); renderDollStage(); renderDollPanel();
             const c = dollCounts(DR.doll);
             document.getElementById('drStats').textContent = `⏱ ${dollTimeText(DR.doll.stats.ms)} · 🧩 조각 ${c.pieces} · 📍 점 ${c.pts}${c.pieces ? ' · 🔥 어려움' : ''}`;
@@ -573,6 +736,7 @@
                     h += grp('머리 색', colorsD('hairColor', HAIR_SW));
                     h += grp('앞머리', chipsD('hairFront', [['none', '없음'], ['blunt', '일자 뱅'], ['wispy', '시스루'], ['spiky', '삐죽'], ['side', '옆으로'], ['part', '가르마'], ['up', '올림']]));
                     h += grp('뒷머리', chipsD('hairBack', [['none', '없음'], ['short', '짧은 머리'], ['bob', '단발'], ['long', '긴 생머리'], ['twin', '양갈래'], ['pony', '포니테일'], ['bun', '똥머리']]));
+                    h += salonPanel();
                     break;
                 case 'makeup':
                     h += grp('볼터치 색', colorsD('blush', MAKE_SW));
@@ -598,10 +762,12 @@
                         h += grp(t === 'dress' && DR.doll.dress === 'hanbok' ? '저고리 색 (무늬색)' : '무늬 색', colorsD(`cloth.${t}.patColor`, CLOTH_SW));
                         h += grp('무늬 크기', rangeD(`cloth.${t}.patSize`, 0.4, 2, 0.1, 'pct'));
                     }
-                    if (t === 'top' || (t === 'dress' && DR.doll.dress !== 'hanbok')) h += grp('소매', chipsD(`cloth.${t}.sleeve`, [['none', '민소매'], ['short', '반팔'], ['puff', '퍼프'], ['long', '긴팔']]));
-                    if (t === 'bottom' || (t === 'dress' && DR.doll.dress !== 'hanbok')) h += grp('길이', rangeD(`cloth.${t}.len`, 0, 1, 0.05, 'len'));
+                    if (t === 'top' || (t === 'dress' && DR.doll.dress !== 'hanbok')) h += grp('소매 모양', chipsD(`cloth.${t}.sleeve`, [['none', '민소매'], ['short', '반팔'], ['puff', '퍼프'], ['long', '긴팔']]));
+                    h += grp('✂️ 재단', `<p class="dr-note" style="margin:0">인형 위 <b style="color:#ff6b8f">●</b> 손잡이를 끌어 보세요.<br>↕ 기장 · ↔ 치마 퍼짐 · 바지 통 · ✂ 소매 길이</p>
+                        <div class="chips" style="margin-top:6px"><button type="button" class="chip" data-dtailor="reset">↺ ${{ top: '상의', bottom: '하의', dress: '원피스', shoes: '신발' }[t]} 처음 모양</button>${undoChips()}</div>`);
                     break;
                 }
+                case 'deco': h += decoPanel(); break;
                 case 'acc':
                     h += grp('소품 (여러 개 가능)', togglesD([['acc.bow', '🎀 리본'], ['acc.headband', '머리띠'], ['acc.crown', '👑 왕관'], ['acc.beret', '베레모'], ['acc.flower', '🌼 꽃핀'], ['acc.glasses', '👓 안경'], ['acc.tie', '👔 넥타이']]));
                     h += grp('소품 색 (리본·머리끈·넥타이·옷고름)', colorsD('accColor', CLOTH_SW.concat(['#ffd54f'])));
@@ -610,6 +776,48 @@
             }
             P.innerHTML = h;
             if (st.id === 'done') afterDonePanel();
+        }
+
+        const undoChips = () => '<button type="button" class="chip" data-daction="undo">↩ 되돌리기</button><button type="button" class="chip" data-daction="redo">↪ 다시</button>';
+        const toolChips = (attr, cur, list) => `<div class="chips">${list.map(([k, l]) => `<button type="button" class="chip${cur === k ? ' on' : ''}" data-${attr}="${k}">${l}</button>`).join('')}</div>`;
+        const swD = (attr, cur, list) => `<div class="swatches">${list.map(c => `<button type="button" class="sw${cur === c ? ' on' : ''}" style="background:${c}" data-${attr}="${c}" aria-label="${c}"></button>`).join('')}<input type="color" value="${cur}" data-${attr}in="1" title="직접 고르기"></div>`;
+        const rangeX = (key, min, max, step, v, txt) => `<div class="range"><input type="range" min="${min}" max="${max}" step="${step}" value="${v}" data-dx="${key}"><span>${txt}</span></div>`;
+        const DYE_SW = ['#f5a3c0', '#ff6b8f', '#b49cff', '#a7c7ff', '#8fe0c4', '#ffe08a', '#ffffff', '#2e221f'];
+        const PAINT_SW = ['#ffffff', '#ff6b8f', '#ffd1dc', '#ffe08a', '#c9f0d6', '#b9dcff', '#c9b6ff', '#3b3b55', '#f2e3c9', '#e86a5a'];
+
+        /* ---------- 💇 미용실 (③ 헤어) ---------- */
+        function salonPanel() {
+            const D = DR.doll;
+            let h = grp('💇 미용실 <small class="dr-note">고르고 인형 머리를 직접 만져요</small>', toolChips('dsalon', DR.salon, [['cut', '✂️ 자르기'], ['grow', '🌱 기르기'], ['comb', '🪮 빗질'], ['dye', '🎨 염색']])
+                + `<div class="chips" style="margin-top:6px">${DR.salon ? '<button type="button" class="chip" data-dsalon="off">✋ 손 떼기</button>' : ''}<button type="button" class="chip" data-dsalonreset="1">↺ 처음 머리로</button>${undoChips()}</div>`,
+                D.hairBack === 'none' && D.hairFront === 'none' ? '먼저 위에서 앞머리나 뒷머리를 골라 주세요.' : '');
+            if (DR.salon === 'dye') {
+                h += grp('염색 색', swD('dhc', DR.hcolor, DYE_SW));
+                h += grp('붓 굵기', rangeX('hw', 2, 30, 1, DR.hw, DR.hw));
+            }
+            h += grp('끝만 물들이기 (옴브레)', colorsD('hairTip', DYE_SW) + rangeD('hairTipA', 0, 1, 0.05, 'pct'));
+            return h;
+        }
+        /* ---------- 🖌️ 옷 꾸미기 (⑥) ---------- */
+        const STAMP_NAMES = { heart: '💗 하트', star: '⭐ 별', dot: '⚪ 도트', flower: '🌸 꽃', sparkle: '✨ 반짝' };
+        const PATCH_NAMES = { button: '🔘 단추', heart: '💗 하트 와펜', star: '⭐ 별 와펜', bow: '🎀 리본', lace: '🤍 레이스', pocket: '👖 주머니', flower: '🌼 꽃' };
+        function decoPanel() {
+            const D = DR.doll;
+            let h = `<p class="dr-intro">입힌 옷 위에 직접 칠하고, 도장을 찍고, 단추나 와펜을 붙여 나만의 옷을 만들어요.</p>`;
+            h += grp('도구', toolChips('ddeco', DR.deco, [['brush', '🖌️ 붓'], ['stamp', '🔖 도장'], ['patch', '🧷 붙이기'], ['erase', '🧽 지우개']]) + `<div class="chips" style="margin-top:6px">${undoChips()}</div>`);
+            if (DR.deco !== 'erase') h += grp('색', swD('dpc', DR.pcolor, PAINT_SW));
+            if (DR.deco === 'brush') h += grp('붓 굵기', rangeX('pw', 1, 24, 1, DR.pw, DR.pw));
+            if (DR.deco === 'stamp') {
+                h += grp('도장 모양', toolChips('dstamp', DR.stamp, Object.keys(STAMP_NAMES).map(k => [k, STAMP_NAMES[k]])));
+                h += grp('도장 크기', rangeX('ps', 0.5, 3, 0.1, DR.ps, Math.round(DR.ps * 100) + '%'));
+            }
+            if (DR.deco === 'patch') h += grp('붙일 것', toolChips('dpatch', DR.patchKind, Object.keys(PATCH_NAMES).map(k => [k, PATCH_NAMES[k]])));
+            const q = DR.psel >= 0 ? D.patch[DR.psel] : null;
+            if (q && DR.deco === 'patch') h += grp(`고른 것: ${PATCH_NAMES[q.k]}`, `<span class="dr-note">크기</span>${rangeX('patch-s', 0.4, 3, 0.05, q.s, Math.round(q.s * 100) + '%')}<span class="dr-note">돌리기</span>${rangeX('patch-r', -180, 180, 5, q.r, q.r + '°')}
+                <div class="chips" style="margin-top:6px"><button type="button" class="chip" data-dpatchact="del">🗑 떼기</button><button type="button" class="chip" data-dpatchact="dup">📄 하나 더</button></div>`, '위의 색을 누르면 고른 것 색도 바뀌어요.');
+            h += grp(`꾸민 것 (칠 ${D.paint.length} · 붙임 ${D.patch.length})`, `<div class="chips"><button type="button" class="chip" data-ddecoclear="paint">🧽 칠한 것 모두 지우기</button><button type="button" class="chip" data-ddecoclear="patch">🧷 붙인 것 모두 떼기</button></div>`,
+                D.top === 'none' && D.bottom === 'none' && D.dress === 'none' ? '옷을 안 입었으면 속옷 위에 칠해져요. ⑤ 옷에서 먼저 옷을 골라 보세요.' : '');
+            return h;
         }
 
         /* ---------- 어려움 패널 ---------- */
@@ -804,6 +1012,24 @@
             if (ds.dset) { dSet(ds.dset, ds.val); return; }
             if (ds.dtoggle) { dSet(ds.dtoggle, !dGet(ds.dtoggle)); return; }
             if (ds.ctarget) { DR.clothTarget = ds.ctarget; renderDollPanel(); return; }
+            if (ds.dsalon) { DR.salon = ds.dsalon === 'off' || DR.salon === ds.dsalon ? null : ds.dsalon; renderDollRoom(); return; }
+            if (ds.dsalonreset) { dollPush(); Object.assign(DR.doll, { hairCut: 1844, bangCut: 1844, hairGrow: 1, hairSway: 0, hairTipA: 0, hairPaint: [] }); dollChanged(); renderDollRoom(); return; }
+            if (ds.dhc) { DR.hcolor = ds.dhc; renderDollPanel(); return; }
+            if (ds.dtailor) {
+                const t = DR.clothTarget, c = DR.doll.cloth[t], M = DOLL_MANNEQUIN.cloth[t];
+                dollPush(); c.len = M.len; c.fl = 1; c.slen = SLEEVE_LEN[c.sleeve] || M.slen; dollChanged(); renderDollRoom(); return;
+            }
+            if (ds.ddeco) { DR.deco = ds.ddeco; DR.psel = -1; renderDollRoom(); return; }
+            if (ds.dpc) { DR.pcolor = ds.dpc; if (DR.psel >= 0 && DR.deco === 'patch') { dollPush(); DR.doll.patch[DR.psel].c = ds.dpc; dollChanged(); renderDollStage(); } renderDollPanel(); return; }
+            if (ds.dstamp) { DR.stamp = ds.dstamp; renderDollPanel(); return; }
+            if (ds.dpatch) { DR.patchKind = ds.dpatch; DR.psel = -1; renderDollRoom(); return; }
+            if (ds.dpatchact && DR.psel >= 0) {
+                const P = DR.doll.patch; dollPush();
+                if (ds.dpatchact === 'del') { P.splice(DR.psel, 1); DR.psel = -1; }
+                else { const c = dollClone(P[DR.psel]); c.x += 8; c.y += 8; P.push(c); DR.psel = P.length - 1; }
+                dollChanged(); renderDollRoom(); return;
+            }
+            if (ds.ddecoclear) { dollPush(); DR.doll[ds.ddecoclear] = []; DR.psel = -1; dollChanged(); renderDollRoom(); return; }
             if (ds.dmode) {
                 DR.mode[DOLL_STEPS[DR.step].id] = ds.dmode; DR.sel = -1; DR.drawing = null;
                 if (ds.dmode === 'hard' && !DR.part) { const p = (DOLL_PARTS[DOLL_STEPS[DR.step].id] || [])[0]; if (p) pickPart(p[0]); }
@@ -857,6 +1083,16 @@
                 t.parentElement.querySelector('span').textContent = fmtVal(t.dataset.fmt, t.value);
                 dollChanged(); renderDollStage();
             }
+            if (t.dataset.dx) {
+                const k = t.dataset.dx, v = parseFloat(t.value), span = t.parentElement.querySelector('span');
+                if (k.startsWith('patch-')) {
+                    const q = DR.doll.patch[DR.psel]; if (!q) return;
+                    q[k.slice(6)] = v; span.textContent = k === 'patch-s' ? Math.round(v * 100) + '%' : v + '°';
+                    dollChanged(); renderDollStage();
+                } else { DR[k] = v; span.textContent = k === 'ps' ? Math.round(v * 100) + '%' : v; }
+            }
+            if (t.dataset.dhcin) DR.hcolor = t.value;
+            if (t.dataset.dpcin) { DR.pcolor = t.value; if (DR.psel >= 0 && DR.deco === 'patch') { DR.doll.patch[DR.psel].c = t.value; dollChanged(); renderDollStage(); } }
             if (t.dataset.dcolor) { const ks = t.dataset.dcolor.split('.'), last = ks.pop(); ks.reduce((o, k) => o[k], DR.doll)[last] = t.value; dollChanged(); renderDollStage(); }
             if (t.dataset.dcolorpick) { DR.color = t.value; if (DR.sel >= 0) { const L = DR.doll.layers[DR.sel]; L.fill = t.value; L.stroke = L.kind === 'poly' ? (L.w <= 0.5 ? t.value : dDark(t.value, 0.38)) : t.value; dollChanged(); renderDollStage(); } }
             if (t.dataset.dopt) {
