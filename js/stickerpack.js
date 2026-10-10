@@ -33,7 +33,7 @@
             const c = spkMk(160, 160), x = c.getContext('2d'), [fill, line] = SPK_COLORS[i % SPK_COLORS.length];
             x.translate(80, 84); x.rotate([-.07, .05, -.03, .08, -.06, .03][i % 6]);
             x.font = `700 ${ch.length > 1 ? 80 : 108}px ${SPK_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
-            x.save(); x.shadowColor = 'rgba(120,80,95,.22)'; x.shadowBlur = 6; x.shadowOffsetY = 3; x.lineWidth = 26; x.strokeStyle = '#fff'; x.strokeText(ch, 0, 0); x.restore();
+            x.save(); x.lineWidth = 26; x.strokeStyle = '#fff'; x.strokeText(ch, 0, 0); x.restore();
             x.lineWidth = 26; x.strokeStyle = '#fff'; x.strokeText(ch, 0, 0);
             x.lineWidth = 7; x.strokeStyle = line; x.strokeText(ch, 0, 0);
             x.fillStyle = fill; x.fillText(ch, 0, 0);
@@ -61,7 +61,7 @@
             const h = SPK_HEARTS[i], c = spkMk(160, 160), x = c.getContext('2d'), cx = 80, cy = 82, s = h.twin ? 44 : 54;
             const body = (bx, by, bs, fill, line, rot) => {
                 x.save(); x.translate(bx, by); x.rotate(rot || 0); x.translate(-bx, -by);
-                x.save(); x.shadowColor = 'rgba(120,80,95,.22)'; x.shadowBlur = 6; x.shadowOffsetY = 3; spkHeartPath(x, bx, by, bs); x.lineWidth = 22; x.lineJoin = 'round'; x.strokeStyle = '#fff'; x.stroke(); x.restore();
+                x.save(); spkHeartPath(x, bx, by, bs); x.lineWidth = 22; x.lineJoin = 'round'; x.strokeStyle = '#fff'; x.stroke(); x.restore();
                 spkHeartPath(x, bx, by, bs); x.lineWidth = 22; x.strokeStyle = '#fff'; x.stroke();
                 if (fill === 'rainbow') { const g = x.createLinearGradient(bx - bs, by - bs, bx + bs, by + bs); ['#ff9ec1', '#ffd36b', '#a8e3a0', '#9fd3ff', '#c7a8ff'].forEach((q, k) => g.addColorStop(k / 4, q)); x.fillStyle = g; } else x.fillStyle = fill;
                 x.fill(); x.save(); x.clip();

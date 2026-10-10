@@ -56,7 +56,7 @@
             [...body.children].forEach(c => box.insertBefore(c, body));
             box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover, .snb-style, .snb-sheets').forEach(e => e.remove());
             m.classList.remove('snb-sheet');
-            m.classList.remove('snb-on', 'snb-away');
+            m.classList.remove('snb-on');
             box.style.left = box.style.top = box.style.width = box.style.height = '';
         }
 
@@ -83,8 +83,9 @@
             if (!box) return;
             box.style.left = box.style.top = '0px';
             const L = box.offsetLeft, T = box.offsetTop, p = snb.pos;                // 애니메이션 중에도 바뀌지 않는 제자리
-            p.x = Math.max(-L, Math.min(innerWidth - box.offsetWidth - L, p.x));
-            p.y = Math.max(-T, Math.min(innerHeight - box.offsetHeight - T, p.y));
+            const KEEP = 140;                                                   // 화면 밖으로 밀어 둘 수 있어요 (제목 줄 쪽은 이만큼 늘 보여요) · 폰에서 페이지를 넓게 보며 붙이게
+            p.x = Math.max(KEEP - box.offsetWidth - L, Math.min(innerWidth - KEEP - L, p.x));
+            p.y = Math.max(-T, Math.min(innerHeight - KEEP - T, p.y));
             box.style.left = p.x + 'px'; box.style.top = p.y + 'px';
         }
 
@@ -102,7 +103,7 @@
         function snbOnShow(m) {
             if (snbMode() !== 'note') { snbUnwrap(m); if (snb.m === m) snb.m = null; return; }
             snbWrap(m);
-            m.classList.add('snb-on'); m.classList.remove('snb-away');
+            m.classList.add('snb-on');
             snbSize(m); snbPlaceBox(m.querySelector('.modal-content'));
             const again = snb.skipCover && snb.m === m;
             snb.skipCover = false;
@@ -111,7 +112,7 @@
             snbMeasure();
         }
         function snbOnHide(m) {
-            m.classList.remove('snb-away', 'snb-back'); const w = snbq('diaryWrapper'); if (w) w.classList.remove('snb-front');
+            m.classList.remove('snb-back'); const w = snbq('diaryWrapper'); if (w) w.classList.remove('snb-front');
             if (snb.m !== m || snb.skipCover || snb.dropping) return;
             if (snb.libSaved && typeof libLayout !== 'undefined') {           // 🏷️ 그림 모음 배치는 원래대로 (수첩일 때만 장에 맞춰요)
                 const first = libPage * libLayout.rows * libLayout.cols;
@@ -394,13 +395,14 @@
             document.body.appendChild(g);
             p.ghost = g; p.gw = w; p.gh = h;
             snbGhostAt(p.x, p.y);
-            snb.m.classList.add('snb-away'); snb.m.classList.remove('snb-back'); const dw = snbq('diaryWrapper'); if (dw) dw.classList.remove('snb-front');
+            snb.m.classList.remove('snb-back'); const dw = snbq('diaryWrapper'); if (dw) dw.classList.remove('snb-front');
             if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
         }
         function snbGhostAt(x, y) { const p = snb.press || snb.last; if (p && p.ghost) p.ghost.style.transform = `translate(${x - p.gw / 2}px, ${y - p.gh / 2}px) rotate(-4deg) scale(1.12)`; }
         function snbOver(x, y) {
             const cv = snbq('canvasArea'); if (!cv || (typeof isCoverOpen !== 'undefined' && !isCoverOpen)) return false;
-            const r = cv.getBoundingClientRect();
+            const r = cv.getBoundingClientRect(), m = snb.m, b = m && m.style.display === 'flex' && !m.classList.contains('snb-back') && m.querySelector('.modal-content').getBoundingClientRect();
+            if (b && x >= b.left && x <= b.right && y >= b.top && y <= b.bottom) return false;   // 수첩 위에 놓으면 제자리로 (수첩은 그대로 있어요)
             return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
         }
         function snbDrop(p, x, y, cancel) {
@@ -410,7 +412,7 @@
                 if (!ok) { const r = p.it.getBoundingClientRect(); g.style.transform = `translate(${r.left + r.width / 2 - p.gw / 2}px, ${r.top + r.height / 2 - p.gh / 2}px)`; }
                 setTimeout(() => g.remove(), ok ? 180 : 260);
             }
-            if (!ok) { if (m) m.classList.remove('snb-away'); return; }
+            if (!ok) return;
             snbPut(p, x, y);
         }
         /* 놓은 자리에 붙이기 : 그 스티커를 톡 누른 것과 똑같이 한 뒤, 새로 생긴 것을 놓은 자리로 옮겨요
@@ -434,7 +436,6 @@
             if (it.classList.contains('lib-item')) {
                 const im = it.querySelector('img'); if (!im) return;
                 const url = im.src.replace(/=w\d+$/, '');
-                closeModal(m.id);
                 (async () => { let s = url; try { if (window.pelBake) s = await pelBake(url); } catch (e) {} addImage(s); })();
                 return;
             }
@@ -451,12 +452,11 @@
         /* 수첩 다시 올라오기 : 붙였으면 (창이 닫혔어도) 표지 없이 그 장 그대로 다시 열어요 */
         function snbBack(m, reopen) {
             if (!m) return;
-            if (m.style.display === 'flex') { m.classList.remove('snb-away'); return; }
-            if (!reopen) { m.classList.remove('snb-away'); return; }
+            if (m.style.display === 'flex' || !reopen) return;
             const other = [...document.querySelectorAll('.modal')].some(x => x !== m && x.style.display === 'flex');
-            if (other) { m.classList.remove('snb-away'); return; }
+            if (other) return;
             snb.skipCover = true;
-            setTimeout(() => { snb.skipCover = true; m.style.display = 'flex'; setTimeout(() => m.classList.remove('snb-away'), 30); }, 260);
+            setTimeout(() => { snb.skipCover = true; m.style.display = 'flex'; }, 260);
         }
         /* 새로 붙은 것의 가운데를 놓은 자리로 (페이지 밖으로 넘치면 안쪽으로) · elCenter 와 같은 계산 */
         function snbPlace(el, x, y) {
@@ -609,17 +609,16 @@
             if (!r.width || !r.height) return false;
             pc.classList.add('out');
             p.seal = pfxSeal({ src, cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height, rot: 0, x: p.x, y: p.y,
-                onDetach: () => { if (snb.m) snb.m.classList.add('snb-away'); },   // 다 떼어지면 수첩이 비켜 줘요
                 onCancel: () => snbPeelBack(p),
                 onDrop: (cx, cy, rot) => { if (snbOver(cx, cy)) snbPeelStick(p, cx, cy, rot, r); else snbPeelBack(p); } });
             const stage = document.querySelector('body > .pfx-stage:last-of-type'); if (stage) stage.classList.add('snb-top');   // 수첩 위에서 떼어져요
             if (navigator.vibrate) try { navigator.vibrate(6); } catch (er) {}
             return true;
         }
-        function snbPeelBack(p) { p.it.classList.remove('out'); if (snb.m) snb.m.classList.remove('snb-away'); }
+        function snbPeelBack(p) { p.it.classList.remove('out'); }
         async function snbPeelStick(p, cx, cy, rot, r) {
-            const pc = p.it, m = snb.m;
-            setTimeout(() => { pc.classList.remove('out'); pc.classList.add('again'); setTimeout(() => pc.classList.remove('again'), 500); if (m) m.classList.remove('snb-away'); }, 350);   // 스티커첩은 다시 채워져요
+            const pc = p.it;
+            setTimeout(() => { pc.classList.remove('out'); pc.classList.add('again'); setTimeout(() => pc.classList.remove('again'), 500); }, 350);   // 스티커첩은 다시 채워져요
             if (pc._src) { snbPut({ it: pc._src, t: null }, cx, cy); return; }      // 낱장 모음 시트 : 원래 칸과 같은 방법으로 그 자리에
             let s = pc._url;
             if (pc._k === 'seal' && window.pelBake) try { s = await pelBake(s); } catch (e) {}
