@@ -7,9 +7,9 @@
        ③ 열어 둔 동안 3시간마다 '아직 있어요' (3시간이 넘도록 신호가 없으면 서버가 off 로 봐요)
      다른 탭 · 앱으로 잠깐 다녀오는 건 신호를 보내지 않아요
    - 보내는 건 구글 로그인 확인용 정보와 기기 종류(PC · 휴대폰 · 태블릿)뿐 (이메일 · 일기 내용은 보내지 않아요)
-   - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물(🎀 · 🍬 전체 + 디자인별 끝나는 날) · 내 저금 코드를 받아요 → setGift (js/settings.js) · prCode (js/piggy.js)
+   - '들어왔어요' · '아직 있어요' 의 답으로 🐷 저금통 선물(🎀 전체 + 디자인별 끝나는 날) · 내 저금 코드를 받아요 → setGift (js/settings.js) · prCode (js/piggy.js)
    - 🖼️ 배경화면 : 로그인 신호의 답 walls 로 '내가 받은 배경화면'을 맞추고(wlSetMine) · 도착 신호 w 는 링크 창(wlGift)으로 보여 줘요 (js/wall.js)
-   - 🎁 선물 도착 : 주인이 저금 확인 · 아이템 주기를 하면 서버에 도착 신호가 남아요 → 🪙 · 🎀 · 🍬 · 🎁 · 🖼️ 를 알림 창 하나로 보여 줘요 (js/arrival.js 의 arPush)
+   - 🎁 선물 도착 : 주인이 저금 확인 · 아이템 주기를 하면 서버에 도착 신호가 남아요 → 🪙 · 🎀 · 🎁 · 🖼️ 를 알림 창 하나로 보여 줘요 (js/arrival.js 의 arPush)
        신호는 다이어리가 '받아서 저장했어요' 하고 알릴 때까지 서버에 남아 있어요 → 다이어리를 안 쓰는 동안 받은 선물도, 접속하면 바로 떠요
        다이어리를 보고 있는 동안 1분마다 살짝 물어봐요 (로그인 확인 없이 회원번호로 · 서버가 시트를 열지 않아서 아주 가벼워요)
        다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간(창을 다시 누르거나 인터넷이 다시 연결될 때도) 바로 물어봐요
@@ -35,7 +35,7 @@
                 const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify({ action: 'here', token: drive.token, dev: prDevice() }) });
                 const j = await res.json();
                 if (!(j && j.ok)) pr.last = Date.now() - PR_EVERY + 30000;
-                if (j && j.ok && typeof setGift === 'function') setGift(j.tape, j.pat, j.tp, j.pp);
+                if (j && j.ok && typeof setGift === 'function') setGift(j.tape, j.tp);
                 if (j && j.ok && typeof wlSetMine === 'function') wlSetMine(j.walls);          // 🖼️ 내가 받은 배경화면 (js/wall.js)
                 if (j && j.ok && j.me) pr.me = String(j.me);
                 if (j && j.ok && j.code) { pr.code = String(j.code); try { localStorage.setItem('malang_code', pr.code); } catch (e) {} }   // 🛍️ 문구점 주문에 저금 코드를 같이 적으려고 (shop/shop.js)
@@ -70,7 +70,7 @@
             try { navigator.sendBeacon(MEMBER_API_URL, JSON.stringify({ action: 'bye', token: drive.token })); } catch (e) {}
         }
         const prFirst = setInterval(() => {                                                 // ① 로그인되면 곧바로
-            if (typeof drive !== 'undefined' && drive.ready && drive.guest) { clearInterval(prFirst); if (typeof setGift === 'function') setGift('', '', {}, {}); if (typeof wlSetMine === 'function') wlSetMine([]); return; }   // 게스트는 선물 없음
+            if (typeof drive !== 'undefined' && drive.ready && drive.guest) { clearInterval(prFirst); if (typeof setGift === 'function') setGift('', {}); if (typeof wlSetMine === 'function') wlSetMine([]); return; }   // 게스트는 선물 없음
             if (prOk()) { clearInterval(prFirst); if (!pr.last) prHere(); }
         }, 1000);
         setInterval(() => { if (Date.now() - pr.last >= PR_EVERY) prHere(); }, 15000);      // ③ 그 뒤로 3시간마다

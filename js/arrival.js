@@ -1,7 +1,7 @@
 /* 말랑달콤 다이어리 - js/arrival.js
-   🎁 선물 도착 : 🪙 코인 · 🎀 마스킹테이프 · 🍬 달콤배경지 · 🎁 캡슐 스티커 · 🖼️ 배경화면 을 '알림 창 하나'로 보여 줘요 + 메뉴에 NEW 표시
+   🎁 선물 도착 : 🪙 코인 · 🎀 마스킹테이프 · 🎁 캡슐 스티커 · 🖼️ 배경화면 을 '알림 창 하나'로 보여 줘요 + 메뉴에 NEW 표시
    - 서버(말랑달콤 사람들)가 도착 신호 한 장을 남겨요 (js/presence.js 가 로그인할 때 · 1분마다 받아 와요)
-       { t: 🎀 · p: 🍬 · s: 🎁 → { all 또는 이름: [끝나는 날, 늘어남(1=원래 있던 것에 이어 붙음), 더한 일수] } , c: 🪙 [더한 개수, 지금 코인] , w: 🖼️ { 번호: [이름, 링크] } , n: 신호 번호 }
+       { t: 🎀 · s: 🎁 → { all 또는 이름: [끝나는 날, 늘어남(1=원래 있던 것에 이어 붙음), 더한 일수] } , c: 🪙 [더한 개수, 지금 코인] , w: 🖼️ { 번호: [이름, 링크] } , n: 신호 번호 }
    - 놓치지 않게 (알림이 안 뜨는 일이 없게)
        ① 신호를 받으면 먼저 이 기기에 저장(malang_arrive)하고 → 그다음에 서버에 '받았어요'(gift_ack)를 알려요 · 서버는 그때까지 신호를 지우지 않아요
        ② 창은 사용자가 '닫기'를 눌러야 닫혀요 · 닫기 전에 다이어리를 꺼도 다음에 켜면 다시 떠요
@@ -9,12 +9,12 @@
        ④ 여러 번 받아도 한 창에 합쳐서(기간은 더해서) 보여 줘요
    - 🔔 NEW 표시 : 선물을 받으면 그 아이템이 있는 메뉴 버튼에 표시가 붙고, 안으로 들어갈수록 어느 버튼인지 이어져요 · 그 버튼을 누르면 사라져요
        index.html 의 data-nw="종류" (그 자리 버튼 · 누르면 사라짐) · data-nw-any="종류,종류" (바깥 버튼 · 안쪽 것이 하나라도 새것이면 표시)
-       종류 : tape 🎀 · pat 🍬 · caps 🎁 · coin 🪙 · wall 🖼️
+       종류 : tape 🎀 · caps 🎁 · coin 🪙 · wall 🖼️
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
 
         const AR_PENDING = 'malang_arrive';          // 아직 '닫기'를 안 누른 도착 알림 (합쳐 둔 한 장)
         const AR_SEEN = 'malang_arrive_n';           // 이미 받아 둔 신호 번호들 (서버가 '받았어요'를 못 받아 또 보내도 두 번 안 더하려고)
-        const AR_NEW = 'malang_new';                 // 메뉴에 붙일 NEW { me, tape: {id|all: 1}, pat: {…}, caps: {…}, coin: 1, wall: {번호: 1} }
+        const AR_NEW = 'malang_new';                 // 메뉴에 붙일 NEW { me, tape: {id|all: 1}, caps: {…}, coin: 1, wall: {번호: 1} }
         const arRead = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
         const arWrite = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
         const arEsc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -34,7 +34,7 @@
         function nwMark(g) {
             const n = nwGet(); n.me = arMe();
             const put = (k, o) => { if (!o || typeof o !== 'object' || !Object.keys(o).length) return; n[k] = n[k] && typeof n[k] === 'object' ? n[k] : {}; Object.keys(o).forEach(id => { n[k][id] = 1; }); };
-            put('tape', g.t); put('pat', g.p); put('caps', g.s); put('wall', g.w);
+            put('tape', g.t); put('caps', g.s); put('wall', g.w);
             if (g.c) n.coin = 1;
             arWrite(AR_NEW, n); nwRefresh();
         }
@@ -93,7 +93,7 @@
             arMerge(a, g);
             arWrite(AR_PENDING, { me: arMe(), g: a });                              // ① 먼저 이 기기에 저장
             if (n) { seen.push(n); arWrite(AR_SEEN, seen.slice(-30)); }
-            if (typeof giftApply === 'function') giftApply(g);                       // 🎀 · 🍬 지금 가진 것에 바로 합치기 (js/settings.js)
+            if (typeof giftApply === 'function') giftApply(g);                       // 🎀 지금 가진 것에 바로 합치기 (js/settings.js)
             if (g.w && typeof wlGift === 'function') wlGift(g.w);                    // 🖼️ 받은 배경화면 목록에 더하기 (js/wall.js)
             arCaps(g.s); arCoin(g.c);
             nwMark(g);
@@ -121,16 +121,14 @@
         const AR_WHERE = {
             coin: ['🪙', '코인', '☕ 카페 → 🌱 매일 → 🎁 랜덤박스'],
             tape: ['🎀', '마스킹테이프', '✨ 스티커 → 🎀 마스킹테이프 → 이벤트'],
-            pat: ['🍬', '달콤배경지', '🎨 페이지 → 🌈 배경지 → 이벤트'],
             caps: ['🎁', '캡슐 스티커', '✨ 스티커 → 🎁 캡슐 스티커'],
             wall: ['🖼️', '배경화면', '☕ 카페 → 📱 말랑달콤 배경화면']
         };
         const arDay = u => { const d = new Date(u + 'T00:00:00'); return isNaN(d) ? '' : `${d.getMonth() + 1}월 ${d.getDate()}일`; };
         function arNames(kind, sig) {                   // 신호 → 보여 줄 묶음 [{ names:[…], until, more, add }] (같은 기간끼리 한 줄)
             const lib = kind === 'tape' ? (typeof TAPES !== 'undefined' ? TAPES : [])
-                : kind === 'pat' ? (typeof BG_PATTERNS !== 'undefined' ? BG_PATTERNS : [])
                 : (typeof capsList === 'function' ? capsList() : []);
-            const whole = kind === 'tape' ? '마스킹테이프 전체' : '달콤배경지 전체';
+            const whole = kind === 'tape' ? '마스킹테이프 전체' : '캡슐 스티커 전체';
             const groups = {};
             Object.keys(sig || {}).sort((x, y) => (x === 'all' ? -1 : y === 'all' ? 1 : 0)).forEach(id => {
                 const v = sig[id]; if (!Array.isArray(v)) return;
@@ -160,7 +158,7 @@
             const g = p.g, old = document.getElementById('arPop'); if (old) old.remove();
             const rows = []; let allMore = true, any = false;
             if (Array.isArray(g.c)) { any = true; allMore = false; rows.push(arRow('coin', `<b>코인 +${+g.c[0] || 0}개</b>${g.c[1] != null ? `<small class="gp-dd">지금 코인 <em>${+g.c[1]}개</em></small>` : ''}`, true)); }
-            [['tape', g.t], ['pat', g.p], ['caps', g.s]].forEach(([kind, sig]) => {
+            [['tape', g.t], ['caps', g.s]].forEach(([kind, sig]) => {
                 const gr = arNames(kind, sig); if (!gr.length) return;
                 any = true;
                 if (!gr.every(x => x.more)) allMore = false;
@@ -219,7 +217,6 @@
         function arGo(kind) {                           // '열어 보기' : 그 아이템이 있는 자리로 바로
             try {
                 if (kind === 'tape' || kind === 'caps') openStickerList(kind);
-                else if (kind === 'pat') openPatternList('paid');
                 else if (kind === 'coin') openRandomBox();
                 else if (kind === 'wall') openWall();
             } catch (e) {}

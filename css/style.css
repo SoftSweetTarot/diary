@@ -373,8 +373,6 @@
 
         /* 🐷 저금통 선물 : 저금해 준 사람에게만 보여요 (js/settings.js setGift) */
         body:not(.tape-on) .tape-only { display: none !important; }
-        body:not(.pat-on) .pat-only { display: none !important; }
-
 
         /* 🎨 전체 배경 패턴 레이어 : 패턴을 쓰면 body 배경을 비우고 이 레이어가 보여요 */
         .bg-pattern-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; display: none; }
@@ -396,7 +394,7 @@
         }
         .skin-pattern-note .btn { flex-shrink: 0; font-size: 12px; padding: 3px 8px; }
 
-        /* ☁️ 말랑 / 🍬 달콤 패턴 목록 */
+        /* 🌈 배경지 목록 */
         .pat-content { max-width: min(95vw, var(--pat-w, 420px)); min-width: min(90vw, 340px); }
         .pat-content .btn:disabled { opacity: .4; cursor: default; }
         @media (hover: hover) { .pat-content .btn:disabled:hover { background: #fff; color: #444; } }
@@ -420,8 +418,6 @@
         @media (hover: hover) { .pat-item:hover .pat-swatch { border-color: var(--primary-accent); transform: scale(1.04); } }
         .pat-item.sel .pat-swatch { border: 3px solid var(--primary-accent); box-shadow: 0 0 0 3px rgba(255,107,129,.2); }
         .pat-swatch-inner { position: absolute; left: 0; top: 0; width: 200%; height: 200%; transform: scale(.5); transform-origin: 0 0; }
-        .pat-badge { position: absolute; right: 4px; top: 3px; font-size: 13px; }
-        .pat-left { position: absolute; left: 4px; top: 4px; font-size: 10.5px; font-weight: bold; color: #fff; background: #ff6b93; border-radius: 8px; padding: 0 5px; line-height: 16px; }   /* 🍬 달콤패턴 남은 날 */
         .pat-check {
             position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); white-space: nowrap;
             background: var(--primary-accent); color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 10px;
@@ -2240,22 +2236,13 @@
         .pg-sec { background: #fff; border-radius: 18px; padding: 14px 14px 12px; box-shadow: 0 3px 12px rgba(255, 120, 160, .12); }
         .pg-sec-t { font-size: 16.5px; font-weight: 900; color: #ff6b93; margin-bottom: 10px; }
         .pg-sec-t span { font-size: 12px; font-weight: bold; color: #fff; background: #ffa5c0; border-radius: 10px; padding: 2px 8px; margin-left: 4px; vertical-align: 2px; }
-        .pg-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
-        .pg-tab { flex: 1; padding: 9px 4px; border-radius: 14px; border: 2px solid #ffd1df; background: #fff7fa; color: #b0607e; font: inherit; font-weight: bold; font-size: 14px; cursor: pointer; transition: all .2s; }
-        .pg-tab small { display: block; font-size: 11px; font-weight: normal; opacity: .8; }
-        .pg-tab.on { background: linear-gradient(160deg, #ff8fb1, #ff6b93); border-color: #ff6b93; color: #fff; box-shadow: 0 4px 10px rgba(255, 107, 147, .3); }
         .pg-gift-d { font-size: 12.5px; color: #a07888; margin: 0 0 10px; text-align: center; word-break: keep-all; }
         .pg-where { margin: 10px 0 0; padding: 8px 10px; border-radius: 12px; background: #fff3c4; font-size: 12.5px; color: #7a5a1e; text-align: center; word-break: keep-all; }
         .pg-where b { color: #c2456f; }
         .pg-tapes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 10px; max-height: 240px; overflow-y: auto; padding: 4px 4px 2px; }
         .pg-tp { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .pg-tp span { display: block; width: 100%; height: 24px; transform: rotate(var(--r, 0deg)); filter: drop-shadow(0 1px 1px rgba(0,0,0,.12)); }
-        .pg-tp small, .pg-pt small { font-size: 11.5px; color: #8a6a58; text-align: center; }
-        .pg-pats { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
-        .pg-pt { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .pg-pt-sw { width: 100%; aspect-ratio: 1; border-radius: 14px; border: 2px solid #fff; box-shadow: 0 0 0 1.5px #ffd1df, 0 3px 8px rgba(0,0,0,.08); }
-        .pg-pt-sw { overflow: hidden; position: relative; }
-        .pg-pt-sw i { position: absolute; left: 0; top: 0; width: 200%; height: 200%; transform: scale(.5); transform-origin: 0 0; }
+        .pg-tp small { font-size: 11.5px; color: #8a6a58; text-align: center; }
         .pg-promise { list-style: none; margin: 12px 0 0; padding: 10px 12px; border-radius: 14px; background: #fff5f8; font-size: 13px; line-height: 1.7; word-break: keep-all; }
         .pg-promise b { color: #e2557f; }
         .pg-steps { list-style: none; counter-reset: pg; margin: 0 0 12px; padding: 0; font-size: 13.5px; word-break: keep-all; }

@@ -212,46 +212,43 @@
         let currentSkinId = 'pink';
         let currentSkinInline = null;      // 목록에 없는 페이지를 쓰는 중일 때 그 색 (예: 내려간 모두의 페이지)
 
-        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프 · 🍬 달콤패턴)
+        /* 🐷 말랑달콤 저금통 : 마음을 넣어 준 사람에게만 보이는 선물 (🎀 마스킹테이프)
            - 선물은 두 가지 : '전체'(저금 확인 때 · 그 종류 전부가 열려요) 와 '디자인 하나하나'(🎁 아이템 주기 · 캡슐 스티커처럼 디자인마다 따로 기간)
              한 디자인의 끝나는 날 = 전체와 그 디자인 중 더 늦은 날
            - 사람들이 만들어 나눈 페이지 · 배경지(카페에서 등록)은 만든 사람의 고운 마음이라 언제나 누구나 써요
-           - 화면에서 class="tape-only" 는 🎀 이 하나라도 열린 사람에게만, class="pat-only" 는 🍬 이 하나라도 열린 사람에게만 보여요 (css : body.tape-on · body.pat-on)
-           - 이미 다이어리에 붙인 테이프 · 깔아 둔 배경지는 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
-           - 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setGift(전체🎀, 전체🍬, {테이프id: 날}, {배경지id: 날}) (js/presence.js)
+           - 화면에서 class="tape-only" 는 🎀 이 하나라도 열린 사람에게만 보여요 (css : body.tape-on)
+           - 이미 다이어리에 붙인 테이프는 기간이 끝나도 그대로 둬요 (새로 고르는 것만 막아요)
+           - 끝나는 날은 '말랑달콤 사람들' 서버가 접속 신호의 답으로 알려 줘요 → setGift(전체🎀, {테이프id: 날}) (js/presence.js)
              그 날(한국 시간)까지 열려요 · 빈 값이면 닫혀요 · 🐷 저금통 창 : js/piggy.js */
         const GIFT_LOCAL = 'malang_gift';      // 이 기기에 마지막으로 받은 선물 → 다이어리를 열자마자 바로 보여 줘요 (서버 답이 오면 고쳐요)
-        let giftBox = { ta: '', pa: '', tp: {}, pp: {} };      // ta · pa : 🎀 · 🍬 전체 끝나는 날 / tp · pp : 디자인별 끝나는 날
+        let giftBox = { ta: '', tp: {} };      // ta : 🎀 전체 끝나는 날 / tp : 디자인별 끝나는 날
         const giftToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
         const giftOk = d => !!d && d >= giftToday();
         const giftLeft = d => giftOk(d) ? Math.round((Date.parse(d) - Date.parse(giftToday())) / 864e5) : -1;   // 0 = 오늘이 마지막 날 · 닫혔으면 -1
         const dLabel = n => n < 0 ? '' : n ? 'D-' + n : 'D-day';
         const giftEnd = (all, one) => [all, one].filter(giftOk).sort().pop() || '';      // 전체와 디자인 하나 중 더 늦은 날 · 없으면 ''
-        const tapeUntil = id => giftEnd(giftBox.ta, giftBox.tp[id]), patUntil = id => giftEnd(giftBox.pa, giftBox.pp[id]);
-        const tapeHas = id => !!tapeUntil(id), patHas = id => !!patUntil(id);
-        const tapeLeft = id => giftLeft(tapeUntil(id)), patLeft = id => giftLeft(patUntil(id));
+        const tapeUntil = id => giftEnd(giftBox.ta, giftBox.tp[id]);
+        const tapeHas = id => !!tapeUntil(id);
+        const tapeLeft = id => giftLeft(tapeUntil(id));
         const giftAlive = (all, map) => giftOk(all) || Object.keys(map).some(k => giftOk(map[k]));
-        const tapeOn = () => giftAlive(giftBox.ta, giftBox.tp), patOn = () => giftAlive(giftBox.pa, giftBox.pp);
+        const tapeOn = () => giftAlive(giftBox.ta, giftBox.tp);
         const giftCount = map => Object.keys(map).filter(k => giftOk(map[k])).length;
-        function setGift(ta, pa, tp, pp) {
+        function setGift(ta, tp) {
             const day = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d : '';
             const map = o => { const r = {}; if (o && typeof o === 'object') Object.keys(o).forEach(k => { if (/^[\w-]{1,30}$/.test(k) && day(o[k])) r[k] = o[k]; }); return r; };
-            giftBox = { ta: day(ta), pa: day(pa), tp: map(tp), pp: map(pp) };
+            giftBox = { ta: day(ta), tp: map(tp) };
             document.body.classList.toggle('tape-on', tapeOn());
-            document.body.classList.toggle('pat-on', patOn());
-            try { if (tapeOn() || patOn()) localStorage.setItem(GIFT_LOCAL, JSON.stringify(giftBox)); else localStorage.removeItem(GIFT_LOCAL); } catch (e) {}
+            try { if (tapeOn()) localStorage.setItem(GIFT_LOCAL, JSON.stringify(giftBox)); else localStorage.removeItem(GIFT_LOCAL); } catch (e) {}
             if (typeof pigThanks === 'function') pigThanks();
         }
-        const giftRefresh = () => setGift(giftBox.ta, giftBox.pa, giftBox.tp, giftBox.pp);      // 기간이 끝난 건 닫기
-        /* 🎁 선물 도착 신호(g = { t: { all|이름: [끝나는 날, 늘어남] }, p: { … } })를 지금 가진 것에 합치기 */
+        const giftRefresh = () => setGift(giftBox.ta, giftBox.tp);      // 기간이 끝난 건 닫기
+        /* 🎁 선물 도착 신호(g = { t: { all|이름: [끝나는 날, 늘어남] } })를 지금 가진 것에 합치기 */
         function giftApply(g) {
-            const b = giftBox, ta = b.ta, pa = b.pa, tp = Object.assign({}, b.tp), pp = Object.assign({}, b.pp);
-            const put = (sig, all, one) => Object.keys(sig || {}).forEach(k => { const u = sig[k] && sig[k][0]; if (k === 'all') all.v = u; else one[k] = u; });
-            const A = { v: ta }, P = { v: pa };
-            put(g.t, A, tp); put(g.p, P, pp);
-            setGift(A.v, P.v, tp, pp);
+            let ta = giftBox.ta; const tp = Object.assign({}, giftBox.tp);
+            Object.keys(g.t || {}).forEach(k => { const u = g.t[k] && g.t[k][0]; if (k === 'all') ta = u; else tp[k] = u; });
+            setGift(ta, tp);
         }
-        try { const g = JSON.parse(localStorage.getItem(GIFT_LOCAL) || 'null') || {}; setGift(g.ta, g.pa, g.tp, g.pp); } catch (e) {}
+        try { const g = JSON.parse(localStorage.getItem(GIFT_LOCAL) || 'null') || {}; setGift(g.ta, g.tp); } catch (e) {}
         const skinCommunity = () => (typeof getCommunitySkins === 'function' ? getCommunitySkins() : []);
         const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 

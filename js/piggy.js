@@ -1,20 +1,20 @@
 /* 말랑달콤 다이어리 - js/piggy.js
    💗 말랑달콤 저금통 (카페 → 💗 말랑달콤 저금통)
-   - 정해진 금액 없이, 마음이 가는 만큼 넣어 주면 한 달 동안 고마움 선물(🎀 마스킹테이프 · 🍬 달콤배경지)이 열려요
+   - 정해진 금액 없이, 마음이 가는 만큼 넣어 주면 한 달 동안 고마움 선물(🎀 마스킹테이프)이 열려요
    - 얼마를 넣어도 똑같이 30일 · 사람들이 만들어 나눈 페이지 · 배경지는 언제나 누구나
    - 주인은 '말랑달콤 사람들' 시트에서 저금 코드를 찾아 '저금 확인 ☑' 을 체크하면 끝 (말랑달콤사람들_앱스크립트.gs · 📱 piggy-check 앱도 돼요)
    - 마음은 카카오페이 오픈채팅 송금으로 받아요 (서로 실명이 안 보여요) : 말랑달콤 1:1 오픈채팅방에 저금 코드를 붙여 넣고 송금
        휴대폰 : 버튼 하나로 저금 코드 복사 + 채팅방 열기 · PC · 태블릿 : QR 코드 (카카오페이 송금은 휴대폰 카카오톡에서만 돼요)
    - 저금 코드 : '말랑' + 4글자 · 처음 접속할 때 서버가 겹치지 않게 정해 줘요 (접속 신호의 답 · js/presence.js 의 pr.code)
        → 채팅에 적힌 코드로 누가 넣었는지 알아요
-   - 선물이 열렸는지는 js/settings.js 의 tapeOn() · patOn() 이 알려 줘요 (🎀 · 🍬 끝나는 날은 따로 · 접속 신호의 답으로 받아요 : js/presence.js)
-   - 🎁 선물 도착 창 : 🪙 · 🎀 · 🍬 · 🎁 · 🖼️ 를 한 창으로 보여 줘요 (js/arrival.js · 닫기를 눌러야 닫혀요) · 신호는 js/presence.js 가 받아 와요
+   - 선물이 열렸는지는 js/settings.js 의 tapeOn() 이 알려 줘요 (🎀 끝나는 날은 접속 신호의 답으로 받아요 : js/presence.js)
+   - 🎁 선물 도착 창 : 🪙 · 🎀 · 🎁 · 🖼️ 를 한 창으로 보여 줘요 (js/arrival.js · 닫기를 눌러야 닫혀요) · 신호는 js/presence.js 가 받아 와요
    ※ 이 파일이 없으면 저금통 버튼을 눌러도 아무 일도 없어요 (다이어리는 정상) */
 
         /* 💬 말랑달콤 1:1 오픈채팅방 주소 : 다이어리 맨 위 폴더의 an.txt 에 적어요 (오픈채팅=https://open.kakao.com/o/…) */
         const PIG_CHAT_FILE = 'an.txt';
         const PIG_QR_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
-        const pig = { tab: 'tape', code: '', built: false, chat: '', phone: false };
+        const pig = { code: '', built: false, chat: '', phone: false };
 
         /* ---------- 🔊 동전 소리 : 짤랑~ (연출 소리를 껐으면 조용히) ---------- */
         function pigCoin() {
@@ -61,7 +61,6 @@
         function pigBuild() {
             const box = document.getElementById('pigBody'); if (!box) return;
             const tapes = typeof TAPES !== 'undefined' ? TAPES : [];
-            const sweet = typeof BG_PATTERNS !== 'undefined' ? BG_PATTERNS.filter(p => p.tier === 'paid') : [];
             box.innerHTML = `
               <div class="pg-hero">${PIG_SVG}
                 <div class="pg-hero-t">말랑달콤 저금통</div>
@@ -78,23 +77,15 @@
 
               <div class="pg-sec">
                 <div class="pg-sec-t">🎁 고마움 선물 <span>한 달 동안 활짝 열려요</span></div>
-                <div class="pg-tabs">
-                  <button type="button" class="pg-tab" data-t="tape" onclick="pigTab('tape')">🎀 마스킹테이프 <small>${tapes.length}가지</small></button>
-                  <button type="button" class="pg-tab" data-t="pat" onclick="pigTab('pat')">🍬 달콤배경지 <small>${sweet.length}가지</small></button>
-                </div>
-                <div class="pg-gift" data-t="tape">
+                <div class="pg-gift">
+                  <p class="pg-gift-d">🎀 마스킹테이프 <b>${tapes.length}가지</b></p>
                   <p class="pg-gift-d">사진 모서리나 글 위에 붙이는 다꾸 테이프예요. 붙인 뒤 길이도 마음대로!</p>
                   <p class="pg-where">📍 선물이 열리면 다이어리 아래 <b>✨ 스티커</b> → <b>🎀 마스킹테이프</b> 칸에 생겨요</p>
                   <div class="pg-tapes">${tapes.map((t, i) => `<div class="pg-tp"><span style="background-image:url(&quot;${tapeUrl(t)}&quot;);--r:${(i % 3 - 1) * 3}deg"></span><small>${t.name}</small></div>`).join('')}</div>
                 </div>
-                <div class="pg-gift" data-t="pat">
-                  <p class="pg-gift-d">다이어리 뒤 배경에 까는 그림 배경지예요. 보기만 해도 기분이 몽글몽글해져요.</p>
-                  <p class="pg-where">📍 선물이 열리면 <b>🎨 페이지</b> → <b>🌈 배경지</b> → <b>이벤트</b> 칸에 들어와요</p>
-                  <div class="pg-pats">${sweet.map((p, i) => `<div class="pg-pt"><div class="pg-pt-sw"><i data-i="${i}"></i></div><small>${p.name}</small></div>`).join('')}</div>
-                </div>
                 <ul class="pg-promise">
                   <li>💗 얼마를 넣어도 똑같이 <b>한 달 동안 모두</b> 쓸 수 있어요</li>
-                  <li>🌷 한 달이 지나도 이미 붙인 테이프 · 깔아 둔 배경지는 <b>그대로 남아요</b></li>
+                  <li>🌷 한 달이 지나도 이미 붙인 테이프는 <b>그대로 남아요</b></li>
                 </ul>
               </div>
 
@@ -115,27 +106,18 @@
               </div>
 
               <div class="pg-foot">마음을 넣어 주신 모든 분들, 정말 정말 고마워요 💕</div>`;
-            box.querySelectorAll('.pg-pt-sw i').forEach(el => paintPatternInto(el, sweet[+el.dataset.i]));
             pig.built = true;
-            pigTab(pig.tab);
         }
 
-        function pigTab(t) {
-            pig.tab = t;
-            document.querySelectorAll('#pigBody .pg-tab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-            document.querySelectorAll('#pigBody .pg-gift').forEach(g => { g.hidden = g.dataset.t !== t; });
-        }
-
-        /* 선물이 열려 있으면 고마움 띠 (🎀 · 🍬 따로 : 전체면 남은 날, 디자인별이면 몇 가지) */
+        /* 선물이 열려 있으면 고마움 띠 (전체면 남은 날, 디자인별이면 몇 가지) */
         function pigThanks() {
             const el = document.getElementById('pigThanks'); if (!el) return;
-            const t = typeof tapeOn === 'function' && tapeOn(), p = typeof patOn === 'function' && patOn();
-            el.hidden = !(t || p);
-            if (!t && !p) return;
-            const part = (all, map, tag) => giftOk(all) ? `${tag} 전체 <b>${dLabel(giftLeft(all))}</b>` : `${tag} <b>${giftCount(map)}가지</b>`;
+            const t = typeof tapeOn === 'function' && tapeOn();
+            el.hidden = !t;
+            if (!t) return;
             el.innerHTML = '💝 마음을 넣어 주셔서 고마워요! 선물이 열려 있어요<br>'
-                + [t ? part(giftBox.ta, giftBox.tp, '🎀 마스킹테이프') : '', p ? part(giftBox.pa, giftBox.pp, '🍬 달콤배경지') : ''].filter(Boolean).join(' · ')
-                + '<br><small>디자인마다 남은 날은 ✨ 스티커 · 🌈 배경지 → 이벤트 칸에서 볼 수 있어요</small>';
+                + (giftOk(giftBox.ta) ? `🎀 마스킹테이프 전체 <b>${dLabel(giftLeft(giftBox.ta))}</b>` : `🎀 마스킹테이프 <b>${giftCount(giftBox.tp)}가지</b>`)
+                + '<br><small>디자인마다 남은 날은 ✨ 스티커 → 🎀 마스킹테이프 → 이벤트 칸에서 볼 수 있어요</small>';
         }
 
         /* 내 저금 코드 (구글 로그인했을 때만) */

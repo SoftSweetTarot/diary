@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/skins.js
-   🎨 페이지 메뉴 (기본페이지 · 말랑배경지 · 달콤배경지) · 전체 배경지 적용/저장/불러오기
+   🎨 페이지 메뉴 (기본페이지 · 말랑배경지) · 전체 배경지 적용/저장/불러오기
    - 고른 배경지는 설정값 'diary_bg_pattern' 으로 저장 → 구글 드라이브 설정.json 에 함께 저장돼요
        예) "diary_bg_pattern": {"id":"tomato","scale":1}
    - 배경지 해제 시 이 값을 지워요 (설정.json 에서도 빠짐)
@@ -81,7 +81,6 @@
             }
             const p = findBgPattern(id);
             if (!p) return;
-            if (p.tier === 'paid' && !patHas(id)) { showMsg('🎁 선물로 열리는 배경지예요 💕'); return; }
             bgPattern = { id, scale: bgPattern ? bgPattern.scale : 1 };
             if (p.recipe && id.startsWith('cm:')) bgPattern.r = p.recipe;      // 등록된 사용자 배경지는 레시피도 같이 저장
             if (p.got) bgPattern.g = 1;
@@ -275,7 +274,7 @@
         }
         window.openPageList = openPageList; window.sklSetTab = sklSetTab; window.sklPick = sklPick;
 
-        /* ---------- ☁️ 말랑 / 🍬 달콤 패턴 목록 (라이브러리처럼 페이지 넘기기 + 배치 설정) ---------- */
+        /* ---------- 🌈 배경지 목록 (라이브러리처럼 페이지 넘기기 + 배치 설정) ---------- */
         const PAT_LAYOUT_KEY = 'malang_pattern_layout';
         const PAT_DEFAULT_LAYOUT = { rows: 3, cols: 3, size: 100 };
         const PAT_LAYOUT_LIMITS = { rows: [1, 8], cols: [1, 8], size: [60, 180] };
@@ -300,13 +299,12 @@
         function savePatLayout() { try { localStorage.setItem(PAT_LAYOUT_KEY, JSON.stringify(patLayout)); } catch (e) {} }
 
         /* 배경지 칸 5개 (스티커 창과 같은 이름) : 기본 = ☁️ 말랑배경지 · 내가만든 · 공유받은 = 📥 파일로 받은 것 + 🌟 등록된 사용자 배경지
-           이벤트 = 🍬 달콤배경지 (선물 받은 것만) · 문구점 = 🛍️ 문구점 가기 */
+           이벤트 = 앞으로 이벤트로 나눠 줄 배경지 (아직 없어서 칸이 숨어 있어요) · 문구점 = 🛍️ 문구점 가기 */
         function patItems() {
             const cm = typeof getCommunityItems === 'function' ? getCommunityItems() : [];
             const my = tab => typeof patListItems === 'function' ? patListItems(tab).items : [];   // 🌈 내가만든 · 받은 : 모음의 작은 그림 (js/pattern-maker.js)
             if (patTier === 'mine') return my('mine');
             if (patTier === 'share') return my('share').concat(cm);
-            if (patTier === 'event') return BG_PATTERNS.filter(p => p.tier === 'paid' && patHas(p.id));
             if (patTier === 'free') return BG_PATTERNS.filter(p => p.tier === 'free');
             return [];
         }
@@ -316,14 +314,14 @@
         function patPageCount() { const n = patItems().length; return n ? Math.ceil(n / patPerPage()) : 0; }
 
         function openPatternList(tier) {
-            tier = { paid: 'event', my: 'mine' }[tier] || tier;                          // 예전 이름 (🎁 선물 도착 js/arrival.js 가 'paid' 로 불러요)
+            tier = { my: 'mine' }[tier] || tier;
             if (!STK_TABS.some(t => t[0] === tier)) {                                  // 칸을 안 정했으면 지금 쓰는 배경지가 있는 칸부터
                 const id = bgPattern ? String(bgPattern.id) : '';
                 const mine = id.startsWith('my:') && (getMyPatternItems().find(p => p.id === id) || {});
-                tier = id.startsWith('cm:') ? 'share' : mine ? (mine.got ? 'share' : 'mine') : (currentBgPattern() || {}).tier === 'paid' ? 'event' : 'free';
+                tier = id.startsWith('cm:') ? 'share' : mine ? (mine.got ? 'share' : 'mine') : 'free';
             }
             const bar = document.getElementById('patTabs');
-            if (bar) bar.innerHTML = stkTabsOn(v => v === 'event' && BG_PATTERNS.some(p => p.tier === 'paid' && patHas(p.id))).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="setPatTab('${v}')">${n}</button>`).join('');   // 🆓 이벤트 · 문구점은 받은 게 있을 때만 (js/stickermaker.js STK_HIDE)
+            if (bar) bar.innerHTML = stkTabsOn().map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="setPatTab('${v}')">${n}</button>`).join('');   // 🆓 이벤트 · 문구점은 받은 게 있을 때만 (js/stickermaker.js STK_HIDE)
             if (bar && !bar.querySelector(`[data-tab="${tier}"]`)) tier = 'free';
             closeModal('skinModal');
             setPatTab(tier);
@@ -394,7 +392,6 @@
                 inner.className = 'pat-swatch-inner';
                 paintPatternInto(inner, p);
                 sw.appendChild(inner);
-                if (p.tier === 'paid') { const b = document.createElement('span'); b.className = 'pat-badge'; b.textContent = '🍬'; sw.appendChild(b); const d = document.createElement('span'); d.className = 'pat-left'; d.textContent = dLabel(patLeft(p.id)); sw.appendChild(d); if (typeof nwHas === 'function' && nwHas('pat', p.id)) { const nw = document.createElement('em'); nw.className = 'nw-chip'; nw.textContent = 'NEW'; sw.appendChild(nw); } }
                 if (bgPattern && bgPattern.id === p.id) { const c = document.createElement('span'); c.className = 'pat-check'; c.textContent = '✔ 사용 중'; sw.appendChild(c); }
                 card.title = p.name || '';
                 card.append(sw);                                               // 썸네일만 (이름 · 만든 사람은 안 보여요)
