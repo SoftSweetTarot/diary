@@ -605,7 +605,10 @@
            opts.bg    : 배경 그리기 (인형방·자랑 카드) / false면 투명 (일기에 붙일 때)
            opts.crop  : 인형 둘레만 잘라내기 (일기 스티커용)
            opts.pfx   : 무늬 id 앞머리 (한 화면에 인형이 여러 개일 때 겹치지 않게)
-           opts.upto  : 다시보기용 (몇 번째 조각까지 그릴지) */
+           opts.upto  : 다시보기용 (몇 번째 조각까지 그릴지)
+           opts.hop   : 💕 콩 한 번 뛰기 (인형방에서 콕 눌렀을 때 · live 와 같이)
+           opts.live  : ✨ 살아 움직이기 (숨쉬기 · 눈 깜빡 · 고개 살랑 · 머리카락 살랑 · SVG 안의 SMIL 이라 <img> 로 붙여도 움직여요)
+                        '움직임 줄이기'를 켠 기기에서는 가만히 있어요 */
         function dollSVG(D, opts = {}) {
             const pfx = opts.pfx || 'dl', defs = [], P = dollParts(D, pfx, defs);
             const PK = 1 / DOLL_ART_K;
@@ -627,11 +630,19 @@
             /* 💇 머리 : 기르기 · 빗질은 귀 아래(DOLL_HAIR_TOP)부터 · 자르기는 그 높이 아래를 잘라내요 */
             const cutClip = (id, y) => { defs.push(`<clipPath id="${pfx}-${id}"><rect x="-400" y="-400" width="1700" height="${y + 400}"/></clipPath>`); return `clip-path="url(#${pfx}-${id})"`; };
             const HT = DOLL_HAIR_TOP;
+            /* ✨ 움직임 : 겉 g 에 animateTransform 만 (같은 시간이라 나눠 그린 조각끼리 맞춰 움직여요) */
+            const live = !!opts.live && !(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            const ease = n => `calcMode="spline" keyTimes="${[...Array(n)].map((_, i) => dN(i / (n - 1))).join(';')}" keySplines="${Array(n - 1).fill('.45 0 .55 1').join(';')}"`;
+            const anim = (type, values, dur, extra = ease(values.split(';').length)) => `<animateTransform attributeName="transform" type="${type}" values="${values}" dur="${dur}s" repeatCount="indefinite" ${extra}/>`;
+            const around = (x, y, a, s) => live ? `<g transform="translate(${x} ${y})"><g>${a}<g transform="translate(${-x} ${-y})">${s}</g></g></g>` : s;
+            const NX = dN(DOLL_ART_X + 426 * DOLL_ART_K), NY = dN(650 * DOLL_ART_K);
+            const nod = s => s && live ? `<g>${anim('rotate', `0 ${NX} ${NY};1.6 ${NX} ${NY};0 ${NX} ${NY};-1.6 ${NX} ${NY};0 ${NX} ${NY}`, 7)}${s}</g>` : s;   // 고개 살랑 (목이 축)
+            const blink = s => ['basic', 'sparkle', 'heart'].includes(D.eyes) ? around(0, 476, anim('scale', '1 1;1 1;1 .08;1 1;1 1', 4.6, 'keyTimes="0;.9;.93;.96;1"'), s) : s;   // 눈 깜빡
             let hb = P.hairBack();
             if (hb) {
-                if (D.hairGrow !== 1 || D.hairSway) {
+                if (D.hairGrow !== 1 || D.hairSway || live) {
                     defs.push(`<clipPath id="${pfx}-hUp"><rect x="-400" y="-400" width="1700" height="${HT + 402}"/></clipPath><clipPath id="${pfx}-hDn"><rect x="-400" y="${HT - 1}" width="1700" height="3000"/></clipPath>`);
-                    hb = `<g clip-path="url(#${pfx}-hUp)">${hb}</g><g clip-path="url(#${pfx}-hDn)"><g transform="translate(426 ${HT}) skewX(${dN(-D.hairSway * 16)}) scale(1 ${D.hairGrow}) translate(-426 -${HT})">${hb}</g></g>`;
+                    hb = `<g clip-path="url(#${pfx}-hUp)">${hb}</g><g clip-path="url(#${pfx}-hDn)">${around(426, HT, anim('skewX', '0;2.2;0;-2.2;0', 5.2), `<g transform="translate(426 ${HT}) skewX(${dN(-D.hairSway * 16)}) scale(1 ${D.hairGrow}) translate(-426 -${HT})">${hb}</g>`)}</g>`;   // 귀 아래만 살랑
                 }
                 if (D.hairCut < 1844) hb = `<g ${cutClip('hCut', D.hairCut)}>${hb}</g>`;
             }
@@ -649,17 +660,16 @@
             const clothFront = (dress ? P.dressWear('top') : (tucked ? '' : top) + topSleeves + P.straps()) + P.tie();
             let body = A('<ellipse cx="426" cy="1802" rx="240" ry="30" fill="#000" opacity=".08"/>');
             body += layers('back');
-            body += A(hb) + dye(hb, 'mHB');
+            body += nod(A(hb) + dye(hb, 'mHB'));
             body += A(P.hood() + P.skinArt('ears') + P.skinArt('body') + P.skinArt('legs') + clothBack + P.skinArt('arms') + clothFront);
             if (D.paint.length) body += `<g ${mask('mCl', wh(clothBack) + bk(P.skinArt('arms')) + wh(clothFront))}>${dollPaintSVG(D.paint)}</g>`;
             if (D.patch.length) body += `<g class="dl-patches">${D.patch.map(dollPatchSVG).join('')}</g>`;
             body += layers('cloth');
-            body += A(P.skinArt('head') + P.eyes() + P.mouth() + P.makeup());
-            body += layers('face');
-            body += A(P.glasses() + hf) + dye(hf, 'mHF') + A(P.brows());
-            body += layers('hair');
-            body += A(P.accessories());
+            body += nod(A(P.skinArt('head') + blink(P.eyes()) + P.mouth() + P.makeup()) + layers('face') +
+                A(P.glasses() + hf) + dye(hf, 'mHF') + A(P.brows()) + layers('hair') + A(P.accessories()));
             body += layers('top');
+            if (live) body = around(150, 462, anim('scale', '1 1;1.004 1.012;1 1', 3.6), body);   // 숨쉬기 (발이 축)
+            if (live && opts.hop) body = `<g>${anim('translate', '0 0;0 -16;0 0;0 -5;0 0', 0.7, 'keyTimes="0;.3;.6;.8;1" repeatCount="1"').replace('repeatCount="indefinite" ', '')}${body}</g>`;   // 💕 콩 뛰기 (한 번)
             if (D.flip) body = `<g transform="translate(${DOLL_W} 0) scale(-1 1)">${body}</g>`;
             const vb = opts.crop ? '46 0 208 470' : `0 0 ${DOLL_W} ${DOLL_H}`;
             const bg = opts.bg === false ? '' : (DOLL_BGS(pfx)[D.bg] || '');

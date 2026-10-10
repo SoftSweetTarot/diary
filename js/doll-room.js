@@ -22,6 +22,7 @@
             color: '#ff9fb6', outline: 'auto', w: 3, op: 1, pat: 'none', patColor: '#ffffff', mirror: false,
             zoom: 1, history: [], future: [], lastAct: 0, attachEl: null, replay: null, clothTarget: 'top',
             salon: null, hcolor: '#f5a3c0', hw: 10,                                          // 💇 미용실 도구
+            react: false,                                                                    // 💕 콕 누른 반응 중
             deco: 'brush', pcolor: '#ff6b8f', pw: 5, stamp: 'heart', ps: 1.2, patchKind: 'button', psel: -1,   // 🖌️ 옷 꾸미기 도구
             touch: null                                                                      // 손잡이 · 미용실 · 꾸미기 끌기 중
         };
@@ -172,7 +173,7 @@
                 const card = document.createElement('div');
                 card.className = 'doll-card';
                 const img = document.createElement('img');
-                img.alt = d.name || '인형'; img.src = dollDataUrl(d, { bg: true, pfx: 'pk' + i });
+                img.alt = d.name || '인형'; img.src = dollDataUrl(d, { bg: true, pfx: 'pk' + i, live: true });
                 const nm = document.createElement('div'); nm.className = 'doll-card-name';
                 nm.textContent = (d.name || '이름 없는 인형') + (d.stats.hard ? ' 🔥' : '');
                 nm.title = ent.name;
@@ -280,7 +281,9 @@
            ===================================================================== */
         function renderDollStage() {
             const host = document.getElementById('drDoll');
-            host.innerHTML = dollSVG(DR.doll, { bg: true, pfx: 'rm', attrs: 'id="drSvg"' });
+            const still = isHardStep() || easyTouch() || !!DR.touch || !!DR.drag;          // 만지는 중엔 가만히
+            const D = DR.react ? Object.assign({}, DR.doll, { eyes: 'smile', mouth: 'open' }) : DR.doll;
+            host.innerHTML = dollSVG(D, { bg: true, pfx: 'rm', attrs: 'id="drSvg"', live: !still, hop: DR.react });
             const svg = document.getElementById('drSvg');
             svg.classList.toggle('pick', isHardStep() && DR.tool === 'select');
             drawOverlay();
@@ -447,8 +450,15 @@
             const i = patchAt(p); if (i >= 0) { D.patch.splice(i, 1); DR.psel = -1; }
             return n !== D.paint.length + D.patch.length;
         }
+        /* 💕 인형을 콕 누르면 방긋 웃으며 콩 뛰어요 (만지는 도구를 안 쓸 때) */
+        function dollPoke() {
+            if (DR.react || DR.replay) return;
+            DR.react = true; renderDollStage();
+            setTimeout(() => { DR.react = false; if (document.getElementById('dollRoom').style.display === 'flex') renderDollStage(); }, 1200);
+        }
         function setupEasyTouch() {
             const ov = document.getElementById('drOverlay');
+            document.getElementById('drDoll').addEventListener('click', () => { if (!isHardStep() && !easyTouch()) dollPoke(); });
             let raf = 0;
             const redraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderDollStage(); }); };
             /* ✂️ 재단 손잡이 */
@@ -1123,7 +1133,7 @@
         function setPlacedDoll(el, d) {
             el.dataset.doll = JSON.stringify(d);
             const img = el.querySelector('img');
-            if (img) img.src = dollDataUrl(d, { bg: false, crop: true });
+            if (img) img.src = dollDataUrl(d, { bg: false, crop: true, live: true });
             saveData(false);
         }
 
@@ -1140,7 +1150,7 @@
             el.dataset.doll = JSON.stringify(d);
             const img = document.createElement('img');
             img.alt = d.name || '인형';
-            img.src = dollDataUrl(d, { bg: false, crop: true });
+            img.src = dollDataUrl(d, { bg: false, crop: true, live: true });
             el.appendChild(img);
             if (!el.style.width) el.style.width = '130px';
             if (interactive) {
@@ -1165,7 +1175,7 @@
             if (!d) return;
             const ch = (key, opts) => `<div class="chips">${opts.map(([v, l]) => `<button type="button" class="chip${d[key] === v ? ' on' : ''}" data-qk="${key}" data-qv="${v}">${l}</button>`).join('')}</div>`;
             document.getElementById('dollQuickBody').innerHTML =
-                `<img class="dq-preview" alt="인형 미리보기" src="${dollDataUrl(d, { bg: true, pfx: 'qk' })}">` +
+                `<img class="dq-preview" alt="인형 미리보기" src="${dollDataUrl(d, { bg: true, pfx: 'qk', live: true })}">` +
                 grp('눈', ch('eyes', [['basic', '기본'], ['sparkle', '반짝'], ['smile', '웃음'], ['wink', '윙크'], ['sleepy', '졸림'], ['heart', '하트']])) +
                 grp('입', ch('mouth', [['cat', '고양이'], ['smile', '스마일'], ['open', '활짝'], ['o', '오!'], ['pout', '뽀뽀']])) +
                 grp('눈썹', ch('brows', [['basic', '기본'], ['worried', '시무룩'], ['strong', '씩씩'], ['none', '없음']])) +
