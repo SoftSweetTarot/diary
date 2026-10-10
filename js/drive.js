@@ -332,8 +332,11 @@
                 const folderId = await getFolder([...DAY_PATH, yearFolderName(y), monthFolderName(m)], create);
                 if (!folderId) return null;
                 const files = await driveList(`'${folderId}' in parents and mimeType!='${FOLDER_MIME}' and trashed=false`, 'id,name,modifiedTime,size');
-                const e = { folderId, files: new Map() };
-                files.forEach(f => { if (!e.files.has(f.name)) e.files.set(f.name, f); });   // 같은 이름이 여러 개면 가장 오래된 1개만 사용
+                const e = { folderId, files: new Map(), dups: new Map() };
+                files.forEach(f => {                                                         // 같은 이름이 여러 개면 가장 오래된 것을 쓰고, 나머지는 dups 에 (dayDupFix 가 하나로 정리)
+                    if (!e.files.has(f.name)) e.files.set(f.name, f);
+                    else { const a = e.dups.get(f.name) || [e.files.get(f.name)]; a.push(f); e.dups.set(f.name, a); }
+                });
                 drive.monthIndex.set(key, e);
                 return e;
             })();
@@ -361,11 +364,45 @@
 
         async function fetchDay(date, meta) {
             const idx = await getMonthIndex(date.getFullYear(), date.getMonth() + 1, false);
+            if (idx) await dayDupFix(idx, dayFileName(date.getDate()), getDateKey(date));
             const f = idx && idx.files.get(dayFileName(date.getDate()));
             if (meta) meta.t = f ? f.modifiedTime || '' : '';
             if (!f) return null;                                   // 그날 쓴 일기가 없음
             const obj = parseJsonObject(await readFileText(f.id), getDateKey(date));
             return obj ? JSON.stringify(obj) : null;
+        }
+
+        /* 📄📄 같은 날 일기 파일이 2개 이상 (두 기기가 거의 동시에 처음 만든 경우) → 하나로 정리
+           - 내용이 모두 같으면 묻지 않고 나머지를 휴지통으로
+           - 다르면 "어느 쪽을 남길까요?" → 고른 내용을 가장 먼저 만든 파일에 두고 나머지는 휴지통으로 (30일 안에 되살릴 수 있어요) */
+        const dupFixing = new Map();
+        function dayDupFix(idx, name, key) {
+            const list = idx.dups && idx.dups.get(name);
+            if (!list || list.length < 2) return Promise.resolve();
+            const tk = idx.folderId + '/' + name;
+            if (dupFixing.has(tk)) return dupFixing.get(tk);
+            const p = (async () => {
+                const texts = [];
+                for (const f of list) { let t = null; try { t = JSON.stringify(parseJsonObject(await readFileText(f.id), key)); } catch (e) { if (e.type !== 'corrupt') throw e; } texts.push(t); }
+                let win = 0;
+                for (let i = 1; i < list.length; i++) {
+                    const a = texts[win], b = texts[i];
+                    if (b === null || b === 'null' || b === a) continue;
+                    if (a === null || a === 'null') { win = i; continue; }
+                    const tm = f => new Date(f.modifiedTime).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const dk = parseDayKey(key);
+                    const first = await showAsk(`📄 <b>${dk.m}월 ${dk.d}일</b> 일기 파일이 두 개 있어요.<br>(두 기기에서 거의 동시에 처음 저장한 것 같아요)<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 드라이브 휴지통으로 가요.</span>`, `🕐 ${tm(list[win])} 저장한 것`, `🕑 ${tm(list[i])} 저장한 것`);
+                    if (!first) win = i;
+                }
+                const keep = list[0];
+                let meta = keep;
+                if (win !== 0 && texts[win] !== null) meta = Object.assign({}, keep, await driveUpsert(idx.folderId, name, keep.id, texts[win]));
+                for (let i = 1; i < list.length; i++) await driveTrash(list[i].id);
+                idx.files.set(name, meta); idx.dups.delete(name);
+                if (drive.dayMeta.has(key)) drive.dayMeta.set(key, meta.modifiedTime || '');
+            })();
+            dupFixing.set(tk, p);
+            return p.finally(() => dupFixing.delete(tk));
         }
 
         /* 하루치를 메모리로 읽어 오기 (이미 읽었으면 바로 끝, 읽는 중이면 그 요청을 같이 기다림) */
@@ -590,8 +627,18 @@
             let cur = known ? await driveMeta(known.id) : null;
             if (!cur) cur = await findFile(dir, F.name);                              // 처음이거나 지워졌으면 이름으로 한 번 더 찾기
             if (cur && (!known || cur.id !== known.id || cur.modifiedTime !== known.modifiedTime)) await mergeKeyFile(which, cur, mine);
-            const body = settingsBody(which);
-            const saved = await driveUpsert(dir, F.name, cur && cur.id, body);
+            let body = settingsBody(which);
+            let saved = await driveUpsert(dir, F.name, cur && cur.id, body);
+            if (!cur) {                                                             // 📄📄 다른 기기가 거의 동시에 같은 파일을 먼저 만들었으면 : 그 파일에 합쳐서 하나로
+                const first = await findFile(dir, F.name);
+                if (first && first.id !== saved.id) {
+                    await mergeKeyFile(which, first, mine);
+                    body = settingsBody(which);
+                    const fin = await driveUpsert(dir, F.name, first.id, body);
+                    await driveTrash(saved.id);
+                    saved = fin;
+                }
+            }
             drive[F.prop] = { id: saved.id, name: F.name, modifiedTime: saved.modifiedTime };
             if (which === 'cafe') { const o = JSON.parse(body); drive.cafeBase = new Map(Object.keys(o).map(k => [k, JSON.stringify(o[k])])); }
         }
@@ -602,6 +649,7 @@
             const name = dayFileName(dk.d);
             const idx = await getMonthIndex(dk.y, dk.m, val !== null);              // 올릴 때만 년도·달 폴더를 만들어요
             if (!idx) return;                                                       // 지울 날인데 폴더도 없음
+            await dayDupFix(idx, name, key);
             const f = idx.files.get(name);
             let cur = f ? await driveMeta(f.id) : null;
             if (!cur) cur = await findFile(idx.folderId, name);
@@ -624,6 +672,23 @@
                 return;
             }
             const saved = await driveUpsert(idx.folderId, name, cur && cur.id, val);    // 있으면 덮어쓰기, 없으면 새 파일
+            if (!cur) {                                                             // 📄📄 새로 만들었으면 : 다른 기기가 거의 동시에 같은 날 파일을 먼저 만들었는지 바로 확인
+                const first = await findFile(idx.folderId, name);
+                if (first && first.id !== saved.id) {
+                    let theirs = null;
+                    try { theirs = JSON.stringify(parseJsonObject(await readFileText(first.id), key)); } catch (e) { if (e.type !== 'corrupt') throw e; }
+                    let mine = true;
+                    if (theirs !== null && theirs !== 'null' && theirs !== val)
+                        mine = await showAsk(`📱 다른 기기에서도 방금 <b>${dk.m}월 ${dk.d}일</b> 일기를 처음 저장했어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 드라이브 휴지통으로 가요.</span>`, '📝 내 것 저장', '📱 다른 기기 것');
+                    let fin = first;
+                    if (mine && theirs !== val) fin = Object.assign({}, first, await driveUpsert(idx.folderId, name, first.id, val));
+                    await driveTrash(saved.id);                                     // 내가 만든 쪽은 휴지통으로 (가장 먼저 만든 파일 하나만 남겨요)
+                    idx.files.set(name, { id: first.id, name, modifiedTime: fin.modifiedTime });
+                    drive.dayMeta.set(key, fin.modifiedTime);
+                    if (!mine && !drive.dirtyKeys.has(key)) { store.putLoaded(key, theirs); dayShownAgain(key); }
+                    return;
+                }
+            }
             idx.files.set(name, { id: saved.id, name, modifiedTime: saved.modifiedTime });
             drive.dayMeta.set(key, saved.modifiedTime);
         }
@@ -887,6 +952,31 @@
            - 화면이 꺼지면 브라우저가 앱을 곧바로 멈출 수 있어서, 업로드가 끝나기 전에 멈추는 경우를
              대비해 이 기기에 임시 보관본도 함께 남기고, 다음에 열 때 자동으로 복구를 물어봅니다.
            ===================================================================== */
+        /* 임시 보관 : 탭마다 따로 (탭 두 개가 서로 덮어쓰지 않게) · 두 곳에 같이 남겨요
+           - localStorage : 바로 써져서 화면이 꺼지는 순간에도 안전 (약 5MB 까지)
+           - IndexedDB    : 사진이 많은 날처럼 큰 내용도 담겨요 (수백 MB) */
+        const PEND_TAB = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        const PEND_LS = PENDING_KEY + ':' + PEND_TAB;
+        let pendDbP = null;
+        function pendDb() {
+            if (!pendDbP) pendDbP = new Promise(ok => {
+                try {
+                    const r = indexedDB.open('mallang-pending', 1);
+                    r.onupgradeneeded = () => r.result.createObjectStore('p');
+                    r.onsuccess = () => ok(r.result); r.onerror = r.onblocked = () => ok(null);
+                } catch (e) { ok(null); }
+            });
+            return pendDbP;
+        }
+        async function pendTx(mode, fn) {
+            const db = await pendDb(); if (!db) return null;
+            return new Promise(ok => {
+                try {
+                    const tx = db.transaction('p', mode), r = fn(tx.objectStore('p'));
+                    tx.oncomplete = () => ok(r ? r.result : true); tx.onerror = tx.onabort = () => ok(null);
+                } catch (e) { ok(null); }
+            });
+        }
         function savePending() {
             try {
                 const items = {}, b = {}, bv = {};
@@ -899,10 +989,45 @@
                         if (keyFile(k) === 'cafe' && drive.cafeBase.has(k)) bv[k] = drive.cafeBase.get(k);   // ☕ 합칠 때 기준
                     }
                 });
-                localStorage.setItem(PENDING_KEY, JSON.stringify({ savedAt: Date.now(), items, b, bv }));
-            } catch (e) { /* 용량 초과 등: 임시 보관은 포기하고 업로드만 시도 */ }
+                const rec = { savedAt: Date.now(), tab: PEND_TAB, items, b, bv };
+                try { localStorage.setItem(PEND_LS, JSON.stringify(rec)); }
+                catch (e) { try { localStorage.removeItem(PEND_LS); } catch (x) {} }     // 너무 커서 못 담으면 옛 보관본이 남지 않게 지우고 IndexedDB 만
+                pendTx('readwrite', st => st.put(rec, PEND_TAB));
+            } catch (e) { /* 임시 보관은 포기하고 업로드만 시도 */ }
         }
-        function clearPending() { try { localStorage.removeItem(PENDING_KEY); } catch (e) {} }
+        function clearPending() {
+            try { localStorage.removeItem(PEND_LS); } catch (e) {}
+            pendTx('readwrite', st => st.delete(PEND_TAB));
+        }
+        /* 이 기기에 남아 있는 모든 탭의 보관본 → 하나로 (같은 내용 칸은 가장 나중에 보관한 것) */
+        async function readAllPending() {
+            const recs = [], lsKeys = [];
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith(PENDING_KEY)) { lsKeys.push(k); try { const r = JSON.parse(localStorage.getItem(k)); if (r && r.items) recs.push(r); } catch (e) {} }
+                }
+            } catch (e) {}
+            const vals = await pendTx('readonly', st => st.getAll());
+            if (Array.isArray(vals)) vals.forEach(r => { if (r && r.items) recs.push(r); });
+            const forget = async () => {
+                lsKeys.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+                await pendTx('readwrite', st => st.clear());
+            };
+            if (!recs.length) return { p: null, forget };
+            recs.sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0));               // 오래된 것부터 → 나중 것이 덮어요
+            const p = { savedAt: 0, items: {}, b: {}, bv: {}, at: {} };
+            recs.forEach(r => {
+                if (typeof r.items !== 'object') return;
+                Object.keys(r.items).forEach(k => {
+                    p.items[k] = r.items[k]; p.at[k] = r.savedAt || 0;
+                    if (r.b && k in r.b) p.b[k] = r.b[k]; else delete p.b[k];
+                    if (r.bv && k in r.bv) p.bv[k] = r.bv[k]; else delete p.bv[k];
+                });
+                p.savedAt = Math.max(p.savedAt, r.savedAt || 0);
+            });
+            return { p, forget };
+        }
 
         function saveOnScreenOff() {
             try { if (!turn) saveData(false); } catch (err) {}      // 편집 중인 글/스티커를 메모리(store)에 반영
@@ -920,9 +1045,8 @@
              · ☕ 카페 기록은 묻지 않고 양쪽을 합쳐요 (cafeMerge)
            - 지금 드라이브 내용이 보관본과 같으면 (이미 올라감) 아무것도 안 해요 */
         async function recoverPendingBackup() {
-            let p = null;
-            try { const raw = localStorage.getItem(PENDING_KEY); p = raw ? JSON.parse(raw) : null; } catch (e) {}
-            if (!p || !p.items || typeof p.items !== 'object') { clearPending(); return; }
+            const { p, forget } = await readAllPending();
+            if (!p) { await forget(); return; }
             const B = p.b && typeof p.b === 'object' ? p.b : {}, BV = p.bv && typeof p.bv === 'object' ? p.bv : {};
             const safe = [], cafe = [], askDays = [], askSet = [];
             for (const k of Object.keys(p.items)) {
@@ -946,7 +1070,7 @@
                 else if (k in B && B[k] === now) safe.push(k);                          // 그 사이 아무도 안 고쳤어요
                 else (dk ? askDays : askSet).push(k);                                   // 그 사이 다른 기기가 고쳤어요
             }
-            clearPending();
+            await forget();
             if (!safe.length && !cafe.length && !askDays.length && !askSet.length) return;
             const put = k => { const v = p.items[k]; if (v === null) store.removeItem(k); else store.setItem(k, v); };
             let any = false;

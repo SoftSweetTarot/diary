@@ -829,6 +829,7 @@
             closeModal('saveChooser');
             if (kind === 'web') saveData(true);
             if (kind === 'png') setTimeout(exportToPNG, 60);
+            if (kind === 'hist') openDayHistory();                              // 🕘 이 날 이전 버전 (js/day-history.js)
         }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */

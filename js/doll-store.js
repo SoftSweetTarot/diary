@@ -123,7 +123,7 @@
             let saved;
             try { saved = await driveUpsert(folderId, fname, writeId, body); }
             catch (e) {
-                if (e && e.code === 'gone') saved = await driveUpsert(folderId, fname, null, body);   // 그 사이 지워진 파일 → 새로 만들기
+                if (e && e.code === 'gone') saved = await driveUpsert(await getFolder(DOLL_FOLDERS.deco, true), fname, null, body);   // 그 사이 지워진 파일 · 폴더 → 폴더를 다시 찾아서 새로 만들기
                 else throw e;
             }
             const prev = list.find(e => e.id === saved.id);
