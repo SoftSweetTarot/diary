@@ -1,7 +1,7 @@
 /* 말랑달콤 다이어리 - js/doll-store.js
    👧 인형 저장소 : 구글 드라이브에 인형마다 파일 1개, 인형 이름으로 저장
        내 드라이브 / 말랑달콤 / 카페 / 인형 / 로라.json
-       (나중에 인형극을 만들면 : 말랑달콤 / 카페 / 인형극 / 상황극.json — DOLL_FOLDERS.play 주석만 풀면 됨)
+       🎭 인형극 : 말랑달콤 / 카페 / 인형극 / 상황극.json (js/puppet.js)
    - 다이어리(말랑달콤/다이어리)와는 다른 폴더라서 일기·설정 저장과 서로 영향을 주지 않아요.
    - 저장할 때만 그 인형 파일 하나를 올려요. (설정을 바꿀 때마다 인형까지 올라가지 않음)
    - 로그인 없이 둘러보기(게스트)일 때는 이 기기(브라우저)에만 저장해요.
@@ -9,8 +9,8 @@
    ※ 파일 불러오는 순서: … → pattern-maker → doll-render → doll-store → doll-room → service */
 
         const DOLL_FOLDERS = {
-            deco: [TOP_FOLDER_NAME, '카페', '인형']             // 👧 인형 꾸미기 : 말랑달콤 / 카페 / 인형 / 로라.json
-            // play: [TOP_FOLDER_NAME, '카페', '인형극']        // 🎭 나중에 인형극 : 말랑달콤 / 카페 / 인형극 / 상황극.json
+            deco: [TOP_FOLDER_NAME, '카페', '인형'],            // 👧 인형 꾸미기 : 말랑달콤 / 카페 / 인형 / 로라.json
+            play: [TOP_FOLDER_NAME, '카페', '인형극']           // 🎭 인형극 : 말랑달콤 / 카페 / 인형극 / 상황극.json (js/puppet.js)
         };
         const DOLL_MAX_COUNT = Infinity;                        // 인형 개수 제한 없음
         const DOLL_GUEST_KEY = 'malang_dolls_guest';            // 게스트 모드 : 이 기기에만

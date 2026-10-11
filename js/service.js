@@ -130,7 +130,7 @@
         function comingSoon(name) { showMsg(name + ' 기능은 준비 중이에요.<br>조금만 기다려 주세요!'); }
         function openShop(at) { window.open('shop/' + (at || ''), '_blank'); }      // at : 문구점 안의 칸 (예 '#/c/스티커')
         function openPet() { comingSoon('🐾 펫 키우기'); }
-        function openPuppetShow() { comingSoon('🎭 인형극'); }
+        if (typeof window.openPuppetShow !== 'function') window.openPuppetShow = () => comingSoon('🎭 인형극');   // js/puppet.js 가 없을 때만
         function openSweetVideo() { comingSoon('🎬 달콤영상'); }
         function openFortune() { if (typeof openFortuneCard === 'function') openFortuneCard(); else comingSoon('🔮 포춘카드'); }   // js/fortune.js
         function openComics() { comingSoon('📚 만화방'); }
