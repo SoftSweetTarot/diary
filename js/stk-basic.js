@@ -1,5 +1,9 @@
 /* 말랑달콤 다이어리 - js/stk-basic.js
    🆓 기본 스티커 : 처음부터 누구나 쓰는 🧩 조각스티커 봉투 · 📄 모조지 (✨ 스티커 → 그 종류 → 기본 칸)
+   + 🖼️ 개발자 그림 : 드라이브 '기본스티커' 폴더 (기본스티커 서버 · js/elements.js basicKit) 의 그림을 각 창 기본 칸 맨 앞에 섞어요
+       🍭 미니시트 · 🧩 조각스티커 · 📄 모조지 = 폴더 1개가 한 묶음 · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
+       (🏷️ 씰은 js/elements.js 의 씰 목록이 낱장 · 씰 종이로 보여 줘요)
+       붙일 때 그림을 받아 data 로 바꿔서 일기에 담아요 (사진과 같아요 · 나중에 드라이브에서 지워도 붙인 건 그대로)
    - 그림은 모두 이 파일 안의 SVG (파일 없음) · 다이어리에 붙이면 그 그림(SVG)이 일기에 담겨요
    - 🧩 봉투를 누르면 지금 연출 그대로 봉투가 나와요 (js/piecebag.js openPieceBag) · 조각마다 하얀 다이컷 테두리
    - 📄 모조지를 누르면 그림들이 모조지 한 장에 인쇄돼서 나와요 (js/papermaker.js pmMakeSheet → openPaperSheet) · 열 때마다 배치가 조금씩 달라요
@@ -92,14 +96,26 @@
         const sbMini = (ks, die) => ks.slice(0, 3).map(k => `<img alt="" src="${sbSvg(k, die)}">`).join('');
         /* 기본 칸 그리기 (js/stickermaker.js stkTab) : kind = 'piece' · 'paper' */
         function stkBasicHtml(kind) {
-            if (kind === 'piece') return '<div class="tp-note">🧩 봉투를 누르면 뜯어서 조각을 떼어 붙여요</div>' + sbOn(SB_BAGS).map(b =>
+            if (kind === 'piece') return '<div class="tp-note">🧩 봉투를 누르면 뜯어서 조각을 떼어 붙여요</div>' + stkBasicSrv('piece') + sbOn(SB_BAGS).map(b =>
                 `<button type="button" class="sb-card sb-bag" onclick="stkBasicOpen('piece','${b.id}')"><span class="sb-top" style="--c:${b.c}">${b.n}</span><span class="sb-mini">${sbMini(b.k, true)}</span><small>조각 ${b.k.length}개</small></button>`).join('');
-            if (kind === 'paper') return '<div class="tp-note">📄 모조지를 누르면 그림 둘레를 따라 오려서 붙여요</div>' + sbOn(SB_SHEETS).map(s =>
+            if (kind === 'paper') return '<div class="tp-note">📄 모조지를 누르면 그림 둘레를 따라 오려서 붙여요</div>' + stkBasicSrv('paper') + sbOn(SB_SHEETS).map(s =>
                 `<button type="button" class="sb-card sb-sheet" onclick="stkBasicOpen('paper','${s.id}')"><i class="sb-tape"></i><b>${s.n}</b><span class="sb-mini">${sbMini(s.k, false)}</span><small>그림 ${s.k.length}개</small></button>`).join('');
             return '';
         }
         async function stkBasicOpen(kind, id) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
+            if (/^srv:\d+$/.test(id)) {                                     // 🖼️ 개발자 그림 묶음
+                const x = SRV[kind] && SRV[kind][+id.slice(4)]; if (!x || !x.urls) return;
+                let srcs;
+                try { srcs = kind === 'piece' ? await Promise.all(x.urls.map(u => sbDie(u + '=w600'))) : await Promise.all(x.urls.map(u => sbData(u + '=w600').then(d => d.src))); }
+                catch (e) { sbFail(); return; }
+                if (kind === 'piece') { if (window.stkLeave) stkLeave(); else closeModal('stickerModal'); if (window.openPieceBag) openPieceBag(srcs, { t: x.n, s: '말랑달콤 기본 조각' }); return; }
+                let sheet = null;
+                try { sheet = await pmMakeSheet(srcs); } catch (e) { showMsg('모조지를 만들지 못했어요.'); return; }
+                if (window.stkLeave) stkLeave(); else closeModal('stickerModal');
+                openPaperSheet(sheet);
+                return;
+            }
             if (kind === 'piece') {
                 const b = sbOn(SB_BAGS).find(x => x.id === id); if (!b || !window.openPieceBag) return;
                 if (window.stkLeave) stkLeave(); else closeModal('stickerModal');
@@ -112,6 +128,99 @@
             if (window.stkLeave) stkLeave(); else closeModal('stickerModal');
             openPaperSheet(sheet);
         }
+        /* =====================================================================
+           🖼️ 개발자 그림 (드라이브 기본스티커 폴더)
+           ===================================================================== */
+        const SRV = { mini: null, piece: null, paper: null, tape: null, tk: null, leaf: null, memo: null }, sbCache = new Map();
+        const okId = id => typeof id === 'string' && /^[\w-]{10,80}$/.test(id);
+        const nm = n => (window.kitName ? kitName(String(n || '')) : String(n || '')).slice(0, 24);
+        const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+        const thumb = (u, w) => u + '=w' + (w || 160);
+        async function sbList(kind) {                                   // [{ n, urls }] (묶음) · [{ n, url }] (1장)
+            if (SRV[kind]) return SRV[kind];
+            if (!window.basicKit) return [];
+            const k = await basicKit(), a = Array.isArray(k.kits && k.kits[kind]) ? k.kits[kind] : [];
+            return (SRV[kind] = a.map(x => {
+                if (!x) return null;
+                if (Array.isArray(x.ids)) { const urls = x.ids.filter(okId).slice(0, 30).map(driveImageUrl); return urls.length ? { n: nm(x.n), urls } : null; }
+                return okId(x.id) ? { n: nm(x.n), url: driveImageUrl(x.id) } : null;
+            }).filter(Boolean));
+        }
+        /* 주소 그림 → data 주소 (투명한 곳이 있으면 PNG · 없으면 JPG) · 한 번 받은 건 기억 */
+        function sbData(url, jpeg) {
+            if (sbCache.has(url)) return sbCache.get(url);
+            const p = new Promise((ok, no) => {
+                const im = new Image(); im.crossOrigin = 'anonymous';
+                im.onload = () => {
+                    try {
+                        const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+                        const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+                        let clear = false;
+                        if (!jpeg) { const a = x.getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < a.length; i += 16) if (a[i] < 250) { clear = true; break; } }
+                        ok({ src: clear ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', .88), w: c.width, h: c.height });
+                    } catch (e) { no(e); }
+                };
+                im.onerror = () => no(new Error('load'));
+                im.src = url;
+            });
+            p.catch(() => sbCache.delete(url));
+            sbCache.set(url, p);
+            return p;
+        }
+        const sbDie = url => window.pelBake ? pelBake(url) : sbData(url).then(d => d.src);   // 하얀 다이컷 테두리 (js/stickerpeel.js)
+        const sbFail = () => showMsg('⚠ 그림을 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
+        const BAG_COLS = ['#ffd1dc', '#cfe9ff', '#ffe8c2', '#ffd6e8', '#dff3d8', '#e8dcff'];
+
+        /* 기본 칸에 넣는 자리 : 먼저 빈 자리를 두고 → 목록을 받으면 채워요 (못 받으면 조용히 빈 채로) */
+        function stkBasicSrv(kind) {
+            setTimeout(() => sbFill(kind), 0);
+            return `<div class="sb-srv" data-sbk="${kind}"></div>`;
+        }
+        async function sbFill(kind) {
+            let list = [];
+            try { list = await sbList(kind); } catch (e) { return; }
+            const html = list.map((x, i) => {
+                const t = x.urls ? x.urls : [x.url];
+                if (kind === 'piece') return `<button type="button" class="sb-card sb-bag" onclick="stkBasicOpen('piece','srv:${i}')"><span class="sb-top" style="--c:${BAG_COLS[i % BAG_COLS.length]}">${esc(x.n)}</span><span class="sb-mini">${t.slice(0, 3).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><small>조각 ${t.length}개</small></button>`;
+                if (kind === 'paper') return `<button type="button" class="sb-card sb-sheet" onclick="stkBasicOpen('paper','srv:${i}')"><i class="sb-tape"></i><b>${esc(x.n)}</b><span class="sb-mini">${t.slice(0, 3).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><small>그림 ${t.length}개</small></button>`;
+                if (kind === 'mini') return `<button type="button" class="spk-card" onclick="openStickerPack('srv:${i}')"><span class="spk-prev">${t.slice(0, 4).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><b>🧸 ${esc(x.n)}</b><small>스티커 ${t.length}개</small></button>`;
+                if (kind === 'tape') return `<button type="button" class="tp-item" onclick="sbUse('tape',${i})"><span style="background:url(&quot;${thumb(x.url, 240)}&quot;) left center / auto 100% repeat-x"></span><small>${esc(x.n)}</small></button>`;
+                if (kind === 'tk') return `<button type="button" class="tk-it" onclick="sbUse('tk',${i})">${window.tkMiniHtml ? tkMiniHtml('my', { src: thumb(x.url, 200) }) : ''}<b>${esc(x.n)}</b></button>`;
+                if (kind === 'leaf') return `<button type="button" class="lf-pick" onclick="sbUse('leaf',${i})"><i class="lf-sw lf-my" style="--lf-img:url('${thumb(x.url, 240)}')"></i>${esc(x.n)}</button>`;
+                if (kind === 'memo') return `<button type="button" class="btn pp-pick-btn" title="${esc(x.n)}" onclick="sbUse('memo',${i})"><span class="pp-chip sb-memo" style="background-image:url(&quot;${thumb(x.url, 120)}&quot;)"></span><small>${esc(x.n)}</small></button>`;
+                return '';
+            }).join('');
+            document.querySelectorAll(`.sb-srv[data-sbk="${kind}"]`).forEach(el => { el.innerHTML = html; });
+        }
+        /* 🍭 미니시트 : js/stickerpack.js openStickerPack('srv:번호') 가 불러요 */
+        function sbPack(id) {
+            const i = +String(id).replace('srv:', ''), x = SRV.mini && SRV.mini[i];
+            if (!x || !x.urls) return null;
+            return { id: 'srv' + i, icon: '🧸', name: x.n, sub: '', load: () => Promise.all(x.urls.map(u => sbDie(u + '=w600'))) };
+        }
+        /* 🎀 🧻 📃 📝 그림 1장 쓰기 */
+        async function sbUse(kind, i) {
+            if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
+            const x = SRV[kind] && SRV[kind][i]; if (!x || !x.url) return;
+            let d;
+            try { d = await sbData(x.url + (kind === 'leaf' ? '=w900' : kind === 'tape' ? '=h120' : '=w600'), kind === 'leaf'); } catch (e) { sbFail(); return; }
+            if (kind === 'tape') {                                          // 무늬 한 칸을 옆으로 이어 붙여요 (테이프 높이 30)
+                if (typeof tapeUrl !== 'function' || !window.placeTape) return;
+                const h = 30, w = Math.max(6, Math.round(h * d.w / d.h * 10) / 10);
+                placeTape(tapeUrl({ id: 'b-' + i, name: x.n, bg: 'none', w, h, p: `<image href="${d.src}" width="${w}" height="${h}" preserveAspectRatio="none"/>` }));
+            } else if (kind === 'tk') { if (window.tkUseMy) tkUseMy({ src: d.src, glue: '' }); }
+            else if (kind === 'leaf') { if (window.pickLeaf) pickLeaf('my', d.src); }
+            else if (kind === 'memo') {                                     // 그림 위에 글을 쓰는 메모 (🧻 떡메 메모와 같은 모양으로 저장)
+                closeModal('paperModal');
+                if (typeof addText !== 'function' || !window.tkNoteDress) return;
+                addText();
+                const el = typeof selectedElement !== 'undefined' ? selectedElement : null; if (!el) return;
+                tkNoteDress(el, 'my', d.src);
+                el.style.width = '180px'; el.style.height = Math.round(180 * d.h / d.w) + 'px';
+                if (typeof saveData === 'function') saveData(false);
+            }
+        }
+        window.stkBasicSrv = stkBasicSrv; window.sbPack = sbPack; window.sbUse = sbUse;
         window.stkBasicHtml = stkBasicHtml; window.stkBasicOpen = stkBasicOpen;
     })();
 

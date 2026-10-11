@@ -96,6 +96,7 @@
         }
         async function spkSrcs(pack) {
             if (spkS.cache[pack.id]) return spkS.cache[pack.id];
+            if (pack.load) return (spkS.cache[pack.id] = await pack.load());   // 🖼️ 개발자 그림 미니시트 (js/stk-basic.js sbPack)
             if (pack.id !== 'heart' && document.fonts && document.fonts.load) await Promise.race([document.fonts.load(`700 100px ${SPK_FONT}`), new Promise(r => setTimeout(r, 1500))]).catch(() => {});
             return (spkS.cache[pack.id] = pack.items.map((it, i) => pack.id === 'heart' ? spkHeart(i) : spkGlyph(it, i)));
         }
@@ -113,7 +114,7 @@
             g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
             const cards = [];
             for (const p of SPK_PACKS) { const s = await spkSrcs(p); cards.push(`<button type="button" class="spk-card" onclick="openStickerPack('${p.id}')"><span class="spk-prev">${s.slice(0, 4).map(u => `<img src="${u}" alt="">`).join('')}</span><b>${p.icon} ${p.name}</b><small>${p.sub}</small></button>`); }
-            if (document.querySelector('#stickerKindTabs .stk-tab.on[data-tab="pack"]')) g.innerHTML = `<div class="spk-cards">${cards.join('')}</div>`;
+            if (document.querySelector('#stickerKindTabs .stk-tab.on[data-tab="pack"]')) g.innerHTML = `<div class="spk-cards">${window.stkBasicSrv ? stkBasicSrv('mini') : ''}${cards.join('')}</div>`;   // 🖼️ 개발자 그림 시트가 맨 앞 (js/stk-basic.js)
         }
 
         /* ---------- 하얀 판 ---------- */
@@ -144,10 +145,11 @@
         }
         async function openStickerPack(id) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
-            const p = SPK_PACKS.find(q => q.id === id); if (!p) return;
+            const p = SPK_PACKS.find(q => q.id === id) || (window.sbPack && sbPack(id)); if (!p) return;
             if (window.stkLeave) stkLeave();
             spkBuild(); spkPutBack(); spkS.pack = p;
-            const srcs = await spkSrcs(p);
+            let srcs;
+            try { srcs = await spkSrcs(p); } catch (e) { showMsg('⚠ 미니시트를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); if (window.stkReturn) stkReturn(); return; }
             spkq('spkTitle').textContent = p.icon + ' ' + p.name;
             spkq('spkGrid').innerHTML = srcs.map((u, i) => `<span class="spk-it" data-i="${i}"><img src="${u}" alt="" draggable="false"></span>`).join('');
             spkq('spkRoom').classList.add('show');

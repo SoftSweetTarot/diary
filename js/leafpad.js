@@ -52,7 +52,7 @@
         }
         function openLeafPicker() {
             const box = lfq('leafPick'); if (!box) return;
-            if (!box.firstChild) box.innerHTML = LEAFS.map(([k, n]) => `<button type="button" class="lf-pick" data-lf="${k}" onclick="pickLeaf('${k}')"><i class="lf-sw lf-${k}"></i>${n}</button>`).join('');
+            if (!box.firstChild) box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('leaf') : '') + LEAFS.map(([k, n]) => `<button type="button" class="lf-pick" data-lf="${k}" onclick="pickLeaf('${k}')"><i class="lf-sw lf-${k}"></i>${n}</button>`).join('');
             setPageLeaf(pageLeaf, pageLeafImg);
             lfTabs('leaf', 'free');
             closeModal('stickerMakeModal'); openModal('leafModal');
@@ -117,7 +117,7 @@
         function openTteok() {
             const box = lfq('tkList');
             if (!box.firstChild) {
-                box.innerHTML = TK_PADS.map(([k, n]) => `<button type="button" class="tk-it" data-k="${k}">${tkMiniHtml(k)}<b>${n}</b></button>`).join('');
+                box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('tk') : '') + TK_PADS.map(([k, n]) => `<button type="button" class="tk-it" data-k="${k}">${tkMiniHtml(k)}<b>${n}</b></button>`).join('');
                 box.querySelectorAll('.tk-it').forEach(b => tkTap(b, () => { tk.pad = b.dataset.k; tk.my = null; spawnTteok(); }));
             }
             tkChips(lfq('tkEdgePick'), TK_EDGES, tk.edge, k => { tk.edge = k; });

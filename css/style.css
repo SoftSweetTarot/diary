@@ -3241,3 +3241,9 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .sticker-grid .sb-sheet .sb-mini img { filter: none; }
 .sticker-grid .sb-tape { position: absolute; left: 50%; top: -6px; width: 44px; height: 13px; margin-left: -22px; background: rgba(255, 173, 196, .75); transform: rotate(-3deg); }
 @media (hover: hover) { .sticker-grid .sb-card:hover { background: #fff6f9; } }
+
+/* 🖼️ 개발자 그림 (드라이브 기본스티커 폴더 · js/stk-basic.js) : 각 창 기본 칸 맨 앞에 섞여요 */
+.sb-srv { display: contents; }
+.pp-chip.sb-memo { background-size: cover; background-position: center; border: 0; }
+.lib-item.lib-sheet { background: linear-gradient(135deg, #fff 0 70%, #fdf3f6 70%); box-shadow: 2px 2px 0 #f3e1e8, 4px 4px 0 #f8eef2; }
+.lib-item .lib-cnt { position: absolute; right: 4px; bottom: 4px; font-size: 11px; line-height: 1; padding: 3px 6px; border-radius: 999px; background: var(--primary-accent, #ff6b81); color: #fff; font-weight: bold; }
