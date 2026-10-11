@@ -130,7 +130,8 @@
         const LF_TAB_NAMES = [['free', '기본'], ['mine', '내가만든'], ['share', '공유받은'], ['event', '이벤트'], ['shop', '문구점']];   // 모든 보관 창 공통 (js/stickermaker.js STK_TABS)
         function lfTabs(w, tab) {
             const name = LF_TABS[w], bar = lfq(w + 'Tabs'), other = lfq(w + 'Other');
-            if (!bar.firstChild) bar.innerHTML = LF_TAB_NAMES.filter(([v]) => !STK_HIDE.includes(v)).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="lfTabs('${w}','${v}')">${n}</button>`).join('');
+            if (!bar.firstChild) bar.innerHTML = LF_TAB_NAMES.filter(([v]) => !STK_HIDE.includes(v) && !(typeof stkOff === 'function' && stkOff(v, 'stk'))).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="lfTabs('${w}','${v}')">${n}</button>`).join('');
+            bar.hidden = bar.children.length < 2;                                 // 칸이 하나뿐이면 칸 줄은 숨겨요
             bar.querySelectorAll('.stk-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
             lfq(w + 'Free').hidden = tab !== 'free'; other.hidden = tab === 'free';
             if (w === 'tk') lfq('tkEdgePick').hidden = tab === 'event' || tab === 'shop';   // 찢김 모양은 기본 · 내가만든 · 공유받은 떡메 모두

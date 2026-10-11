@@ -323,7 +323,13 @@
         /* 🆓 지금은 무료 앱으로 : 앱 전체(스티커 · 속지 · 떡메 · 페이지 · 배경지 창)의 🎁 이벤트 · 🛍️ 문구점 칸은 숨겨 둬요 (이 줄을 비우면 다시 보여요 · 도련 · 2026-10-10)
            has(칸) : 이미 받은 게 든 칸은 보여요 (받은 걸 쓸 곳이 없어지지 않게) */
         const STK_HIDE = ['event', 'shop'];
-        const stkTabsOn = has => STK_TABS.filter(([v]) => !STK_HIDE.includes(v) || (has && has(v)));
+        /* 🔓 숨긴 기능의 칸 (js/features.js) : 스티커 · 속지 · 떡메 창(win 'stk')의 '내가만든' (✂️ 스티커 만들기) · 모든 창의 '공유받은' (카페로 주고받기)
+           has(칸) : 든 게 있는 칸은 보여요 (🌟 등록된 모두의 페이지 등) */
+        function stkOff(v, win) {
+            if (typeof ftOn !== 'function') return false;
+            return (v === 'mine' && win === 'stk' && !ftOn('stkmake')) || (v === 'share' && !ftOn('share'));
+        }
+        const stkTabsOn = (has, win) => STK_TABS.filter(([v]) => (STK_HIDE.includes(v) || stkOff(v, win)) ? !!(has && has(v)) : true);
         let stkKind = 'tape';
         function openStickerKind(kind, tab) {
             stkBackOn = false;
@@ -334,9 +340,9 @@
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0] + ' ' + k[1];
             const bar = smq('stickerKindTabs');
             bar.classList.remove('two');
-            bar.innerHTML = stkTabsOn(v => v === 'event' && kind === 'tape' && typeof tapeRecvHtml === 'function' && tapeRecvHtml()).map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
-            bar.hidden = false;
-            stkTab(tab || (kind === 'seal' ? 'free' : 'mine'));                 // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
+            bar.innerHTML = stkTabsOn(v => v === 'event' && kind === 'tape' && typeof tapeRecvHtml === 'function' && tapeRecvHtml(), 'stk').map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
+            bar.hidden = bar.children.length < 2;                               // 칸이 하나뿐이면 칸 줄은 숨겨요
+            stkTab(tab || (kind === 'seal' || stkOff('mine', 'stk') ? 'free' : 'mine'));                 // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
         }
         /* 🏷️ 씰스티커 → 기본 : 스티커 칸 대신 말랑달콤 그림 모음 목록을 바로 (창 넓이는 목록 배치를 따라요 · js/elements.js) */
         function stkLib(on) {

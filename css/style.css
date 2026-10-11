@@ -3224,3 +3224,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .nt-body p { margin: 0 0 10px; }
 .nt-body a { color: var(--primary-accent); }
 .nt-close { width: 100%; justify-content: center; margin-top: 12px; }
+
+/* 🔓 기능 공개 스위치 (js/features.js) : 숨긴 기능의 버튼 · 칸 */
+.ft-no-cafe [data-ft~="cafe"], .ft-no-notebook [data-ft~="notebook"], .ft-no-dday [data-ft~="dday"], .ft-no-pattern [data-ft~="pattern"],
+.ft-no-studio [data-ft~="studio"], .ft-no-stkmake [data-ft~="stkmake"], .ft-no-share [data-ft~="share"], .ft-no-caps [data-ft~="caps"] { display: none !important; }

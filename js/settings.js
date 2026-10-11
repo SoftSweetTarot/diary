@@ -179,7 +179,7 @@
                 }
                 const mine = S.diaryBytes + S.dollBytes + S.playBytes;
                 if (d) d.innerHTML = `└ 그중 <b>말랑달콤</b> : ${fmtBytes(mine)}<br>`
-                    + `<span style="color:#999;">(📔 일기 ${S.days}일치 ${fmtBytes(S.diaryBytes)} · 👧 인형 ${S.dolls}개 ${fmtBytes(S.dollBytes)}`
+                    + `<span style="color:#999;">(📔 일기 ${S.days}일치 ${fmtBytes(S.diaryBytes)}` + (S.dolls ? ` · 👧 인형 ${S.dolls}개 ${fmtBytes(S.dollBytes)}` : '')
                     + (S.plays ? ` · 🎭 인형극 ${S.plays}개 ${fmtBytes(S.playBytes)}` : '') + ')</span>';
             } else {
                 if (t) t.innerText = drive.guest ? '로그인하면 볼 수 있어요' : drive.ready ? '계산 중…' : '-';

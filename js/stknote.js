@@ -21,6 +21,7 @@
             let v = null;
             try { v = snbSync() ? store.getItem(SNB_KEY) : localStorage.getItem(SNB_LOCAL); } catch (e) {}
             try { v = JSON.parse(v); } catch (e) {}
+            if (typeof ftOn === 'function' && !ftOn('notebook')) return 'list';   // 🔓 수첩을 숨겨 둔 동안은 늘 고르는 창 (js/features.js)
             return v === 'note' ? 'note' : 'list';
         }
         function snbSet(v) {
