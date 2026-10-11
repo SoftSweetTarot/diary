@@ -3209,3 +3209,18 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 @media (max-width: 560px) { .ps-play { padding: 10px; } .ps-theater { box-shadow: 0 0 0 4px #6b2a3a, 0 0 0 7px #d4a24c, 0 12px 30px rgba(0, 0, 0, .6); } }
 .ps-bub.low { transform: translateX(-50%); animation: psNar .3s ease-out; }
 .ps-bub.low::after { display: none; }
+
+/* 📢 겉표지 공지 (js/service.js) : 새 공지면 카드 속 편지가 딸랑딸랑 · 누르면 공지 창 */
+.cover-notice { position: relative; }
+.cn-hit { position: absolute; inset: 0; margin: 0; padding: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.cn-hit:active { background: rgba(255, 255, 255, .18); }
+.cover-notice.ring.img img { animation: cnRing 1.4s ease-in-out infinite; transform-origin: 50% 0; }
+@keyframes cnRing { 0%, 48%, 100% { transform: rotate(0); } 6% { transform: rotate(-3deg); } 14% { transform: rotate(3deg); } 22% { transform: rotate(-2deg); } 30% { transform: rotate(1.5deg); } 38% { transform: rotate(-.8deg); } }
+.nt-box { max-width: 460px; width: min(92vw, 460px); }
+.nt-date { text-align: center; font-size: 12px; color: #aa8a98; margin: -4px 0 8px; }
+.nt-date:empty { display: none; }
+.nt-body { max-height: 58vh; overflow-y: auto; font-size: 14.5px; line-height: 1.75; color: #5a3d4a; padding: 4px 2px; word-break: keep-all; overflow-wrap: anywhere; }
+.nt-body img { max-width: 100%; height: auto; border-radius: 12px; display: block; margin: 0 auto 10px; }
+.nt-body p { margin: 0 0 10px; }
+.nt-body a { color: var(--primary-accent); }
+.nt-close { width: 100%; justify-content: center; margin-top: 12px; }

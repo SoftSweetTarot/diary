@@ -640,6 +640,7 @@
                 loadUIFont();
                 if (typeof showApply === 'function') showApply();
                 if (typeof ddRefresh === 'function') ddRefresh();
+                if (typeof noticeRefresh === 'function') noticeRefresh();      // 📢 다른 기기에서 본 공지는 여기서도 그만 흔들려요 (js/service.js)
             } catch (e) { console.warn(e); }
         }
 
