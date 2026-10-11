@@ -7,7 +7,7 @@
        🖌️ 옷 꾸미기(⑥) : 붓 · 도장(옷 안에만 칠해져요) · 단추 · 와펜 · 레이스 붙이기
    - 내 인형들 : 인형마다 파일 1개 → 구글 드라이브 '말랑달콤 / 인형 / 인형이름.json' (js/doll-store.js, 개수 제한 없음)
    - 만드는 중인 인형은 이 기기에 자동 임시 저장 (창을 닫아도 이어서 만들기)
-   - 📷 사진으로 저장(자랑 카드 PNG) · 💾 인형 파일로 저장(.malang.txt) · 📂 인형 불러오기 · 📔 일기에 붙이기
+   - 📷 사진으로 저장(자랑 카드 PNG) · 💾 인형 파일로 저장(이름.json) · 📂 인형 불러오기 · 📔 일기에 붙이기
    - 일기에 붙인 인형은 페이지 요소 {"t":"d","c":{인형 데이터}} 로 저장되고, 두 번 누르면 표정·옷을 바로 고칠 수 있어요
    ※ 파일 불러오는 순서: … → pattern-maker → doll-render → doll-store → doll-room → doll-move → service */
 
@@ -69,7 +69,7 @@
                 <div class="doll-picker-top">
                   <button class="btn btn-primary" type="button" onclick="openDollRoom(null)">✏️ 새 인형 만들기</button>
                   <button class="btn" type="button" onclick="document.getElementById('dollFile').click()">📂 인형 불러오기</button>
-                  <input type="file" id="dollFile" accept=".txt,.json,text/plain,application/json" style="display:none" onchange="importDollFile(event)">
+                  <input type="file" id="dollFile" accept=".json,application/json" style="display:none" onchange="importDollFile(event)">
                 </div>
                 <p class="doll-where" id="dollWhere"></p>
                 <div class="doll-draft" id="dollDraftNote" style="display:none"></div>
@@ -950,10 +950,15 @@
                 downloadBlob(await dollCardBlob(DR.doll, clear), `malang_doll_${dollStamp()}.png`);
             } catch (e) { showMsg('사진을 만들지 못했어요.<br>잠시 후 다시 시도해 주세요.'); }
         }
-        function dollSaveFile() {
+        /* 💾 인형 파일로 저장 : 씰스티커 저장처럼 파일 이름 · 만든 사람을 먼저 물어봐요 (js/sharebox.js shxAsk) */
+        async function dollSaveFile() {
             const d = sanitizeDoll(DR.doll);
             if (!d) { showMsg('⚠ 인형이 너무 커서 파일로 저장할 수 없어요.'); return; }
-            downloadBlob(new Blob([JSON.stringify({ malang_doll: 1, name: d.name, by: d.by, doll: d })], { type: 'text/plain;charset=utf-8' }), `malang_doll_${dollStamp()}.malang.txt`);
+            const a = await shxAsk('💾 인형 파일로 저장', d.name || '내 인형', d.by, false, '인형을 불러온 사람에게 <b>만든 사람</b>으로 보여요');
+            if (!a) return;
+            d.by = a.by;
+            if (DR.doll) { DR.doll.by = a.by; const by = document.getElementById('drBy'); if (by) by.value = a.by; dollChanged(); }   // 완성 화면의 '만든 사람'도 같이
+            downloadBlob(new Blob([JSON.stringify({ malang_doll: 1, name: d.name, by: d.by, doll: d })], { type: 'application/json' }), `${a.name}.json`);
         }
         function importDollFile(e) {
             const f = e.target.files && e.target.files[0];

@@ -87,7 +87,7 @@
 
         /* 파일 이름 · 만든 사람 묻기 (배경지 💾 파일로 저장도 같이 써요 js/pattern-maker.js) → { name, by } 또는 null */
         const SHX_NICK = 'malang_pattern_nick';                        // 배경지 만든 사람 닉네임과 같은 칸 (이 기기에 기억)
-        function shxAsk(title, defName, defBy, noBy) {                  // noBy : 만든 사람 칸 없이 (🎨 페이지 · 🌈 배경지)
+        function shxAsk(title, defName, defBy, noBy, hint) {            // noBy : 만든 사람 칸 없이 (🎨 페이지 · 🌈 배경지) · hint : 만든 사람 칸 아래 안내 (없으면 공유받은 칸 안내)
             return new Promise(resolve => {
                 let nick = defBy || '';
                 if (!nick) try { nick = localStorage.getItem(SHX_NICK) || ''; } catch (e) {}
@@ -96,7 +96,7 @@
                 el.innerHTML = `<div class="alert-card shx-card"><b class="shx-t">${shxEsc(title)}</b>
                     <label>파일 이름<input type="text" id="shxName" maxlength="40" value="${shxEsc(defName)}" enterkeyhint="next"></label>
                     ${noBy ? '<small>카페에 올릴 때 보이는 파일 이름이에요</small>' : `<label>만든 사람<input type="text" id="shxBy" maxlength="12" value="${shxEsc(nick)}" placeholder="닉네임 (안 써도 돼요)" enterkeyhint="done"></label>
-                    <small>받은 사람의 공유받은 칸에 <b>by 닉네임</b>으로 보여요</small>`}
+                    <small>${hint || '받은 사람의 공유받은 칸에 <b>by 닉네임</b>으로 보여요'}</small>`}
                     <div class="alert-btns"><button type="button" class="btn btn-primary" data-ok>💾 저장</button><button type="button" class="btn" data-no>취소</button></div></div>`;
                 document.body.appendChild(el);
                 const done = ok => {
