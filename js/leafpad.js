@@ -27,6 +27,7 @@
            📃 속지
            ===================================================================== */
         const LEAFS = [['line', '줄노트'], ['grid', '모눈'], ['dot', '도트'], ['gingham', '깅엄'], ['kraft', '크라프트'], ['plain', '무지']];
+        const LEAF_CAT = { line: '기본', plain: '기본', kraft: '기본', grid: '패턴', dot: '패턴', gingham: '체크' };   // 🗂 카테고리 칸 (js/stk-basic.js) · 이름은 안 보여요
         let pageLeaf = 'line', pageLeafImg = '';                           // 지금 페이지의 속지 (js/elements.js 저장 · 불러오기) · 'my' = 📃 속지 만들기로 만든 그림(pageLeafImg · js/leafmaker.js)
         const lfMyOk = img => /^data:image\/(jpeg|png|webp)/.test(img || '');
 
@@ -52,7 +53,7 @@
         }
         function openLeafPicker() {
             const box = lfq('leafPick'); if (!box) return;
-            if (!box.firstChild) box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('leaf') : '') + LEAFS.map(([k, n]) => `<button type="button" class="lf-pick" data-lf="${k}" onclick="pickLeaf('${k}')"><i class="lf-sw lf-${k}"></i>${n}</button>`).join('');
+            if (!box.firstChild) box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('leaf') : '') + LEAFS.map(([k, n]) => `<button type="button" class="lf-pick" data-lf="${k}" data-sbc="${LEAF_CAT[k] || ''}" title="${n}" onclick="pickLeaf('${k}')"><i class="lf-sw lf-${k}"></i></button>`).join('');
             setPageLeaf(pageLeaf, pageLeafImg);
             lfTabs('leaf', 'free');
             closeModal('stickerMakeModal'); openModal('leafModal');
@@ -75,6 +76,7 @@
            🧻 떡메모지
            ===================================================================== */
         const TK_PADS = [['memo', '메모'], ['check', '체크'], ['sky', '하늘'], ['todo', '투두']];
+        const TK_CAT = { memo: '기본', check: '체크', sky: '하늘', todo: '체크' };   // 🗂 카테고리 칸 (js/stk-basic.js) · 이름은 안 보여요
         const TK_EDGES = [['straight', '반듯하게'], ['top', '윗변만 찢김'], ['all', '사방 찢김']];
         const TK_W = 150, TK_H = 148;
         const tk = { pad: 'memo', edge: 'top', my: null };              // my : 🧻 내가만든 · 공유받은 떡메 { src(앞면 그림 JPG), glue(풀칠 띠 색 · 빈 값 = 스킨 색) } (js/leafmaker.js)
@@ -117,7 +119,7 @@
         function openTteok() {
             const box = lfq('tkList');
             if (!box.firstChild) {
-                box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('tk') : '') + TK_PADS.map(([k, n]) => `<button type="button" class="tk-it" data-k="${k}">${tkMiniHtml(k)}<b>${n}</b></button>`).join('');
+                box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('tk') : '') + TK_PADS.map(([k, n]) => `<button type="button" class="tk-it" data-k="${k}" data-sbc="${TK_CAT[k] || ''}" title="${n}">${tkMiniHtml(k)}</button>`).join('');
                 box.querySelectorAll('.tk-it').forEach(b => tkTap(b, () => { tk.pad = b.dataset.k; tk.my = null; spawnTteok(); }));
             }
             tkChips(lfq('tkEdgePick'), TK_EDGES, tk.edge, k => { tk.edge = k; });

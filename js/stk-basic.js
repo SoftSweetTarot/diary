@@ -1,7 +1,9 @@
 /* 말랑달콤 다이어리 - js/stk-basic.js
    🆓 기본 스티커 : 처음부터 누구나 쓰는 🧩 조각스티커 봉투 · 📄 모조지 (✨ 스티커 → 그 종류 → 기본 칸)
    + 🖼️ 개발자 그림 : 드라이브 '기본스티커' 폴더 (기본스티커 서버 · js/elements.js basicKit) 의 그림을 각 창 기본 칸 맨 앞에 섞어요
-       🍭 미니시트 · 🧩 조각스티커 · 📄 모조지 = 폴더 1개가 한 묶음 · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
+       🍭 미니시트 · 🧩 조각스티커 · 📄 모조지 = 숫자 폴더 1개가 한 묶음 (낱장 폴더는 그림 1개가 한 묶음) · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
+       🗂 카테고리 칸 : 기본 칸 위에 '🌈 전체 · 카테고리…' (씰 창과 같은 모양) · 스티커 이름은 안 보여요
+       data-sbc="카테고리" 가 붙은 칸만 걸러요 (제가 그린 것도 각 파일에서 data-sbc 를 붙여요 : js/tape.js · js/stickerpack.js · js/leafpad.js · js/paper.js)
        (🏷️ 씰은 js/elements.js 의 씰 목록이 낱장 · 씰 종이로 보여 줘요)
        붙일 때 그림을 받아 data 로 바꿔서 일기에 담아요 (사진과 같아요 · 나중에 드라이브에서 지워도 붙인 건 그대로)
    - 그림은 모두 이 파일 안의 SVG (파일 없음) · 다이어리에 붙이면 그 그림(SVG)이 일기에 담겨요
@@ -81,25 +83,26 @@
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
         }
         const SB_BAGS = [
-            { id: 'b-berry', n: '🍓 딸기 디저트', c: '#ffd1dc', k: ['strawberry', 'cake', 'macaron', 'cupcake', 'donut', 'milk'] },
-            { id: 'b-sky', n: '☁️ 맑음 흐림', c: '#cfe9ff', k: ['sun', 'cloud', 'rainbow', 'drop', 'star', 'moon'] },
-            { id: 'b-animal', n: '🐰 동물 친구', c: '#ffe8c2', k: ['bunny', 'bear', 'cat', 'chick', 'paw', 'carrot'] },
-            { id: 'b-love', n: '💌 러블리', c: '#ffd6e8', k: ['heart', 'bow', 'letter', 'sparkle', 'flower', 'love'] }
+            { id: 'b-berry', g: '디저트', c: '#ffd1dc', k: ['strawberry', 'cake', 'macaron', 'cupcake', 'donut', 'milk'] },
+            { id: 'b-sky', g: '하늘', c: '#cfe9ff', k: ['sun', 'cloud', 'rainbow', 'drop', 'star', 'moon'] },
+            { id: 'b-animal', g: '동물', c: '#ffe8c2', k: ['bunny', 'bear', 'cat', 'chick', 'paw', 'carrot'] },
+            { id: 'b-love', g: '마음', c: '#ffd6e8', k: ['heart', 'bow', 'letter', 'sparkle', 'flower', 'love'] }
         ];
         const SB_SHEETS = [
-            { id: 's-stationery', n: '✏️ 문구점', k: ['pencil', 'eraser', 'clip', 'scissors', 'ruler', 'note', 'tag', 'star', 'heart'] },
-            { id: 's-garden', n: '🌷 꽃밭 산책', k: ['tulip', 'daisy', 'leaf', 'butterfly', 'ladybug', 'sprout', 'flower', 'sun', 'cloud'] },
-            { id: 's-cafe', n: '☕ 카페 타임', k: ['coffee', 'croissant', 'cookie', 'sign', 'teapot', 'cake', 'macaron', 'donut', 'heart'] },
-            { id: 's-sea', n: '🏖 여름 바다', k: ['whale', 'shell', 'starfish', 'watermelon', 'icecream', 'sunglass', 'sun', 'drop', 'cloud'] }
+            { id: 's-stationery', g: '용품', k: ['pencil', 'eraser', 'clip', 'scissors', 'ruler', 'note', 'tag', 'star', 'heart'] },
+            { id: 's-garden', g: '꽃식물', k: ['tulip', 'daisy', 'leaf', 'butterfly', 'ladybug', 'sprout', 'flower', 'sun', 'cloud'] },
+            { id: 's-cafe', g: '디저트', k: ['coffee', 'croissant', 'cookie', 'sign', 'teapot', 'cake', 'macaron', 'donut', 'heart'] },
+            { id: 's-sea', g: '여름', k: ['whale', 'shell', 'starfish', 'watermelon', 'icecream', 'sunglass', 'sun', 'drop', 'cloud'] }
         ];
         const sbOn = a => a.filter(x => !x.hold);
         const sbMini = (ks, die) => ks.slice(0, 3).map(k => `<img alt="" src="${sbSvg(k, die)}">`).join('');
+        const sbc = c => ` data-sbc="${esc(c || '')}"`;
         /* 기본 칸 그리기 (js/stickermaker.js stkTab) : kind = 'piece' · 'paper' */
         function stkBasicHtml(kind) {
             if (kind === 'piece') return '<div class="tp-note">🧩 봉투를 누르면 뜯어서 조각을 떼어 붙여요</div>' + stkBasicSrv('piece') + sbOn(SB_BAGS).map(b =>
-                `<button type="button" class="sb-card sb-bag" onclick="stkBasicOpen('piece','${b.id}')"><span class="sb-top" style="--c:${b.c}">${b.n}</span><span class="sb-mini">${sbMini(b.k, true)}</span><small>조각 ${b.k.length}개</small></button>`).join('');
+                `<button type="button" class="sb-card sb-bag"${sbc(b.g)} onclick="stkBasicOpen('piece','${b.id}')"><span class="sb-top" style="--c:${b.c}"></span><span class="sb-mini">${sbMini(b.k, true)}</span><small>조각 ${b.k.length}개</small></button>`).join('');
             if (kind === 'paper') return '<div class="tp-note">📄 모조지를 누르면 그림 둘레를 따라 오려서 붙여요</div>' + stkBasicSrv('paper') + sbOn(SB_SHEETS).map(s =>
-                `<button type="button" class="sb-card sb-sheet" onclick="stkBasicOpen('paper','${s.id}')"><i class="sb-tape"></i><b>${s.n}</b><span class="sb-mini">${sbMini(s.k, false)}</span><small>그림 ${s.k.length}개</small></button>`).join('');
+                `<button type="button" class="sb-card sb-sheet"${sbc(s.g)} onclick="stkBasicOpen('paper','${s.id}')"><i class="sb-tape"></i><span class="sb-mini">${sbMini(s.k, false)}</span><small>그림 ${s.k.length}개</small></button>`).join('');
             return '';
         }
         async function stkBasicOpen(kind, id) {
@@ -109,7 +112,7 @@
                 let srcs;
                 try { srcs = kind === 'piece' ? await Promise.all(x.urls.map(u => sbDie(u + '=w600'))) : await Promise.all(x.urls.map(u => sbData(u + '=w600').then(d => d.src))); }
                 catch (e) { sbFail(); return; }
-                if (kind === 'piece') { if (window.stkLeave) stkLeave(); else closeModal('stickerModal'); if (window.openPieceBag) openPieceBag(srcs, { t: x.n, s: '말랑달콤 기본 조각' }); return; }
+                if (kind === 'piece') { if (window.stkLeave) stkLeave(); else closeModal('stickerModal'); if (window.openPieceBag) openPieceBag(srcs, { t: '말랑달콤 조각', s: kitCat(x.c) || '기본 조각' }); return; }
                 let sheet = null;
                 try { sheet = await pmMakeSheet(srcs); } catch (e) { showMsg('모조지를 만들지 못했어요.'); return; }
                 if (window.stkLeave) stkLeave(); else closeModal('stickerModal');
@@ -119,7 +122,7 @@
             if (kind === 'piece') {
                 const b = sbOn(SB_BAGS).find(x => x.id === id); if (!b || !window.openPieceBag) return;
                 if (window.stkLeave) stkLeave(); else closeModal('stickerModal');
-                openPieceBag(b.k.map(k => sbSvg(k, true)), { t: b.n.replace(/^\S+\s*/, ''), s: '말랑달콤 기본 조각' });
+                openPieceBag(b.k.map(k => sbSvg(k, true)), { t: '말랑달콤 조각', s: b.g || '기본 조각' });
                 return;
             }
             const s = sbOn(SB_SHEETS).find(x => x.id === id); if (!s || !window.openPaperSheet || !window.pmMakeSheet) return;
@@ -133,17 +136,18 @@
            ===================================================================== */
         const SRV = { mini: null, piece: null, paper: null, tape: null, tk: null, leaf: null, memo: null }, sbCache = new Map();
         const okId = id => typeof id === 'string' && /^[\w-]{10,80}$/.test(id);
-        const nm = n => (window.kitName ? kitName(String(n || '')) : String(n || '')).slice(0, 24);
+        const kitCat = c => (window.kitName ? kitName(String(c || '')) : String(c || '')).slice(0, 24);   // '1. 동물' → '동물'
         const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
         const thumb = (u, w) => u + '=w' + (w || 160);
-        async function sbList(kind) {                                   // [{ n, urls }] (묶음) · [{ n, url }] (1장)
+        async function sbList(kind) {                                   // [{ c, urls }] (묶음) · [{ c, url }] (1장) · c = 카테고리 (그대로 · 화면에는 앞 번호 뺀 이름)
             if (SRV[kind]) return SRV[kind];
             if (!window.basicKit) return [];
             const k = await basicKit(), a = Array.isArray(k.kits && k.kits[kind]) ? k.kits[kind] : [];
             return (SRV[kind] = a.map(x => {
                 if (!x) return null;
-                if (Array.isArray(x.ids)) { const urls = x.ids.filter(okId).slice(0, 30).map(driveImageUrl); return urls.length ? { n: nm(x.n), urls } : null; }
-                return okId(x.id) ? { n: nm(x.n), url: driveImageUrl(x.id) } : null;
+                const c = String(x.c || '').slice(0, 40);
+                if (Array.isArray(x.ids)) { const urls = x.ids.filter(okId).slice(0, 30).map(driveImageUrl); return urls.length ? { c, urls } : null; }
+                return okId(x.id) ? { c, url: driveImageUrl(x.id) } : null;
             }).filter(Boolean));
         }
         /* 주소 그림 → data 주소 (투명한 곳이 있으면 PNG · 없으면 JPG) · 한 번 받은 건 기억 */
@@ -177,26 +181,48 @@
             return `<div class="sb-srv" data-sbk="${kind}"></div>`;
         }
         async function sbFill(kind) {
+            const boxes = () => document.querySelectorAll(`.sb-srv[data-sbk="${kind}"]`);
+            boxes().forEach(el => sbCats(el.parentElement, kind));           // 제가 그린 것 카테고리 먼저 (서버 목록이 늦거나 못 받아도)
             let list = [];
             try { list = await sbList(kind); } catch (e) { return; }
             const html = list.map((x, i) => {
-                const t = x.urls ? x.urls : [x.url];
-                if (kind === 'piece') return `<button type="button" class="sb-card sb-bag" onclick="stkBasicOpen('piece','srv:${i}')"><span class="sb-top" style="--c:${BAG_COLS[i % BAG_COLS.length]}">${esc(x.n)}</span><span class="sb-mini">${t.slice(0, 3).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><small>조각 ${t.length}개</small></button>`;
-                if (kind === 'paper') return `<button type="button" class="sb-card sb-sheet" onclick="stkBasicOpen('paper','srv:${i}')"><i class="sb-tape"></i><b>${esc(x.n)}</b><span class="sb-mini">${t.slice(0, 3).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><small>그림 ${t.length}개</small></button>`;
-                if (kind === 'mini') return `<button type="button" class="spk-card" onclick="openStickerPack('srv:${i}')"><span class="spk-prev">${t.slice(0, 4).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><b>🧸 ${esc(x.n)}</b><small>스티커 ${t.length}개</small></button>`;
-                if (kind === 'tape') return `<button type="button" class="tp-item" onclick="sbUse('tape',${i})"><span style="background:url(&quot;${thumb(x.url, 240)}&quot;) left center / auto 100% repeat-x"></span><small>${esc(x.n)}</small></button>`;
-                if (kind === 'tk') return `<button type="button" class="tk-it" onclick="sbUse('tk',${i})">${window.tkMiniHtml ? tkMiniHtml('my', { src: thumb(x.url, 200) }) : ''}<b>${esc(x.n)}</b></button>`;
-                if (kind === 'leaf') return `<button type="button" class="lf-pick" onclick="sbUse('leaf',${i})"><i class="lf-sw lf-my" style="--lf-img:url('${thumb(x.url, 240)}')"></i>${esc(x.n)}</button>`;
-                if (kind === 'memo') return `<button type="button" class="btn pp-pick-btn" title="${esc(x.n)}" onclick="sbUse('memo',${i})"><span class="pp-chip sb-memo" style="background-image:url(&quot;${thumb(x.url, 120)}&quot;)"></span><small>${esc(x.n)}</small></button>`;
+                const t = x.urls ? x.urls : [x.url], g = sbc(x.c);
+                if (kind === 'piece') return `<button type="button" class="sb-card sb-bag"${g} onclick="stkBasicOpen('piece','srv:${i}')"><span class="sb-top" style="--c:${BAG_COLS[i % BAG_COLS.length]}"></span><span class="sb-mini">${t.slice(0, 3).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><small>조각 ${t.length}개</small></button>`;
+                if (kind === 'paper') return `<button type="button" class="sb-card sb-sheet"${g} onclick="stkBasicOpen('paper','srv:${i}')"><i class="sb-tape"></i><span class="sb-mini">${t.slice(0, 3).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><small>그림 ${t.length}개</small></button>`;
+                if (kind === 'mini') return `<button type="button" class="spk-card"${g} onclick="openStickerPack('srv:${i}')"><span class="spk-prev">${t.slice(0, 4).map(u => `<img alt="" src="${thumb(u, 96)}">`).join('')}</span><small>스티커 ${t.length}개</small></button>`;
+                if (kind === 'tape') return `<button type="button" class="tp-item"${g} onclick="sbUse('tape',${i})"><span style="background:url(&quot;${thumb(x.url, 240)}&quot;) left center / auto 100% repeat-x"></span></button>`;
+                if (kind === 'tk') return `<button type="button" class="tk-it"${g} onclick="sbUse('tk',${i})">${window.tkMiniHtml ? tkMiniHtml('my', { src: thumb(x.url, 200) }) : ''}</button>`;
+                if (kind === 'leaf') return `<button type="button" class="lf-pick"${g} onclick="sbUse('leaf',${i})"><i class="lf-sw lf-my" style="--lf-img:url('${thumb(x.url, 240)}')"></i></button>`;
+                if (kind === 'memo') return `<button type="button" class="btn pp-pick-btn"${g} onclick="sbUse('memo',${i})"><span class="pp-chip sb-memo" style="background-image:url(&quot;${thumb(x.url, 120)}&quot;)"></span></button>`;
                 return '';
             }).join('');
-            document.querySelectorAll(`.sb-srv[data-sbk="${kind}"]`).forEach(el => { el.innerHTML = html; });
+            boxes().forEach(el => { el.innerHTML = html; sbCats(el.parentElement, kind); });
+        }
+        /* 🗂 카테고리 칸 : 그 창 기본 칸의 data-sbc 를 모아 '🌈 전체 · 카테고리…' 칸을 만들고, 누르면 그 카테고리만 보여요
+           카테고리가 하나도 없으면 칸을 숨겨요 · 고른 칸은 창을 다시 열어도 기억 (앱을 켠 동안) */
+        const sbCatOn = {};
+        function sbCats(box, kind) {
+            if (!box) return;
+            const items = [...box.querySelectorAll('[data-sbc]')], cats = [];
+            items.forEach(el => { const c = el.dataset.sbc; if (c && !cats.includes(c)) cats.push(c); });
+            const cnt = c => items.filter(el => el.dataset.sbc === c).length;
+            let bar = box.querySelector(':scope > .sb-cats');
+            if (!cats.length) { if (bar) bar.remove(); items.forEach(el => { el.hidden = false; }); return; }
+            if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.insertBefore(bar, box.querySelector(':scope > .sb-srv') || box.firstChild); }
+            /* 같은 이름은 하나로 ('1. 동물' 과 '동물' 처럼 번호만 다르면 같은 칸) */
+            const label = c => kitCat(c) || c, labels = [...new Set(cats.map(label))];
+            let cur = sbCatOn[kind] || '';
+            if (cur && !labels.includes(cur)) cur = '';
+            const btn = (v, txt, n) => `<button type="button" class="lib-cat${v === cur ? ' on' : ''}" data-c="${esc(v)}">${esc(txt)}<small>${n}</small></button>`;
+            bar.innerHTML = btn('', '🌈 전체', items.length) + labels.map(l => btn(l, l, cats.filter(c => label(c) === l).reduce((a, c) => a + cnt(c), 0))).join('');
+            items.forEach(el => { el.hidden = !!cur && label(el.dataset.sbc) !== cur; });
+            bar.querySelectorAll('.lib-cat').forEach(b => { b.onclick = () => { sbCatOn[kind] = b.dataset.c; sbCats(box, kind); }; });
         }
         /* 🍭 미니시트 : js/stickerpack.js openStickerPack('srv:번호') 가 불러요 */
         function sbPack(id) {
             const i = +String(id).replace('srv:', ''), x = SRV.mini && SRV.mini[i];
             if (!x || !x.urls) return null;
-            return { id: 'srv' + i, icon: '🧸', name: x.n, sub: '', load: () => Promise.all(x.urls.map(u => sbDie(u + '=w600'))) };
+            return { id: 'srv' + i, icon: '🧸', name: '', sub: '', load: () => Promise.all(x.urls.map(u => sbDie(u + '=w600'))) };
         }
         /* 🎀 🧻 📃 📝 그림 1장 쓰기 */
         async function sbUse(kind, i) {
@@ -207,7 +233,7 @@
             if (kind === 'tape') {                                          // 무늬 한 칸을 옆으로 이어 붙여요 (테이프 높이 30)
                 if (typeof tapeUrl !== 'function' || !window.placeTape) return;
                 const h = 30, w = Math.max(6, Math.round(h * d.w / d.h * 10) / 10);
-                placeTape(tapeUrl({ id: 'b-' + i, name: x.n, bg: 'none', w, h, p: `<image href="${d.src}" width="${w}" height="${h}" preserveAspectRatio="none"/>` }));
+                placeTape(tapeUrl({ id: 'b-' + i, name: '', bg: 'none', w, h, p: `<image href="${d.src}" width="${w}" height="${h}" preserveAspectRatio="none"/>` }));
             } else if (kind === 'tk') { if (window.tkUseMy) tkUseMy({ src: d.src, glue: '' }); }
             else if (kind === 'leaf') { if (window.pickLeaf) pickLeaf('my', d.src); }
             else if (kind === 'memo') {                                     // 그림 위에 글을 쓰는 메모 (🧻 떡메 메모와 같은 모양으로 저장)

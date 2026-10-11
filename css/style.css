@@ -2613,6 +2613,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lf-tabs .stk-tab { font-size: 11.5px; letter-spacing: -.05em; }
 .stk-tabs.two { grid-template-columns: repeat(2, 1fr); }
 .spk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 4px 2px; }
+.sticker-grid > .spk-cards { grid-column: 1 / -1; align-content: start; }      /* 창 너비를 다 써요 (한 칸에 갇히지 않게) */
 .spk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border: 1.5px solid var(--border-color); border-radius: 18px; background: #fff; font: inherit; color: #6b4f5a; cursor: pointer; box-shadow: 0 2px 0 var(--border-color); }
 .spk-card:active { transform: translateY(1px); box-shadow: none; }
 .spk-prev { display: flex; gap: 2px; height: 44px; align-items: center; }
@@ -3244,6 +3245,11 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 
 /* 🖼️ 개발자 그림 (드라이브 기본스티커 폴더 · js/stk-basic.js) : 각 창 기본 칸 맨 앞에 섞여요 */
 .sb-srv { display: contents; }
+.sb-cats { grid-column: 1 / -1; margin-bottom: 0; min-width: 0; }               /* 🗂 기본 칸 카테고리 (js/stk-basic.js sbCats) · 씰 창과 같은 모양 */
+[data-sbc][hidden] { display: none !important; }
+.sticker-grid .sb-bag .sb-top { min-height: 22px; }                               /* 이름 없는 봉투 윗띠 */
+.sticker-grid .tp-item[data-sbc] { padding: 12px 4px; }
+.lf-picks .lf-pick[data-sbc] .lf-sw { margin-bottom: 0; }
 .pp-chip.sb-memo { background-size: cover; background-position: center; border: 0; }
 .lib-item.lib-sheet { background: linear-gradient(135deg, #fff 0 70%, #fdf3f6 70%); box-shadow: 2px 2px 0 #f3e1e8, 4px 4px 0 #f8eef2; }
 .lib-item .lib-cnt { position: absolute; right: 4px; bottom: 4px; font-size: 11px; line-height: 1; padding: 3px 6px; border-radius: 999px; background: var(--primary-accent, #ff6b81); color: #fff; font-weight: bold; }

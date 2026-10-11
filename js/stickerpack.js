@@ -12,9 +12,9 @@
         const SPK_FONT = "'Fredoka', 'Jua', 'Arial Rounded MT Bold', sans-serif";
         const SPK_COLORS = [['#ff9ec1', '#e0628f'], ['#ffd36b', '#d9a12a'], ['#9fd3ff', '#4f9fd8'], ['#a8e3a0', '#5aa863'], ['#c7a8ff', '#8a63d9'], ['#ffb48a', '#e07a45'], ['#8fe0d2', '#3fae9c']];
         const SPK_PACKS = [
-            { id: 'abc', icon: '🔤', name: '말랑 알파벳', sub: 'A ~ Z', items: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
-            { id: 'num', icon: '🔢', name: '말랑 숫자', sub: '0 ~ 9 · ! ?', items: '0123456789!?'.split('') },
-            { id: 'heart', icon: '💗', name: '하트 모음', sub: '하트 16가지', items: Array.from({ length: 16 }, (_, i) => 'h' + i) },
+            { id: 'abc', icon: '🔤', g: '글자', name: '말랑 알파벳', sub: 'A ~ Z', items: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
+            { id: 'num', icon: '🔢', g: '숫자', name: '말랑 숫자', sub: '0 ~ 9 · ! ?', items: '0123456789!?'.split('') },
+            { id: 'heart', icon: '💗', g: '마음', name: '하트 모음', sub: '하트 16가지', items: Array.from({ length: 16 }, (_, i) => 'h' + i) },
         ];
         const spkS = { cache: {}, pack: null, lift: null, mv: null, drag: null, press: null };
         const spkq = id => document.getElementById(id);
@@ -113,7 +113,7 @@
             if (tab === 'emoji') { const b = document.querySelector('#stickerCategories .em-cat'); if (b) b.click(); return; }
             g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
             const cards = [];
-            for (const p of SPK_PACKS) { const s = await spkSrcs(p); cards.push(`<button type="button" class="spk-card" onclick="openStickerPack('${p.id}')"><span class="spk-prev">${s.slice(0, 4).map(u => `<img src="${u}" alt="">`).join('')}</span><b>${p.icon} ${p.name}</b><small>${p.sub}</small></button>`); }
+            for (const p of SPK_PACKS) { const s = await spkSrcs(p); cards.push(`<button type="button" class="spk-card" data-sbc="${p.g}" onclick="openStickerPack('${p.id}')"><span class="spk-prev">${s.slice(0, 4).map(u => `<img src="${u}" alt="">`).join('')}</span><small>스티커 ${s.length}개</small></button>`); }   // 이름 없이 · 카테고리 칸 (js/stk-basic.js)
             if (document.querySelector('#stickerKindTabs .stk-tab.on[data-tab="pack"]')) g.innerHTML = `<div class="spk-cards">${window.stkBasicSrv ? stkBasicSrv('mini') : ''}${cards.join('')}</div>`;   // 🖼️ 개발자 그림 시트가 맨 앞 (js/stk-basic.js)
         }
 
@@ -150,7 +150,7 @@
             spkBuild(); spkPutBack(); spkS.pack = p;
             let srcs;
             try { srcs = await spkSrcs(p); } catch (e) { showMsg('⚠ 미니시트를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); if (window.stkReturn) stkReturn(); return; }
-            spkq('spkTitle').textContent = p.icon + ' ' + p.name;
+            spkq('spkTitle').textContent = p.icon;
             spkq('spkGrid').innerHTML = srcs.map((u, i) => `<span class="spk-it" data-i="${i}"><img src="${u}" alt="" draggable="false"></span>`).join('');
             spkq('spkRoom').classList.add('show');
             const b = spkq('spkBoard'), W = window.innerWidth, H = window.innerHeight, pg = spkq('diaryBook') || spkq('diaryWrapper'), r = pg.getBoundingClientRect();

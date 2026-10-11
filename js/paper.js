@@ -21,6 +21,7 @@
             { id: 'frame', name: '점선 액자', s: '액자' },
             { id: 'chalk', name: '칠판', s: '칠판' }
         ];
+        const PAPER_CAT = { py: '포스트잇', pp: '포스트잇', pm: '포스트잇', ps: '포스트잇', bw: '말풍선', bp: '말풍선', think: '말풍선', tag: '모양', frame: '모양', chalk: '모양' };   // 🗂 카테고리 칸 · 나머지는 '기본'
         const PAPER_LIGHT_TEXT = ['chalk'];                     // 어두운 바탕 → 글자를 밝게
 
         function setPaper(el, id) {                            // 요소에 모양 입히기 (불러올 때도 사용)
@@ -42,7 +43,7 @@
         /* 📝 메모지 창 (하단메뉴 ✨ 스티커 → 📝 메모지) : 모양을 고르면 그 모양의 메모지가 페이지에 놓이고, 눌러서 글을 써요 */
         function openPaperPicker() {
             const box = document.getElementById('paperPick'); if (!box) return;
-            if (!box.firstChild) box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('memo') : '') + PAPERS.map(p => `<button type="button" class="btn pp-pick-btn" title="${p.name}" onclick="pickPaper('${p.id}')"><span class="pp-chip${p.id ? ' pp-' + p.id : ''}"></span><small>${p.name}</small></button>`).join('');
+            if (!box.firstChild) box.innerHTML = (window.stkBasicSrv ? stkBasicSrv('memo') : '') + PAPERS.map(p => `<button type="button" class="btn pp-pick-btn" title="${p.name}" data-sbc="${PAPER_CAT[p.id] || '기본'}" onclick="pickPaper('${p.id}')"><span class="pp-chip${p.id ? ' pp-' + p.id : ''}"></span></button>`).join('');   // 이름 없이 · 카테고리 칸 (js/stk-basic.js)
             openModal('paperModal');
         }
         function pickPaper(id) {

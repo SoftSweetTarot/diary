@@ -101,9 +101,9 @@
         }
 
         /* 📚 기본스티커 : 기본스티커 서버(라이브러리_앱스크립트.gs)가 드라이브 '기본스티커' 폴더를 읽어 목록을 보내 줘요
-           - 🏷️ 씰 : images [{ id, c }] 낱장 · sheets [{ c, n, ids }] 씰 종이 (c = 기본스티커/씰 아래 폴더 이름 = 카테고리 · '' 이면 '전체'에서만)
-           - 나머지 종류 (🍭 🧩 📄 🎀 🧻 📃 📝) : kits → js/stk-basic.js 가 각 창의 기본 칸에 제가 그린 그림과 섞어서 보여요
-           - 카테고리 · 이름 : 폴더 · 파일 이름 ('1. 캐릭터' 처럼 앞 번호는 순서용 · 화면에는 '캐릭터')
+           - 🏷️ 씰 : images [{ id, c }] 낱장 · sheets [{ c, ids }] 씰 종이 (c = 기본스티커/씰 아래 폴더 이름 = 카테고리 · '' 이면 '전체'에서만)
+           - 나머지 종류 (🍭 🧩 📄 🎀 🧻 📃 📝) : kits [{ c, ids }] · [{ c, id }] → js/stk-basic.js 가 각 창의 기본 칸에 제가 그린 그림과 섞어서 카테고리 칸과 함께 보여요
+           - 카테고리만 이름이 보여요 ('1. 캐릭터' 처럼 앞 번호는 순서용 · 화면에는 '캐릭터') · 스티커 이름은 없어요
            - 목록은 앱을 켠 동안 한 번만 받아요 (basicKit) */
         const LIB_API_URL = 'https://script.google.com/macros/s/AKfycbzpe6ZEbSpety1CASpu6whbYRNp5JE5P_PBCL9_fkCTSBXlXMfKem4vBTeRGyUtE4p5uA/exec';                        // ← 그림모음 앱스크립트 웹 앱 주소 (…/exec)
         let libItems = null, libLoading = false, libCats = [], libCat = '';
@@ -264,7 +264,7 @@
                 libItems = [];
                 kit.sheets.forEach(x => {                                          // 🏷️ 씰 종이 (폴더 1개 = 종이 1장) : 카테고리 맨 앞에
                     const ids = Array.isArray(x && x.ids) ? x.ids.filter(okId).slice(0, 30) : [];
-                    if (ids.length) libItems.push({ u: driveImageUrl(ids[0]), s: ids.map(driveImageUrl), n: String(x.n || ''), c: String(x.c || '') });
+                    if (ids.length) libItems.push({ u: driveImageUrl(ids[0]), s: ids.map(driveImageUrl), c: String(x.c || '') });
                 });
                 kit.images.forEach(x => { if (x && okId(x.id) && !seen.has(x.id)) { seen.add(x.id); libItems.push({ u: driveImageUrl(x.id), c: String(x.c || '') }); } });
                 libCats = [...new Set(libItems.map(x => x.c).filter(Boolean))];
@@ -325,7 +325,7 @@
             const start = libPage * per;
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
             const frag = document.createDocumentFragment();
-            view.slice(start, start + per).forEach(({ u: url, s: sheet, n }) => {
+            view.slice(start, start + per).forEach(({ u: url, s: sheet }) => {
                 const item = document.createElement('div');
                 item.className = 'lib-item' + (sheet ? ' lib-sheet' : '');
                 const img = document.createElement('img');
@@ -334,7 +334,7 @@
                 img.onerror = () => item.classList.add('bad');
                 item.appendChild(img);
                 if (sheet) {                                                       // 🏷️ 씰 종이 : 몇 개 붙어 있는지 · 이름
-                    item.title = libCatName(n || '') + ' · 씰 ' + sheet.length + '개';
+                    item.title = '씰 ' + sheet.length + '개';
                     const b = document.createElement('b'); b.className = 'lib-cnt'; b.textContent = '×' + sheet.length; item.appendChild(b);
                 }
                 item.onclick = () => { if (!libSwiped) (sheet ? libPickSheet(sheet) : libPick(url)); };
