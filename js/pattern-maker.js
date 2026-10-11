@@ -70,18 +70,18 @@
             v.busy = false;
             if (collOnline() && !C.checked) collCheck(C);
         }
-        const patCell = (e, got) => ({ id: 'my:' + e.id, uid: e.id, tier: 'my', got: !!got, name: got ? '공유받은 배경지' : '내 배경지', css: recipeToCss(e.th) });
+        const patCell = (e, got) => ({ id: 'my:' + e.id, uid: e.id, tier: 'my', got: !!got, name: got ? '공유받은 배경지' : '내 배경지', by: got && e.x && e.x.by ? recipeText(e.x.by, 12) : '', css: recipeToCss(e.th) });
         async function patThumb(r) { return r.kind === 'tile' && /^data:/.test(r.src) ? Object.assign({}, r, { src: await collThumb(r.src) || r.src }) : r; }
 
         /* 넣기 → uid · got 이고 이미 있으면 'same' · 실패 null */
-        async function addMyPattern(r, got) {                           // got : 📥 파일로 불러온 배경지 (공유받은 칸)
+        async function addMyPattern(r, got, by) {                       // got : 📥 파일로 불러온 배경지 (공유받은 칸) · by : 만든 사람
             const clean = sanitizeRecipe(r);
             if (!clean) { showMsg('⚠ 배경지를 저장하지 못했어요.<br>다시 만들어 주세요.'); return null; }
             const h = collHash(JSON.stringify(clean)), C = patColl(got);
             try {
                 const same = (await collAll(C)).find(e => e.x && e.x.h === h);
                 if (same) return got ? 'same' : same.id;                    // 같은 배경지를 두 번 누르면 하나만
-                const uid = await collAdd(C, clean, await patThumb(clean), { h });   // 화면은 바로 · 드라이브는 뒤에서
+                const uid = await collAdd(C, clean, await patThumb(clean), got && by ? { h, by } : { h });   // 화면은 바로 · 드라이브는 뒤에서
                 myPatterns.push(Object.assign({ uid, r: clean }, got ? { got: 1 } : {}));
                 patView[got ? 'share' : 'mine'] = null;
                 return uid;
@@ -184,12 +184,12 @@
             downloadPatternFile(r);
         }
 
-        /* ---------- 💾 배경지 파일 : 카페에 첨부해서 올리는 파일 (이미지까지 파일 하나에 들어 있음 · 이름 · 만든 사람 없음) ---------- */
+        /* ---------- 💾 배경지 파일 : 카페에 첨부해서 올리는 파일 (이미지까지 파일 하나에 들어 있음 · 파일 이름.json · 만든 사람 by) ---------- */
         async function downloadPatternFile(r) {
             if (!window.shxAsk) return;
-            const a = await shxAsk('💾 배경지 파일로 저장', '배경지', '', true);
+            const a = await shxAsk('💾 배경지 파일로 저장', '배경지', '');
             if (!a) return;
-            shxDownload({ malang_pattern: 1, recipe: r }, a.name);
+            shxDownload(Object.assign({ malang_pattern: 1 }, a.by ? { by: a.by } : {}, { recipe: r }), a.name);
             showMsg('💾 <b>' + recipeText(a.name, 40) + '.json</b> 파일을 저장했어요!<br><br>말랑달콤 카페의 <b>배경지 게시판</b>에 첨부해서 올려 주세요.<br><span style="font-size:12px;color:#777;">받은 사람은 🌈 배경지 → 공유받은 → 📥 파일 불러오기로 넣어요.<br>아이패드 · 아이폰은 \'파일\' 앱 → 다운로드 폴더에 있어요.</span>');
         }
 
@@ -218,7 +218,7 @@
             if (o && o.malang_sticker) { showMsg('✨ 스티커 파일이에요.<br><b>✨ 스티커 → 그 종류 → 공유받은</b> 칸의 📥 파일 불러오기로 넣어 주세요.'); return; }
             if (!o || o.malang_pattern !== 1 || !o.recipe) { showMsg('⚠ 말랑달콤 배경지 파일이 아니에요.<br><span style="font-size:12px;color:#777;">카페에서 받은 배경지 파일을 골라 주세요.</span>'); return; }
             if (!sanitizeRecipe(o.recipe)) { showMsg('⚠ 배경지 파일을 읽을 수 없어요.'); return; }
-            const uid = await addMyPattern(o.recipe, true);
+            const uid = await addMyPattern(o.recipe, true, recipeText(o.by, 12));
             if (!uid) return;
             if (uid === 'same') { showMsg('🌈 이미 가지고 있는 배경지예요.'); return; }
             if (typeof renderPatternList === 'function') renderPatternList();

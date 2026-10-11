@@ -87,7 +87,7 @@
 
         /* 파일 이름 · 만든 사람 묻기 (배경지 💾 파일로 저장도 같이 써요 js/pattern-maker.js) → { name, by } 또는 null */
         const SHX_NICK = 'malang_pattern_nick';                        // 배경지 만든 사람 닉네임과 같은 칸 (이 기기에 기억)
-        function shxAsk(title, defName, defBy, noBy, hint) {            // noBy : 만든 사람 칸 없이 (🎨 페이지 · 🌈 배경지) · hint : 만든 사람 칸 아래 안내 (없으면 공유받은 칸 안내)
+        function shxAsk(title, defName, defBy, noBy, hint) {            // noBy : 만든 사람 칸 없이 (🎭 인형극 제목 묻기) · hint : 만든 사람 칸 아래 안내 (없으면 공유받은 칸 안내)
             return new Promise(resolve => {
                 let nick = defBy || '';
                 if (!nick) try { nick = localStorage.getItem(SHX_NICK) || ''; } catch (e) {}

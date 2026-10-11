@@ -469,15 +469,15 @@
 
         /* ---------- 💾 페이지 파일로 저장 · 📥 페이지 파일 불러오기 ----------
            파일 : 사용자가 정한 이름.json  내용 : {"malang_skin":1,"skin":{색 · 꾸밈}}  → 카페에 첨부 → 받은 사람은 📔 페이지 → 공유받은 → 📥 파일 불러오기
-           (이름 · 만든 사람은 담지 않아요 · 썸네일만) */
+           (만든 사람 by 도 담아요 → 받은 사람의 공유받은 칸에 by 닉네임) */
         async function downloadSkinFile(id) {
             await pgEnsure(id, false);
             const c = hasOwn(customSkins, id) ? sanitizeSkin(customSkins[id]) : null;
             if (!c) { showMsg('⚠ 이 페이지를 읽을 수 없어요.'); return; }
             if (!window.shxAsk) return;
-            const a = await shxAsk('💾 페이지 파일로 저장', '페이지', '', true);
+            const a = await shxAsk('💾 페이지 파일로 저장', '페이지', '');
             if (!a) return;
-            shxDownload({ malang_skin: 1, skin: c }, a.name);
+            shxDownload(Object.assign({ malang_skin: 1 }, a.by ? { by: a.by } : {}, { skin: c }), a.name);
             showMsg('💾 <b>' + a.name.replace(/[<>&]/g, '') + '.json</b> 파일을 저장했어요!<br><br>말랑달콤 카페의 <b>페이지 게시판</b>에 첨부해서 올려 주세요.<br><span style="font-size:12px;color:#777;">받은 사람은 📔 페이지 → 공유받은 → 📥 파일 불러오기로 넣어요.</span>');
         }
 
@@ -488,7 +488,7 @@
             try {
                 const o = JSON.parse(m[0]);
                 const c = sanitizeSkin(o && o.skin ? o.skin : o);
-                return c ? { skin: c } : null;
+                return c ? { skin: c, by: o && typeof o.by === 'string' ? o.by.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12) : '' } : null;
             } catch (e) { return null; }
         }
         async function addReceivedSkin(p) {
@@ -502,7 +502,7 @@
             if (mySkinFull('')) return;
             const skin = Object.assign({}, p.skin, { got: 1 });                      // got : 공유받은 칸에 보여요
             let id;
-            try { id = await collAdd(pgColl(true), skin, await pgThumb(skin), { h }); }
+            try { id = await collAdd(pgColl(true), skin, await pgThumb(skin), p.by ? { h, by: p.by } : { h }); }
             catch (e) { showMsg('⚠ 페이지를 넣지 못했어요. 잠시 뒤 다시 해 주세요.'); return; }
             customSkins[id] = skin;
             applySkinPreset(id);
