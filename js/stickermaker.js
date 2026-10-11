@@ -342,7 +342,7 @@
             bar.classList.remove('two');
             bar.innerHTML = stkTabsOn(v => v === 'event' && kind === 'tape' && typeof tapeRecvHtml === 'function' && tapeRecvHtml(), 'stk').map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="stkTab('${v}')">${n}</button>`).join('');
             bar.hidden = bar.children.length < 2;                               // 칸이 하나뿐이면 칸 줄은 숨겨요
-            stkTab(tab || (kind === 'seal' || stkOff('mine', 'stk') ? 'free' : 'mine'));                 // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
+            stkTab(tab || 'free');                                              // 기본 칸부터 (🆓 기본 스티커 : js/tape.js · js/stk-basic.js)                 // 기본 칸에 든 게 있으면 기본부터, 없으면 내가만든부터
         }
         /* 🏷️ 씰스티커 → 기본 : 스티커 칸 대신 말랑달콤 그림 모음 목록을 바로 (창 넓이는 목록 배치를 따라요 · js/elements.js) */
         function stkLib(on) {
@@ -365,6 +365,14 @@
             const got = tab === 'event' && stkKind === 'tape' && typeof tapeRecvHtml === 'function' ? tapeRecvHtml() : '';   // 🎁 이벤트로 받은 테이프 (js/tape.js)
             if (got) { g.innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + got; return; }
             const ss = document.getElementById('seasonTab');
+            if (tab === 'free') {                                                   // 🆓 기본 : 🎀 기본 테이프 (js/tape.js) · 🧩 기본 봉투 · 📄 기본 모조지 (js/stk-basic.js)
+                const basic = stkKind === 'tape' ? (window.tapeFreeHtml ? '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + tapeFreeHtml() : '')
+                    : window.stkBasicHtml ? stkBasicHtml(stkKind) : '';
+                if (basic) {
+                    g.innerHTML = (stkKind === 'piece' && ss && !ss.hidden ? go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')") : '') + basic;
+                    return;
+                }
+            }
             if (tab === 'free' && stkKind === 'piece' && ss && !ss.hidden) g.innerHTML = go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')");
             else if (tab === 'shop') g.innerHTML = go('🛍️', '문구점에서 ' + k[1] + ' 보기', '새 창으로 열려요', 'stkShop()');
             else if (tab === 'event') g.innerHTML = `<div class="cs-empty">🎁 아직 받은 이벤트 선물이 없어요.<br>이벤트 ${k[1]}가 오면 여기에 들어와요!</div>`;

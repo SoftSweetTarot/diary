@@ -103,7 +103,7 @@
             S.mv.x += dx; S.mv.y += dy;
         }
         /* srcs : 봉투에 든 조각 그림들 */
-        async function openPieceBag(srcs) {
+        async function openPieceBag(srcs, label) {                   // label : { t: 봉투 이름, s: 작은 글 } (🆓 기본 봉투 js/stk-basic.js · 없으면 내가 만든 봉투)
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return false; }
             let imgs;
             try { imgs = await Promise.all(srcs.map(pcbLoad)); } catch (e) { showMsg('조각스티커를 열지 못했어요.'); return false; }
@@ -112,6 +112,7 @@
             const S = pcbS;
             S.cv = pcbq('pcbCv'); S.ctx = S.cv.getContext('2d');
             S.assets = imgs.map((im, i) => Object.assign(pcbAsset(im), { src: srcs[i] }));
+            S.label = label && label.t ? { t: String(label.t).slice(0, 14), s: String(label.s || '').slice(0, 14) } : null;
             S.pieces = []; S.fallers = []; S.drag = null; S.closing = 0; S.used = new Set(); S.mv = { x: 0, y: 0 }; S.on = true;
             pcbLayout();
             S.bag = { state: 'closed', tear: 0, dir: 1, wig: 0, move: null, strip: null, busy: false,
@@ -176,8 +177,8 @@
             pcbRR(ctx, lx, ly, lw, lh, 6 * k); ctx.fillStyle = '#ffd9e4'; ctx.fill(); ctx.strokeStyle = BC; ctx.lineWidth = 1.2; ctx.stroke();
             if (k > .5) {
                 ctx.fillStyle = '#9b6676'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-                ctx.font = `700 ${Math.round(16 * k)}px ${FONT}`; ctx.fillText('말랑 조각스티커', r.x + r.w / 2, ly + lh * .5);
-                ctx.font = `${Math.round(12 * k)}px ${FONT}`; ctx.fillText('내가 만든 조각 · ' + S.assets.length + 'pcs', r.x + r.w / 2, ly + lh * .88); ctx.textAlign = 'left';
+                ctx.font = `700 ${Math.round(16 * k)}px ${FONT}`; ctx.fillText(S.label ? S.label.t : '말랑 조각스티커', r.x + r.w / 2, ly + lh * .5);
+                ctx.font = `${Math.round(12 * k)}px ${FONT}`; ctx.fillText((S.label ? S.label.s : '내가 만든 조각') + ' · ' + S.assets.length + 'pcs', r.x + r.w / 2, ly + lh * .88); ctx.textAlign = 'left';
             }
             if (!open) {                                                         // 뜯는 띠 (점선 위쪽) · 오른쪽부터 뜯으면 거울처럼 뒤집어 그려요
                 const flip = b.tear > 0 && b.dir < 0;

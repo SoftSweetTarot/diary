@@ -12,7 +12,6 @@
             pattern: false,   // 🌈 배경지 · 🖼️ 이미지로 배경지 · 🖌️ 그려서 배경지 (🎨 페이지 창)
             studio: false,    // 🎀 페이지 꾸미기 (🎨 페이지 창)
             stkmake: false,   // ✂️ 나만의 스티커 만들기 · 스티커 창들의 '내가만든' 칸
-                              //    (+ 🧩 조각스티커 · 📄 모조지 · 🎀 마스킹테이프 버튼 : 지금은 만든 것만 들어 있는 칸이라 같이 숨겨요)
             share: false,     // 📥 '공유받은' 칸 · 💾 공유용 파일 저장 (카페로 주고받는 것)
             caps: false       // 🎁 캡슐스티커 (카페 랜덤박스에서 받아요)
         };
@@ -21,11 +20,6 @@
             const root = document.documentElement;
             Object.keys(FEATURES).forEach(k => root.classList.toggle('ft-no-' + k, !ftOn(k)));
             if (!ftOn('dday')) root.classList.add('hide-dday');            // 페이지 왼쪽 위 D-day (js/dday.js · css 의 .hide-dday)
-            /* 🧩 조각스티커 : 계절 스티커가 열려 있으면 기본 칸에 계절 스티커가 있어서 버튼을 보여요 (js/season.js SEASON_OPEN) */
-            window.addEventListener('load', () => {
-                if (ftOn('stkmake') || typeof SEASON_OPEN === 'undefined' || !SEASON_OPEN) return;
-                const b = document.querySelector('#stickerMakeModal [data-ft-piece]'); if (b) b.removeAttribute('data-ft');
-            });
         })();
         window.ftOn = ftOn;
 
