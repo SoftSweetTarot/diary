@@ -113,7 +113,7 @@
 
         /* ---------- 편지함 불러오기 ---------- */
         async function lbLoad() {
-            lbq('lbIn').innerHTML = lbq('lbSent').innerHTML = '<div class="lb-wait"><span>📮</span><p>우체통을 열어 보는 중…</p></div>';
+            lbq('lbIn').innerHTML = lbq('lbSent').innerHTML = '';                 // 열 때는 조용히 (📮 우체통을 열어 보는 중… 은 📬 편지 받기를 눌렀을 때만)
             const r = await lbCall('box');
             if (!r || !r.ok) { lb.data = null; const m = `<div class="lb-empty">⚠️ ${LB_ERR[r && r.error] || LB_ERR.server}<br><button type="button" onclick="lbLoad()">🔄 다시 열기</button></div>`; lbq('lbIn').innerHTML = lbq('lbSent').innerHTML = m; return; }
             lb.data = r;
@@ -123,7 +123,7 @@
         async function lbGet() {
             if (lb.getting || !lb.data) return;
             lb.getting = true;
-            lbq('lbIn').innerHTML = '<div class="lb-wait lb-getting"><span>📮</span><p>우체통을 열어 보는 중…</p><small>어떤 다꾸러의 편지가 와 있을까요?</small></div>';
+            lbq('lbIn').innerHTML = '<div class="lb-wait lb-getting"><span>📮</span><p>우체통을 열어 보는 중…</p></div>';
             const [r] = await Promise.all([lbCall('get'), new Promise(ok => setTimeout(ok, 1800))]);
             lb.getting = false;
             if (!r || !r.ok) {
@@ -141,7 +141,7 @@
             const left = d.gotLeft != null ? d.gotLeft : 0, just = lb.just; lb.just = 0;
             const getBox = (just ? `<p class="lb-arrived">✨ 새 편지 <b>${just}통</b>이 도착했어요!</p>` : '') +
                 (left > 0
-                    ? `<div class="lb-get"><button type="button" class="lb-get-btn" onclick="lbGet()">📬 편지 받기</button><small>오늘 받을 수 있는 편지 <b>${left}통</b> · 마음의 준비가 되면 눌러 주세요</small></div>`
+                    ? `<div class="lb-get"><button type="button" class="lb-get-btn" onclick="lbGet()">📬 편지 받기</button></div>`
                     : `<div class="lb-get done"><small>💌 오늘 받을 편지는 다 받았어요. 내일 또 열어 봐요!</small></div>`);
             const noneNow = lb.empty; lb.empty = false;
             lbq('lbIn').innerHTML = getBox + (noneNow ? '<p class="lb-arrived quiet">🕊️ 지금은 우체통이 비어 있어요. 조금 뒤에 다시 열어 봐요.</p>' : '') + (d.inbox.length ? `<div class="lb-list">${d.inbox.map((x, i) => {
@@ -149,7 +149,7 @@
                 return `<button type="button" class="lb-env${x.read ? ' read' : ''}" style="--bg:${p.bg};--ac:${p.ac};--d:${i * .06}s" onclick="lbOpen('${x.id}')">
                     <span class="lb-seal">${x.read ? x.sticker : '💗'}</span>
                     <span class="lb-env-t"><b>${x.reply ? '💌 내 편지에 온 답장' : x.read ? '어딘가의 다꾸러' : '✨ 새 편지가 도착했어요'}</b><small>${lbWhen(x.at)}${x.replied ? ' · 답장 보냄' : ''}</small></span></button>`;
-            }).join('')}</div>` : `<div class="lb-empty"><span>🕊️</span>아직 받은 편지가 없어요.<br>위의 📬 편지 받기를 누르면 편지가 와요.<br>먼저 누군가에게 편지를 써 볼까요?<br><button type="button" onclick="lbTab('write')">✉️ 편지 쓰기</button></div>`);
+            }).join('')}</div>` : '');
             const ST = { flying: ['🕊️', '날아가는 중'], arrived: ['📬', '도착했어요'], replied: ['💌', '답장이 왔어요'] };
             lbq('lbSent').innerHTML = (d.left != null ? `<p class="lb-left">오늘 더 보낼 수 있는 편지 <b>${d.left}통</b></p>` : '') + (d.sent.length ? `<div class="lb-list">${d.sent.map(x => {
                 const p = lbPaper(x.paper), s = ST[x.state] || ST.flying;
