@@ -11,6 +11,7 @@
   - 📱 기기 칸의 '🖥 다이어리만' : 기기 · 바탕 없이 다이어리(바깥 배경지 포함)가 영상 화면 전체를 채워요.
   - 열기 : PC 크롬(또는 엣지)에서 https://softsweetdiary.com/recorder.html
            (다이어리와 같은 주소에서 열어야 마우스 커서 · 클릭 효과가 영상에 함께 찍혀요)
+  - 🔄 다이어리 칸의 '💻 로컬 테스트 ↔ 🌐 사이트' 버튼 : 로컬테스트_윈도우.bat 로 켠 http://localhost:8000/recorder.html 과 사이트를 오가요 (설정은 그대로)
   - F2 : 녹화 시작 / 끝 → 끝날 때마다 mp4 파일로 저장 (저장 폴더를 골라 두면 그 폴더에 바로, 아니면 '다운로드' 폴더)
   - 영상 : 1920×1080 (가로) · 1080×1920 (세로) 등 정해진 크기 · 1초 30장 · H.264 + AAC 보통 mp4 (mp4-muxer : MIT 라이선스)
   - 처음 F2 를 누르면 크롬이 '이 탭 공유' 창을 띄워요 → '탭 오디오도 공유' 를 켜고 [공유] (한 번만 하면 창을 닫을 때까지 계속 써요)
@@ -89,6 +90,10 @@
     #recState.on { color: #e53950; } #recState.on::before { content: '● '; animation: blink 1s steps(2) infinite; }
     @keyframes blink { 50% { opacity: 0; } }
     #recInfo { color: var(--muted); font-size: 11.5px; line-height: 1.6; margin-top: 6px; }
+    #where { font-size: 12.5px; margin: 0 0 6px; padding: 6px 8px; border-radius: 10px; background: #fff6f9; }
+    #where b { color: var(--pink); }
+    #where.local { background: #eef7ff; } #where.local b { color: #3b82c4; }
+    .note { margin: 6px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.55; }
     #warn { display: none; background: #fff1d6; border: 1.5px solid #ffc46b; border-radius: 12px; padding: 8px 10px; font-size: 12px; line-height: 1.6; margin-bottom: 10px; }
     #hint { position: fixed; left: 12px; bottom: 10px; color: rgba(255,255,255,.6); font-size: 12px; }
     #toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); background: rgba(40,30,40,.88); color: #fff; padding: 9px 16px; border-radius: 12px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; }
@@ -151,15 +156,23 @@
     </div>
     <div class="sec">
         <h2>🔄 다이어리</h2>
-        <button class="btn big" id="reloadBtn" type="button">다이어리 새로고침</button>
+        <div id="where"></div>
+        <button class="btn big" id="swapBtn" type="button"></button>
+        <p class="note" id="swapNote"></p>
+        <button class="btn big" id="reloadBtn" type="button" style="margin-top:6px">다이어리 새로고침</button>
     </div>
 </aside>
 
 <script>
 (() => {
     const $ = id => document.getElementById(id);
-    const DIARY_URL = location.protocol.startsWith('http') ? new URL('./index.html', location.href).href : 'https://softsweetdiary.com/';
+    const DIARY_URL = new URL('./index.html', location.href).href;   // 이 도구와 같은 폴더의 다이어리 (사이트 · localhost · 컴퓨터 파일 모두)
     const SAVE_KEY = 'malang_recorder';
+    /* 🌐 사이트 ↔ 💻 로컬 : 같은 녹화 도구를 다른 주소에서 다시 열어요 (다이어리와 같은 주소여야 커서 · 클릭 효과가 찍혀요)
+       💻 로컬 = 내 컴퓨터의 로컬테스트_윈도우.bat (맥 .command) 가 켠 http://localhost:8000 · 설정은 주소 뒤에 붙여서 그대로 가져가요 */
+    const SITE_URL = 'https://softsweetdiary.com/recorder.html';
+    const LOCAL_URL = 'http://localhost:8000/recorder.html';
+    const IS_LOCAL = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 
     /* ---------- 기기 (w·h = 다이어리가 보이는 화면 크기 · top = 위쪽 상태 표시줄) ---------- */
     const DEVICES = {
@@ -186,6 +199,10 @@
     const DEF = { ratio: '16:9', dev: 'iphone', frame: '#1d1d22', size: 86, ox: 0, oy: 0, tilt: 0, kind: 'linear', c1: '#ffd6e4', c2: '#ffeef5', pat: 'dot', deco: true, showCursor: true, showClick: true };
     let S = Object.assign({}, DEF);
     try { Object.assign(S, JSON.parse(localStorage.getItem(SAVE_KEY) || '{}')); } catch (e) {}
+    try {                                                       // 🔁 바꾸기 버튼으로 넘어왔으면 그때 설정 그대로
+        const m = /[#&]s=([^&]+)/.exec(location.hash);
+        if (m) { Object.assign(S, JSON.parse(decodeURIComponent(m[1]))); history.replaceState(null, '', location.pathname + location.search); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+    } catch (e) {}
     if (!DEVICES[S.dev]) S.dev = DEF.dev;
     let bgImage = '';
     const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} };
@@ -316,6 +333,16 @@
     $('imgBtn').onclick = () => $('imgFile').click();
     $('imgFile').onchange = e => { const f = e.target.files[0]; if (!f) return; if (bgImage) URL.revokeObjectURL(bgImage); bgImage = URL.createObjectURL(f); e.target.value = ''; changed(); toast('🖼 이미지 바탕은 이 창을 닫으면 다시 골라야 해요'); };
     $('reloadBtn').onclick = () => { const f = $('app'); if (f) f.src = DIARY_URL; };
+    /* 🌐 ↔ 💻 */
+    $('where').className = IS_LOCAL ? 'local' : '';
+    $('where').innerHTML = IS_LOCAL ? '지금 : <b>💻 로컬 테스트</b> (' + (location.host || '컴퓨터 파일') + ')' : '지금 : <b>🌐 사이트</b> (softsweetdiary.com)';
+    $('swapBtn').textContent = IS_LOCAL ? '🌐 사이트 다이어리로 바꾸기' : '💻 로컬 테스트 다이어리로 바꾸기';
+    $('swapNote').innerHTML = IS_LOCAL ? '깃허브에 올린 다이어리로 바꿔요. 설정은 그대로 가져가요.'
+        : '먼저 다이어리 폴더의 <b>로컬테스트_윈도우.bat</b>(맥은 .command)을 켜 두세요.<br>안 켜져 있으면 \'연결할 수 없음\' 화면이 나와요.';
+    $('swapBtn').onclick = () => {
+        if (R) { toast('녹화를 끝낸 뒤에 바꿔 주세요.'); return; }
+        location.href = (IS_LOCAL ? SITE_URL : LOCAL_URL) + '#s=' + encodeURIComponent(JSON.stringify(S));
+    };
     window.addEventListener('resize', layoutStage);
 
     /* ---------- 🖱 영상용 커서 · 클릭 효과 (다이어리 안에서 움직여도 따라가요) ---------- */
@@ -372,7 +399,8 @@
     setInterval(() => { try { const f = $('app'); if (f && f.contentDocument && !f.contentDocument.__malangRec) hookApp(); } catch (e) {} }, 1000);
     function showWarn() {
         const w = $('warn'); w.style.display = 'block';
-        w.innerHTML = '⚠️ 이 도구를 컴퓨터 파일로 직접 열어서 <b>마우스 커서 · 클릭 효과가 영상에 찍히지 않아요.</b><br>크롬 주소창에 <b>softsweetdiary.com/recorder.html</b> 을 열어 주세요.';
+        w.innerHTML = location.protocol === 'file:' ? '💻 컴퓨터 파일로 열었어요. 녹화는 그대로 돼요.<br><b>🖱 마우스 칸의 커서 · 클릭 효과</b>만 영상에 안 찍혀요.'
+            : '⚠️ <b>마우스 커서 · 클릭 효과가 영상에 찍히지 않아요.</b><br>크롬 주소창에 <b>softsweetdiary.com/recorder.html</b> 을 열어 주세요.';
     }
 
     /* ---------- 🎬 녹화 (F2) ----------
