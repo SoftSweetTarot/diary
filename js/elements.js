@@ -413,7 +413,14 @@
             /* 🪶 끌어 옮기기 (맨 위 레이어로 · 놓은 뒤에도 맨 위)
                - 그림 스티커 · 이모지 : 🏷️ 씰스티커처럼 손가락을 따라 가장자리부터 떼어져요 (js/peelfx.js pfxSeal) → 다 떼면 떠서 따라오고, 놓으면 작아지며 붙어요 · 덜 떼고 놓으면 제자리에 다시 붙어요
                - 액자 사진 · 마스킹테이프 등 : 6% 커지고 그림자를 단 채 떠서 따라와요 */
-            let lift = 1, liftRaf = 0, lifted = false, seal = null;
+            let lift = 1, liftRaf = 0, lifted = false, seal = null, peelStop = null;
+            /* 스티커인지 : 그림 스티커 · 이모지 (액자 사진 · 테이프 · 글 쓰는 메모 · 움직이는 것은 아니에요) */
+            function isStickerEl() {
+                if (el.className.indexOf('fr-') >= 0 || el.dataset.float || el.querySelector('textarea')) return false;
+                const img = el.querySelector(':scope > img');
+                if (img) return img.complete && !!img.naturalWidth && !(typeof isTapeSrc === 'function' && isTapeSrc(img.dataset.src));
+                return !!el.querySelector(':scope > span');
+            }
             function liftTo(to) {
                 cancelAnimationFrame(liftRaf);
                 const from = lift, t0 = performance.now();
@@ -504,6 +511,9 @@
                         if (!(seal = sealStart())) { el.classList.add('lifting'); liftTo(1.06); }   // 📝 메모지 · 🧻 떡메 · 📄 모조지 · 테이프 : 살짝 떠서 옮겨요
                         else { seal.move(pos.x, pos.y); return; } */
                         el.classList.add('lifting'); liftTo(1.06);                      // 모두 살짝 떠서 옮겨요 (그림자 : css .lifting)
+                        /* 🏷️ 스티커만 : 처음에 잡은 쪽 가장자리가 살짝(30%) 들렸다가 평평해지며 떠요 (0.3초 · 저절로)
+                           위치는 처음부터 손가락과 1:1 이라 살짝 옮기기도 그대로 돼요 (js/peelfx.js pfxPeel) */
+                        if (window.pfxPeel && isStickerEl()) { if (peelStop) peelStop(); peelStop = pfxPeel(el, startX, startY, ddx, ddy, rotation, () => { peelStop = null; }, { upto: .3, ms: 160, flat: true, flatMs: 150 }); }
                     }
                     posX = initialX + ddx;
                     posY = initialY + ddy;
@@ -525,6 +535,7 @@
             const onEnd = () => {
                 actionType = null; pinch = null;
                 if (seal) { lifted = false; seal.up(); return; }
+                if (peelStop) { peelStop(); peelStop = null; }                  // 아주 빨리 놓으면 들린 쪽도 바로 평평하게
                 if (lifted) { lifted = false; el.classList.remove('lifting'); land(); }
             };
             /* 내려앉기 : 살짝 눌렸다가(0.98) 제자리 크기로 */

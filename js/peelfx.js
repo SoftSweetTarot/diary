@@ -5,7 +5,11 @@
    ※ 이 파일이 없어도 다이어리는 정상 동작 (연출 없이 바로 떠요) */
 
         const PFX_MS = 190, PFX_UPTO = .72;
-        function pfxPeel(el, x, y, dx, dy, rotDeg, done) {
+        /* o (생략 가능) : { upto: 얼마나 들릴지(0~1) · ms: 들리는 시간 · flat: true 면 들렸다가 다시 평평해지며 끝나요 (페이지 스티커 옮길 때) }
+           스티커가 움직이는 중이어도 접힌 쪽이 따라와요 (매 장면 el 의 transform 을 다시 읽어요) */
+        function pfxPeel(el, x, y, dx, dy, rotDeg, done, o) {
+            o = o || {};
+            const UPTO = o.upto || PFX_UPTO, MS = o.ms || PFX_MS, FLAT = o.flat ? (o.flatMs || 150) : 0;
             const w = el.offsetWidth, h = el.offsetHeight, len = Math.hypot(dx, dy);
             if (!w || !h || !len) { done(); return () => {}; }
             /* 화면 → 스티커 안쪽 좌표 (회전 · 크기 되돌리기) */
@@ -33,17 +37,21 @@
 
             const half = (M, sg) => { const p = [-n[1] * 4000, n[0] * 4000], q = [n[0] * 4000 * sg, n[1] * 4000 * sg];
                 return `polygon(${M[0] + p[0]}px ${M[1] + p[1]}px, ${M[0] - p[0]}px ${M[1] - p[1]}px, ${M[0] - p[0] + q[0]}px ${M[1] - p[1] + q[1]}px, ${M[0] + p[0] + q[0]}px ${M[1] + p[1] + q[1]}px)`; };
-            const base = el.style.transform, t0 = performance.now();
+            const t0 = performance.now();
             let raf = 0, over = false;
             const frame = now => {
                 if (over) return;
-                const k = Math.min(1, (now - t0) / PFX_MS), e = 1 - Math.pow(1 - k, 2), d = Math.max(.5, span * 2 * PFX_UPTO * e);
+                const tt = now - t0, k = Math.min(1, tt / MS);
+                let e = 1 - Math.pow(1 - k, 2);
+                if (FLAT && tt > MS) { const q = Math.min(1, (tt - MS) / FLAT); e = 1 - q * q; }   // 평평해지기
+                const d = Math.max(.5, span * 2 * UPTO * e), base = el.style.transform;
+                wrap.style.left = el.offsetLeft + 'px'; wrap.style.top = el.offsetTop + 'px';
                 const M = [C[0] + n[0] * d / 2, C[1] + n[1] * d / 2], md = M[0] * n[0] + M[1] * n[1];
                 el.style.clipPath = half(M, 1);                                       // 아직 붙어 있는 쪽
                 cp.style.clipPath = half(M, -1);                                      // 들린 쪽 → 접는 선으로 뒤집어요
                 const A = 1 - 2 * n[0] * n[0], B = -2 * n[0] * n[1], D = 1 - 2 * n[1] * n[1];
                 wrap.style.transform = `${base} translate(${-w / 2}px, ${-h / 2}px) matrix(${A}, ${B}, ${B}, ${D}, ${2 * md * n[0]}, ${2 * md * n[1]}) translate(${w / 2}px, ${h / 2}px)`;
-                if (k < 1) raf = requestAnimationFrame(frame); else { stop(); done(); }
+                if (tt < MS + FLAT) raf = requestAnimationFrame(frame); else { stop(); done(); }
             };
             const stop = () => { if (over) return; over = true; cancelAnimationFrame(raf); el.style.clipPath = ''; wrap.remove(); };
             frame(t0);
