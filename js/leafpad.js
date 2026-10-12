@@ -212,7 +212,7 @@
             el.innerHTML = `<div class="tk-rpad" id="tkRPad"><div class="tk-stack"></div><div class="tk-top" id="tkRTop"></div><div class="tk-stubs" id="tkRStubs"></div><div class="tk-glue"></div><button type="button" class="tk-x" aria-label="닫기">✕</button></div>`
                 + `<p class="pel-hint" id="tkHint"></p>`;
             document.body.appendChild(el);
-            tkTap(el.querySelector('.tk-x'), closeTteokRoom);
+            tkTap(el.querySelector('.tk-x'), () => { closeTteokRoom(); openModal('tteokModal'); });   // ✕ 로 남은 떡메를 치우면 떡메모지 목록 창이 다시 떠요 (다른 걸 고를 수 있게)
             el.addEventListener('pointerdown', tkDown); el.addEventListener('pointermove', tkMove);
             el.addEventListener('pointerup', tkUp); el.addEventListener('pointercancel', tkUp);
             window.addEventListener('resize', () => { if (tkS.on) tkLayout(); });
