@@ -1240,13 +1240,16 @@
 
 
 
-/* 🔁 목록 받기 : 실패하면 받을 때까지 알아서 다시 해요 (모든 목록 창 공통)
-   keepTrying(fn, { alive, onTry, max })
+/* 🔁 목록 받기 : 실패하면 받을 때까지 알아서 다시 해요 (모든 목록 창 공통 · 숨은 창까지)
+   keepTrying(fn, { alive, onTry, max, stop })
    - fn : 목록을 받는 일 (실패하면 throw)
    - alive() : 그 창이 아직 열려 있는지 · 닫으면 그만둬요 (없으면 계속)
    - onTry(n) : n번째로 다시 하기 전에 안내 글씨 바꾸기
-   - max : 최대 몇 번까지 (없으면 받을 때까지)
-   간격 2초 → 4초 → 8초 … 최대 30초 · 인터넷이 끊겼으면 다시 연결될 때 바로 */
+   - max : 최대 몇 번까지 (없으면 받을 때까지) · stop(e) : true 면 기다려도 소용없는 실패라 바로 그만둬요
+   ⏱ 5초마다 한 번씩 : 한 번에 5초까지 기다리고(답이 없으면 실패) → 바로 다시 · 빨리 실패하면 5초를 채운 뒤 다시
+      서버가 잠에서 깨느라 느릴 수 있어서 4번째부터는 한 번에 10초까지 기다려요 (도련 · 2026-10-13)
+   인터넷이 끊겼으면 다시 연결될 때 바로 */
+const KT_EVERY = 5000, KT_WAIT = 5000, KT_WAIT_SLOW = 10000;
 const KT_MSG = n => `⏳ 다시 불러오는 중이에요… (${n}번째)`;
 const ktShown = el => !!(el && el.isConnected && el.getClientRects().length);       // 화면에 보이는 칸인지 (창이 열려 있는지)
 function ktWait(ms) {
@@ -1258,13 +1261,16 @@ function ktWait(ms) {
 async function keepTrying(fn, o) {
     o = o || {};
     for (let n = 1; ; n++) {
-        try { return await fn(); }
-        catch (e) {
-            if ((o.max && n >= o.max) || (o.alive && !o.alive())) throw e;
+        const t0 = Date.now();
+        let timer = 0;
+        try {
+            return await Promise.race([fn(), new Promise((_, no) => { timer = setTimeout(() => no(new Error('timeout')), n <= 3 ? KT_WAIT : KT_WAIT_SLOW); })]);
+        } catch (e) {
+            if ((o.stop && o.stop(e)) || (o.max && n >= o.max) || (o.alive && !o.alive())) throw e;
             if (o.onTry) try { o.onTry(n + 1, e); } catch (x) {}
-            await ktWait(Math.min(30000, 2000 * 2 ** (n - 1)));
+            await ktWait(Math.max(0, KT_EVERY - (Date.now() - t0)));
             if (o.alive && !o.alive()) throw e;
-        }
+        } finally { clearTimeout(timer); }
     }
 }
 

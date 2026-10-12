@@ -114,7 +114,7 @@
 
         async function fetchLibraryList() {
             if (!LIB_API_URL) throw new Error('setup');
-            const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 15000);
+            const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), KT_WAIT_SLOW);   // 기다리는 시간은 keepTrying 이 정해요 (5초 · 느리면 10초)
             try {
                 const res = await fetch(LIB_API_URL, { signal: ctl.signal });
                 const data = await res.json();
@@ -123,22 +123,18 @@
             } finally { clearTimeout(timer); }
         }
         /* 기본스티커 목록 (앱을 켠 동안 한 번) : { images, sheets, kits }
-           실패하면 받을 때까지 알아서 다시 해요 (2초 → 4초 → 8초 … 최대 30초 간격 · 인터넷이 끊겼으면 다시 연결될 때)
+           실패하면 받을 때까지 5초마다 알아서 다시 해요 (js/drive.js keepTrying · 창을 닫아도 뒤에서 계속)
            씰 · 포인트 · 조각 · 모조지 · 테이프 · 메모지 · 떡메 · 속지 창이 모두 이 목록 하나를 같이 기다려요 */
         let basicKitP = null, basicKitTry = 0;
-        const kitWait = ms => new Promise(ok => {
-            if (navigator.onLine === false) { const on = () => { removeEventListener('online', on); ok(); }; addEventListener('online', on); return; }
-            setTimeout(ok, ms);
-        });
         async function basicKitLoop() {
-            for (basicKitTry = 1; ; basicKitTry++) {
-                try { const k = await fetchLibraryList(); basicKitTry = 0; return k; }
-                catch (e) {
-                    if (e && e.message === 'setup') { basicKitTry = 0; basicKitP = null; throw e; }   // 서버 주소가 없으면 기다려도 소용없어요
-                    document.dispatchEvent(new CustomEvent('basickit-retry', { detail: { n: basicKitTry, err: e } }));
-                    await kitWait(Math.min(30000, 2000 * 2 ** (basicKitTry - 1)));
-                }
-            }
+            basicKitTry = 1;
+            try {
+                return await keepTrying(fetchLibraryList, {
+                    stop: e => e && e.message === 'setup',                     // 서버 주소가 없으면 기다려도 소용없어요
+                    onTry: n => { basicKitTry = n; document.dispatchEvent(new CustomEvent('basickit-retry', { detail: { n: n - 1 } })); }
+                });
+            } catch (e) { basicKitP = null; throw e; }
+            finally { basicKitTry = 0; }
         }
         function basicKit(force) {
             if (!basicKitP || (force && !basicKitTry)) basicKitP = basicKitLoop();
