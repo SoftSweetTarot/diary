@@ -122,12 +122,32 @@
                 return { images: data.images, sheets: Array.isArray(data.sheets) ? data.sheets : [], kits: data.kits && typeof data.kits === 'object' ? data.kits : {} };
             } finally { clearTimeout(timer); }
         }
-        /* 기본스티커 목록 (앱을 켠 동안 한 번 · 실패하면 다음에 다시) : { images, sheets, kits } */
-        let basicKitP = null;
+        /* 기본스티커 목록 (앱을 켠 동안 한 번) : { images, sheets, kits }
+           실패하면 받을 때까지 알아서 다시 해요 (2초 → 4초 → 8초 … 최대 30초 간격 · 인터넷이 끊겼으면 다시 연결될 때)
+           씰 · 포인트 · 조각 · 모조지 · 테이프 · 메모지 · 떡메 · 속지 창이 모두 이 목록 하나를 같이 기다려요 */
+        let basicKitP = null, basicKitTry = 0;
+        const kitWait = ms => new Promise(ok => {
+            if (navigator.onLine === false) { const on = () => { removeEventListener('online', on); ok(); }; addEventListener('online', on); return; }
+            setTimeout(ok, ms);
+        });
+        async function basicKitLoop() {
+            for (basicKitTry = 1; ; basicKitTry++) {
+                try { const k = await fetchLibraryList(); basicKitTry = 0; return k; }
+                catch (e) {
+                    if (e && e.message === 'setup') { basicKitTry = 0; basicKitP = null; throw e; }   // 서버 주소가 없으면 기다려도 소용없어요
+                    document.dispatchEvent(new CustomEvent('basickit-retry', { detail: { n: basicKitTry, err: e } }));
+                    await kitWait(Math.min(30000, 2000 * 2 ** (basicKitTry - 1)));
+                }
+            }
+        }
         function basicKit(force) {
-            if (!basicKitP || force) basicKitP = fetchLibraryList().catch(e => { basicKitP = null; throw e; });
+            if (!basicKitP || (force && !basicKitTry)) basicKitP = basicKitLoop();
             return basicKitP;
         }
+        document.addEventListener('basickit-retry', e => {                 // 🏷️ 씰 창 안내 글씨 (다른 창은 받을 때까지 조용히 기다렸다가 채워요)
+            const st = document.getElementById('libStatus');
+            if (st && libLoading) st.textContent = `⏳ 목록을 다시 불러오는 중이에요… (${e.detail.n + 1}번째)`;
+        });
         window.basicKit = basicKit; window.driveImageUrl = driveImageUrl; window.kitName = libCatName;
 
         /* ---------- 📚 라이브러리 페이지 넘기기 · 배치 설정 ----------
