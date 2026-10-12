@@ -3248,6 +3248,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 /* 🖼️ 개발자 그림 (드라이브 기본스티커 폴더 · js/stk-basic.js) : 각 창 기본 칸 맨 앞에 섞여요 */
 .sb-srv { display: contents; }
 .sb-cats { grid-column: 1 / -1; margin-bottom: 0; min-width: 0; }               /* 🗂 기본 칸 카테고리 (js/stk-basic.js sbCats) · 씰 창과 같은 모양 */
+.sb-pager { grid-column: 1 / -1; margin: 2px 0 4px; min-width: 0; }                 /* ◀ 이전 · 다음 ▶ (js/stk-basic.js sbPage) */
+.sb-pager[hidden] { display: none !important; }
 [data-sbc][hidden] { display: none !important; }
 .sticker-grid .sb-bag .sb-top { min-height: 22px; }                               /* 이름 없는 봉투 윗띠 */
 .sticker-grid .tp-item[data-sbc] { padding: 12px 4px; }

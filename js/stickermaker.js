@@ -363,10 +363,10 @@
             if (tab === 'mine') return loadMyStickers(stkKind);
             if (tab === 'share' && window.shxShareTab) return shxShareTab(stkKind, g);            // 📥 공유받은 (js/sharebox.js)
             const got = tab === 'event' && stkKind === 'tape' && typeof tapeRecvHtml === 'function' ? tapeRecvHtml() : '';   // 🎁 이벤트로 받은 테이프 (js/tape.js)
-            if (got) { g.innerHTML = '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + got; return; }
+            if (got) { g.innerHTML = got; return; }
             const ss = document.getElementById('seasonTab');
             if (tab === 'free') {                                                   // 🆓 기본 : 🎀 기본 테이프 (js/tape.js) · 🧩 기본 봉투 · 📄 기본 모조지 (js/stk-basic.js)
-                const basic = stkKind === 'tape' ? (window.tapeFreeHtml ? '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div>' + (window.stkBasicSrv ? stkBasicSrv('tape') : '') + tapeFreeHtml() : '')
+                const basic = stkKind === 'tape' ? (window.tapeFreeHtml ? (window.stkBasicSrv ? stkBasicSrv('tape') : '') + tapeFreeHtml() : '')
                     : window.stkBasicHtml ? stkBasicHtml(stkKind) : '';
                 if (basic) {
                     g.innerHTML = (stkKind === 'piece' && ss && !ss.hidden ? go('🌸', ss.textContent.replace(/^\S+\s*/, ''), '지금 계절 스티커', "openStickerList('season')") : '') + basic;

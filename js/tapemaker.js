@@ -183,7 +183,7 @@
             g.dataset.mytape = '1';
             const C = tpmColl();
             C.onChange = () => { if (g.dataset.mytape && g.isConnected) loadMyTapes(); };
-            g.innerHTML = (window.shxBar ? shxBar('tape') : '') + '<div class="tp-note">🎀 사진 모서리나 글 위에 붙여 보세요 · 붙인 뒤 ↔ 손잡이로 길이 조절</div><div class="cg-host"></div>';
+            g.innerHTML = (window.shxBar ? shxBar('tape') : '') + '<div class="cg-host"></div>';
             return collGrid(g.querySelector('.cg-host'), C, tpmCell, '<div class="cs-empty">🎀 아직 마스킹테이프가 없어요.<br>✂️ 스티커만들기에서 나만의 테이프를 만들어 보세요!</div>');
         }
         async function tpmUse(id) {

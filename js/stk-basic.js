@@ -99,9 +99,9 @@
         const sbc = c => ` data-sbc="${esc(c || '')}"`;
         /* 기본 칸 그리기 (js/stickermaker.js stkTab) : kind = 'piece' · 'paper' */
         function stkBasicHtml(kind) {
-            if (kind === 'piece') return '<div class="tp-note">🧩 봉투를 누르면 뜯어서 조각을 떼어 붙여요</div>' + stkBasicSrv('piece') + sbOn(SB_BAGS).map(b =>
+            if (kind === 'piece') return stkBasicSrv('piece') + sbOn(SB_BAGS).map(b =>
                 `<button type="button" class="sb-card sb-bag"${sbc(b.g)} onclick="stkBasicOpen('piece','${b.id}')"><span class="sb-top" style="--c:${b.c}"></span><span class="sb-mini">${sbMini(b.k, true)}</span><small>조각 ${b.k.length}개</small></button>`).join('');
-            if (kind === 'paper') return '<div class="tp-note">📄 모조지를 누르면 그림 둘레를 따라 오려서 붙여요</div>' + stkBasicSrv('paper') + sbOn(SB_SHEETS).map(s =>
+            if (kind === 'paper') return stkBasicSrv('paper') + sbOn(SB_SHEETS).map(s =>
                 `<button type="button" class="sb-card sb-sheet"${sbc(s.g)} onclick="stkBasicOpen('paper','${s.id}')"><i class="sb-tape"></i><span class="sb-mini">${sbMini(s.k, false)}</span><small>그림 ${s.k.length}개</small></button>`).join('');
             return '';
         }
@@ -207,7 +207,7 @@
             items.forEach(el => { const c = el.dataset.sbc; if (c && !cats.includes(c)) cats.push(c); });
             const cnt = c => items.filter(el => el.dataset.sbc === c).length;
             let bar = box.querySelector(':scope > .sb-cats');
-            if (!cats.length) { if (bar) bar.remove(); items.forEach(el => { el.hidden = false; }); return; }
+            if (!cats.length) { if (bar) bar.remove(); items.forEach(el => { el.hidden = false; }); sbPage(box, kind, items); return; }
             if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.insertBefore(bar, box.querySelector(':scope > .sb-srv') || box.firstChild); }
             /* 같은 이름은 하나로 ('1. 동물' 과 '동물' 처럼 번호만 다르면 같은 칸) */
             const label = c => kitCat(c) || c, labels = [...new Set(cats.map(label))];
@@ -215,8 +215,35 @@
             if (cur && !labels.includes(cur)) cur = '';
             const btn = (v, txt, n) => `<button type="button" class="lib-cat${v === cur ? ' on' : ''}" data-c="${esc(v)}">${esc(txt)}<small>${n}</small></button>`;
             bar.innerHTML = btn('', '🌈 전체', items.length) + labels.map(l => btn(l, l, cats.filter(c => label(c) === l).reduce((a, c) => a + cnt(c), 0))).join('');
-            items.forEach(el => { el.hidden = !!cur && label(el.dataset.sbc) !== cur; });
-            bar.querySelectorAll('.lib-cat').forEach(b => { b.onclick = () => { sbCatOn[kind] = b.dataset.c; sbCats(box, kind); }; });
+            const shown = items.filter(el => !cur || label(el.dataset.sbc) === cur);
+            items.forEach(el => { el.hidden = false; });
+            bar.querySelectorAll('.lib-cat').forEach(b => { b.onclick = () => { sbCatOn[kind] = b.dataset.c; sbPgOn[kind] = 0; sbCats(box, kind); }; });
+            sbPage(box, kind, shown, items);
+        }
+        /* ◀ 이전 · 다음 ▶ : 씰스티커 창처럼 한 쪽씩 (한 줄 칸 수 × SB_ROWS 줄) · 쪽 수가 1이면 숨겨요 */
+        const SB_ROWS = { mini: 2, piece: 2, paper: 2, tape: 4, memo: 4, tk: 3, leaf: 3 }, sbPgOn = {};
+        function sbPage(box, kind, shown, all) {
+            (all || shown).forEach(el => { el.hidden = !shown.includes(el); });
+            let pg = box.querySelector(':scope > .sb-pager');
+            if (!pg) {
+                pg = document.createElement('div'); pg.className = 'lib-pager sb-pager';
+                pg.innerHTML = '<button type="button" class="btn">◀ 이전</button><span class="lib-page-info sb-pg-info"></span><button type="button" class="btn">다음 ▶</button>';
+                const bar = box.querySelector(':scope > .sb-cats');
+                box.insertBefore(pg, bar ? bar.nextSibling : (box.querySelector(':scope > .sb-srv') || box.firstChild));
+                const [p, n] = pg.querySelectorAll('.btn');
+                p.onclick = () => { sbPgOn[kind] = (sbPgOn[kind] || 0) - 1; sbCats(box, kind); };
+                n.onclick = () => { sbPgOn[kind] = (sbPgOn[kind] || 0) + 1; sbCats(box, kind); };
+            }
+            /* 한 줄 칸 수 : 첫 줄에 놓인 칸을 세요 (창이 안 보이면 3) */
+            const t0 = shown[0];                                            // offsetTop : 창이 뜨며 기울어도 그대로
+            const cols = t0 && t0.offsetWidth ? Math.max(1, shown.filter(el => Math.abs(el.offsetTop - t0.offsetTop) < 2).length) : 3;
+            const per = cols * (SB_ROWS[kind] || 3), pages = Math.ceil(shown.length / per);
+            const cur = Math.max(0, Math.min(sbPgOn[kind] || 0, pages - 1)); sbPgOn[kind] = cur;
+            shown.forEach((el, i) => { if (i < cur * per || i >= (cur + 1) * per) el.hidden = true; });
+            pg.hidden = pages <= 1;
+            const [p, n] = pg.querySelectorAll('.btn');
+            p.disabled = cur <= 0; n.disabled = cur >= pages - 1;
+            pg.querySelector('.sb-pg-info').textContent = `${cur + 1} / ${pages}`;
         }
         /* 🍭 포인트스티커 : js/stickerpack.js openStickerPack('srv:번호') 가 불러요 */
         function sbPack(id) {
