@@ -80,7 +80,7 @@
             S.sheet = pmMk(PM_W * PM_HR, S.SH * PM_HR); const s = S.sheet.getContext('2d'); s.scale(PM_HR, PM_HR);
             pmRR(s, 0, 0, PM_W, S.SH, 6); s.save(); s.clip(); s.drawImage(im, 0, 0, PM_W, S.SH); s.restore();
             pmGrain(s, PM_W, S.SH);
-            S.pieces = []; S.fades = []; S.drag = null; S.edit = null; S.mv = { x: 0, y: 0 }; S.on = true;
+            S.pieces = []; S.fades = []; S.drag = null; S.edit = null; S.mv = { x: 0, y: 0 }; S.gone = 0; S.back = 0; S.on = true;
             pmLayout();
             pmq('pmPens').hidden = true;
             pmq('pmRoom').classList.add('show'); document.body.classList.add('fc-lock');
@@ -117,7 +117,7 @@
             if (S.drag) return;                                                          // 끄는 중에는 그대로 (손가락은 누른 칸이 끝까지 받아요)
             if (S.edit) z.push([0, 0, S.W, S.H]);
             else {
-                z.push([S.X - m, S.Y - 24, PM_W * S.SC + m * 2, S.SH * S.SC + 24 + m]);
+                if (!S.gone) z.push([S.X - m, S.Y - 24, PM_W * S.SC + m * 2, S.SH * S.SC + 24 + m]);
                 for (const st of S.pieces) { const r = Math.max(st.w, st.h) * st.s / 2; z.push([st.cx - r, st.cy - r, r * 2, r * 2]); }
             }
             while (hit.children.length < z.length) { const d = document.createElement('div'); d.className = 'pm-z'; hit.appendChild(d); }
@@ -151,7 +151,8 @@
 
         /* ---------- 오리기 (모조지 좌표) ---------- */
         const pmToSheet = P => [(P[0] - pmS.X) / pmS.SC, (P[1] - pmS.Y) / pmS.SC];
-        const pmInSheet = (P, m = 0) => { const S = pmS; return P[0] > S.X - m && P[0] < S.X + PM_W * S.SC + m && P[1] > S.Y - m && P[1] < S.Y + S.SH * S.SC + m; };
+        const pmPhone = () => innerWidth < 700;                                          // 📱 폰 : 모조지가 페이지를 거의 가려서, 오린 스티커를 붙이는 동안 모조지가 비켜 줘요 (씰 종이와 같아요)
+        const pmInSheet = (P, m = 0) => { const S = pmS; if (S.gone) return false; return P[0] > S.X - m && P[0] < S.X + PM_W * S.SC + m && P[1] > S.Y - m && P[1] < S.Y + S.SH * S.SC + m; };
         /* 잘린 단면의 보풀 : 종이가 있는 곳에서만 바깥으로 짧게 삐죽 */
         function pmFibers(g, pts, A, AW, ox, oy) {
             g.save(); g.lineWidth = .5; g.lineCap = 'round';
@@ -294,7 +295,10 @@
             const st = pmCutOut(d.pts);
             if (!st) { S.fades.push({ pts: d.pts, len: d.len, t0: pmNow() }); pmSay('여긴 종이가 거의 없어요. 남은 그림을 오려 보세요'); return; }
             S.pieces.push(st); pmBuzz(18);
-            if (P) S.drag = { mode: 'piece', st, off: [P[0] - st.cx, P[1] - st.cy], start: P, last: P, t0: pmNow(), moved: true };   // 오린 스티커가 손가락을 따라와요
+            if (P) {
+                S.drag = { mode: 'piece', st, off: [P[0] - st.cx, P[1] - st.cy], start: P, last: P, t0: pmNow(), moved: true };   // 오린 스티커가 손가락을 따라와요
+                if (pmPhone()) { S.gone = pmNow(); S.back = 0; }                                   // 📱 모조지는 스르르 비켜요 (놓으면 다시)
+            }
             pmSay('쏙! 오려졌어요 ✨ 페이지로 끌어서 붙여요');
         }
         function pmUp(e) {
@@ -309,10 +313,12 @@
             if (d.mode === 'edittap') { if (pmDist([e.clientX, e.clientY], d.start) < 12) pmExitEdit(); return; }
             if (d.mode === 'piece') {
                 clearTimeout(d.lp); const st = d.st;
+                const away = !!S.gone;                                                             // 📱 비켜 있던 모조지는 놓는 순간 다시 나타나요
+                if (away) { S.gone = 0; S.back = pmNow(); }
                 if (d.crumpled) return;
                 if (!d.moved) { pmEnterEdit(st); return; }
                 const pg = pmq('canvasArea'), r = pg && pg.getBoundingClientRect(), P = [st.cx, st.cy];
-                if (r && !pmInSheet(P) && P[0] >= r.left && P[0] <= r.right && P[1] >= r.top && P[1] <= r.bottom) { pmStick(st); return; }
+                if (r && (away || !pmInSheet(P)) && P[0] >= r.left && P[0] <= r.right && P[1] >= r.top && P[1] <= r.bottom) { pmStick(st); return; }
                 st.squish = pmNow();
                 pmSay(pmInSheet(P) ? '모조지 위에 놓았어요. <b>페이지</b>로 끌어서 붙여요' : '톡 누르면 위에 <b>글씨</b>를 쓸 수 있어요 ✍️ 페이지로 끌면 붙어요');
             }
@@ -393,9 +399,13 @@
             const S = pmS; if (!S.on) return;
             const c = S.ctx, t = pmNow();
             c.setTransform(S.DPR, 0, 0, S.DPR, 0, 0); c.clearRect(0, 0, S.W, S.H);
-            c.save(); c.shadowColor = 'rgba(90,60,70,.2)'; c.shadowBlur = 6; c.shadowOffsetY = 2;
-            c.drawImage(S.sheet, S.X, S.Y, PM_W * S.SC, S.SH * S.SC); c.restore();
-            pmDrawTape(c);
+            const bo = S.gone ? Math.max(0, 1 - (t - S.gone) / 220) : S.back ? Math.min(1, (t - S.back) / 260) : 1;   // 📱 비켜 줄 때 스르르
+            if (bo > 0) {
+                c.save(); c.globalAlpha = bo; c.shadowColor = 'rgba(90,60,70,.2)'; c.shadowBlur = 6; c.shadowOffsetY = 2;
+                c.drawImage(S.sheet, S.X, S.Y, PM_W * S.SC, S.SH * S.SC); c.restore();
+                c.save(); c.globalAlpha = bo; pmDrawTape(c); c.restore();
+            }
+            const bx = pmq('pmX'); if (bx) { bx.style.opacity = bo; bx.style.visibility = bo > 0 ? 'visible' : 'hidden'; }
             for (const st of [...S.pieces].sort((a, b) => a.z - b.z)) if (!S.edit || S.edit.st !== st) pmDrawPiece(c, st, t);
             S.fades = S.fades.filter(f => { const q = (t - f.t0) / 600; if (q >= 1) return false; pmDrawCut(c, f, 1 - q, t); return true; });
             if (S.drag && S.drag.mode === 'cut') pmDrawCut(c, S.drag, 1, t);

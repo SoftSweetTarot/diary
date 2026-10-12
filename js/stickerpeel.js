@@ -175,6 +175,7 @@
                 pelRR(ctx, bx, by, B.w, B.h, 14); const g = ctx.createLinearGradient(bx, by, bx + B.w, by + B.h);
                 g.addColorStop(0, '#fdfdff'); g.addColorStop(.5, '#f4f6fb'); g.addColorStop(1, '#fbfcff'); ctx.fillStyle = g; ctx.fill(); ctx.restore();
             }
+            if (bo > 0 && S.items.length > 1) { ctx.save(); ctx.globalAlpha = bo; pelDrawTape(ctx); ctx.restore(); }   // 여러 개 씰 종이 : 위쪽 '✋ 잡고 옮겨요' (포인트스티커처럼)
             const bx = pelq('pelX');                                             // ✕ : 하얀 종이 오른쪽 위 끝 (모조지처럼 · 종이를 따라 다녀요)
             if (bx) { const B = S.board; bx.style.left = (B.cx + B.w / 2 - 26) + 'px'; bx.style.top = (B.cy - B.h / 2) + 'px'; bx.style.opacity = bo; bx.style.visibility = bo > 0 ? '' : 'hidden'; }
             const d = S.drag, cur = S.items.find(o => o.st === st);
@@ -207,9 +208,30 @@
             for (const [lx, ly] of pelS.a.edge) { const [x, y] = pelToStage(st, lx, ly); if ((x - M[0]) * n[0] + (y - M[1]) * n[1] < 0) off++; }
             return off / pelS.a.edge.length;
         }
+        /* ✋ 잡고 옮겨요 테이프 (여러 개 씰 종이 위쪽 가운데) : 잡고 끌면 하얀 종이째 옮겨요 */
+        function pelTape() { const B = pelS.board, w = 112, h = 24; return { x: B.cx - w / 2, y: B.cy - B.h / 2 - h / 2 - 2, w, h }; }
+        function pelDrawTape(c) {
+            const t = pelTape(); c.save(); c.translate(t.x + t.w / 2, t.y + t.h / 2); c.rotate(-.03);
+            const w = t.w / 2, h = t.h / 2; c.beginPath(); c.moveTo(-w, -h);
+            for (let i = 0; i <= 6; i++) c.lineTo(w - (i % 2) * 4, -h + i * t.h / 6);
+            for (let i = 0; i <= 6; i++) c.lineTo(-w + ((i + 1) % 2) * 4, h - i * t.h / 6);
+            c.closePath(); c.shadowColor = 'rgba(90,60,70,.18)'; c.shadowBlur = 3; c.shadowOffsetY = 1;
+            c.fillStyle = 'rgba(255,198,214,.92)'; c.fill(); c.shadowBlur = 0; c.shadowOffsetY = 0;
+            c.fillStyle = 'rgba(255,255,255,.35)'; for (let x = -w + 8; x < w - 4; x += 12) c.fillRect(x, -h, 5, t.h);
+            c.fillStyle = '#9b5a6e'; c.font = "700 12px 'Jua', sans-serif"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('✋ 잡고 옮겨요', 0, 1);
+            c.restore();
+        }
         function pelDown(e) {
             const S = pelS; if (!S.on || S.drag || S.st.state === 'free') return;
             e.preventDefault(); const P = [e.clientX, e.clientY];
+            if (S.items.length > 1 && S.board && !S.gone) {                    // ✋ 테이프를 잡으면 종이 옮기기
+                const t = pelTape();
+                if (P[0] > t.x - 8 && P[0] < t.x + t.w + 8 && P[1] > t.y - 8 && P[1] < t.y + t.h + 8) {
+                    S.drag = { mode: 'board', last: P, lt: performance.now() };
+                    try { S.cv.setPointerCapture(e.pointerId); } catch (er) {}
+                    pelSay('씰 종이를 옮기는 중… ✋'); return;
+                }
+            }
             let best = 1e12, bp = null, bo = null, hit = null;                   // 손가락에서 가장 가까운 스티커 가장자리
             for (const o of S.items) {
                 if (o.st.state !== 'on') continue;
