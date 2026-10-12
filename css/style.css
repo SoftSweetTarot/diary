@@ -125,6 +125,8 @@
         /* 🪄 실제 문구처럼 : 스티커는 살짝 두께 그림자 · 이모지 스티커는 하얀 칼선 · 📄 모조지는 얇은 종이 그림자 (🎀 테이프 · 🧻 떡메 · 📷 액자는 따로) */
         #canvasArea .element-box:not([class*="fr-"]):not(.tk-note):not(.is-tape):not([data-float]):not([data-ts]) > img { filter: drop-shadow(0 1px .8px rgba(90, 60, 70, .2)) drop-shadow(0 2px 3px rgba(90, 60, 70, .08)); }
         #canvasArea .element-box[data-float] > img { filter: drop-shadow(0 .6px .6px rgba(90, 70, 50, .22)); }
+        /* 옮기는 동안 살짝 뜬 그림자 (위 두 줄보다 강하게 · 모든 스티커 · 사진 · 메모 공통) */
+        #canvasArea .element-box.lifting:not([class*="fr-"]) > :not(.handle):not(.rot-zone), #canvasArea .element-box.lifting[class*="fr-"] { filter: drop-shadow(3px 8px 7px rgba(120, 70, 90, .3)) !important; }
         #canvasArea .element-box > span { filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 1px 1px rgba(90, 60, 70, .28)); }
         .element-box textarea {
             background: transparent; border: none; resize: none; outline: none;

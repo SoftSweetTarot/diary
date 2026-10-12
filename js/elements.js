@@ -461,8 +461,11 @@
                     if (!lifted && Math.hypot(ddx, ddy) > 6) {
                         lifted = true;
                         el.style.zIndex = zIndexCounter++;
+                        /* 🏷️ 씰스티커처럼 떼었다 붙이기 : 지금은 꺼 뒀어요 (모든 것이 모조지처럼 살짝 떠서 옮겨져요)
+                           다시 켜려면 아래 두 줄의 // 를 지우고, 그 밑의 '살짝 떠서' 한 줄을 지우면 돼요 (sealStart 함수는 그대로 있어요)
                         if (!(seal = sealStart())) { el.classList.add('lifting'); liftTo(1.06); }   // 📝 메모지 · 🧻 떡메 · 📄 모조지 · 테이프 : 살짝 떠서 옮겨요
-                        else { seal.move(pos.x, pos.y); return; }
+                        else { seal.move(pos.x, pos.y); return; } */
+                        el.classList.add('lifting'); liftTo(1.06);                      // 모두 살짝 떠서 옮겨요 (그림자 : css .lifting)
                     }
                     posX = initialX + ddx;
                     posY = initialY + ddy;
