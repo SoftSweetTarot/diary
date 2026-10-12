@@ -991,6 +991,7 @@
         }
 
         function openArcade() {
+            if (typeof warmServer === 'function' && typeof HOF_API_URL !== 'undefined' && HOF_API_URL) warmServer(HOF_API_URL);   // 🏆 오락실에 들어오면 명예의 전당 서버도 미리 깨워요 (4분에 한 번만)
             if (typeof closeModal === 'function') closeModal('serviceModal');
             arBuild();
             ar.best = arReadBest();

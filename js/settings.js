@@ -563,12 +563,14 @@
         document.querySelectorAll('.modal').forEach(mtDecorate);
         function openModal(id) {
             if (id === 'settingsModal') { saveData(false); updateStorageInfo(); refreshStorageStats(); if (typeof sndRenderSettings === 'function') sndRenderSettings(); }
-            /* ☕ 서버 미리 깨우기 (js/service.js) : 설정 메뉴를 열면 건의함 서버, 카페를 열면 랜덤박스 서버 */
+            /* ☕ 서버 미리 깨우기 (js/service.js) : 설정 메뉴를 열면 건의함 서버, 카페를 열면 랜덤박스 · 포춘카드 · 편지함 · 명예의 전당 서버 */
             if (typeof warmServer === 'function') {
                 if (id === 'settingsMenuModal' && typeof FEEDBACK_SCRIPT_URL !== 'undefined') warmServer(FEEDBACK_SCRIPT_URL);
                 if (id === 'serviceModal' && typeof GACHA_API_URL !== 'undefined') warmServer(GACHA_API_URL);
                 if (id === 'serviceModal' && typeof wlPrefetch === 'function') wlPrefetch();     // 📱 배경화면 목록 미리 받아 두기 (js/wall.js)
                 if (id === 'serviceModal' && typeof FORTUNE_API_URL !== 'undefined' && FORTUNE_API_URL) warmServer(FORTUNE_API_URL);
+                if (id === 'serviceModal' && typeof LB_API_URL !== 'undefined' && LB_API_URL) warmServer(LB_API_URL);         // 💌 익명 편지함 (js/letter.js)
+                if (id === 'serviceModal' && typeof HOF_API_URL !== 'undefined' && HOF_API_URL) warmServer(HOF_API_URL);      // 🏆 명예의 전당 (js/hof.js)
             }
             if (id === 'serviceModal' && typeof svcShowCats === 'function') svcShowCats();
             const m = document.getElementById(id);
