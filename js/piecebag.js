@@ -269,8 +269,8 @@
             for (const st of S.pieces) { pcbStep(st, t); if (st.sGoal != null) { st.s += (st.sGoal - st.s) * .2; if (Math.abs(st.sGoal - st.s) < .002) { st.s = st.sGoal; st.sGoal = null; } } }
             if (S.drag && S.drag.mode === 'free') pcbAnchor(S.drag.st, S.drag.last);
             pcbDrawBag(t);
-            const bx = document.getElementById('pcbX');                          // ✕ : 봉투 오른쪽 위 (작아진 봉투를 따라 다녀요)
-            if (bx) { const r = pcbBagRect(t); bx.style.left = (r.x + r.w - 10) + 'px'; bx.style.top = (r.y - 14) + 'px'; bx.style.opacity = fade; }
+            const bx = document.getElementById('pcbX');                          // ✕ : 뜯은 뒤 작아진 봉투 안쪽 오른쪽 위 (뜯기 전에는 안 보여요)
+            if (bx) { const r = pcbBagRect(t), op = S.bag.state !== 'closed'; bx.style.left = (r.x + r.w - 20) + 'px'; bx.style.top = (r.y + 1) + 'px'; bx.style.opacity = fade; bx.style.visibility = op ? 'visible' : 'hidden'; }
             const order = [...S.pieces].sort((a, b) => (PCB_LAYER[a.state] - PCB_LAYER[b.state]) || (a.z - b.z));
             let dim = false;
             for (const st of order) {
