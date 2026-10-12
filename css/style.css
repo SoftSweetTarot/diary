@@ -2618,8 +2618,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .stk-tabs.two { grid-template-columns: repeat(2, 1fr); }
 .spk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 4px 2px; }
 .sticker-grid > .spk-cards { grid-column: 1 / -1; align-content: start; }      /* 창 너비를 다 써요 (한 칸에 갇히지 않게) */
-.spk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border: 1.5px solid var(--border-color); border-radius: 18px; background: #fff; font: inherit; color: #6b4f5a; cursor: pointer; box-shadow: 0 2px 0 var(--border-color); }
-.spk-card:active { transform: translateY(1px); box-shadow: none; }
+.spk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: #6b4f5a; cursor: pointer; }   /* 조각스티커 칸처럼 두께 없이 */
+.spk-card:active { transform: translateY(1px); }
 .spk-prev { display: flex; gap: 2px; height: 44px; align-items: center; }
 .spk-prev img { height: 34px; max-width: 34px; object-fit: contain; }
 .spk-card b { font-size: 14px; } .spk-card small { font-size: 11.5px; color: #a98a96; }
