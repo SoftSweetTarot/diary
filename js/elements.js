@@ -101,7 +101,7 @@
         }
 
         /* 📚 기본스티커 : 기본스티커 서버(라이브러리_앱스크립트.gs)가 드라이브 '기본스티커' 폴더를 읽어 목록을 보내 줘요
-           - 🏷️ 씰 : images [{ id, c }] 낱장 · sheets [{ c, ids }] 씰 종이 (c = 기본스티커/씰 아래 폴더 이름 = 카테고리 · '' 이면 '전체'에서만)
+           - 🏷️ 씰 : images [{ id, c }] 낱장 · sheets [{ c, ids }] 씰 종이 (c = 기본스티커/씰스티커 아래 폴더 이름 = 카테고리 · '' 이면 '전체'에서만)
            - 나머지 종류 (🍭 🧩 📄 🎀 🧻 📃 📝) : kits [{ c, ids }] · [{ c, id }] → js/stk-basic.js 가 각 창의 기본 칸에 제가 그린 그림과 섞어서 카테고리 칸과 함께 보여요
            - 카테고리만 이름이 보여요 ('1. 캐릭터' 처럼 앞 번호는 순서용 · 화면에는 '캐릭터') · 스티커 이름은 없어요
            - 목록은 앱을 켠 동안 한 번만 받아요 (basicKit) */
@@ -317,7 +317,7 @@
             applyLibLayoutStyle();
             renderLibCats();
             const view = libView();
-            if (!view.length) { st.textContent = '기본스티커 / 씰 폴더에 그림이 없어요.'; updateLibPager(); return; }
+            if (!view.length) { st.textContent = '기본스티커 / 씰스티커 폴더에 그림이 없어요.'; updateLibPager(); return; }
             const per = libPerPage(), pages = libPageCount();
             libPage = Math.max(0, Math.min(pages - 1, libPage));
             const nSheet = view.filter(x => x.s).length;
