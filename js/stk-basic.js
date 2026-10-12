@@ -228,8 +228,8 @@
             if (!pg) {
                 pg = document.createElement('div'); pg.className = 'lib-pager sb-pager';
                 pg.innerHTML = '<button type="button" class="btn">◀ 이전</button><span class="lib-page-info sb-pg-info"></span><button type="button" class="btn">다음 ▶</button>';
-                const bar = box.querySelector(':scope > .sb-cats');
-                box.insertBefore(pg, bar ? bar.nextSibling : (box.querySelector(':scope > .sb-srv') || box.firstChild));
+                const bar = box.querySelector(':scope > .sb-cats');           // ◀ ▶ 위 · 🗂 카테고리는 그림 목록 바로 위
+                box.insertBefore(pg, bar || box.querySelector(':scope > .sb-srv') || box.firstChild);
                 const [p, n] = pg.querySelectorAll('.btn');
                 p.onclick = () => { sbPgOn[kind] = (sbPgOn[kind] || 0) - 1; sbCats(box, kind); };
                 n.onclick = () => { sbPgOn[kind] = (sbPgOn[kind] || 0) + 1; sbCats(box, kind); };
