@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/stknote.js
    📒 스티커 수첩 : 스티커 고르는 창의 두 번째 모양 (⚙️ 설정 → 📒 스티커 고르는 창 에서 골라요 · 처음엔 🪟 고르는 창)
-   - ✨ 스티커 창의 9칸(미니시트 · 캡슐 · 씰 · 조각 · 모조지 · 마테 · 메모지 · 떡메모지 · 속지)을 열면 수첩 겉표지가 먼저 보여요 → 톡 누르면 펼쳐져요
+   - ✨ 스티커 창의 9칸(포인트스티커 · 캡슐 · 씰 · 조각 · 모조지 · 마테 · 메모지 · 떡메모지 · 속지)을 열면 수첩 겉표지가 먼저 보여요 → 톡 누르면 펼쳐져요
    - 위의 칸(기본 · 내가만든 · 공유받은 …)만 두고 나머지 줄(그림 모음 칸 · 이전/다음 · 배치 · 안내 글 · 공유하기 …)은 숨겨서 스티커가 많이 보여요
    - 옆으로 밀거나 ‹ › 로 한 장씩 넘겨요 (한 장에 들어가는 만큼만 · 잘린 줄은 다음 장으로)
    - 스티커를 꾹 누른 채(마우스는 누른 채 바로) 끌면 수첩이 아래로 비켜 주고, 다이어리 위에 놓으면 그 자리에 붙어요 → 수첩이 다시 올라와요
@@ -477,12 +477,12 @@
         }
 
         /* ---------- 🧾 시트 스타일 : 진짜 스티커첩처럼 한 장에 세로로 긴 시트 하나 (도련 · 2026-10-10)
-           여러 그림이 든 스티커(내 씰 · 조각 여러 장 · 공유받은 것 · 미니시트)는 시트 한 장씩
+           여러 그림이 든 스티커(내 씰 · 조각 여러 장 · 공유받은 것 · 포인트스티커)는 시트 한 장씩
            그림이 하나뿐인 스티커는 '낱장 모음 시트'로 한 장에 모아요 · 시트의 그림은 하나씩 떼어 붙여요
            원래 목록은 몸통 안에 숨겨 두고(눌렀을 때 하는 일 · 더 불러오기는 그대로) 시트만 보여요
            ✨ 스티커 창 수첩은 늘 시트로만 보여요 (목록으로 보기 · 목록에서 끌어 붙이기 없음 · 도련 · 2026-10-10) ---------- */
         const SNB_SRC = '.lib-item:not(.empty), .sticker-item, .smk-it, .spk-card, .cs-it, .tpm-it';
-        /* 여러 그림이 든 칸인지 : 미니시트 묶음 · 'N장 / Npcs' 표시가 2 이상인 내 스티커 · 공유받은 스티커 */
+        /* 여러 그림이 든 칸인지 : 포인트스티커 묶음 · 'N장 / Npcs' 표시가 2 이상인 내 스티커 · 공유받은 스티커 */
         function snbMulti(e) {
             if (e.classList.contains('spk-card')) { const id = ((e.getAttribute('onclick') || '').match(/'([^']+)'/) || [])[1]; return id ? { pack: id } : null; }
             if (!e.classList.contains('smk-it') || !e.dataset.id) return null;
@@ -512,7 +512,7 @@
             };
             multi.forEach(([e, mu]) => {
                 const im = e.querySelector('img'), b = e.querySelector('b:not(.smk-n)');
-                const name = mu.pack ? (b ? b.textContent : '미니시트') : ((im && im.alt) || '내 스티커 시트');
+                const name = mu.pack ? (b ? b.textContent : '포인트스티커') : ((im && im.alt) || '내 스티커 시트');
                 const sh = sheet(name, mu.pack ? (e.querySelector('small') || {}).textContent : (e.querySelector('.smk-n') || {}).textContent);
                 sh._mu = mu; sh.querySelector('.snb-sh-in').innerHTML = '<small class="snb-sh-wait">시트를 펼치는 중…</small>';
             });
@@ -579,7 +579,7 @@
             if (typeof saveData === 'function') saveData(false);
         }
 
-        /* ---------- 🧾 시트에서 돌돌 말려 떼기 (js/peelfx.js pfxSeal · 🍭 미니시트 판과 같은 떼기)
+        /* ---------- 🧾 시트에서 돌돌 말려 떼기 (js/peelfx.js pfxSeal · 🍭 포인트스티커 판과 같은 떼기)
            누른 채 끌면 가장자리부터 말려 올라오다 다 떼어지면 손가락을 따라와요 → 페이지 위에 놓으면 그 자리 · 그 각도로 붙어요
            덜 떼고 놓거나 페이지 밖에 놓으면 시트로 착 돌아가요 ---------- */
         function snbPeelStart(p) {

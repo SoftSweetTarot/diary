@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/stickerpack.js
-   🍭 미니시트 : ✨ 스티커 창 → 🍭 미니시트 → 위쪽 '🍭 미니시트' 칸 (첫 칸 · 😀 이모지는 둘째 칸)
+   🍭 포인트스티커 : ✨ 스티커 창 → 🍭 포인트스티커 → 위쪽 '🍭 포인트스티커' 칸 (첫 칸 · 😀 이모지는 둘째 칸)
    - 비슷한 것끼리 묶은 작은 스티커 모음 : 🔤 말랑 알파벳 A~Z · 🔢 말랑 숫자 0~9 · 💗 하트 모음
      그림 파일 없이 코드로 그려요 (말랑 버블 글씨 + 하얀 다이컷 테두리 · spkDraw) → 한 번 그린 건 기억해 둬요
    - 팩을 고르면 하얀 판에 스티커가 올려진 채 페이지 옆(자리가 없으면 아래쪽)에 떠 있어요
@@ -7,14 +7,14 @@
      2) 그대로 끌어서 페이지에 놓으면 작아지며 꾹 붙어요 → 빨간 점선이 생겨 옮기기 · 돌리기 · 크기 조절 (다른 스티커와 같아요)
         페이지 밖이나 판 위에 놓으면 제자리로 돌아가요 · 떠 있을 때 다른 곳을 누르면 제자리로
    - 판 위쪽 테이프(✋)를 끌면 판이 옮겨져요 · 오른쪽 위 끝 ✕ 로 닫아요 · 판 바깥은 그대로 페이지라 붙인 스티커를 바로 고칠 수 있어요
-   ※ 이 파일이 없어도 다이어리는 정상 동작 (미니시트 칸만 '준비 중') */
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (포인트스티커 칸만 '준비 중') */
 
         const SPK_FONT = "'Fredoka', 'Jua', 'Arial Rounded MT Bold', sans-serif";
         const SPK_COLORS = [['#ff9ec1', '#e0628f'], ['#ffd36b', '#d9a12a'], ['#9fd3ff', '#4f9fd8'], ['#a8e3a0', '#5aa863'], ['#c7a8ff', '#8a63d9'], ['#ffb48a', '#e07a45'], ['#8fe0d2', '#3fae9c']];
         const SPK_PACKS = [
             { id: 'abc', icon: '🔤', g: '글자', name: '말랑 알파벳', sub: 'A ~ Z', items: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
             { id: 'num', icon: '🔢', g: '숫자', name: '말랑 숫자', sub: '0 ~ 9 · ! ?', items: '0123456789!?'.split('') },
-            { id: 'heart', icon: '💗', g: '마음', name: '하트 모음', sub: '하트 16가지', items: Array.from({ length: 16 }, (_, i) => 'h' + i) },
+            { id: 'heart', icon: '💗', g: '도형', name: '하트 모음', sub: '하트 16가지', items: Array.from({ length: 16 }, (_, i) => 'h' + i) },
         ];
         const spkS = { cache: {}, pack: null, lift: null, mv: null, drag: null, press: null };
         const spkq = id => document.getElementById(id);
@@ -96,15 +96,15 @@
         }
         async function spkSrcs(pack) {
             if (spkS.cache[pack.id]) return spkS.cache[pack.id];
-            if (pack.load) return (spkS.cache[pack.id] = await pack.load());   // 🖼️ 개발자 그림 미니시트 (js/stk-basic.js sbPack)
+            if (pack.load) return (spkS.cache[pack.id] = await pack.load());   // 🖼️ 개발자 그림 포인트스티커 (js/stk-basic.js sbPack)
             if (pack.id !== 'heart' && document.fonts && document.fonts.load) await Promise.race([document.fonts.load(`700 100px ${SPK_FONT}`), new Promise(r => setTimeout(r, 1500))]).catch(() => {});
             return (spkS.cache[pack.id] = pack.items.map((it, i) => pack.id === 'heart' ? spkHeart(i) : spkGlyph(it, i)));
         }
 
-        /* ---------- 🍭 미니시트 창 : 위쪽 '🍭 미니시트 · 😀 이모지' 두 칸 (js/stickermaker.js openStickerList) ---------- */
+        /* ---------- 🍭 포인트스티커 창 : 위쪽 '🍭 포인트스티커 · 😀 이모지' 두 칸 (js/stickermaker.js openStickerList) ---------- */
         function spkTabs() {
             const bar = spkq('stickerKindTabs'); if (!bar) return;
-            bar.innerHTML = [['pack', '🍭 미니시트'], ['emoji', '😀 이모지']].map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="spkTab('${v}')">${n}</button>`).join('');
+            bar.innerHTML = [['pack', '🍭 포인트스티커'], ['emoji', '😀 이모지']].map(([v, n]) => `<button type="button" class="stk-tab" data-tab="${v}" onclick="spkTab('${v}')">${n}</button>`).join('');
             bar.classList.add('two'); bar.hidden = false;
         }
         async function spkTab(tab) {
@@ -149,7 +149,7 @@
             if (window.stkLeave) stkLeave();
             spkBuild(); spkPutBack(); spkS.pack = p;
             let srcs;
-            try { srcs = await spkSrcs(p); } catch (e) { showMsg('⚠ 미니시트를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); if (window.stkReturn) stkReturn(); return; }
+            try { srcs = await spkSrcs(p); } catch (e) { showMsg('⚠ 포인트스티커를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); if (window.stkReturn) stkReturn(); return; }
             spkq('spkTitle').textContent = p.icon;
             spkq('spkGrid').innerHTML = srcs.map((u, i) => `<span class="spk-it" data-i="${i}"><img src="${u}" alt="" draggable="false"></span>`).join('');
             spkq('spkRoom').classList.add('show');

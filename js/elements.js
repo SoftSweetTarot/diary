@@ -588,7 +588,7 @@
         };
         ['mousedown', 'touchstart', 'mouseup', 'touchend', 'touchcancel'].forEach(t => document.addEventListener(t, idleTouch, { capture: true, passive: true }));
         /* ✏️ 애플펜슬 : 아이패드는 펜슬로 끌자마자 그림 끌어 옮기기 · 글자 고르기를 시작해서 (손가락은 꾹 눌러야 시작) 끌기가 중간에 끊겨요
-           → 페이지 스티커 · 🍭 미니시트 · 🏷️ 씰스티커 · 🧩 조각스티커(비닐 찢기) · 📄 모조지 화면에서는 펜슬일 때 그 동작을 막아요 (글상자 · 버튼은 그대로) */
+           → 페이지 스티커 · 🍭 포인트스티커 · 🏷️ 씰스티커 · 🧩 조각스티커(비닐 찢기) · 📄 모조지 화면에서는 펜슬일 때 그 동작을 막아요 (글상자 · 버튼은 그대로) */
         document.addEventListener('touchstart', e => {
             const t = e.touches[0], tg = e.target;
             if (!e.cancelable || !t || t.touchType !== 'stylus' || !tg.closest) return;

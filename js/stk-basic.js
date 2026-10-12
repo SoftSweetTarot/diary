@@ -1,7 +1,7 @@
 /* 말랑달콤 다이어리 - js/stk-basic.js
    🆓 기본 스티커 : 처음부터 누구나 쓰는 🧩 조각스티커 봉투 · 📄 모조지 (✨ 스티커 → 그 종류 → 기본 칸)
    + 🖼️ 개발자 그림 : 드라이브 '기본스티커' 폴더 (기본스티커 서버 · js/elements.js basicKit) 의 그림을 각 창 기본 칸 맨 앞에 섞어요
-       🍭 미니시트 · 🧩 조각스티커 · 📄 모조지 = 숫자 폴더 1개가 한 묶음 (낱장 폴더는 그림 1개가 한 묶음) · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
+       🍭 포인트스티커 · 🧩 조각스티커 · 📄 모조지 = 숫자 폴더 1개가 한 묶음 (낱장 폴더는 그림 1개가 한 묶음) · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
        🗂 카테고리 칸 : 기본 칸 위에 '🌈 전체 · 카테고리…' (씰 창과 같은 모양) · 스티커 이름은 안 보여요
        data-sbc="카테고리" 가 붙은 칸만 걸러요 (제가 그린 것도 각 파일에서 data-sbc 를 붙여요 : js/tape.js · js/stickerpack.js · js/leafpad.js · js/paper.js)
        (🏷️ 씰은 js/elements.js 의 씰 목록이 낱장 · 씰 종이로 보여 줘요)
@@ -218,7 +218,7 @@
             items.forEach(el => { el.hidden = !!cur && label(el.dataset.sbc) !== cur; });
             bar.querySelectorAll('.lib-cat').forEach(b => { b.onclick = () => { sbCatOn[kind] = b.dataset.c; sbCats(box, kind); }; });
         }
-        /* 🍭 미니시트 : js/stickerpack.js openStickerPack('srv:번호') 가 불러요 */
+        /* 🍭 포인트스티커 : js/stickerpack.js openStickerPack('srv:번호') 가 불러요 */
         function sbPack(id) {
             const i = +String(id).replace('srv:', ''), x = SRV.mini && SRV.mini[i];
             if (!x || !x.urls) return null;

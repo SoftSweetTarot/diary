@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/peelfx.js
-   🏷️ 씰스티커처럼 떼어지는 연출 (짧게 저절로) : 🍭 미니시트에서 뗄 때(js/stickerpack.js) · 페이지에 붙은 스티커를 옮길 때(js/elements.js makeTransformable)
+   🏷️ 씰스티커처럼 떼어지는 연출 (짧게 저절로) : 🍭 포인트스티커에서 뗄 때(js/stickerpack.js) · 페이지에 붙은 스티커를 옮길 때(js/elements.js makeTransformable)
    - 끄는 방향 뒤쪽 가장자리가 먼저 들려서 앞으로 접혀 넘어가요 (접힌 쪽은 크림색 뒷면 + 그림자)
    - pfxPeel(el, x, y, dx, dy, rotDeg, done) : 화면 좌표 (x, y)를 잡고 (dx, dy) 방향으로 떼기 · 끝나면 done() · 돌려준 함수를 부르면 바로 멈춰요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (연출 없이 바로 떠요) */

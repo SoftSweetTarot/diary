@@ -291,9 +291,9 @@
             o.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, o.width, o.height);
             return (smS[key] = o.toDataURL('image/png'));
         }
-        /* ✨ 스티커 창(하단메뉴) → 목록 창 : 🍭 미니시트(위쪽 🍭 미니시트 · 😀 이모지 두 칸) · 🎁 캡슐스티커 · 🌸 계절 스티커 (🎀 마스킹테이프는 종류 창의 내스티커로)
+        /* ✨ 스티커 창(하단메뉴) → 목록 창 : 🍭 포인트스티커(위쪽 🍭 포인트스티커 · 😀 이모지 두 칸) · 🎁 캡슐스티커 · 🌸 계절 스티커 (🎀 마스킹테이프는 종류 창의 내스티커로)
            목록을 불러오는 코드(loadXxx)는 stickerModal 안의 눈에 안 보이는 카테고리 버튼(.cat-btn)이 불러요 → 그 버튼을 대신 눌러 줘요 */
-        const SL_KINDS = { emoji: ['🍭 미니시트', 'em-cat'], caps: ['🎁 캡슐스티커', 'cs-cat'], season: ['🌸 계절 스티커', 'ss-cat'] };
+        const SL_KINDS = { emoji: ['🍭 포인트스티커', 'em-cat'], caps: ['🎁 캡슐스티커', 'cs-cat'], season: ['🌸 계절 스티커', 'ss-cat'] };
         function openStickerList(kind) {
             stkBackOn = false;
             if (kind === 'tape') return openStickerKind('tape');
@@ -302,7 +302,7 @@
             openModal('stickerModal');
             const bar = smq('stickerKindTabs'); bar.hidden = true; bar.classList.remove('two'); stkLib(false);
             const t = document.getElementById('stickerListTitle'); if (t) t.textContent = k[0];
-            if (kind === 'emoji' && window.spkTabs) { spkTabs(); spkTab('pack'); return; }   // 🍭 미니시트 · 😀 이모지 두 칸 (js/stickerpack.js)
+            if (kind === 'emoji' && window.spkTabs) { spkTabs(); spkTab('pack'); return; }   // 🍭 포인트스티커 · 😀 이모지 두 칸 (js/stickerpack.js)
             const b = document.querySelector('#stickerCategories .' + k[1]); if (b) b.click();
         }
         window.openStickerList = openStickerList;
@@ -463,7 +463,7 @@
         }
 
         /* ---------- ↩️ 스티커 창으로 다시 (도련 · 2026-10-10) : 스티커를 붙이면 사라졌던 ✨ 스티커 창이 보던 칸 그대로 다시 떠요 → 이어서 붙여요
-           붙이는 창(🏷️ 떼는 종이 · 🧩 봉투 · 📄 모조지 · 🍭 미니시트 판)으로 갔으면 그 창이 닫힐 때 · 바로 붙는 것(이모지 · 캡슐 · 계절 · 테이프)은 붙는 게 보이고 나서 ---------- */
+           붙이는 창(🏷️ 떼는 종이 · 🧩 봉투 · 📄 모조지 · 🍭 포인트스티커 판)으로 갔으면 그 창이 닫힐 때 · 바로 붙는 것(이모지 · 캡슐 · 계절 · 테이프)은 붙는 게 보이고 나서 ---------- */
         const STK_BLINK = 700;
         let stkBackOn = false;
         function stkLeave() {                                              // ✨ 스티커 창 → 붙이는 창으로 (스티커 창이 떠 있을 때만 돌아올 자리로 기억)
