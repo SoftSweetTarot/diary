@@ -3259,8 +3259,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lf-picks .lf-pick[data-sbc] .lf-sw { margin-bottom: 0; }
 .pp-chip.sb-memo { background-size: cover; background-position: center; border: 0; }
 .lib-grid { grid-auto-flow: row dense; }                                          /* 2칸짜리 씰 종이 뒤 빈칸은 다음 1칸짜리가 채워요 (js/elements.js libPages) */
-.lib-item.lib-sheet { aspect-ratio: auto; container-type: inline-size; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px;
-    background: linear-gradient(135deg, #fff 0 70%, #fdf3f6 70%); box-shadow: 2px 2px 0 #f3e1e8, 4px 4px 0 #f8eef2; }
+.lib-item.lib-sheet { aspect-ratio: auto; container-type: inline-size; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; }   /* 1개짜리 칸과 같은 모양 (두께 없이) */
 .lib-item .lib-cnt { font-size: 11px; line-height: 1.2; color: #a08890; }
 /* 🖼️ 여러 개 묶음 미리보기 (js/stk-basic.js sbThumbs) : 한 칸 --tw · 2줄 · 넘치는 줄은 잘려서 안 보여요 */
 .sb-thumbs { --tw: 26px; display: grid; grid-template-columns: repeat(auto-fill, var(--tw)); grid-auto-rows: var(--tw); justify-content: center; gap: 2px; width: 100%; height: calc(var(--tw) * 2 + 2px); overflow: hidden; padding: 0 4px; box-sizing: border-box; }

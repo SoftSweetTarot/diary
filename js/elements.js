@@ -101,7 +101,7 @@
         }
 
         /* 📚 기본스티커 : 기본스티커 서버(라이브러리_앱스크립트.gs)가 드라이브 '기본스티커' 폴더를 읽어 목록을 보내 줘요
-           - 🏷️ 씰 : images [{ id, c }] 낱장 · sheets [{ c, ids }] 씰 종이 (c = 기본스티커/씰스티커 아래 폴더 이름 = 카테고리 · '' 이면 '전체'에서만)
+           - 🏷️ 씰 : images [{ id, c }] 낱장 · sheets [{ c, ids }] 씰 종이 (c = 기본스티커/씰스티커 아래 폴더 이름 = 카테고리 · '' 이면 '기본' 카테고리)
            - 나머지 종류 (🍭 🧩 📄 🎀 🧻 📃 📝) : kits [{ c, ids }] · [{ c, id }] → js/stk-basic.js 가 각 창의 기본 칸에 제가 그린 그림과 섞어서 카테고리 칸과 함께 보여요
            - 카테고리만 이름이 보여요 ('1. 캐릭터' 처럼 앞 번호는 순서용 · 화면에는 '캐릭터') · 스티커 이름은 없어요
            - 목록은 앱을 켠 동안 한 번만 받아요 (basicKit) */
@@ -278,11 +278,11 @@
                 libItems = [];
                 kit.sheets.forEach(x => {                                          // 🏷️ 씰 종이 (폴더 1개 = 종이 1장) : 카테고리 맨 앞에
                     const ids = Array.isArray(x && x.ids) ? x.ids.filter(okId).slice(0, 30) : [];
-                    if (ids.length) libItems.push({ u: driveImageUrl(ids[0]), s: ids.map(driveImageUrl), c: String(x.c || '') });
+                    if (ids.length) libItems.push({ u: driveImageUrl(ids[0]), s: ids.map(driveImageUrl), c: String(x.c || '기본') });
                 });
-                kit.images.forEach(x => { if (x && okId(x.id) && !seen.has(x.id)) { seen.add(x.id); libItems.push({ u: driveImageUrl(x.id), c: String(x.c || '') }); } });
+                kit.images.forEach(x => { if (x && okId(x.id) && !seen.has(x.id)) { seen.add(x.id); libItems.push({ u: driveImageUrl(x.id), c: String(x.c || '기본') }); } });   // 카테고리 폴더 밖 그림 = '기본'
                 libCats = [...new Set(libItems.map(x => x.c).filter(Boolean))];
-                if (!libCats.includes(libCat)) libCat = '';
+                if (!libCats.includes(libCat)) libCat = libCats[0] || '';      // '전체' 칸 없이 첫 카테고리부터 (한꺼번에 다 그리지 않아서 빨라요)
                 libPage = 0;
                 renderLibrary();
             } catch (err) {
@@ -294,14 +294,13 @@
             libLoading = false;
         }
 
-        /* 🗂 카테고리 칸 (하위 폴더가 없으면 숨겨요) */
+        /* 🗂 카테고리 칸 (카테고리가 하나뿐이면 숨겨요) · '전체' 칸은 없어요 */
         function renderLibCats() {
             const box = document.getElementById('libCats'); if (!box) return;
-            box.hidden = !libCats.length;
-            if (!libCats.length) { box.innerHTML = ''; return; }
+            box.hidden = libCats.length < 2;
+            if (libCats.length < 2) { box.innerHTML = ''; return; }
             const btn = (c, label, n) => `<button type="button" class="lib-cat${c === libCat ? ' on' : ''}" data-c="${c.replace(/[&<>"']/g, ch => '&#' + ch.charCodeAt(0) + ';')}">${label}<small>${n}</small></button>`;
-            box.innerHTML = btn('', '🌈 전체', libItems.length)
-                + libCats.map(c => btn(c, libCatName(c).replace(/[&<>"']/g, ch => '&#' + ch.charCodeAt(0) + ';'), libItems.filter(x => x.c === c).length)).join('');
+            box.innerHTML = libCats.map(c => btn(c, libCatName(c).replace(/[&<>"']/g, ch => '&#' + ch.charCodeAt(0) + ';'), libItems.filter(x => x.c === c).length)).join('');
             box.querySelectorAll('.lib-cat').forEach(b => { b.onclick = () => setLibCat(b.dataset.c); });
             const on = box.querySelector('.lib-cat.on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         }

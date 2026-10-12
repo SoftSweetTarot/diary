@@ -2,7 +2,7 @@
    🆓 기본 스티커 : 처음부터 누구나 쓰는 🧩 조각스티커 봉투 · 📄 모조지 (✨ 스티커 → 그 종류 → 기본 칸)
    + 🖼️ 개발자 그림 : 드라이브 '기본스티커' 폴더 (기본스티커 서버 · js/elements.js basicKit) 의 그림을 각 창 기본 칸 맨 앞에 섞어요
        🍭 포인트스티커 · 🧩 조각스티커 · 📄 모조지 = 숫자 폴더 1개가 한 묶음 (낱장 폴더는 그림 1개가 한 묶음) · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
-       🗂 카테고리 칸 : 기본 칸 위에 '🌈 전체 · 카테고리…' (씰 창과 같은 모양) · 스티커 이름은 안 보여요
+       🗂 카테고리 칸 : 기본 칸 위에 카테고리 칸 ('전체' 없이 첫 카테고리부터) (씰 창과 같은 모양) · 스티커 이름은 안 보여요
        data-sbc="카테고리" 가 붙은 칸만 걸러요 (제가 그린 것도 각 파일에서 data-sbc 를 붙여요 : js/tape.js · js/stickerpack.js · js/leafpad.js · js/paper.js)
        (🏷️ 씰은 js/elements.js 의 씰 목록이 낱장 · 씰 종이로 보여 줘요)
        붙일 때 그림을 받아 data 로 바꿔서 일기에 담아요 (사진과 같아요 · 나중에 드라이브에서 지워도 붙인 건 그대로)
@@ -200,27 +200,24 @@
             }).join('');
             boxes().forEach(el => { el.innerHTML = html; sbCats(el.parentElement, kind); });
         }
-        /* 🗂 카테고리 칸 : 그 창 기본 칸의 data-sbc 를 모아 '🌈 전체 · 카테고리…' 칸을 만들고, 누르면 그 카테고리만 보여요
+        /* 🗂 카테고리 칸 : 그 창 기본 칸의 data-sbc 를 모아 카테고리 칸을 만들고 ('전체' 없음 · 카테고리 없는 칸 = 기본), 누르면 그 카테고리만 보여요
            카테고리가 하나도 없으면 칸을 숨겨요 · 고른 칸은 창을 다시 열어도 기억 (앱을 켠 동안) */
         const sbCatOn = {};
         function sbCats(box, kind) {
             if (!box) return;
-            const items = [...box.querySelectorAll('[data-sbc]')], cats = [];
-            items.forEach(el => { const c = el.dataset.sbc; if (c && !cats.includes(c)) cats.push(c); });
-            const cnt = c => items.filter(el => el.dataset.sbc === c).length;
+            const items = [...box.querySelectorAll('[data-sbc]')];
+            /* 같은 이름은 하나로 ('1. 동물' 과 '동물' 처럼 번호만 다르면 같은 칸) · 카테고리 없는 칸 = '기본' */
+            const label = c => kitCat(c) || c || '기본', labels = [...new Set(items.map(el => label(el.dataset.sbc)))];
             let bar = box.querySelector(':scope > .sb-cats');
-            if (!cats.length) { if (bar) bar.remove(); items.forEach(el => { el.hidden = false; }); sbPage(box, kind, items); return; }
-            if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.insertBefore(bar, box.querySelector(':scope > .sb-srv') || box.firstChild); }
-            /* 같은 이름은 하나로 ('1. 동물' 과 '동물' 처럼 번호만 다르면 같은 칸) */
-            const label = c => kitCat(c) || c, labels = [...new Set(cats.map(label))];
-            let cur = sbCatOn[kind] || '';
-            if (cur && !labels.includes(cur)) cur = '';
-            const btn = (v, txt, n) => `<button type="button" class="lib-cat${v === cur ? ' on' : ''}" data-c="${esc(v)}">${esc(txt)}<small>${n}</small></button>`;
-            bar.innerHTML = btn('', '🌈 전체', items.length) + labels.map(l => btn(l, l, cats.filter(c => label(c) === l).reduce((a, c) => a + cnt(c), 0))).join('');
-            const shown = items.filter(el => !cur || label(el.dataset.sbc) === cur);
             items.forEach(el => { el.hidden = false; });
+            if (labels.length < 2) { if (bar) bar.remove(); sbPage(box, kind, items); return; }   // 카테고리가 하나뿐이면 칸 없이
+            if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.insertBefore(bar, box.querySelector(':scope > .sb-srv') || box.firstChild); }
+            let cur = sbCatOn[kind] || '';
+            if (!labels.includes(cur)) cur = labels[0];                   // '전체' 칸 없이 첫 카테고리부터
+            const btn = (v, n) => `<button type="button" class="lib-cat${v === cur ? ' on' : ''}" data-c="${esc(v)}">${esc(v)}<small>${n}</small></button>`;
+            bar.innerHTML = labels.map(l => btn(l, items.filter(el => label(el.dataset.sbc) === l).length)).join('');
             bar.querySelectorAll('.lib-cat').forEach(b => { b.onclick = () => { sbCatOn[kind] = b.dataset.c; sbPgOn[kind] = 0; sbCats(box, kind); }; });
-            sbPage(box, kind, shown, items);
+            sbPage(box, kind, items.filter(el => label(el.dataset.sbc) === cur), items);
         }
         /* ◀ 이전 · 다음 ▶ : 씰스티커 창처럼 한 쪽씩 (한 줄 칸 수 × SB_ROWS 줄) · 쪽 수가 1이면 숨겨요 */
         const SB_ROWS = { mini: 2, piece: 2, paper: 2, tape: 4, memo: 4, tk: 3, leaf: 3 }, sbPgOn = {};
