@@ -48,7 +48,7 @@
             if (pelq('pelRoom')) return;
             const el = document.createElement('div');
             el.id = 'pelRoom'; el.className = 'pel-room';
-            el.innerHTML = `<canvas id="pelCv"></canvas><p class="pel-hint" id="pelHint"></p><button type="button" class="pel-x" onclick="closeStickerPeel()" aria-label="닫기">✕</button>`;
+            el.innerHTML = `<canvas id="pelCv"></canvas><p class="pel-hint" id="pelHint"></p><button type="button" class="pel-x pel-bx" id="pelX" onclick="closeStickerPeel()" aria-label="닫기">✕</button>`;
             document.body.appendChild(el);
             const cv = pelq('pelCv');
             cv.addEventListener('pointerdown', pelDown); cv.addEventListener('pointermove', pelMove);
@@ -175,6 +175,8 @@
                 pelRR(ctx, bx, by, B.w, B.h, 14); const g = ctx.createLinearGradient(bx, by, bx + B.w, by + B.h);
                 g.addColorStop(0, '#fdfdff'); g.addColorStop(.5, '#f4f6fb'); g.addColorStop(1, '#fbfcff'); ctx.fillStyle = g; ctx.fill(); ctx.restore();
             }
+            const bx = pelq('pelX');                                             // ✕ : 하얀 종이 오른쪽 위 끝 (모조지처럼 · 종이를 따라 다녀요)
+            if (bx) { const B = S.board; bx.style.left = (B.cx + B.w / 2 - 26) + 'px'; bx.style.top = (B.cy - B.h / 2) + 'px'; bx.style.opacity = bo; bx.style.visibility = bo > 0 ? '' : 'hidden'; }
             const d = S.drag, cur = S.items.find(o => o.st === st);
             for (const o of S.items) {                                           // 종이 위에 남은 스티커들 (잡은 건 맨 위에)
                 if (o.st.state !== 'on') continue;
