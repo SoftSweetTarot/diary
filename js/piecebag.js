@@ -53,7 +53,7 @@
             if (pcbq('pcbRoom')) return;
             const el = document.createElement('div');
             el.id = 'pcbRoom'; el.className = 'pel-room';
-            el.innerHTML = `<canvas id="pcbCv"></canvas><p class="pel-hint" id="pcbHint"></p><button type="button" class="pel-x" onclick="closePieceBag()" aria-label="닫기">✕</button>`;
+            el.innerHTML = `<canvas id="pcbCv"></canvas><p class="pel-hint" id="pcbHint"></p><button type="button" class="pel-x pcb-bx" id="pcbX" onclick="closePieceBag()" aria-label="닫기">✕</button>`;
             document.body.appendChild(el);
             const cv = pcbq('pcbCv');
             cv.addEventListener('pointerdown', pcbDown); cv.addEventListener('pointermove', pcbMove);
@@ -269,6 +269,8 @@
             for (const st of S.pieces) { pcbStep(st, t); if (st.sGoal != null) { st.s += (st.sGoal - st.s) * .2; if (Math.abs(st.sGoal - st.s) < .002) { st.s = st.sGoal; st.sGoal = null; } } }
             if (S.drag && S.drag.mode === 'free') pcbAnchor(S.drag.st, S.drag.last);
             pcbDrawBag(t);
+            const bx = document.getElementById('pcbX');                          // ✕ : 봉투 오른쪽 위 (작아진 봉투를 따라 다녀요)
+            if (bx) { const r = pcbBagRect(t); bx.style.left = (r.x + r.w - 10) + 'px'; bx.style.top = (r.y - 14) + 'px'; bx.style.opacity = fade; }
             const order = [...S.pieces].sort((a, b) => (PCB_LAYER[a.state] - PCB_LAYER[b.state]) || (a.z - b.z));
             let dim = false;
             for (const st of order) {

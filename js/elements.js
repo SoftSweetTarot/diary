@@ -158,7 +158,21 @@
             try { localStorage.setItem(LIB_LAYOUT_KEY, JSON.stringify(libLayout)); } catch (e) {}
         }
         function libPerPage() { return libLayout.rows * libLayout.cols; }
-        function libPageCount() { const n = libView().length; return n ? Math.ceil(n / libPerPage()) : 0; }
+        /* 쪽 나누기 : 씰 1개 = 1칸 · 씰 종이(여러 개) = 옆으로 2칸 · 빈 곳은 뒤의 1칸짜리가 채워요 (CSS grid-auto-flow: dense 와 같은 순서)
+           → [[item, …], …] 쪽마다 */
+        const libSpan = x => x.s ? Math.min(2, libLayout.cols) : 1;
+        function libPages() {
+            const { rows, cols } = libLayout, out = [];
+            let page = null, used = null;
+            const fit = w => { for (let r = 0; r < rows; r++) for (let c = 0; c + w <= cols; c++) { let ok = true; for (let k = 0; k < w; k++) if (used[r * cols + c + k]) ok = false; if (ok) { for (let k = 0; k < w; k++) used[r * cols + c + k] = 1; return true; } } return false; };
+            libView().forEach(x => {
+                const w = libSpan(x);
+                if (!page || !fit(w)) { page = []; used = new Array(rows * cols).fill(0); out.push(page); fit(w); }
+                page.push(x);
+            });
+            return out;
+        }
+        function libPageCount() { return libPages().length; }
 
         /* 줄 수·한 줄 개수·크기 → 그리드 모양과 창 너비에 반영, 설정 칸 값도 맞춤 */
         function applyLibLayoutStyle() {
@@ -212,9 +226,9 @@
 
         /* 설정을 바꿔도 지금 보고 있던 첫 번째 이미지가 들어 있는 페이지로 이동 */
         function setLibLayout(next) {
-            const firstIndex = libPage * libPerPage();
+            const first = (libPages()[libPage] || [])[0];
             libLayout = next;
-            libPage = Math.floor(firstIndex / libPerPage());
+            libPage = Math.max(0, libPages().findIndex(p => p.includes(first)));
             saveLibLayout();
             if (libItems) renderLibrary(); else { applyLibLayoutStyle(); updateLibPager(); }
         }
@@ -318,30 +332,35 @@
             renderLibCats();
             const view = libView();
             if (!view.length) { st.textContent = '기본스티커 / 씰스티커 폴더에 그림이 없어요.'; updateLibPager(); return; }
-            const per = libPerPage(), pages = libPageCount();
+            const per = libPerPage(), all = libPages(), pages = all.length;
             libPage = Math.max(0, Math.min(pages - 1, libPage));
             const nSheet = view.filter(x => x.s).length;
             st.textContent = (nSheet ? `씰 종이 ${nSheet}장 · ` : '') + `씰 ${view.length - nSheet}개 · 누르면 씰스티커로 나와요`;
-            const start = libPage * per;
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
-            const frag = document.createDocumentFragment();
-            view.slice(start, start + per).forEach(({ u: url, s: sheet }) => {
+            const frag = document.createDocumentFragment(), cur = all[libPage] || [];
+            const big = u => u.includes('lh3.googleusercontent.com/d/');
+            let usedSlots = 0;
+            cur.forEach(x => {
+                const { u: url, s: sheet } = x;
                 const item = document.createElement('div');
                 item.className = 'lib-item' + (sheet ? ' lib-sheet' : '');
-                const img = document.createElement('img');
-                img.loading = 'lazy';
-                img.src = url.includes('lh3.googleusercontent.com/d/') ? url + '=w' + thumbW : url;
-                img.onerror = () => item.classList.add('bad');
-                item.appendChild(img);
-                if (sheet) {                                                       // 🏷️ 씰 종이 : 몇 개 붙어 있는지 · 이름
-                    item.title = '씰 ' + sheet.length + '개';
-                    const b = document.createElement('b'); b.className = 'lib-cnt'; b.textContent = '×' + sheet.length; item.appendChild(b);
+                usedSlots += libSpan(x);
+                if (sheet) {                                                       // 🏷️ 씰 종이 : 옆으로 2칸 · 안에 든 씰을 작게 최대한 많이 + 총 개수
+                    item.style.gridColumn = 'span ' + libSpan(x);
+                    item.title = '스티커 ' + sheet.length + '개';
+                    item.innerHTML = sbThumbs(sheet.map(u => big(u) ? u + '=w96' : u)) + `<small class="lib-cnt">스티커 ${sheet.length}개</small>`;
+                } else {
+                    const img = document.createElement('img');
+                    img.loading = 'lazy';
+                    img.src = big(url) ? url + '=w' + thumbW : url;
+                    img.onerror = () => item.classList.add('bad');
+                    item.appendChild(img);
                 }
                 item.onclick = () => { if (!libSwiped) (sheet ? libPickSheet(sheet) : libPick(url)); };
                 frag.appendChild(item);
             });
             /* 마지막 페이지가 덜 차도 창 크기가 흔들리지 않도록 빈칸 채우기 */
-            for (let k = view.length - start; k < per && pages > 1; k++) {
+            for (let k = usedSlots; k < per && pages > 1; k++) {
                 const empty = document.createElement('div');
                 empty.className = 'lib-item empty';
                 frag.appendChild(empty);
