@@ -86,7 +86,7 @@
         let pendingToken = null;
 
         function markDirty(key) {
-            if (drive.guest) { updateBadge(); return; }
+            if (drive.guest) { if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestSave === 'function') localTestSave(); updateBadge(); return; }
             drive.dirtyKeys.add(key);
             if (drive.ready) {
                 clearTimeout(uploadTimer);
@@ -861,7 +861,8 @@
             const el = document.getElementById('driveBadge');
             if (!el) return;
             let text = '', warn = false, stay = false;
-            if (drive.guest) { text = '☁ 저장 안 됨 · 눌러서 로그인'; warn = true; }
+            if (drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST) { text = ''; }   // 💻 로컬 테스트 : 이 브라우저에 저장 중이라 알림 없음 (녹화에도 안 찍혀요)
+            else if (drive.guest) { text = '☁ 저장 안 됨 · 눌러서 로그인'; warn = true; }
             else if (!drive.ready) { return; }
             else if (drive.needAuth) { text = '⚠ 로그인이 만료됐어요 · 눌러서 다시 연결'; warn = true; stay = true; }
             else if (drive.full) { text = '⚠ 드라이브 공간이 꽉 찼어요 · 이 기기에 보관 중'; warn = true; stay = true; }
@@ -913,6 +914,7 @@
         }
 
         async function initDrive() {
+            if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestStart === 'function') { await localTestStart(); return; }   // 💻 내 컴퓨터(localhost) : 로그인 없이 · 이 브라우저에 저장 (js/localtest.js)
             if (GOOGLE_CLIENT_ID.startsWith('YOUR_CLIENT_ID')) {
                 showGate('config', '⚙ 코드 맨 위의 <b>GOOGLE_CLIENT_ID</b>에<br>발급받은 OAuth 클라이언트 ID를 넣어 주세요.');
                 return;
@@ -1237,6 +1239,34 @@
         });
 
 
+
+/* 🔁 목록 받기 : 실패하면 받을 때까지 알아서 다시 해요 (모든 목록 창 공통)
+   keepTrying(fn, { alive, onTry, max })
+   - fn : 목록을 받는 일 (실패하면 throw)
+   - alive() : 그 창이 아직 열려 있는지 · 닫으면 그만둬요 (없으면 계속)
+   - onTry(n) : n번째로 다시 하기 전에 안내 글씨 바꾸기
+   - max : 최대 몇 번까지 (없으면 받을 때까지)
+   간격 2초 → 4초 → 8초 … 최대 30초 · 인터넷이 끊겼으면 다시 연결될 때 바로 */
+const KT_MSG = n => `⏳ 다시 불러오는 중이에요… (${n}번째)`;
+const ktShown = el => !!(el && el.isConnected && el.getClientRects().length);       // 화면에 보이는 칸인지 (창이 열려 있는지)
+function ktWait(ms) {
+    return new Promise(ok => {
+        if (navigator.onLine === false) { const on = () => { removeEventListener('online', on); ok(); }; addEventListener('online', on); return; }
+        setTimeout(ok, ms);
+    });
+}
+async function keepTrying(fn, o) {
+    o = o || {};
+    for (let n = 1; ; n++) {
+        try { return await fn(); }
+        catch (e) {
+            if ((o.max && n >= o.max) || (o.alive && !o.alive())) throw e;
+            if (o.onTry) try { o.onTry(n + 1, e); } catch (x) {}
+            await ktWait(Math.min(30000, 2000 * 2 ** (n - 1)));
+            if (o.alive && !o.alive()) throw e;
+        }
+    }
+}
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['drive'] = true;

@@ -41,10 +41,14 @@
         const wlImg2 = (id, w) => `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;     // 첫 주소가 안 될 때
 
         async function wlLoad() {
+            const open = () => ktShown(document.getElementById('wlBody'));       // 🔁 배경화면 창이 열려 있으면 받을 때까지 다시
             try {
-                const res = await fetch(MEMBER_API_URL + '?action=walls', { credentials: 'omit' });
-                const j = await res.json();
-                if (!j || !j.ok || !Array.isArray(j.items)) throw 0;
+                const j = await keepTrying(async () => {
+                    const res = await fetch(MEMBER_API_URL + '?action=walls', { credentials: 'omit' });
+                    const j = await res.json();
+                    if (!j || !j.ok || !Array.isArray(j.items)) throw new Error('server');
+                    return j;
+                }, { alive: open, onTry: n => { const b = document.getElementById('wlBody'); if (b && !(wl.items && wl.items.length)) b.innerHTML = `<div class="wl-wait">${WL_PHONE}<p>${KT_MSG(n)}</p></div>`; } });
                 wl.items = j.items; wl.at = Date.now();
                 try { localStorage.setItem(WL_LOCAL, JSON.stringify(j.items)); } catch (e) {}
             } catch (e) { if (!(wl.items && wl.items.length)) wl.items = null; wl.at = 0; }   // 못 받으면 지난번 목록은 그대로

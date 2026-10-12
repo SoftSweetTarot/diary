@@ -55,14 +55,15 @@
             if (!v) {
                 v = patView[tab] = { C, lists: null, next: 0, items: [], busy: true };
                 C.onChange = () => { patView[tab] = null; if (typeof renderPatternList === 'function') renderPatternList(); };
-                try { v.lists = await collIndex(C); } catch (e) { v.busy = false; v.next = -1; return; }
+                const live = () => patView[tab] === v && ktShown(document.getElementById('patternModal'));   // 🔁 배경지 창이 열려 있는 동안 받을 때까지 다시
+                try { v.lists = await keepTrying(() => collIndex(C), { alive: live }); } catch (e) { v.busy = false; v.next = -1; return; }
                 v.next = v.lists.length - 1;
                 v.items = C.pend.slice().reverse().map(e => patCell(e, got));
             }
             v.busy = true;
             try {
                 while (v.next >= 0) {
-                    const arr = await collLoad(C, v.lists[v.next--]);
+                    const L = v.lists[v.next--], arr = await keepTrying(() => collLoad(C, L), { alive: () => patView[tab] === v && ktShown(document.getElementById('patternModal')) });
                     v.items = v.items.concat(arr.slice().reverse().filter(e => !C.gone.has(e.id)).map(e => patCell(e, got)).filter(p => p.css));
                     if (arr.length) break;
                 }

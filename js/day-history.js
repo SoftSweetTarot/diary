@@ -57,8 +57,8 @@
             list.innerHTML = '<div class="dh-empty">☁ 드라이브에서 불러오는 중…</div>';
             openModal('dayHistory');
             let r;
-            try { r = await dhLoad(DH.date); }
-            catch (e) { console.warn('이전 버전 불러오기 실패:', e); list.innerHTML = '<div class="dh-empty">⚠ 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>'; return; }
+            try { r = await keepTrying(() => dhLoad(DH.date), { alive: () => ktShown(list), onTry: n => { list.innerHTML = `<div class="dh-empty">${KT_MSG(n)}</div>`; } }); }
+            catch (e) { if (!ktShown(list)) return; console.warn('이전 버전 불러오기 실패:', e); list.innerHTML = '<div class="dh-empty">⚠ 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>'; return; }
             DH.file = r.file;
             if (!r.file || !r.revs.length) { list.innerHTML = '<div class="dh-empty">이 날은 아직 드라이브에 저장된 기록이 없어요.</div>'; return; }
             list.innerHTML = (r.trashed ? '<div class="dh-empty dh-warn">🗑 이 날 일기는 지워져서 휴지통에 있어요.<br>아래 버전으로 되살릴 수 있어요.</div>' : '') +

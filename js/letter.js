@@ -114,7 +114,9 @@
         /* ---------- 편지함 불러오기 ---------- */
         async function lbLoad() {
             lbq('lbIn').innerHTML = lbq('lbSent').innerHTML = '';                 // 열 때는 조용히 (📮 우체통을 열어 보는 중… 은 📬 편지 받기를 눌렀을 때만)
-            const r = await lbCall('box');
+            /* 🔁 연결 · 서버 문제면 편지함이 열려 있는 동안 받을 때까지 다시 (js/drive.js keepTrying) */
+            const r = await keepTrying(async () => { const r = await lbCall('box'); if (!r || (!r.ok && (!r.error || r.error === 'network' || r.error === 'server'))) throw r || {}; return r; },
+                { alive: () => ktShown(lbq('lbIn')) || ktShown(lbq('lbSent')), onTry: n => { lbq('lbIn').innerHTML = lbq('lbSent').innerHTML = `<div class="lb-empty">${KT_MSG(n)}</div>`; } }).catch(r => r);
             if (!r || !r.ok) { lb.data = null; const m = `<div class="lb-empty">⚠️ ${LB_ERR[r && r.error] || LB_ERR.server}<br><button type="button" onclick="lbLoad()">🔄 다시 열기</button></div>`; lbq('lbIn').innerHTML = lbq('lbSent').innerHTML = m; return; }
             lb.data = r;
             lbRender();

@@ -156,8 +156,9 @@
             if (where) where.textContent = dollUseDrive() ? `☁ 내 드라이브 / ${dollFolderText()} 폴더에 인형마다 파일 1개로 저장돼요` : '🙈 로그인하지 않아서 이 기기에만 저장돼요';
             if (!dollCache.list || force) grid.innerHTML = '<div class="doll-empty">☁ 인형을 불러오는 중…</div>';
             let list;
-            try { list = await listDolls(force); }
+            try { list = await keepTrying(() => listDolls(force), { alive: () => ktShown(grid), onTry: n => { grid.innerHTML = `<div class="doll-empty">${KT_MSG(n)}</div>`; } }); }
             catch (e) {
+                if (!ktShown(grid)) return;
                 grid.innerHTML = '';
                 const box = document.createElement('div'); box.className = 'doll-empty';
                 box.innerHTML = '⚠ 인형을 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.<br>';

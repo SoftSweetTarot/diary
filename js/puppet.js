@@ -230,8 +230,8 @@
             PS.show = null; PS.dirty = false;
             const box = pzq('psList');
             box.innerHTML = '<div class="ps-empty">🎭 무대를 준비하는 중…</div>';
-            try { PS.list = await psList(); }
-            catch (e) { box.innerHTML = '<div class="ps-empty">⚠ 인형극을 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>'; return; }
+            try { PS.list = await keepTrying(psList, { alive: () => ktShown(box), onTry: n => { box.innerHTML = `<div class="ps-empty">${KT_MSG(n)}</div>`; } }); }
+            catch (e) { if (!ktShown(box)) return; box.innerHTML = '<div class="ps-empty">⚠ 인형극을 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>'; return; }
             if (!PS.list.length) { box.innerHTML = '<div class="ps-empty">아직 만든 인형극이 없어요.<br>➕ 새 인형극 만들기로 첫 공연을 준비해 볼까요?</div>'; return; }
             box.innerHTML = PS.list.map((e, i) => `<div class="ps-item"><span class="ps-item-ico">🎭</span><div class="ps-item-t"><b>${psEsc(e.name)}</b><small>${e.mt ? new Date(typeof e.mt === 'number' ? e.mt : Date.parse(e.mt)).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : ''}</small></div>` +
                 `<button type="button" class="btn" data-psi="${i}" data-psa="play">▶ 보기</button><button type="button" class="btn" data-psi="${i}" data-psa="edit">✏️</button><button type="button" class="btn" data-psi="${i}" data-psa="del">🗑</button></div>`).join('');
@@ -320,7 +320,7 @@
                 h += `<h4 class="ps-h4">내 인형 데려오기 <small>(장면마다 ${PS_MAX_ACT}명까지)</small></h4><div class="ps-dolls" id="psDolls"><div class="ps-empty">☁ 인형을 불러오는 중…</div></div>`;
                 P.innerHTML = h;
                 let list = [];
-                try { list = await listDolls(); } catch (e) { pzq('psDolls').innerHTML = '<div class="ps-empty">⚠ 인형을 불러오지 못했어요.</div>'; return; }
+                try { list = await keepTrying(() => listDolls(), { alive: () => ktShown(pzq('psDolls')), onTry: n => { const d = pzq('psDolls'); if (d) d.innerHTML = `<div class="ps-empty">${KT_MSG(n)}</div>`; } }); } catch (e) { if (!pzq('psDolls')) return; pzq('psDolls').innerHTML = '<div class="ps-empty">⚠ 인형을 불러오지 못했어요.</div>'; return; }
                 if (PS.tab !== 'cast' || !pzq('psDolls')) return;
                 const inCast = PS.show.cast.map((c, i) => c ? i : -1).filter(i => i >= 0 && !list.some(e => e.id === PS.show.cast[i].src));
                 pzq('psDolls').innerHTML = (list.length || inCast.length) ?

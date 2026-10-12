@@ -440,7 +440,8 @@
             host._cg = tok;
             host.innerHTML = '<div class="cg-more">불러오는 중…</div>';
             let lists;
-            try { lists = await collIndex(C); }
+            const live = () => host._cg === tok && host.isConnected;          // 🔁 창이 열려 있는 동안 받을 때까지 다시 (js/drive.js keepTrying)
+            try { lists = await keepTrying(() => collIndex(C), { alive: live, onTry: n => { if (live()) host.innerHTML = `<div class="cg-more">${KT_MSG(n)}</div>`; } }); }
             catch (e) { if (host._cg === tok) host.innerHTML = '<div class="cs-empty">⚠ 목록을 읽지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>'; return; }
             if (host._cg !== tok) return;
             let next = lists.length - 1, shown = 0;
@@ -459,7 +460,7 @@
                 loading = true;
                 try {
                     while (next >= 0 && host._cg === tok) {
-                        const items = await collLoad(C, lists[next--]);
+                        const L = lists[next--], items = await keepTrying(() => collLoad(C, L), { alive: live, onTry: n => { sentinel.textContent = KT_MSG(n); } });
                         if (host._cg !== tok) return;
                         add(items.slice().reverse());
                         if (items.length) break;

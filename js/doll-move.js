@@ -160,8 +160,8 @@
             const grid = document.getElementById('dmvGrid');
             grid.innerHTML = '<div class="doll-empty">☁ 인형을 불러오는 중…</div>';
             let list;
-            try { list = await listDolls(force); }
-            catch (e) { grid.innerHTML = '<div class="doll-empty">⚠ 인형을 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>'; return; }
+            try { list = await keepTrying(() => listDolls(force), { alive: () => ktShown(grid), onTry: n => { grid.innerHTML = `<div class="doll-empty">${KT_MSG(n)}</div>`; } }); }
+            catch (e) { if (!ktShown(grid)) return; grid.innerHTML = '<div class="doll-empty">⚠ 인형을 불러오지 못했어요.<br>인터넷 연결을 확인해 주세요.</div>'; return; }
             grid.innerHTML = '';
             if (!list.length) {
                 grid.innerHTML = '<div class="doll-empty">아직 만든 인형이 없어요.<br>먼저 👧 인형방에서 인형을 만들어 주세요!</div>';

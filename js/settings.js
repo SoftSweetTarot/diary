@@ -186,7 +186,8 @@
                 if (d) d.innerText = '';
             }
             const st = document.getElementById('driveStatusText');
-            if (st) st.textContent = drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
+            if (st) st.textContent = drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST ? '💻 로컬 테스트 · 이 브라우저에만 저장 (처음부터 : 주소 뒤에 ?reset)'
+                : drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
                 : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${ROOT_PATH_TEXT} / 년도 / 월 / 일.json` : '☁ 연결 안 됨';
         }
 
@@ -496,7 +497,7 @@
             const h = pgHash(p.skin);
             let same = null;
             try {
-                for (const g of [true, false]) { const e = (await collAll(pgColl(g))).find(x => x.x && x.x.h === h); if (e) { same = { id: e.id, g }; break; } }
+                for (const g of [true, false]) { const e = (await keepTrying(() => collAll(pgColl(g)), { max: 4 })).find(x => x.x && x.x.h === h); if (e) { same = { id: e.id, g }; break; } }
             } catch (e) { showMsg('⚠ 페이지 목록을 읽지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 불러와 주세요.</span>'); return; }
             if (same) { if (await pgEnsure(same.id, same.g)) applySkinPreset(same.id); showMsg('📔 이미 가지고 있는 페이지예요.'); return; }
             if (mySkinFull('')) return;

@@ -136,7 +136,8 @@
             const c = hof.cache[hof.game];
             if (c && Date.now() - c.at < 30000) { hofRender(); return; }
             hq('hofList').innerHTML = '<div class="hof-empty">🏆 순위를 불러오는 중…</div>'; hq('hofMe').innerHTML = ''; hq('hofChamp').hidden = true;
-            const g = hof.game, r = await hofCall('board', { game: g });
+            const g = hof.game, r = await keepTrying(async () => { const r = await hofCall('board', { game: g }); if (!r.ok && (r.error === 'network' || r.error === 'server' || !r.error)) throw r; return r; },   // 🔁 받을 때까지 다시
+                { alive: () => g === hof.game && ktShown(hq('hofList')), onTry: n => { if (g === hof.game) hq('hofList').innerHTML = `<div class="hof-empty">${KT_MSG(n)}</div>`; } }).catch(r => r);
             if (g !== hof.game) return;
             if (!r.ok) { hq('hofList').innerHTML = `<div class="hof-empty">${HOF_ERR[r.error] || HOF_ERR.server}</div>`; return; }
             hof.cache[g] = { at: Date.now(), r };

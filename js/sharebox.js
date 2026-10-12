@@ -183,7 +183,7 @@
             if (!o || o.malang_sticker !== 1 || !SHX_KINDS[o.kind] || !Array.isArray(o.items)) { showMsg('⚠ 말랑달콤 스티커 파일이 아니에요.<br><span style="font-size:12px;color:#777;">카페에서 받은 .json 파일을 골라 주세요.</span>'); return; }
             const kind = o.kind, by = shxTxt(o.by, 12), C = shxColl(kind);
             let all;
-            try { all = await collAll(C); }                                  // 이미 받은 것과 겹치는지 보려고 목록을 모두 읽어요
+            try { all = await keepTrying(() => collAll(C), { max: 4 }); }                                  // 이미 받은 것과 겹치는지 보려고 목록을 모두 읽어요
             catch (e) { showMsg('⚠ 공유받은 목록을 읽지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인한 뒤 다시 불러와 주세요.</span>'); return; }
             const have = new Set(all.map(e => e.x && e.x.h));
             let room = SHX_MAX - all.length, add = 0, same = 0, bad = 0, full = 0;

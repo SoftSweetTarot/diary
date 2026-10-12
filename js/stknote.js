@@ -549,7 +549,7 @@
             const mu = sh._mu, g = sh.querySelector('.snb-sh-in');
             let urls = [], k = 'pack';
             try {
-                if (mu.pack) { const P = typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack); urls = P ? await spkSrcs(P) : []; }
+                if (mu.pack) { const P = typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack); urls = P ? await keepTrying(() => spkSrcs(P), { alive: () => sh.isConnected }) : []; }
                 else {
                     let o = await collItem(stkColl(mu.kind, mu.got), mu.id);
                     if (mu.got && typeof shxItem === 'function') o = shxItem(mu.kind, o);
