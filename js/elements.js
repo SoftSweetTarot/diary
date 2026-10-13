@@ -781,6 +781,11 @@
             if (typeof searchTouch === 'function') searchTouch(dayKey);          // 🔍 검색 목록 고치기 (js/search.js)
 
             if (!showAlert) return;          // 자동 저장: 변경이 있으면 잠시 뒤 드라이브에 자동 업로드
+            if (drive.guest && window.dvOn && dvOn()) {                         // 📁 이 기기 폴더 (js/devsave.js)
+                await dvFlush();
+                showMsg('📁 이 기기의 <b>말랑달콤</b> 폴더에 저장했어요!<br><span style="font-size:12px;color:#777;">' + dvWhere() + '</span>');
+                return;
+            }
             if (drive.guest || !drive.ready) {
                 showMsg('⚠ 구글 드라이브에 연결되어 있지 않아 웹에 저장되지 않았어요.<br>왼쪽 아래 ☁ 표시를 눌러 로그인해 주세요.<br><span style="font-size:12px;color:#777;">사진으로 남기려면 💾 저장 → 🖼 내 기기에 사진(PNG)으로 저장을 눌러 주세요.</span>');
                 return;

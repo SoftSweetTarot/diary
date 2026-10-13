@@ -187,6 +187,7 @@
             }
             const st = document.getElementById('driveStatusText');
             if (st) st.textContent = drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST ? '💻 로컬 테스트 · 이 브라우저에만 저장 (처음부터 : 주소 뒤에 ?reset)'
+                : drive.guest && window.dvOn && dvOn() ? '📁 로그인 없이 · ' + dvWhere() + ' 폴더에 저장 중'
                 : drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
                 : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${ROOT_PATH_TEXT} / 년도 / 월 / 일.json` : '☁ 연결 안 됨';
         }

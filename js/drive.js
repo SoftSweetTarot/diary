@@ -86,7 +86,7 @@
         let pendingToken = null;
 
         function markDirty(key) {
-            if (drive.guest) { if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestSave === 'function') localTestSave(); updateBadge(); return; }
+            if (drive.guest) { if (window.dvOn && dvOn()) dvDirty(key); else if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestSave === 'function') localTestSave(); updateBadge(); return; }   // 📁 이 기기 폴더 (js/devsave.js)
             drive.dirtyKeys.add(key);
             if (drive.ready) {
                 clearTimeout(uploadTimer);
@@ -861,7 +861,8 @@
             const el = document.getElementById('driveBadge');
             if (!el) return;
             let text = '', warn = false, stay = false;
-            if (drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST) { text = ''; }   // 💻 로컬 테스트 : 이 브라우저에 저장 중이라 알림 없음 (녹화에도 안 찍혀요)
+            if (drive.guest && window.dvOn && dvOn()) { text = ''; }                     // 📁 이 기기 폴더에 저장 중 : 알림 없음
+            else if (drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST) { text = ''; }   // 💻 로컬 테스트 : 이 브라우저에 저장 중이라 알림 없음 (녹화에도 안 찍혀요)
             else if (drive.guest) { text = '☁ 저장 안 됨 · 눌러서 로그인'; warn = true; }
             else if (!drive.ready) { return; }
             else if (drive.needAuth) { text = '⚠ 로그인이 만료됐어요 · 눌러서 다시 연결'; warn = true; stay = true; }
@@ -880,7 +881,7 @@
 
         async function onBadgeClick() {
             if (drive.guest) {
-                const yes = await showMsg('구글 계정으로 로그인할까요?<br><span style="font-size:12px;color:#777;">게스트로 쓴 일기는 로그인한 뒤 내 드라이브로 옮길지 물어볼게요.</span>', true);
+                const yes = await showMsg('구글 계정으로 로그인할까요?<br><span style="font-size:12px;color:#777;">' + (window.dvOn && dvOn() ? '이 기기 폴더에 쓴 일기는' : '게스트로 쓴 일기는') + ' 로그인한 뒤 내 드라이브로 옮길지 물어볼게요.</span>', true);
                 if (yes) showGate('login', '☁ 구글 계정으로 로그인해 주세요.');
             } else if (drive.needAuth) {
                 try { await requestToken('select_account'); await flushUpload({ force: true }); }
@@ -914,6 +915,7 @@
         }
 
         async function initDrive() {
+            if (window.dvAuto && await dvAuto()) return;                    // 📁 로그인 없이 이 기기 폴더에 쓰기로 했으면 바로 열어요 (js/devsave.js)
             if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestStart === 'function') { await localTestStart(); return; }   // 💻 내 컴퓨터(localhost) : 로그인 없이 · 이 브라우저에 저장 (js/localtest.js)
             if (GOOGLE_CLIENT_ID.startsWith('YOUR_CLIENT_ID')) {
                 showGate('config', '⚙ 코드 맨 위의 <b>GOOGLE_CLIENT_ID</b>에<br>발급받은 OAuth 클라이언트 ID를 넣어 주세요.');
@@ -947,6 +949,7 @@
             showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
             try { await requestToken('select_account'); await loadFromDrive(); hideGate(); await postLoginTasks(); }
             catch (e) { showGate('login', driveErrorText(e)); if (guestDays) guestHold = guestDays; return; }
+            if (window.dvOff) dvOff();                                            // 📁 이제 드라이브로 열려요 (이 기기 폴더 파일은 그대로)
             if (guestDays || guestHold) guestCarry(Object.assign({}, guestHold || {}, guestDays || {}));
         }
         /* 👤 게스트 일기 → 내 드라이브로 옮기기 (물어본 뒤 · 드라이브에도 있는 날은 "어느 쪽?") */
@@ -961,7 +964,7 @@
             guestHold = null;
             const keys = Object.keys(days).filter(k => days[k] !== null).sort();
             if (!keys.length) return;
-            if (!(await showMsg(`👤 게스트로 쓴 일기 <b>${keys.length}일치</b>가 있어요.<br>내 구글 드라이브에 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않으면 게스트 일기는 사라져요.</span>`, true))) return;
+            if (!(await showMsg((window.dvWas ? `📁 이 기기 폴더에 쓴 일기 <b>${keys.length}일치</b>가 있어요.<br>내 구글 드라이브에 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>` : `👤 게스트로 쓴 일기 <b>${keys.length}일치</b>가 있어요.<br>내 구글 드라이브에 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않으면 게스트 일기는 사라져요.</span>`), true))) return;
             let moved = 0, left = keys.slice();
             for (let round = 0; left.length && round < 3; round++) {
                 const next = [];

@@ -3320,3 +3320,12 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .element-box textarea.pencil { text-shadow: .4px .3px 0 currentColor, -.2px 0 .5px rgba(255,255,255,.6); letter-spacing: .3px; }   /* 색연필로 쓴 듯 살짝 거칠게 */
 .mhl-mirror { position: absolute; left: -9999px; top: 0; visibility: hidden; white-space: pre-wrap; overflow-wrap: break-word; word-wrap: break-word; border: 0; margin: 0; }
 .element-box > .mf-probe { position: absolute; width: 0; height: 0; pointer-events: none; }
+
+/* 📁 로그인 없이 : 일기를 어디에 둘까요? (js/devsave.js) */
+.gate-card .dv-title { font-size: 22px; }
+.dv-opt { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; padding: 14px 16px; border-radius: 16px; border: 1.5px solid #f3c9d6; background: #fff; color: #5a3d4a; font-family: inherit; cursor: pointer; }
+.dv-opt > b { font-size: 16px; }
+.dv-opt span { font-size: 13px; line-height: 1.55; color: #6e4c5a; word-break: keep-all; }
+.dv-opt.on { border: 2px solid var(--primary-accent, #f0567a); background: #fff0f4; }
+.dv-opt:focus-visible { outline: 3px solid rgba(240,86,122,.35); outline-offset: 2px; }
+.dv-foot { margin: 0; font-size: 12px; color: #7a5a66; text-align: center; word-break: keep-all; }
