@@ -105,7 +105,6 @@
              f = 그림 파일 이름 (같은 그림은 늘 같은 이름) → 원본 KIT_BASE/k/이름 · 미리보기 KIT_BASE/t/지문.webp (작게 보여 줄 때)
            - 다이어리 안에서는 주소로 바꿔서 써요 : images [{ u, c }] · sheets [{ c, us }] · kits [{ c, us }] · [{ c, u }]
            - c = 기본스티커/씰스티커 아래 폴더 이름 = 카테고리 ('' 이면 '기본' 카테고리) · 나머지 종류는 js/stk-basic.js 가 각 창의 기본 칸에 제가 그린 그림과 섞어서 보여요
-           - 예전에 붙인 스티커의 드라이브 주소(lh3)도 그대로 보여요 (kitSize 가 크기만 맞춰요)
            - 카테고리만 이름이 보여요 ('1. 캐릭터' 처럼 앞 번호는 순서용 · 화면에는 '캐릭터') · 스티커 이름은 없어요
            - 목록은 앱을 켠 동안 한 번만 받아요 (basicKit) */
         const KIT_BASE = 'https://malang-img.pages.dev';                    // ← 🖼️ 그림 보관함 (Cloudflare Pages 주소 · 끝에 / 없이)
@@ -113,11 +112,10 @@
         const KIT_THUMB = new Set();                                         // 미리보기(t/)가 따로 있는 그림 지문
         const kitOk = f => typeof f === 'string' && /^[0-9a-f]{16}\.(png|jpg|gif|webp|svg)$/.test(f);
         const kitUrl = f => KIT_BASE + '/k/' + f;
-        /* 보여 줄 크기에 맞는 주소 : 작게(400 이하)는 미리보기 · 크게는 원본 · 예전 드라이브 주소는 =w 크기 */
+        /* 보여 줄 크기에 맞는 주소 : 작게(400 이하)는 미리보기 · 크게는 원본 */
         function kitSize(u, w) {
             u = String(u || '');
             if (u.startsWith(KIT_BASE + '/k/')) { const f = u.slice(KIT_BASE.length + 3), h = f.split('.')[0]; return w <= 400 && KIT_THUMB.has(h) ? KIT_BASE + '/t/' + h + '.webp' : u; }
-            if (/lh3\.googleusercontent\.com\/d\//.test(u)) return u + (/^h/.test(String(w)) ? '=' : '=w') + w;
             return u;
         }
         const libCatName = c => c.replace(/^\d+\s*[.)_\-]?\s*/, '') || c;
