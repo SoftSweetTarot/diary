@@ -494,9 +494,9 @@
         function mfFrame(now) {
             mf.raf = 0; if (!mf.target || !pcS.held || pcS.carry || !pcS.memo) return;
             const dt = Math.min(50, now - mf.last), k = 1 - Math.pow(.001, dt / 240); mf.last = now;
-            mf.pos[0] += (mf.target[0] - mf.pos[0]) * k; mf.pos[1] += (mf.target[1] - mf.pos[1]) * k; mf.wig = Math.max(0, mf.wig - dt / 420);
-            const w = mf.wig, t = now / 1000;                                   // 사각사각 : 끄적이듯 크게 (도련 · 2026-10-13)
-            const dx = Math.sin(t * 38) * 6.5 * w, dy = Math.cos(t * 27) * 4.5 * w - 3 * w, da = Math.sin(t * 33) * 6 * w;   // 좌우 · 위아래 · 기울기
+            mf.pos[0] += (mf.target[0] - mf.pos[0]) * k; mf.pos[1] += (mf.target[1] - mf.pos[1]) * k; mf.wig = Math.max(0, mf.wig - dt / 320);
+            const w = mf.wig, t = now / 1000;                                   // 사각사각 : 처음과 크게 한 것의 중간 (도련 · 2026-10-13)
+            const dx = Math.sin(t * 42) * 4.35 * w, dy = Math.cos(t * 29) * 2.95 * w - 2 * w, da = Math.sin(t * 33) * 3 * w;   // 좌우 · 위아래 · 기울기
             pcHeldAt(mf.pos[0] + dx, mf.pos[1] + dy, da);
             if (Math.abs(mf.target[0] - mf.pos[0]) > .2 || Math.abs(mf.target[1] - mf.pos[1]) > .2 || mf.wig > 0) mf.raf = requestAnimationFrame(mfFrame);
         }
