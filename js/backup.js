@@ -3,7 +3,7 @@
    - 백업 = 말랑달콤 폴더를 날짜별 json 파일 그대로 zip 에 묶어요 → 풀면 드라이브와 똑같은 말랑달콤 폴더
      (일기 · 설정 · 카페 · 스티커 모음 · 내가 만든 스티커 · 페이지 · 인형 · 인형극 · 검색 목록 모두)
    - 불러오기 = zip 안의 말랑달콤 폴더를 지금 쓰는 곳(구글 드라이브 / 이 기기 폴더)의 같은 자리에 넣어요
-     · 같은 날짜 · 같은 파일은 백업 것으로 덮어써요 (구글 드라이브는 덮어쓰기 전 것이 🕘 이전 버전에 남아요) · 나머지는 그대로
+     · 같은 날짜 · 같은 파일은 백업 것으로 덮어써요 · 나머지는 그대로
      · 구글 드라이브에서 '말랑달콤' 폴더를 내려받은 zip 도 돼요
    - 하드 → 구글 로그인으로 옮길 때도 이 기능으로 폴더를 통째로 옮겨요 (js/devsave.js)
    - 드라이브와 말하는 함수(getFolder · driveList · readFileText · driveUpsert)만 써요 → 구글이든 이 기기 폴더든 같은 코드 (js/drive.js · js/devsave.js vfsFetch)
@@ -183,7 +183,7 @@
                 const b = await bkOpen(file); if (!b) return;
                 const google = !drive.local;
                 const ok = await showMsg(google
-                    ? `📥 백업 파일에 일기 <b>${b.days}일치</b> · 파일 ${b.items.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 · 같은 파일은 백업 것으로 덮어써요 (덮어쓰기 전 것은 🕘 이전 버전에 남아요).<br>나머지는 그대로 있어요.</span>`
+                    ? `📥 백업 파일에 일기 <b>${b.days}일치</b> · 파일 ${b.items.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 · 같은 파일은 백업 것으로 덮어써요.<br>나머지는 그대로 있어요.</span>`
                     : `📥 백업 파일에 일기 <b>${b.days}일치</b> · 파일 ${b.items.length}개가 있어요.<br><b>이 기기 폴더</b>에 저장할까요?<br><span style="font-size:12px;color:#777;">같은 날짜 · 같은 파일은 백업 것으로 덮어써요. 나머지는 그대로 있어요.</span>`, true);
                 if (ok) bkApply(b, google ? '구글 드라이브' : '이 기기 폴더');
             });

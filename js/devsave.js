@@ -11,7 +11,7 @@
      (구글 드라이브에서 '말랑달콤' 폴더를 내려받은 zip 도 불러올 수 있어요)
    - 오래 안 쓰면 (아이폰 사파리 : 안 연 날 7일) 브라우저가 지울 수 있어요 → 도련 : 안 쓰는 거라 괜찮아요
    - 구글로 로그인하면 이 기기 일기를 드라이브로 옮길지 물어봐요 → 그 뒤로는 드라이브로 열려요
-   - 안 되는 것 : 🕘 이전 버전 (구글 드라이브만 기억해요) · 편지 · 명예의 전당 · 뽑기처럼 구글 계정이 있어야 하는 서버 기능
+   - 안 되는 것 : 편지 · 명예의 전당 · 뽑기처럼 구글 계정이 있어야 하는 서버 기능
    ※ drive.js 의 initDrive · gfetch · ensureToken · driveLogin · driveLogout 이 이 파일을 불러요 · 이 파일이 없어도 다이어리는 정상 */
 
         const DV_MODE = 'malang_dev_mode';                 // 'idb' (브라우저 저장공간) | 'dir' (PC 폴더) · 없으면 쓰지 않음
@@ -193,7 +193,7 @@
                 }
                 const m = /\/files(?:\/([^/]+))?(\/revisions(?:\/[^/]+)?)?$/.exec(path);
                 if (!m) return vRes(404, {});
-                if (m[2]) return method === 'GET' && !/alt=media/.test(u.search) ? vRes(200, { revisions: [] }) : method === 'PATCH' ? vRes(200, {}) : vRes(404, {});   // 🕘 이전 버전은 없어요
+                if (m[2]) return method === 'GET' && !/alt=media/.test(u.search) ? vRes(200, { revisions: [] }) : method === 'PATCH' ? vRes(200, {}) : vRes(404, {});   // 옛 버전 목록은 없어요
                 const upload = /\/upload\//.test(path), id = m[1];
                 if (!id) {
                     if (method === 'GET') return vRes(200, { files: vQuery(u.searchParams.get('q') || '') });
@@ -413,7 +413,7 @@
         /* 로그인한 뒤 : 이 기기 폴더 통째로 드라이브로 */
         async function dvCarry(files) {
             const days = files.filter(f => /\/다이어리\/페이지\/\d{4}년\/\d{1,2}월\/\d{1,2}일\.json$/.test(f[0])).length;
-            if (!(await showMsg(`📁 이 기기 폴더에 일기 <b>${days}일치</b> · 파일 ${files.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 일기는 이 기기 것으로 덮어써요 (덮어쓰기 전 것은 🕘 이전 버전에 남아요).<br>설정 · 카페 기록은 합쳐요. 넣지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>`, true))) return;
+            if (!(await showMsg(`📁 이 기기 폴더에 일기 <b>${days}일치</b> · 파일 ${files.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 일기는 이 기기 것으로 덮어써요.<br>설정 · 카페 기록은 합쳐요. 넣지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>`, true))) return;
             await bkApply({ items: files.map(([path, text]) => ({ path, text: async () => text })), days }, '구글 드라이브');
         }
         async function dvStop() {

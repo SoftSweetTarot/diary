@@ -375,30 +375,6 @@
             return obj ? JSON.stringify(obj) : null;
         }
 
-        /* 📌 그날을 이번에 처음 고치기 직전 모습은 '오래 보관'으로 표시 (🕘 이전 버전 · js/day-history.js)
-           - 구글은 옛 버전을 보통 30일 · 최근 100개까지만 남겨요 → 몇 초마다 저장하면 100개가 금방 차서 오래된 버전이 지워질 수 있어요
-           - 그래서 앱을 켠 뒤 그날을 처음 고칠 때 (앱을 계속 켜 두면 6시간마다), 고치기 전 버전(지금 드라이브에 있는 것)을 지워지지 않게 표시해 둬요
-           - 6시간 안에 표시한 버전이 이미 있으면 또 하지 않아요 · 파일 하나에 DAY_KEEP_MAX 개까지 (구글 한도 200개 · 되돌리기용 자리 남김)
-           - 실패해도 저장은 그대로 해요 */
-        const DAY_KEEP_MAX = 150;
-        const dayKept = new Map();                                                  // 날짜 → 마지막으로 확인한 때 (앱을 오래 켜 두어도 6시간마다 다시)
-        async function dayKeepBefore(key, fileId) {
-            if (dayKept.has(key) && Date.now() - dayKept.get(key) < 6 * 3600e3) return;
-            dayKept.set(key, Date.now());
-            try {
-                const res = await gfetch(`${DRIVE_API}/${fileId}/revisions?pageSize=200&fields=${encodeURIComponent('revisions(id,modifiedTime,keepForever)')}`);
-                if (!res.ok) return;
-                const revs = (await res.json()).revisions || [];
-                if (!revs.length) return;
-                const kept = revs.filter(r => r.keepForever);
-                const head = revs.reduce((a, b) => (Date.parse(b.modifiedTime) >= Date.parse(a.modifiedTime) ? b : a));
-                if (head.keepForever || kept.length >= DAY_KEEP_MAX) return;
-                const newest = kept.reduce((t, r) => Math.max(t, Date.parse(r.modifiedTime) || 0), 0);
-                if (newest && Date.parse(head.modifiedTime) - newest < 6 * 3600e3) return;
-                await gfetch(`${DRIVE_API}/${fileId}/revisions/${head.id}?fields=id`, { method: 'PATCH', headers: { 'Content-Type': 'application/json; charset=UTF-8' }, body: JSON.stringify({ keepForever: true }) });
-            } catch (e) { console.warn('고치기 전 버전을 표시하지 못했어요 (저장은 그대로 해요):', key, e); }
-        }
-
         /* 📄📄 같은 날 일기 파일이 2개 이상 (두 기기가 거의 동시에 처음 만든 경우) → 하나로 정리
            - 내용이 모두 같으면 묻지 않고 나머지를 휴지통으로
            - 다르면 "어느 쪽을 남길까요?" → 고른 내용을 가장 먼저 만든 파일에 두고 나머지는 휴지통으로 (30일 안에 되살릴 수 있어요) */
@@ -694,7 +670,6 @@
                     }
                 }
             }
-            if (cur) await dayKeepBefore(key, cur.id);                              // 📌 고치기 전 모습 보관 (처음 한 번)
             if (val === null) {                                                     // 내용을 모두 지운 날 → 파일은 휴지통으로
                 if (cur) await driveTrash(cur.id);
                 idx.files.delete(name); drive.dayMeta.set(key, '');
@@ -983,7 +958,7 @@
                     if (!drive.loadedDays.has(k)) { next.push(k); continue; }         // 드라이브 것을 못 읽으면 덮지 않고 다시 시도
                     const cur = store.getItem(k), mine = days[k];
                     if (cur === mine) continue;
-                    if (cur !== null && !(await showAsk(`📅 <b>${dk.m}월 ${dk.d}일</b>은 드라이브에도 일기가 있어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 사라져요 (드라이브 것은 🕘 이전 버전에 남아요).</span>`, '👤 게스트로 쓴 것', '☁ 드라이브 것'))) continue;
+                    if (cur !== null && !(await showAsk(`📅 <b>${dk.m}월 ${dk.d}일</b>은 드라이브에도 일기가 있어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 사라져요.</span>`, '👤 게스트로 쓴 것', '☁ 드라이브 것'))) continue;
                     store.setItem(k, mine); moved++;
                 }
                 left = next;
