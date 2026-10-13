@@ -348,10 +348,10 @@
             const note = drq('pcTipNote'); note.hidden = false; clearTimeout(pcS.noteTm);
             note.innerHTML = pcS.memo ? '이제 글을 써요 · 다 쓰면 <b>구석 연필통</b>을 톡 ✏️' : '다 쓰면 필기구를 꾹 집어 <b>구석 연필통</b>에 꽂아요 ✏️'; pcS.noteTm = setTimeout(() => { note.hidden = true; }, 4200);
         }
-        function pcHeldAt(x, y) {
+        function pcHeldAt(x, y, da) {
             const h = drq('pcHeld'); if (!h || !pcS.held) return;
             const t = pcTipOf(pcS.held); pcS.tip = [x, y];
-            h.style.transform = `translate(${x}px, ${y}px) rotate(${PC_ANG}deg) translate(${-t[0]}px, ${-t[1]}px)`;
+            h.style.transform = `translate(${x}px, ${y}px) rotate(${PC_ANG + (da || 0)}deg) translate(${-t[0]}px, ${-t[1]}px)`;
         }
         /* 필기구 몸통 위인지 (연필심 쪽 20px 은 빼요 → 쓰기) */
         function pcOnBody(x, y) {
@@ -494,9 +494,10 @@
         function mfFrame(now) {
             mf.raf = 0; if (!mf.target || !pcS.held || pcS.carry || !pcS.memo) return;
             const dt = Math.min(50, now - mf.last), k = 1 - Math.pow(.001, dt / 240); mf.last = now;
-            mf.pos[0] += (mf.target[0] - mf.pos[0]) * k; mf.pos[1] += (mf.target[1] - mf.pos[1]) * k; mf.wig = Math.max(0, mf.wig - dt / 220);
-            const t = now / 1000, dx = Math.sin(t * 46) * 2.2 * mf.wig, dy = Math.cos(t * 31) * 1.4 * mf.wig - mf.wig;   // 사각사각
-            pcHeldAt(mf.pos[0] + dx, mf.pos[1] + dy);
+            mf.pos[0] += (mf.target[0] - mf.pos[0]) * k; mf.pos[1] += (mf.target[1] - mf.pos[1]) * k; mf.wig = Math.max(0, mf.wig - dt / 420);
+            const w = mf.wig, t = now / 1000;                                   // 사각사각 : 끄적이듯 크게 (도련 · 2026-10-13)
+            const dx = Math.sin(t * 38) * 6.5 * w, dy = Math.cos(t * 27) * 4.5 * w - 3 * w, da = Math.sin(t * 33) * 6 * w;   // 좌우 · 위아래 · 기울기
+            pcHeldAt(mf.pos[0] + dx, mf.pos[1] + dy, da);
             if (Math.abs(mf.target[0] - mf.pos[0]) > .2 || Math.abs(mf.target[1] - mf.pos[1]) > .2 || mf.wig > 0) mf.raf = requestAnimationFrame(mfFrame);
         }
         function mfWrite() {                                                   // 손을 뗀 그 자리에서 메모로 → 커서 따라가기
