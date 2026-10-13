@@ -900,7 +900,11 @@
         function openSaveChooser() {
             if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return; }
             const web = document.getElementById('saveWebDesc');
-            if (web) web.textContent = drive.local ? '이 기기 폴더에 저장해요. 기기를 바꿀 땐 ⚙ 설정 → 📦 백업 파일 받기.' : drive.ready && !drive.guest
+            const L = !!drive.local, set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };   // 📁 폴더(하드)로 쓰면 '폴더에 저장' (js/devsave.js)
+            set('saveWebIcon', L ? '📁' : '☁');
+            set('saveWebTitle', L ? '폴더에 저장 (이 기기)' : '웹에 저장 (구글 드라이브)');
+            set('saveChooserNote', L ? '※ 일기는 쓰는 동안 몇 초마다 폴더에 자동 저장돼요.' : '※ 일기는 쓰는 동안 몇 초마다 웹에 자동 저장돼요.');
+            if (web) web.textContent = L ? '이 기기 폴더에 저장해요. 기기를 바꿀 땐 ⚙ 설정 → 📦 백업 파일 받기.' : drive.ready && !drive.guest
                 ? '내 구글 드라이브에 저장해요. 다른 기기에서 로그인해도 이어서 볼 수 있어요.'
                 : '⚠ 지금은 로그인되어 있지 않아서 웹에 저장할 수 없어요.';
             openModal('saveChooser');
