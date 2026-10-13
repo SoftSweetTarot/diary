@@ -3272,3 +3272,10 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 /* 📱 스티커 수첩 : 스티커를 떼는 동안 수첩이 비켜요 (js/stknote.js snbAway) */
 .modal.snb-on { transition: opacity .2s; }
 .modal.snb-on.snb-away { opacity: 0 !important; pointer-events: none !important; }
+
+/* 📒 스티커 수첩 : 시트 이름 대신 '3 / 10' (지금 장 / 모두) · 목록 받는 상황 글씨 (js/stknote.js) */
+.modal.snb-on .snb-sh-head { visibility: hidden; }
+.snb-pgno { position: absolute; z-index: 6; padding: 2px 10px; border-radius: 999px; background: rgba(255,255,255,.92); color: color-mix(in srgb, var(--primary-accent) 70%, #5a1a30); font-size: 13px; font-weight: bold; font-variant-numeric: tabular-nums; pointer-events: none; box-shadow: 0 1px 3px rgba(120,80,95,.15); }
+.snb-pgno.bot { left: 50% !important; bottom: 10px; top: auto !important; transform: translateX(-50%); }
+.snb-net { position: absolute; z-index: 7; left: 50%; top: 46%; transform: translate(-50%, -50%); max-width: 80%; padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.95); border: 1.5px solid var(--border-color); color: #7a5a66; font-size: 13.5px; text-align: center; word-break: keep-all; pointer-events: none; box-shadow: 0 3px 10px rgba(120,80,95,.15); }
+.modal:not(.snb-on) .snb-pgno, .modal:not(.snb-on) .snb-net { display: none !important; }

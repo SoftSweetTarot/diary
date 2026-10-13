@@ -42,6 +42,9 @@
             kids.forEach(c => body.appendChild(c));
             const rings = document.createElement('div'); rings.className = 'snb-rings'; rings.innerHTML = '<i></i>'.repeat(9);
             const ears = ['prev', 'next'].map(k => { const e = document.createElement('div'); e.className = 'snb-ear ' + k; e.dataset.dir = k === 'next' ? 1 : -1; e.setAttribute('aria-label', k === 'next' ? '다음 장' : '앞 장'); return e; });
+            const pgno = document.createElement('div'); pgno.className = 'snb-pgno'; pgno.hidden = true;   // 📄 지금 장 / 모두 몇 장
+            const net = document.createElement('div'); net.className = 'snb-net'; net.hidden = true;        // 📶 목록을 받는 중 · 다시 받는 중
+            box.append(pgno, net);
             const cover = document.createElement('div'); cover.className = 'snb-cover'; cover.hidden = true;
             snbCoverDrag(cover);
             box.prepend(rings); box.append(...ears, cover);
@@ -109,9 +112,24 @@
             snb.skipCover = false;
             snb.m = m;
             if (!again) { snb.page = 0; snb.lastLib = -1; snbCover(m); }
+            snbNetWatch(m);
             if (window.sbRefreshAll) sbRefreshAll();                          // 기본 칸은 수첩에서 카테고리 · ◀ ▶ 없이 전부 펼쳐요 (수첩이 장을 나눠요)
             snbMeasure();
         }
+        /* 📶 목록 상황 (고르는 창의 안내 글씨처럼) : 받는 중이면 '불러오는 중…' · 실패해서 다시 받으면 '다시 불러오는 중… (n번째)' · 받으면 사라져요 */
+        function snbNetSay(t) { const m = snb.m, n = m && m.querySelector('.snb-net'); if (!n) return; n.textContent = t || ''; n.hidden = !t; }
+        function snbNetWatch(m) {
+            if (typeof basicKit !== 'function') return;
+            let done = false;
+            const p = basicKit();
+            p.then(() => { done = true; snbNetSay(''); }, () => { done = true; snbNetSay('⚠ 스티커 목록을 불러오지 못했어요'); });
+            setTimeout(() => { if (!done && snb.m === m) snbNetSay(navigator.onLine === false ? '📴 인터넷 연결을 기다리는 중이에요…' : '📥 스티커 목록을 불러오는 중…'); }, 400);
+        }
+        document.addEventListener('basickit-retry', e => {
+            if (!snb.m || snb.m.style.display !== 'flex') return;
+            snbNetSay(navigator.onLine === false ? '📴 인터넷 연결을 기다리는 중이에요…' : `⏳ 목록을 다시 불러오는 중이에요… (${e.detail.n + 1}번째)`);
+            basicKit().then(() => snbNetSay(''), () => {});
+        });
         function snbOnHide(m) {
             if (snb.m === m && !snb.skipCover && !snb.dropping && window.sbRefreshAll) setTimeout(sbRefreshAll, 0);   // 고르는 창으로 돌아가면 다시 카테고리 · 쪽
             m.classList.remove('snb-back'); const w = snbq('diaryWrapper'); if (w) w.classList.remove('snb-front');
@@ -254,6 +272,13 @@
             const cut = snbCut(snb.page, body.clientHeight);
             body.style.clipPath = cut ? `inset(0 0 ${cut}px 0)` : '';
             m.querySelectorAll('.snb-ear').forEach(e => { const n = snb.page + +e.dataset.dir; e.hidden = n < 0 || n >= snb.pages.length; });
+            const pg = m.querySelector('.snb-pgno');                             // 📄 3 / 10 : 시트 창은 시트 왼쪽 위 · 나머지는 아래 가운데
+            if (pg) {
+                pg.textContent = `${snb.page + 1} / ${snb.pages.length}`; pg.hidden = false;
+                const top = m.classList.contains('snb-sheet');
+                pg.classList.toggle('bot', !top);
+                if (top) { pg.style.top = (body.offsetTop + 14) + 'px'; pg.style.left = (body.offsetLeft + 20) + 'px'; } else { pg.style.top = ''; pg.style.left = ''; }
+            }
             snbSheetNear(body);
         }
         function snbGo(d) { if (snbCurlBegin(d)) snbCurlTo(snb.curl.W, true); }
@@ -502,6 +527,13 @@
             const kind = sh ? sh.dataset.share : mi && mi.dataset.mine; if (!kind) return null;
             return { id: e.dataset.id, kind, got: !!sh, n };
         }
+        /* 🏷️ 씰 종이(여러 개) : 그림 모음 칸 → 그 종이의 씰 전부를 시트 한 장으로 (수첩에서는 그림 모음이 한 쪽에 전부 펼쳐져 있어요) */
+        function snbLibMulti(e) {
+            if (!e.classList.contains('lib-sheet') || typeof libPages !== 'function') return null;
+            const grid = e.parentElement, idx = grid ? [...grid.querySelectorAll('.lib-item:not(.empty)')].indexOf(e) : -1;
+            const it = idx >= 0 && (libPages()[libPage] || [])[idx];
+            return it && it.s ? { lib: it.s, n: it.s.length } : null;
+        }
         function snbSheetSync(m, body) {
             let wrap = body.querySelector(':scope > .snb-sheets');
             const src = m.id === 'stickerModal' ? [...body.querySelectorAll(SNB_SRC)].filter(e => e.offsetParent && !e.closest('.snb-sheets')) : [];
@@ -514,7 +546,7 @@
             if (!wrap) { wrap = document.createElement('div'); wrap.className = 'snb-sheets'; body.prepend(wrap); }
             wrap.textContent = '';
             const multi = [], single = [];
-            src.forEach(e => { const mu = snbMulti(e); if (mu) multi.push([e, mu]); else single.push(e); });
+            src.forEach(e => { const mu = snbMulti(e) || snbLibMulti(e); if (mu) multi.push([e, mu]); else single.push(e); });
             const sheet = (name, sub) => {
                 const sh = document.createElement('div'); sh.className = 'snb-sh';
                 sh.innerHTML = `<div class="snb-sh-head"><b></b><small></small></div><div class="snb-sh-in"></div>`;
@@ -523,7 +555,7 @@
             };
             multi.forEach(([e, mu]) => {
                 const im = e.querySelector('img'), b = e.querySelector('b:not(.smk-n)');
-                const name = mu.pack ? (b ? b.textContent : '포인트스티커') : ((im && im.alt) || '내 스티커 시트');
+                const name = mu.lib ? '씰 종이' : mu.pack ? (b ? b.textContent : '포인트스티커') : ((im && im.alt) || '내 스티커 시트');
                 const sh = sheet(name, mu.pack ? (e.querySelector('small') || {}).textContent : (e.querySelector('.smk-n') || {}).textContent);
                 sh._mu = mu; sh.querySelector('.snb-sh-in').innerHTML = '<small class="snb-sh-wait">시트를 펼치는 중…</small>';
             });
@@ -560,7 +592,8 @@
             const mu = sh._mu, g = sh.querySelector('.snb-sh-in');
             let urls = [], k = 'pack';
             try {
-                if (mu.pack) {
+                if (mu.lib) { urls = mu.lib.map(u => /lh3\.googleusercontent\.com\/d\//.test(u) ? u + '=w400' : u); k = 'seal'; }   // 🏷️ 씰 종이
+                else if (mu.pack) {
                     const P = (typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack)) || (window.sbPack && sbPack(mu.pack));   // 🖼️ 개발자 그림 묶음(srv:N)도
                     urls = P ? await keepTrying(() => spkSrcs(P), { alive: () => sh.isConnected }) : [];
                 } else {
