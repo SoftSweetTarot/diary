@@ -244,6 +244,7 @@
         async function dvStart(mode) {
             V.mode = mode; await vLoad();
             V.on = true; drive.local = true; drive.token = null;
+            if (typeof waitForGoogle === 'function') waitForGoogle(15000).then(ok => { if (ok) driveClientMake(); });   // ☁ 구글로 로그인을 누르면 바로 창이 뜨게 미리 준비
             await loadFromDrive();                                         // 드라이브로 로그인할 때와 똑같이 읽어요 (설정 · 카페 · 모음 · 3일치)
             hideGate(); updateBadge();
             try { await postLoginTasks(); } catch (e) {}
@@ -349,7 +350,10 @@
                 catch (e) { console.warn(e); dvQuit(); dvAskAgain(); showMsg('⚠ 폴더를 열지 못했어요. 폴더가 옮겨졌다면 <b>다른 폴더 고르기</b>를 눌러 주세요.'); }
             };
             c.querySelector('.dv-other').onclick = () => dvPickFolder(true);
-            c.querySelector('.dv-login').onclick = () => { dvSetMode(''); dvBack(); };
+            c.querySelector('.dv-login').onclick = async () => {               // 폴더를 열지 않고 구글로 : 폴더 일기는 옮기지 않아요
+                if (!(await showMsg('폴더에 쓴 일기는 옮기지 않고 그대로 둬요.<br><span style="font-size:12px;color:#777;">옮기려면 <b>📁 폴더 열고 이어서 쓰기</b>를 누른 뒤 ⚙ 설정 → ☁ 구글로 로그인을 눌러 주세요.</span><br>그냥 구글로 시작할까요?', true))) return;
+                dvSetMode(''); dvBack();
+            };
         }
         /* ⚙ 설정 → 📁 폴더 바꾸기 (PC) : 다른 말랑달콤 폴더로 · 새 폴더가 비어 있으면 지금 일기를 옮길지 물어요 */
         async function dvChangeFolder() {
@@ -374,22 +378,42 @@
             } catch (e) { console.warn(e); bkBusy(null); showMsg('⚠ 그 폴더로 바꾸지 못했어요.'); }
         }
 
-        /* ---------- 구글로 옮겨 가기 · 그만 쓰기 ---------- */
-        async function dvBeforeLogin() {                                   // drive.js driveLogin 맨 앞 : 이 기기 말랑달콤 폴더를 통째로 챙겨 두고 드라이브로
-            if (!V.on) return null;
-            try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
-            await flushUpload({ force: true });
-            let files = [];
-            try { files = await bkReadTree(); } catch (e) { console.warn(e); }
-            V.on = false; drive.local = false; drive.ready = false; window.dvWas = true;
-            resetDriveCaches();
-            return files.length ? files : null;
+        /* ---------- ☁ 폴더로 쓰다가 구글로 로그인 (⚙ 설정) ----------
+           - 누른 그 순간 구글 로그인 창부터 열어요 (아이패드 · 아이폰 사파리는 조금이라도 늦게 열면 창을 막아요)
+           - 창이 떠 있는 동안 이 기기 폴더를 통째로 챙겨 둬요 (기다리던 저장 · 모음 · 검색 목록까지 끝낸 뒤)
+           - 로그인을 안 했거나 실패하면 아무것도 바뀌지 않아요 (그대로 이 기기 폴더)
+           - 구글 드라이브를 못 열면 다시 이 기기 폴더로 돌아와요
+           - 열리면 "구글 드라이브 폴더에 넣을까요?" → 넣으면 일기 · 파일은 이 기기 것으로 덮어쓰고 설정 · 카페 · 검색 목록은 합쳐요 (js/backup.js)
+           - 넣지 않아도 이 기기 폴더는 그대로 남아요 · 다음부터는 구글로 열려요 */
+        async function dvLogin() {
+            if (!V.on) return;
+            if (!drive.client && !driveClientMake()) { showMsg('구글 로그인을 준비하는 중이에요.<br>잠시 후 다시 눌러 주세요.'); waitForGoogle(10000).then(ok => { if (ok) driveClientMake(); }); return; }
+            const tp = requestToken('select_account');                      // 창은 지금 바로
+            bkBusy('☁ 구글 로그인 창에서 계정을 선택해 주세요…');
+            let files = null;
+            const collect = (async () => { await bkSettle(); files = await bkReadTree(); })().catch(e => { console.warn(e); files = null; });
+            try { await tp; }
+            catch (e) { await collect; bkBusy(null); drive.token = null; showMsg('로그인하지 않았어요.<br><span style="font-size:12px;color:#777;">지금처럼 이 기기 폴더에 저장해요.</span>'); return; }
+            bkBusy('☁ 구글 드라이브를 여는 중…');
+            await collect;
+            const mode = V.mode;
+            V.on = false; drive.local = false; drive.ready = false; resetDriveCaches();
+            try { await loadFromDrive(); bkBusy(null); hideGate(); await postLoginTasks(); }
+            catch (e) {
+                console.warn(e); drive.token = null;
+                try { await dvStart(mode); } catch (x) { console.warn(x); }
+                bkBusy(null); showMsg('⚠ 구글 드라이브를 열지 못했어요.<br><span style="font-size:12px;color:#777;">지금처럼 이 기기 폴더에 저장해요. 잠시 후 다시 해 주세요.</span>');
+                return;
+            }
+            dvSetMode('');                                                 // 다음부터는 구글로 열려요
+            if (files && files.length) await dvCarry(files);
+            else if (files === null) showMsg('⚠ 이 기기 폴더를 다 읽지 못해서 옮기지 않았어요.<br><span style="font-size:12px;color:#777;">폴더는 그대로 남아 있어요. ⚙ 설정 → 로그아웃 → 로그인 없이 시작하기 → 📁 폴더로 열어서 📦 백업 파일을 받은 뒤, 구글에서 📥 백업 불러오기로 넣을 수 있어요.</span>');
         }
         function dvAfterLogin() { dvSetMode(''); }
         /* 로그인한 뒤 : 이 기기 폴더 통째로 드라이브로 */
         async function dvCarry(files) {
             const days = files.filter(f => /\/다이어리\/페이지\/\d{4}년\/\d{1,2}월\/\d{1,2}일\.json$/.test(f[0])).length;
-            if (!(await showMsg(`📁 이 기기 폴더에 일기 <b>${days}일치</b> · 파일 ${files.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 · 같은 파일은 이 기기 것으로 덮어써요 (덮어쓰기 전 것은 🕘 이전 버전에 남아요).<br>옮기지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>`, true))) return;
+            if (!(await showMsg(`📁 이 기기 폴더에 일기 <b>${days}일치</b> · 파일 ${files.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 일기는 이 기기 것으로 덮어써요 (덮어쓰기 전 것은 🕘 이전 버전에 남아요).<br>설정 · 카페 기록은 합쳐요. 넣지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>`, true))) return;
             await bkApply({ items: files.map(([path, text]) => ({ path, text: async () => text })), days }, '구글 드라이브');
         }
         async function dvStop() {
@@ -404,7 +428,7 @@
         const dvWhere = () => V.mode === 'dir' ? (V.label ? `'${V.label}' 폴더` : '고른 폴더') : '이 기기 폴더';
 
         window.dvAuto = dvAuto; window.dvChoose = dvChoose; window.vfsFetch = vfsFetch; window.dvOn = dvOn; window.dvIsDir = dvIsDir; window.dvWhere = dvWhere;
-        window.dvBeforeLogin = dvBeforeLogin; window.dvAfterLogin = dvAfterLogin; window.dvCarry = dvCarry; window.dvStop = dvStop; window.dvChangeFolder = dvChangeFolder;
+        window.dvLogin = dvLogin; window.dvAfterLogin = dvAfterLogin; window.dvCarry = dvCarry; window.dvStop = dvStop; window.dvChangeFolder = dvChangeFolder;
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['devsave'] = true;

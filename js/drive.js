@@ -952,14 +952,13 @@
         }
 
         async function driveLogin() {
-            const devFiles = drive.local && window.dvBeforeLogin ? await dvBeforeLogin() : null;   // 📁 이 기기 말랑달콤 폴더를 통째로 챙겨요 (js/devsave.js)
+            if (drive.local && window.dvLogin) return dvLogin();                   // 📁 이 기기 폴더로 쓰다가 구글로 (js/devsave.js)
             const guestDays = drive.guest ? guestSnapshot() : null;               // 👤 게스트로 쓴 일기 (로그인하면 메모리가 드라이브 것으로 바뀌어서 먼저 챙겨요)
             if (!drive.client && !driveClientMake() && await waitForGoogle(10000)) driveClientMake();   // 이 기기 폴더로 열었으면 구글 준비가 아직이에요
             showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
             try { await requestToken('select_account'); await loadFromDrive(); hideGate(); await postLoginTasks(); }
-            catch (e) { showGate('login', driveErrorText(e)); if (guestDays) guestHold = guestDays; return; }   // 📁 이 기기 폴더로 쓰던 사람은 다시 열면 그대로 폴더로 열려요
-            if (window.dvAfterLogin) dvAfterLogin();                              // 📁 이제 드라이브로 열려요 (이 기기 폴더 파일은 그대로)
-            if (devFiles && window.dvCarry) { await dvCarry(devFiles); return; }   // 📁 폴더 통째로 구글 드라이브 폴더에 넣을까요?
+            catch (e) { showGate('login', driveErrorText(e)); if (guestDays) guestHold = guestDays; return; }
+            if (window.dvAfterLogin) dvAfterLogin();                              // 📁 폴더 모드를 쓰던 기기도 이제 드라이브로 열려요
             if (guestDays || guestHold) guestCarry(Object.assign({}, guestHold || {}, guestDays || {}));
         }
         /* 👤 게스트 일기 → 내 드라이브로 옮기기 (물어본 뒤 · 드라이브에도 있는 날은 "어느 쪽?") */

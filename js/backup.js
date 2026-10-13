@@ -87,28 +87,52 @@
             return out.sort((a, b) => a[0] < b[0] ? -1 : 1);
         }
         /* [{ path, text() }] → 지금 쓰는 곳의 같은 자리에 (있으면 덮어쓰기) */
+        /* 하나로 모인 파일은 통째로 덮지 않고 합쳐요 (도련 · 2026-10-13 · 경우의 수 점검)
+           - 설정.json · 카페.json : 키마다 (같은 키는 넣는 쪽) → 받는 쪽에만 있던 설정 · 카페 기록이 사라지지 않게
+           - 검색-년도.json : 날짜마다 합치기
+           - 모음 목록(목록/목록N.json) : 넣지 않아요 → 원본은 모두 들어가고, 모음을 처음 열 때 원본을 보고 목록을 다시 맞춰요 (js/coll.js collCheck)
+             (목록 안에는 그쪽 저장소의 파일 번호가 들어 있어서 다른 곳에 그대로 넣으면 맞지 않아요) */
+        const bkKind = p => /\/설정\/설정\.json$|\/카페\/카페\.json$/.test(p) ? 'keys' : /\/검색-\d{4}\.json$/.test(p) ? 'search' : /\/목록\/목록\d+\.json$/.test(p) ? 'skip' : '';
+        function bkMerge(kind, curText, body) {
+            let a, b; try { a = JSON.parse(curText); b = JSON.parse(body); } catch (e) { return body; }
+            if (!a || typeof a !== 'object' || !b || typeof b !== 'object') return body;
+            if (kind === 'keys') return JSON.stringify(Object.assign({}, a, b));
+            if (kind === 'search') return JSON.stringify(Object.assign({}, a, b, { d: Object.assign({}, a.d || {}, b.d || {}) }));
+            return body;
+        }
+        /* 들어가지 못한 것만 돌려줘요 */
         async function bkPutTree(items, tell) {
-            let done = 0, fail = 0;
+            let done = 0; const failed = [];
             for (const it of items) {
-                const parts = it.path.split('/'), name = parts.pop();
-                const put = async body => { const dir = await getFolder(parts, true), cur = await findFile(dir, name); await driveUpsert(dir, name, cur && cur.id, body); };
-                try {
+                const parts = it.path.split('/'), name = parts.pop(), kind = bkKind(it.path);
+                const put = async body => {
+                    const dir = await getFolder(parts, true), cur = await findFile(dir, name);
+                    if (cur && kind) body = bkMerge(kind, await readFileText(cur.id), body);
+                    await driveUpsert(dir, name, cur && cur.id, body);
+                };
+                if (kind !== 'skip') try {
                     const body = await it.text();
                     try { await put(body); }
                     catch (e) { if (e && e.code === 'gone') { resetDriveCaches(); await put(body); } else throw e; }   // 그 사이 폴더가 바뀌었으면 다시 찾아서 한 번 더
-                } catch (e) { console.warn('넣지 못한 파일:', it.path, e); fail++; }
+                } catch (e) { console.warn('넣지 못한 파일:', it.path, e); failed.push(it); }
                 if (tell) tell(++done, items.length);
             }
-            return fail;
+            return failed;
+        }
+        /* 아직 기다리는 저장(모음 · 검색 목록)까지 먼저 끝내요 */
+        async function bkSettle() {
+            try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
+            await flushUpload({ force: true });
+            try { if (typeof collPump === 'function') await collPump(); } catch (e) {}
+            try { if (typeof srUpload === 'function') await srUpload(); } catch (e) {}
         }
 
         /* ---------- 📦 백업 파일 받기 ---------- */
         async function bkBackup() {
             if (!drive.ready || drive.guest) { showMsg('📦 백업은 구글로 로그인했거나 📁 폴더에 저장할 때 받을 수 있어요.<br><span style="font-size:12px;color:#777;">구경만 할 때는 저장된 일기가 없어요.</span>'); return; }
-            try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
             bkBusy('📦 백업 파일을 만드는 중…');
             try {
-                await flushUpload({ force: true });
+                await bkSettle();
                 const list = await bkReadTree((n, all) => bkBusy(`📦 백업 파일을 만드는 중… <b>${n} / ${all}</b>`));
                 bkBusy(null);
                 if (!list.length) { showMsg('아직 저장된 일기가 없어요.'); return; }
@@ -135,16 +159,22 @@
         }
         /* 지금 쓰는 곳에 넣고 다시 읽기 (진행 표시) */
         async function bkApply(b, where) {
-            try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
             bkBusy(`📥 ${where}에 넣는 중…`);
             try {
-                await flushUpload({ force: true });
-                const fail = await bkPutTree(b.items, (n, all) => bkBusy(`📥 ${where}에 넣는 중… <b>${n} / ${all}</b>`));
+                await bkSettle();
+                let items = b.items, failed = [];
+                for (;;) {
+                    failed = await bkPutTree(items, (n, all) => bkBusy(`📥 ${where}에 넣는 중… <b>${n} / ${all}</b>`));
+                    if (!failed.length) break;
+                    bkBusy(null);
+                    if (!(await showMsg(`⚠ <b>${failed.length}개</b>를 넣지 못했어요.<br>인터넷 · 저장공간을 확인하고 다시 시도할까요?`, true))) break;
+                    items = failed; bkBusy(`📥 ${where}에 넣는 중…`);
+                }
                 await loadFromDrive();
                 bkBusy(null);
-                showMsg(fail ? `⚠ ${b.items.length - fail}개는 넣었지만 <b>${fail}개</b>는 넣지 못했어요.<br>잠시 후 백업 불러오기를 한 번 더 해 주세요.` : `📥 백업을 불러왔어요! 일기 <b>${b.days}일치</b>`);
-                return !fail;
-            } catch (e) { console.warn(e); bkBusy(null); showMsg('⚠ 백업을 다 넣지 못했어요.<br>잠시 후 다시 해 주세요.'); return false; }
+                showMsg(failed.length ? `⚠ ${b.items.length - failed.length}개는 넣었지만 <b>${failed.length}개</b>는 넣지 못했어요.` : `📥 ${where}에 넣었어요! 일기 <b>${b.days}일치</b>`);
+                return !failed.length;
+            } catch (e) { console.warn(e); bkBusy(null); showMsg('⚠ 다 넣지 못했어요.<br>잠시 후 다시 해 주세요.'); return false; }
         }
         /* ⚙ 설정 → 📥 백업 불러오기 */
         function bkRestore() {
