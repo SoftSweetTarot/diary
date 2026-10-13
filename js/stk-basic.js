@@ -210,7 +210,7 @@
             const label = c => kitCat(c) || c || '기본', labels = [...new Set(items.map(el => label(el.dataset.sbc)))];
             let bar = box.querySelector(':scope > .sb-cats');
             items.forEach(el => { el.hidden = false; });
-            if (labels.length < 2) { if (bar) bar.remove(); sbPage(box, kind, items); return; }   // 카테고리가 하나뿐이면 칸 없이
+            if (labels.length < 2 || sbNote(box)) { if (bar) bar.remove(); sbPage(box, kind, items); return; }   // 카테고리가 하나뿐이면 칸 없이 · 📒 수첩은 전부
             if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.insertBefore(bar, box.querySelector(':scope > .sb-srv') || box.firstChild); }
             let cur = sbCatOn[kind] || '';
             if (!labels.includes(cur)) cur = labels[0];                   // '전체' 칸 없이 첫 카테고리부터
@@ -221,6 +221,10 @@
         }
         /* ◀ 이전 · 다음 ▶ : 씰스티커 창처럼 한 쪽씩 (한 줄 칸 수 × SB_ROWS 줄) · 쪽 수가 1이면 숨겨요 */
         const SB_ROWS = { mini: 2, piece: 2, paper: 2, tape: 4, memo: 4, tk: 3, leaf: 3 }, sbPgOn = {};
+        /* 📒 스티커 수첩으로 보고 있는지 (js/stknote.js) : 수첩은 카테고리 · ◀ ▶ 없이 전부 펼치고 수첩이 장을 나눠요 */
+        const sbNote = box => !!(box.closest && box.closest('.modal.snb-on'));
+        function sbRefreshAll() { document.querySelectorAll('.sb-srv[data-sbk]').forEach(el => sbCats(el.parentElement, el.dataset.sbk)); }
+        window.sbRefreshAll = sbRefreshAll;
         function sbPage(box, kind, shown, all) {
             (all || shown).forEach(el => { el.hidden = !shown.includes(el); });
             let pg = box.querySelector(':scope > .sb-pager');
@@ -236,7 +240,7 @@
             /* 한 줄 칸 수 : 첫 줄에 놓인 칸을 세요 (창이 안 보이면 3) */
             const t0 = shown[0];                                            // offsetTop : 창이 뜨며 기울어도 그대로
             const cols = t0 && t0.offsetWidth ? Math.max(1, shown.filter(el => Math.abs(el.offsetTop - t0.offsetTop) < 2).length) : 3;
-            const per = cols * (SB_ROWS[kind] || 3), pages = Math.ceil(shown.length / per);
+            const per = sbNote(box) ? Math.max(1, shown.length) : cols * (SB_ROWS[kind] || 3), pages = Math.ceil(shown.length / per);
             const cur = Math.max(0, Math.min(sbPgOn[kind] || 0, pages - 1)); sbPgOn[kind] = cur;
             shown.forEach((el, i) => { if (i < cur * per || i >= (cur + 1) * per) el.hidden = true; });
             pg.hidden = pages <= 1;

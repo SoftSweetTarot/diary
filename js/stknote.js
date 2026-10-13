@@ -109,9 +109,11 @@
             snb.skipCover = false;
             snb.m = m;
             if (!again) { snb.page = 0; snb.lastLib = -1; snbCover(m); }
+            if (window.sbRefreshAll) sbRefreshAll();                          // 기본 칸은 수첩에서 카테고리 · ◀ ▶ 없이 전부 펼쳐요 (수첩이 장을 나눠요)
             snbMeasure();
         }
         function snbOnHide(m) {
+            if (snb.m === m && !snb.skipCover && !snb.dropping && window.sbRefreshAll) setTimeout(sbRefreshAll, 0);   // 고르는 창으로 돌아가면 다시 카테고리 · 쪽
             m.classList.remove('snb-back'); const w = snbq('diaryWrapper'); if (w) w.classList.remove('snb-front');
             if (snb.m !== m || snb.skipCover || snb.dropping) return;
             if (snb.libSaved && typeof libLayout !== 'undefined') {           // 🏷️ 그림 모음 배치는 원래대로 (수첩일 때만 장에 맞춰요)
@@ -203,7 +205,7 @@
             const g = 8, w = body.clientWidth - 12, h = body.clientHeight - 12;
             if (w < 100 || h < 100) return false;
             const cols = Math.max(3, Math.min(10, Math.round(w / 92))), size = Math.max(50, Math.min(140, Math.floor((w - (cols - 1) * g) / cols)));
-            const n = typeof libView === 'function' ? libView().length : 0, rows = Math.max(1, Math.ceil(n / cols));
+            const n = typeof libView === 'function' ? libView().reduce((a, x) => a + (x.s ? Math.min(2, cols) : 1), 0) : 0, rows = Math.max(1, Math.ceil(n / cols) + 1);   // 씰 종이는 2칸
             if (libLayout.cols === cols && libLayout.rows === rows && libLayout.size === size) return false;
             if (!snb.libSaved) snb.libSaved = libLayout;
             libLayout = { rows, cols, size };
@@ -558,9 +560,11 @@
             const mu = sh._mu, g = sh.querySelector('.snb-sh-in');
             let urls = [], k = 'pack';
             try {
-                if (mu.pack) { const P = typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack); urls = P ? await keepTrying(() => spkSrcs(P), { alive: () => sh.isConnected }) : []; }
-                else {
-                    let o = await collItem(stkColl(mu.kind, mu.got), mu.id);
+                if (mu.pack) {
+                    const P = (typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack)) || (window.sbPack && sbPack(mu.pack));   // 🖼️ 개발자 그림 묶음(srv:N)도
+                    urls = P ? await keepTrying(() => spkSrcs(P), { alive: () => sh.isConnected }) : [];
+                } else {
+                    let o = await keepTrying(() => collItem(stkColl(mu.kind, mu.got), mu.id), { alive: () => sh.isConnected });   // 🔁 받을 때까지 다시 (js/drive.js)
                     if (mu.got && typeof shxItem === 'function') o = shxItem(mu.kind, o);
                     if (o) { urls = o.ss || [o.src]; k = o.k || mu.kind; }
                 }
