@@ -3279,3 +3279,37 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-pgno.bot { left: 50% !important; bottom: 10px; top: auto !important; transform: translateX(-50%); }
 .snb-net { position: absolute; z-index: 7; left: 50%; top: 46%; transform: translate(-50%, -50%); max-width: 80%; padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.95); border: 1.5px solid var(--border-color); color: #7a5a66; font-size: 13.5px; text-align: center; word-break: keep-all; pointer-events: none; box-shadow: 0 3px 10px rgba(120,80,95,.15); }
 .modal:not(.snb-on) .snb-pgno, .modal:not(.snb-on) .snb-net { display: none !important; }
+
+
+/* ✏️ 📒 수첩 모드 연필통 (js/draw.js pcOpen) : 페이지 가운데 길쭉한 연필통에 섞여 꽂힌 필기구 · 위로 뽑기 · 페이지 오른쪽 아래 작은 연필통에 꽂으면 완료 */
+.pc-room { position: fixed; inset: 0; z-index: 1500; pointer-events: none; }
+.pc-room[hidden] { display: none; }
+.pc-cup { position: absolute; left: 50%; top: 20%; width: 300px; height: 470px; transition: transform .45s cubic-bezier(.5,0,.3,1), opacity .4s; transform-origin: 50% 100%; }
+.pc-cup.gone { opacity: 0; pointer-events: none; }
+.pc-hint { position: absolute; top: -6px; left: 50%; width: 230px; margin: 0 0 0 -115px; padding: 7px 12px; border-radius: 14px; background: rgba(255,255,255,.95); border: 1.5px solid var(--border-color, #ffb6c1); color: #7a5a66; font-size: 13px; text-align: center; word-break: keep-all; box-shadow: 0 3px 10px rgba(120,80,95,.12); }
+.pc-x { position: absolute; right: -4px; top: 30px; z-index: 30; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border-color, #ffb6c1); background: #fff; color: #7a5a66; font-size: 15px; cursor: pointer; pointer-events: auto; }
+.pc-back { position: absolute; left: 18px; right: 18px; bottom: 226px; height: 40px; border-radius: 50%; background: radial-gradient(ellipse at 50% 70%, #c9607e, #e889a6 70%); }
+.pc-tools { position: absolute; left: 0; right: 0; bottom: 20px; height: 440px; }
+.pc-tool { position: absolute; left: calc(50% - 16px); bottom: 0; width: 32px; height: 340px; transform-origin: 50% 100%; pointer-events: auto; touch-action: none; cursor: grab; filter: drop-shadow(1px 2px 1.5px rgba(90,60,70,.25)); transition: transform .3s cubic-bezier(.3,1.4,.5,1); -webkit-tap-highlight-color: transparent; }
+.pc-tool.er { height: 140px; bottom: 196px; width: 36px; left: calc(50% - 18px); }
+.pc-tool.grab { transition: none; cursor: grabbing; filter: drop-shadow(3px 6px 4px rgba(90,60,70,.3)); }
+.pc-tool svg, .pc-held svg { width: 100%; height: 100%; display: block; }
+.pc-front { position: absolute; left: 18px; right: 18px; bottom: 0; height: 246px; z-index: 20; border-radius: 4px 4px 22px 22px / 4px 4px 12px 12px; pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,.75) 0 2.2px, transparent 2.6px) 0 0 / 10px 10px, linear-gradient(90deg, #f791b0, #ffd0dd 30%, #ffc1d2 55%, #f48bab); box-shadow: inset 0 -6px 0 rgba(150,60,90,.12), 0 12px 22px rgba(150,70,100,.3); }
+.pc-front::before { content: ''; position: absolute; left: -4px; right: -4px; top: -8px; height: 18px; border-radius: 50%; border: 4px solid #ffe1ea; border-top-color: transparent; box-sizing: border-box; }
+.pc-front::after { content: ''; position: absolute; left: 0; right: 0; bottom: 18px; height: 16px; background: rgba(255,255,255,.55); }
+.pc-front i { position: absolute; left: 0; right: 0; top: 10px; height: 14px; background: rgba(255,255,255,.55); }
+.pc-front b { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); color: #fff; font-size: 40px; text-shadow: 0 2px 4px rgba(150,60,90,.25); }
+.pc-held { position: absolute; left: 0; top: 0; width: 30px; height: 150px; transform-origin: 0 0; pointer-events: none; filter: drop-shadow(4px 8px 5px rgba(90,60,70,.28)); }
+.pc-held.carry { filter: drop-shadow(10px 18px 9px rgba(90,60,70,.3)); }
+.pc-held.in { transition: transform .28s ease-in, opacity .28s; opacity: .2; }
+.pc-mini { position: absolute; left: 0; top: 0; width: 62px; height: 84px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; transition: transform .2s; -webkit-tap-highlight-color: transparent; }
+.pc-mini[hidden] { display: none; }
+.pc-mini.over { transform: scale(1.22) rotate(-4deg); }
+.pc-mini-tops { position: absolute; left: 14px; right: 14px; top: 0; height: 40px; display: flex; justify-content: space-around; align-items: flex-end; }
+.pc-mini-tops i { width: 7px; height: 34px; border-radius: 3px 3px 0 0; background: linear-gradient(var(--c) 0 6px, #f3d2a8 6px 11px, var(--c) 11px); transform: rotate(-6deg); }
+.pc-mini-tops i:nth-child(2) { height: 40px; transform: rotate(4deg); }
+.pc-mini-cup { position: absolute; left: 10px; right: 10px; bottom: 0; height: 56px; border-radius: 3px 3px 12px 12px / 3px 3px 7px 7px; background: radial-gradient(circle, rgba(255,255,255,.75) 0 1.6px, transparent 2px) 0 0 / 7px 7px, linear-gradient(90deg, #f791b0, #ffd0dd 35%, #f48bab); box-shadow: 0 5px 12px rgba(150,70,100,.3); }
+.pc-tipnote { position: absolute; max-width: 220px; margin: 0; padding: 7px 12px; border-radius: 14px; background: rgba(255,255,255,.95); border: 1.5px solid var(--border-color, #ffb6c1); color: #7a5a66; font-size: 12.5px; word-break: keep-all; box-shadow: 0 3px 10px rgba(120,80,95,.15); transform: translateY(-100%); }
+.pc-tipnote[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .pc-tool, .pc-cup, .pc-held.in, .pc-mini { transition: none; } }

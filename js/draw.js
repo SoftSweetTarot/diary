@@ -61,6 +61,7 @@
             document.body.classList.add('draw-on');
             drq('penBar').hidden = false;
             penSetTool(dw.tool);
+            if (penNote()) { drq('penBar').hidden = true; pcOpen(); }        // 📒 수첩 모드 : 아래 창 대신 연필통
             penRender();
         }
         function penPoint(e) {
@@ -70,6 +71,8 @@
         }
         function penDown(e) {
             e.preventDefault(); e.stopPropagation();
+            if (penNote() && (!pcS.held || pcS.carry)) return;                 // 📒 필기구를 뽑아야 써져요
+            if (penNote()) pcHeldAt(e.clientX, e.clientY);                     // 연필심이 닿은 바로 그 자리
             try { dw.svg.setPointerCapture(e.pointerId); } catch (err) {}
             const pt = penPoint(e);
             if (dw.tool === 'erase') { dw.erasing = true; dw.hist.push(dw.strokes); dw.erased = false; penRing(pt); penEraseAt(pt); return; }
@@ -77,6 +80,7 @@
             penRender();
         }
         function penMove(e) {
+            if (penNote()) { if (!pcS.held || pcS.carry) return; if (dw.cur || dw.erasing || e.pointerType === 'mouse') pcHeldAt(e.clientX, e.clientY); }   // 📒 연필심이 따라와요
             if (dw.tool === 'erase' && !dw.erasing) penRing(penPoint(e));
             if (!dw.cur && !dw.erasing) return;
             e.preventDefault(); e.stopPropagation();
@@ -125,6 +129,36 @@
             if (hit) { dw.strokes = out; dw.erased = true; penRender(); }
         }
         function penUndo() { if (dw.hist.length) { dw.strokes = dw.hist.pop(); penRender(); } }
+        /* ---------- ✏️ 필기구 그림 (📒 수첩 모드 연필통에서 써요 · 30 × 150 · 위가 연필심) ---------- */
+        const penNote = () => typeof window.snbMode === 'function' && snbMode() === 'note';
+        function penLighten(c, k) {                    // 색을 k 만큼 하얗게
+            const n = parseInt(c.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255, f = v => Math.round(v + (255 - v) * k);
+            return `rgb(${f(r)},${f(g)},${f(b)})`;
+        }
+        function penPencilSvg(c, size) {               // 색연필 한 자루 (30 × 150) · 위가 연필심
+            const tip = [1.6, 2.6, 3.8][size], wood = '#f3d2a8', light = c === '#ffffff' ? '#f4f0f2' : penLighten(c, .28), dark = c === '#ffffff' ? '#ddd3d8' : penLighten(c, -0) ;
+            const lead = c === '#ffffff' ? '#e9e2e5' : c;
+            return `<svg viewBox="0 0 30 150" aria-hidden="true"><path d="M5 34 L15 2 L25 34 Z" fill="${wood}"/><path d="M5 34 Q8 31 10 34 Q12.5 31 15 34 Q17.5 31 20 34 Q22 31 25 34" fill="${wood}" stroke="#e2b88c" stroke-width=".8"/>`
+                + `<path d="M${15 - tip} 13 L15 2 L${15 + tip} 13 Z" fill="${lead}"/>`
+                + `<rect x="5" y="34" width="20" height="98" fill="${dark}"/><rect x="5" y="34" width="6.6" height="98" fill="${light}"/><rect x="18.4" y="34" width="6.6" height="98" fill="rgba(0,0,0,.12)"/>`
+                + `<rect x="5" y="34" width="20" height="98" fill="none" stroke="rgba(90,60,70,.18)" stroke-width=".8"/>`
+                + `<text x="15" y="90" font-size="7" fill="rgba(255,255,255,.75)" text-anchor="middle" transform="rotate(-90 15 90)" font-family="sans-serif">MALLANG</text>`
+                + `<rect x="5" y="132" width="20" height="9" fill="#e5c76b"/><path d="M5 135 H25 M5 138 H25" stroke="#c9a94d" stroke-width=".8"/><rect x="5.5" y="141" width="19" height="9" rx="3" fill="#ffadc4"/></svg>`;
+        }
+        function penMarkerSvg(c, size) {               // 뚜껑 연 형광펜 (30 × 150) · 위가 납작한 펜촉
+            const nib = [5, 7, 9][size];
+            return `<svg viewBox="0 0 30 150" aria-hidden="true"><path d="M${15 - nib} 18 L${15 - nib + 2} 4 L${15 + nib} 9 L${15 + nib} 18 Z" fill="${c}" stroke="rgba(0,0,0,.12)" stroke-width=".8"/>`
+                + `<path d="M4 30 Q4 18 9 18 H21 Q26 18 26 30 Z" fill="${penLighten(c, .1)}" stroke="rgba(0,0,0,.12)" stroke-width=".8"/>`
+                + `<rect x="3" y="30" width="24" height="116" rx="7" fill="${penLighten(c, .45)}" stroke="rgba(0,0,0,.1)" stroke-width=".8"/>`
+                + `<rect x="3" y="58" width="24" height="44" fill="#fff" opacity=".85"/><text x="15" y="80" font-size="7.5" font-weight="bold" fill="${c}" text-anchor="middle" transform="rotate(-90 15 80)" font-family="sans-serif">HIGH</text>`
+                + `<rect x="8" y="34" width="4" height="108" rx="2" fill="#fff" opacity=".35"/></svg>`;
+        }
+        function penEraserSvg(size) {                  // 지우개 (작은 · 보통 · 큰) · 종이 띠를 두른 블록
+            const w = [14, 20, 27][size], x = 15 - w / 2;
+            return `<svg viewBox="0 0 30 150" aria-hidden="true"><rect x="${x}" y="36" width="${w}" height="110" rx="4" fill="#fffaf4" stroke="#e3d6cc" stroke-width="1"/>`
+                + `<rect x="${x}" y="70" width="${w}" height="70" fill="#8fc8e8"/><rect x="${x}" y="80" width="${w}" height="7" fill="#fff" opacity=".7"/>`
+                + `<path d="M${x + 2} 39 Q15 35 ${x + w - 2} 39" stroke="#cfc2b8" stroke-width="1" fill="none"/></svg>`;
+        }
         function penSetTool(t) {
             dw.tool = t;
             document.querySelectorAll('#penBar [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
@@ -188,6 +222,7 @@
             const l = drq('penLayer'); if (l) l.remove();
             dw.svg = null;
             const bar = drq('penBar'); if (bar) bar.hidden = true;
+            pcClose();
             document.body.classList.remove('draw-on');
         }
 
@@ -208,6 +243,168 @@
                 <button type="button" class="draw-done" onclick="penDone()">✓ 완료</button>
               </div>`;
             document.body.appendChild(bar);
+        }
+
+        /* ---------- ✏️ 📒 수첩 모드 연필통 (고르는 창 모드는 지금 그대로 · 도련 · 2026-10-13)
+           - 예쁜 연필통에 색연필 · 형광펜 · 지우개가 섞여 꽂혀 있어요 → 옆으로 끌면 비켜나고, 위로 쭉 끌면 쏙 뽑혀요
+           - 뽑으면 연필통은 오른쪽 아래 구석의 작은 연필통이 되고, 뽑은 필기구만 손에 들려요
+           - 쓰면 연필심(지우개는 바닥)이 손가락 · 마우스가 닿은 바로 그 자리를 따라가요
+           - 필기구를 꾹 누르면 집어 들어 옮겨요 → 작은 연필통에 꽂으면 ✓ 완료 · 화면 밖으로 던지면 '지울까요?'
+           - 작은 연필통을 톡 눌러도 꽂혀요 ---------- */
+        const PC_ANG = -145;                               // 들고 있는 필기구 기울기 (연필심이 왼쪽 아래 · 몸통은 오른쪽 위)
+        const pcS = { tools: [], held: null, tip: null, carry: null, press: null, drag: null, z: 10 };
+        const pcSvg = o => o.tool === 'erase' ? penEraserSvg(o.size) : o.tool === 'hi' ? penMarkerSvg(o.color, 1) : penPencilSvg(o.color, 1);
+        const pcTipOf = o => o.tool === 'erase' ? [15, 37] : o.tool === 'hi' ? [15, 5] : [15, 2];   // 그림 안 닿는 점
+        function pcList() {
+            const all = DRAW_PEN_COLORS.map(c => ({ tool: 'pen', color: c, size: 1 })).concat(DRAW_HI_COLORS.map(c => ({ tool: 'hi', color: c, size: 1 })), [{ tool: 'erase', size: 0 }, { tool: 'erase', size: 2 }]);
+            return [0, 8, 3, 14, 1, 11, 5, 9, 15, 2, 12, 6, 10, 4, 13, 7].map(i => all[i]).filter(Boolean);   // 섞어서 꽂아요
+        }
+        function pcBuild() {
+            let r = drq('pcRoom'); if (r) return r;
+            r = document.createElement('div'); r.id = 'pcRoom'; r.className = 'pc-room'; r.hidden = true;
+            r.innerHTML = `<div class="pc-cup" id="pcCup"><p class="pc-hint">필기구를 골라 <b>위로 쏙</b> 뽑아요 · 옆으로 밀면 비켜나요</p>`
+                + `<button type="button" class="pc-x" aria-label="닫기">✕</button><div class="pc-back"></div><div class="pc-tools" id="pcTools"></div><div class="pc-front"><i></i><b>♡</b></div></div>`
+                + `<div class="pc-held" id="pcHeld" hidden></div><p class="pc-tipnote" id="pcTipNote" hidden>다 쓰면 필기구를 꾹 집어 <b>구석 연필통</b>에 꽂아요 ✏️</p>`
+                + `<button type="button" class="pc-mini" id="pcMini" hidden aria-label="연필통 (꽂으면 완료)"><span class="pc-mini-tops"><i style="--c:#e2556f"></i><i style="--c:#3d9be0"></i><i style="--c:#ffe14d"></i></span><span class="pc-mini-cup"></span></button>`;
+            document.body.appendChild(r);
+            r.querySelector('.pc-x').onclick = () => penClose();
+            drq('pcMini').onclick = () => { if (pcS.held) pcPutBack(); };
+            return r;
+        }
+        /* 페이지 가운데 길쭉한 연필통 · 작은 연필통은 페이지 오른쪽 아래 (하단 메뉴 밖으로 안 나가게) */
+        function pcLayout() {
+            const pg = drq('canvasArea'), cup = drq('pcCup'), mini = drq('pcMini'), note = drq('pcTipNote'); if (!pg || !cup) return;
+            const r = pg.getBoundingClientRect(), cw = cup.offsetWidth, ch = cup.offsetHeight;
+            cup.style.left = Math.round(r.left + r.width / 2 - cw / 2) + 'px';
+            cup.style.top = Math.round(Math.max(8, r.top + r.height / 2 - ch / 2 + 10)) + 'px';
+            if (mini) { mini.style.left = Math.round(r.right - 62 - 12) + 'px'; mini.style.top = Math.round(r.bottom - 84 - 12) + 'px'; }
+            if (note) { note.style.right = Math.round(innerWidth - r.right + 10) + 'px'; note.style.top = Math.round(r.bottom - 84 - 22) + 'px'; }
+        }
+        addEventListener('resize', () => { const r = drq('pcRoom'); if (r && !r.hidden) pcLayout(); });
+        function pcPlace(o) {
+            const lift = o.lift || 0, a = o.a * (1 - Math.min(1, lift / 90));
+            o.el.style.transform = `translate(${o.x}px, ${o.y - lift}px) rotate(${a}deg)`;   // 연필통 바닥이 돌아가는 점
+        }
+        function pcOpen() {
+            const r = pcBuild(); r.hidden = false;
+            requestAnimationFrame(pcLayout);
+            Object.assign(pcS, { held: null, tip: null, carry: null, press: null, drag: null });
+            const cup = drq('pcCup'); cup.classList.remove('gone'); cup.style.transform = '';
+            drq('pcHeld').hidden = true; drq('pcMini').hidden = true; drq('pcTipNote').hidden = true;
+            const box = drq('pcTools'); box.textContent = '';
+            const L = pcList(), n = L.length;
+            pcS.tools = L.map((o, i) => {
+                const el = document.createElement('div'); el.className = 'pc-tool' + (o.tool === 'erase' ? ' er' : ''); el.innerHTML = pcSvg(o);
+                const sv = el.querySelector('svg'); if (sv && o.tool !== 'erase') sv.setAttribute('preserveAspectRatio', 'none');   // 실제처럼 길쭉하게
+                o.el = el; o.x = Math.round(-76 + i * 152 / (n - 1)); o.a = o.x * .17 + (i % 3 - 1) * 1.5; o.y = -((i * 7) % 3 * 14) + (o.tool === 'hi' ? 12 : 0); o.lift = 0;   // 넓은 통에 부채꼴로 기대어요 (윗부분이 넉넉히 벌어져 고르기 쉬워요)
+                el.style.zIndex = o.tool === 'erase' ? 3 : i % 2 ? 2 : 1;   // 짧은 지우개는 앞쪽에
+                pcPlace(o); box.appendChild(el); pcBindTool(o);
+                return o;
+            });
+        }
+        function pcBindTool(o) {
+            const el = o.el;
+            el.addEventListener('pointerdown', e => {
+                if (pcS.held || e.button > 0) return;
+                e.preventDefault(); e.stopPropagation();
+                try { el.setPointerCapture(e.pointerId); } catch (er) {}
+                pcS.drag = { o, id: e.pointerId, x: e.clientX, y: e.clientY, x0: o.x, a0: o.a };
+                el.classList.add('grab'); el.style.zIndex = ++pcS.z;
+            });
+            el.addEventListener('pointermove', e => {
+                const d = pcS.drag;
+                if (pcS.carry && pcS.carry.id === e.pointerId) { pcCarryMove(e); return; }   // 뽑은 채 그대로 끌고 있어요
+                if (!d || d.o !== o || d.id !== e.pointerId) return;
+                const dx = e.clientX - d.x, dy = e.clientY - d.y;
+                o.x = Math.max(-90, Math.min(90, d.x0 + dx)); o.a = Math.max(-16, Math.min(16, d.a0 + dx * .15));   // 옆으로 밀면 비켜나요
+                o.lift = Math.max(0, -dy);
+                pcPlace(o);
+                if (o.lift > 110) pcPick(o, e);                                  // 위로 쭉 → 쏙 뽑혀요
+            });
+            const up = e => {
+                if (pcS.carry && pcS.carry.id === e.pointerId) { pcCarryEnd(e); return; }
+                const d = pcS.drag; if (!d || d.o !== o || d.id !== e.pointerId) return;
+                pcS.drag = null; el.classList.remove('grab'); o.lift = 0; pcPlace(o);   // 덜 뽑으면 다시 쏙 들어가요
+            };
+            el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+        }
+        /* 뽑기 : 연필통은 구석의 작은 연필통으로 · 뽑은 필기구만 손에 */
+        function pcPick(o, e) {
+            pcS.drag = null; o.el.classList.remove('grab'); o.el.style.visibility = 'hidden';
+            pcS.held = o;
+            dw.tool = o.tool; if (o.tool !== 'erase') dw.color[o.tool] = o.color; dw.size[o.tool] = o.size;
+            penSetTool(o.tool);
+            drq('pcMini').hidden = false; pcLayout();
+            const cup = drq('pcCup'), cr = cup.getBoundingClientRect(), mr = drq('pcMini').getBoundingClientRect();   // 연필통이 작은 연필통 자리로 쏙 줄어요
+            cup.style.transform = `translate(${mr.left + mr.width / 2 - (cr.left + cr.width / 2)}px, ${mr.bottom - cr.bottom}px) scale(.22)`;
+            cup.classList.add('gone');
+            const h = drq('pcHeld'); h.innerHTML = pcSvg(o); h.hidden = false; h.classList.add('carry');
+            pcS.carry = { id: e.pointerId, off: [0, 0] };                         // 뽑은 손 그대로 들고 있어요 (연필심 = 손가락)
+            pcHeldAt(e.clientX, e.clientY);
+            if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
+            const note = drq('pcTipNote'); note.hidden = false; clearTimeout(pcS.noteTm); pcS.noteTm = setTimeout(() => { note.hidden = true; }, 4200);
+        }
+        function pcHeldAt(x, y) {
+            const h = drq('pcHeld'); if (!h || !pcS.held) return;
+            const t = pcTipOf(pcS.held); pcS.tip = [x, y];
+            h.style.transform = `translate(${x}px, ${y}px) rotate(${PC_ANG}deg) translate(${-t[0]}px, ${-t[1]}px)`;
+        }
+        /* 필기구 몸통 위인지 (연필심 쪽 20px 은 빼요 → 쓰기) */
+        function pcOnBody(x, y) {
+            if (!pcS.held || !pcS.tip) return false;
+            const a = PC_ANG * Math.PI / 180, ux = -Math.sin(a), uy = Math.cos(a), t = pcTipOf(pcS.held);
+            const px = x - pcS.tip[0], py = y - pcS.tip[1], along = px * ux + py * uy, across = Math.abs(px * uy - py * ux);
+            return along > 22 + (t[1] - 2) && along < 150 - t[1] && across < 18;
+        }
+        const pcOverMini = (x, y) => { const m = drq('pcMini'); if (!m || m.hidden) return false; const r = m.getBoundingClientRect(); return x > r.left - 16 && x < r.right + 16 && y > r.top - 24 && y < r.bottom + 16; };
+        function pcCarryMove(e) {
+            const c = pcS.carry; pcHeldAt(e.clientX + c.off[0], e.clientY + c.off[1]);
+            drq('pcMini').classList.toggle('over', pcOverMini(e.clientX, e.clientY));
+        }
+        function pcCarryEnd(e) {
+            const x = e.clientX, y = e.clientY;
+            pcS.carry = null; drq('pcHeld').classList.remove('carry'); drq('pcMini').classList.remove('over');
+            if (e.type !== 'pointercancel' && pcOverMini(x, y)) { pcPutBack(); return; }                 // 🖊️ 꽂으면 완료
+            if (x < 6 || y < 6 || x > innerWidth - 6 || y > innerHeight - 6) { pcThrow(); return; }        // 화면 밖으로 휙
+        }
+        /* 꾹 누르면 집어 들기 (그냥 쓰려고 누른 건 그대로 써져요) */
+        document.addEventListener('pointerdown', e => {
+            if (!dw.on || !pcS.held || pcS.carry || !pcOnBody(e.clientX, e.clientY)) return;
+            const p = pcS.press = { id: e.pointerId, x: e.clientX, y: e.clientY };
+            p.tm = setTimeout(() => {
+                if (pcS.press !== p) return;
+                pcS.press = null;
+                if (dw.cur) { dw.cur = null; penRender(); }                       // 누르는 사이 찍힌 점은 지워요
+                if (dw.erasing) { dw.erasing = false; if (!dw.erased) dw.hist.pop(); penRing(null); }
+                pcS.carry = { id: p.id, off: [pcS.tip[0] - p.x, pcS.tip[1] - p.y] };
+                drq('pcHeld').classList.add('carry');
+                if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}
+            }, 320);
+        }, true);
+        document.addEventListener('pointermove', e => {
+            const p = pcS.press; if (p && p.id === e.pointerId && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 8) { clearTimeout(p.tm); pcS.press = null; }
+            if (pcS.carry && pcS.carry.id === e.pointerId) { e.preventDefault(); pcCarryMove(e); }
+        }, true);
+        const pcDocUp = e => {
+            const p = pcS.press; if (p && p.id === e.pointerId) { clearTimeout(p.tm); pcS.press = null; }
+            if (pcS.carry && pcS.carry.id === e.pointerId) pcCarryEnd(e);
+        };
+        document.addEventListener('pointerup', pcDocUp, true); document.addEventListener('pointercancel', pcDocUp, true);
+        /* 작은 연필통에 쏙 꽂고 ✓ 완료 */
+        function pcPutBack() {
+            const h = drq('pcHeld'), m = drq('pcMini').getBoundingClientRect();
+            pcS.held = null; pcS.press = null; pcS.carry = null;
+            h.classList.add('in'); h.style.transform = `translate(${m.left + m.width / 2}px, ${m.top + 6}px) rotate(-180deg) translate(-15px, -2px) scale(.35)`;
+            if (navigator.vibrate) try { navigator.vibrate(8); } catch (er) {}
+            setTimeout(() => { h.classList.remove('in'); penDone(); }, 280);
+        }
+        function pcThrow() {
+            if (!dw.strokes.length) { penClose(); return; }
+            showMsg('쓴 것을 모두 지울까요?', true).then(ok => { if (ok) penClose(); else pcHeldAt(innerWidth / 2, innerHeight / 2); });
+        }
+        function pcClose() {
+            const r = drq('pcRoom'); if (r) r.hidden = true;
+            pcS.held = null; pcS.carry = null; pcS.press = null; pcS.drag = null;
         }
         /* 그리는 동안에는 페이지 넘기기(끌기)를 막아요 */
         document.getElementById('diaryWrapper').addEventListener('pointerdown', e => {
