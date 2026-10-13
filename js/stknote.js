@@ -339,7 +339,7 @@
             const up = e => {
                 const p = snb.press; if (!p || p.id !== e.pointerId || p.body !== body) return;
                 clearTimeout(p.timer); snb.press = null;
-                if (p.seal) { snb.noClick = Date.now() + 500; if (e.type === 'pointercancel') { p.seal.kill(); snbPeelBack(p); } else p.seal.up(); return; }
+                if (p.seal) { snb.noClick = Date.now() + 500; if (e.type === 'pointercancel') { p.seal.kill(); snbAway(false); snbPeelBack(p); } else p.seal.up(); return; }
                 if (p.drag) { snb.noClick = Date.now() + 500; snbDrop(p, e.clientX, e.clientY, e.type === 'pointercancel'); return; }
                 if (p.curl && snb.curl) {
                     snb.noClick = Date.now() + 400;
@@ -379,6 +379,14 @@
             e.stopPropagation(); e.preventDefault();
         }, true);
 
+        /* 📱 폰 : 화면이 작아서 스티커를 떼면 수첩이 스르르 비켜요 → 붙이면(또는 제자리로 돌아가면) 다시 나타나요 · ✕ 로 닫을 때까지 반복
+           💻 PC · 아이패드는 수첩이 그대로 있어요 (도련 · 2026-10-13) */
+        function snbAway(on) {
+            const m = snb.m; if (!m) return;
+            clearTimeout(snb.awayTm);
+            if (on) { if (innerWidth < 700) m.classList.add('snb-away'); return; }
+            snb.awayTm = setTimeout(() => m.classList.remove('snb-away'), 220);
+        }
         function snbLift(e, body) {
             const p = snb.press; if (!p || p.drag || !p.it) return;
             p.drag = true;
@@ -394,19 +402,20 @@
             g.style.width = w + 'px'; g.style.height = h + 'px';
             document.body.appendChild(g);
             p.ghost = g; p.gw = w; p.gh = h;
-            snbGhostAt(p.x, p.y);
+            snbGhostAt(p.x, p.y); snbAway(true);
             snb.m.classList.remove('snb-back'); const dw = snbq('diaryWrapper'); if (dw) dw.classList.remove('snb-front');
             if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
         }
         function snbGhostAt(x, y) { const p = snb.press || snb.last; if (p && p.ghost) p.ghost.style.transform = `translate(${x - p.gw / 2}px, ${y - p.gh / 2}px) rotate(-4deg) scale(1.12)`; }
         function snbOver(x, y) {
             const cv = snbq('canvasArea'); if (!cv || (typeof isCoverOpen !== 'undefined' && !isCoverOpen)) return false;
-            const r = cv.getBoundingClientRect(), m = snb.m, b = m && m.style.display === 'flex' && !m.classList.contains('snb-back') && m.querySelector('.modal-content').getBoundingClientRect();
+            const r = cv.getBoundingClientRect(), m = snb.m, b = m && m.style.display === 'flex' && !m.classList.contains('snb-back') && !m.classList.contains('snb-away') && m.querySelector('.modal-content').getBoundingClientRect();   // 📱 비켜 있는 수첩 자리는 페이지예요
             if (b && x >= b.left && x <= b.right && y >= b.top && y <= b.bottom) return false;   // 수첩 위에 놓으면 제자리로 (수첩은 그대로 있어요)
             return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
         }
         function snbDrop(p, x, y, cancel) {
             const m = snb.m, g = p.ghost, ok = !cancel && Math.hypot(x - p.x, y - p.y) > 12 && snbOver(x, y);   // 꾹 누르고 그대로 떼면 붙이지 않아요
+            snbAway(false);
             if (g) {
                 g.classList.add(ok ? 'stick' : 'back');
                 if (!ok) { const r = p.it.getBoundingClientRect(); g.style.transform = `translate(${r.left + r.width / 2 - p.gw / 2}px, ${r.top + r.height / 2 - p.gh / 2}px)`; }
@@ -597,8 +606,9 @@
             if (!r.width || !r.height) return false;
             pc.classList.add('out');
             p.seal = pfxSeal({ src, cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height, rot: 0, x: p.x, y: p.y,
-                onCancel: () => snbPeelBack(p),
-                onDrop: (cx, cy, rot) => { if (snbOver(cx, cy)) snbPeelStick(p, cx, cy, rot, r); else snbPeelBack(p); } });
+                onDetach: () => snbAway(true),                                     // 📱 다 떼어지면 수첩이 비켜요
+                onCancel: () => { snbAway(false); snbPeelBack(p); },
+                onDrop: (cx, cy, rot) => { const ok = snbOver(cx, cy); snbAway(false); if (ok) snbPeelStick(p, cx, cy, rot, r); else snbPeelBack(p); } });
             const stage = document.querySelector('body > .pfx-stage:last-of-type'); if (stage) stage.classList.add('snb-top');   // 수첩 위에서 떼어져요
             if (navigator.vibrate) try { navigator.vibrate(6); } catch (er) {}
             return true;

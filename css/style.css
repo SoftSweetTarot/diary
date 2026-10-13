@@ -3268,3 +3268,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .spk-card .sb-thumbs { margin-bottom: 2px; padding: 0; }
 .spk-card:has(.sb-thumbs) { padding: 10px 4px 8px; }
 .sticker-grid .sb-card .sb-thumbs { margin-top: 4px; }
+
+/* 📱 스티커 수첩 : 스티커를 떼는 동안 수첩이 비켜요 (js/stknote.js snbAway) */
+.modal.snb-on { transition: opacity .2s; }
+.modal.snb-on.snb-away { opacity: 0 !important; pointer-events: none !important; }
