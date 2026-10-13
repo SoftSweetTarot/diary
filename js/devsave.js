@@ -16,7 +16,7 @@
 
         const DV_MODE = 'malang_dev_mode';                 // 'idb' (브라우저 저장공간) | 'dir' (PC 폴더) · 없으면 쓰지 않음
         const DV_DB = 'malang-device', DV_TOP = '말랑달콤';
-        const V = { on: false, mode: '', root: null, idx: new Map(), stale: false, last: 0, wantRestore: false };
+        const V = { on: false, mode: '', top: null, label: '', idx: new Map(), stale: false, last: 0 };   // top : PC 의 말랑달콤 폴더 손잡이
         const dvCanDir = () => typeof window.showDirectoryPicker === 'function';
         const dvEsc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 
@@ -70,10 +70,12 @@
         const vTell = () => { try { if (vBC) vBC.postMessage(1); } catch (e) {} };
 
         /* ---------- 폴더 손잡이 (PC) ---------- */
-        async function vDir(p, create) {
-            let d = V.root;
-            if (!p) return d;
-            for (const n of p.split('/')) {
+        async function vDir(p, create) {                                 // 말랑달콤 폴더 바깥은 절대 건드리지 않아요
+            if (!p) return null;
+            const parts = p.split('/');
+            if (parts[0] !== DV_TOP) throw new Error('outside');
+            let d = V.top;
+            for (const n of parts.slice(1)) {
                 try { d = await d.getDirectoryHandle(n, { create: !!create }); }
                 catch (e) { if (!create && e && (e.name === 'NotFoundError' || e.name === 'TypeMismatchError')) return null; throw e; }
             }
@@ -97,8 +99,7 @@
                         else { const f = await h.getFile(); idx.set(cp, { k: 'f', mt: f.lastModified, ct: f.lastModified, size: f.size }); }
                     }
                 };
-                const top = await vDir(DV_TOP, false);                  // 고른 폴더 전체가 아니라 그 안의 말랑달콤 폴더만 봐요
-                if (top) { idx.set(DV_TOP, { k: 'd', mt: 0, ct: 0 }); await walk(top, DV_TOP); }
+                idx.set(DV_TOP, { k: 'd', mt: 0, ct: 0 }); await walk(V.top, DV_TOP);   // 고른 곳 전체가 아니라 말랑달콤 폴더만 봐요
             }
             V.idx = idx; V.stale = false;
         }
@@ -239,6 +240,7 @@
         /* ---------- 시작 : 이 기기 폴더로 '로그인'한 것처럼 ---------- */
         function dvSetMode(m) { try { if (m) localStorage.setItem(DV_MODE, m); else localStorage.removeItem(DV_MODE); } catch (e) {} }
         function dvGetMode() { try { return localStorage.getItem(DV_MODE) || ''; } catch (e) { return ''; } }
+        const dvDays = () => Array.from(V.idx.keys()).filter(p => /\/다이어리\/페이지\/\d{4}년\/\d{1,2}월\/\d{1,2}일\.json$/.test(p)).length;
         async function dvStart(mode) {
             V.mode = mode; await vLoad();
             V.on = true; drive.local = true; drive.token = null;
@@ -246,7 +248,6 @@
             hideGate(); updateBadge();
             try { await postLoginTasks(); } catch (e) {}
             if (mode === 'idb' && navigator.storage && navigator.storage.persist && !/firefox/i.test(navigator.userAgent)) navigator.storage.persist().catch(() => {});   // 지우지 말아 주세요 (묻는 창 없이 되는 브라우저만)
-            if (V.wantRestore) { V.wantRestore = false; if (await showMsg('📥 이제 다른 기기에서 받은 <b>백업 파일</b>을 골라 주세요.', true)) dvRestorePick(); }
         }
         /* drive.js initDrive 맨 앞 : true 면 구글 화면 없이 이 기기 폴더로 열렸어요 (또는 '이어서 쓰기' 화면) */
         async function dvAuto() {
@@ -257,9 +258,9 @@
             }
             if (mode === 'dir') {
                 let h = null;
-                try { h = await dvTx(['meta'], 'readonly', t => dvReq(t.objectStore('meta').get('dir'))); } catch (e) {}
+                try { h = await dvTx(['meta'], 'readonly', t => dvReq(t.objectStore('meta').get('top'))); } catch (e) {}
                 if (!h || !h.queryPermission) { dvSetMode(''); return false; }
-                V.root = h;
+                V.top = h; try { V.label = localStorage.getItem(DV_MODE + '_label') || ''; } catch (e) { V.label = ''; }
                 let st = 'prompt'; try { st = await h.queryPermission({ mode: 'readwrite' }); } catch (e) {}
                 if (st === 'granted') { try { await dvStart('dir'); return true; } catch (e) { console.warn(e); dvQuit(); } }
                 dvAskAgain();                                  // '이번만 허용'이었으면 한 번 눌러야 해요 (브라우저 규칙)
@@ -280,163 +281,117 @@
         function dvBack() {
             const c = document.querySelector('#driveGate .gate-card');
             if (c && c.dataset.orig) { c.innerHTML = c.dataset.orig; delete c.dataset.orig; }
-            showGate('login', '일기는 내 구글 드라이브의 <b>말랑달콤</b> 폴더에<br>하루에 파일 1개씩 저장돼요.');
+            showGate('login', '일기는 구글 드라이브에<br>하루에 파일 1개씩 저장돼요.');
         }
         function dvChoose() {
             const pc = dvCanDir();
             const c = dvCard(`<div class="gate-title dv-title">일기를 어디에 둘까요?</div>
-                <button type="button" class="dv-opt on" data-v="folder"><b>📁 폴더</b><span>${pc ? '저장할 곳을 고르면 그 안에 <b>말랑달콤</b> 폴더를 만들어 자동으로 저장해요.' : '이 기기에 <b>말랑달콤</b> 폴더를 만들어 자동으로 저장해요. 다음에 열면 그대로 이어서 써요.'}</span></button>
+                <button type="button" class="dv-opt on" data-v="folder"><b>📁 폴더</b><span>${pc ? '저장할 폴더를 고르면 쓰는 대로 자동으로 저장해요. 백업을 푼 폴더를 고르면 그대로 이어서 써요.' : '이 기기 폴더에 쓰는 대로 자동으로 저장해요. 다음에 열면 그대로 이어서 써요.'}</span></button>
                 <button type="button" class="dv-opt" data-v="look"><b>👀 구경만</b><span>저장하지 않아요. 닫거나 새로고침하면 쓴 일기가 사라져요.</span></button>
                 <p class="dv-foot">나중에 구글로 로그인하면 내 드라이브로 옮길 수 있어요.</p>
-                <button type="button" class="gate-guest dv-restore">📥 다른 기기에서 받은 백업 파일로 시작하기</button>
+                <button type="button" class="gate-guest dv-restore">📥 다른 기기에서 받은 백업 파일(zip)로 시작하기</button>
                 <button type="button" class="gate-guest dv-back">← 돌아가기</button>`);
-            c.querySelector('[data-v="folder"]').onclick = () => dvPickFolder();
+            c.querySelector('[data-v="folder"]').onclick = () => dvPickFolder(true);
             c.querySelector('[data-v="look"]').onclick = () => { dvBack(); enterGuestMode(); };
-            c.querySelector('.dv-restore').onclick = () => { V.wantRestore = true; dvPickFolder(); };
+            c.querySelector('.dv-restore').onclick = () => bkPickFile(dvStartWithBackup);
             c.querySelector('.dv-back').onclick = dvBack;
         }
-        async function dvPickFolder() {
+        /* 고른 곳 → 말랑달콤 폴더 : 고른 게 말랑달콤 폴더(또는 백업을 푼 폴더)면 그대로 · 아니면 그 안에 (있으면 그것 · 없으면 만들기) */
+        async function dvTopOf(h) {
+            const label = h.name === DV_TOP ? '' : h.name;                   // 안내문에는 고른 폴더 이름만 (말랑달콤은 말하지 않아요 · 도련)
+            if (h.name === DV_TOP) return { top: h, label };
+            try { return { top: await h.getDirectoryHandle(DV_TOP), label }; } catch (e) {}
+            for (const n of ['다이어리', '설정', '스티커']) { try { await h.getDirectoryHandle(n); return { top: h, label }; } catch (e) {} }   // 이름을 바꾼 말랑달콤 폴더
+            return { top: await h.getDirectoryHandle(DV_TOP, { create: true }), label };
+        }
+        /* 📁 폴더 고르기 · 시작 (say : 다 되면 안내창) → 성공하면 true */
+        async function dvPickFolder(say) {
             if (!dvCanDir()) {
-                try { await dvDb(); } catch (e) { showMsg('⚠ 이 브라우저에서는 저장할 수 없어요.<br><span style="font-size:12px;color:#777;">시크릿 모드라면 일반 창으로 열어 주세요.</span>'); return; }
-                dvSetMode('idb'); dvBack(); showGate('wait', '📁 이 기기에 <b>말랑달콤</b> 폴더를 만드는 중…');
-                try { await dvStart('idb'); } catch (e) { console.warn(e); dvSetMode(''); dvQuit(); dvBack(); showMsg('⚠ 이 기기에 폴더를 만들지 못했어요.<br><span style="font-size:12px;color:#777;">시크릿 모드라면 일반 창으로 열어 주세요.</span>'); }
-                return;
+                try { await dvDb(); } catch (e) { showMsg('⚠ 이 브라우저에서는 저장할 수 없어요.<br><span style="font-size:12px;color:#777;">시크릿 모드라면 일반 창으로 열어 주세요.</span>'); return false; }
+                dvSetMode('idb'); dvBack(); showGate('wait', '📁 이 기기 폴더를 만드는 중…');
+                try { await dvStart('idb'); return true; }
+                catch (e) { console.warn(e); dvSetMode(''); dvQuit(); dvBack(); showMsg('⚠ 이 기기에 폴더를 만들지 못했어요.<br><span style="font-size:12px;color:#777;">시크릿 모드라면 일반 창으로 열어 주세요.</span>'); return false; }
             }
             let h;
             try { h = await showDirectoryPicker({ id: 'malang', mode: 'readwrite', startIn: 'documents' }); }
-            catch (e) { V.wantRestore = false; return; }                       // 고르지 않고 닫음
+            catch (e) { return false; }                                    // 고르지 않고 닫음
             try {
-                V.root = h;
-                try { await dvTx(['meta'], 'readwrite', t => { t.objectStore('meta').put(h, 'dir'); }); } catch (e) {}
-                dvSetMode('dir'); dvBack(); showGate('wait', '📁 <b>' + dvEsc(h.name) + ' / ' + DV_TOP + '</b> 폴더를 여는 중…');
+                const t = await dvTopOf(h);
+                V.top = t.top; V.label = t.label;
+                try { await dvTx(['meta'], 'readwrite', x => { x.objectStore('meta').put(t.top, 'top'); }); } catch (e) {}
+                try { localStorage.setItem(DV_MODE + '_label', t.label); } catch (e) {}
+                dvSetMode('dir'); dvBack(); showGate('wait', '📁 ' + dvFolder(t.label) + '를 여는 중…');
                 await dvStart('dir');
-                if (!V.wantRestore) showMsg(`📁 <b>${dvEsc(h.name)} / ${DV_TOP}</b> 폴더에 저장할게요!<br><span style="font-size:12px;color:#777;">쓰는 대로 자동으로 저장되고, 다음에 열면 그대로 이어서 써요.</span>`);
-            } catch (e) { console.warn(e); dvSetMode(''); dvQuit(); dvBack(); showMsg('⚠ 그 폴더에는 저장할 수 없어요. 다른 폴더를 골라 주세요.'); }
+                const n = dvDays();
+                if (say) showMsg(n ? `📁 ${dvFolder(t.label)}의 일기 <b>${n}일치</b>로 이어서 쓸게요!` : `📁 ${dvFolder(t.label)}에 저장할게요!<br><span style="font-size:12px;color:#777;">쓰는 대로 자동으로 저장되고, 다음에 열면 그대로 이어서 써요.</span>`);
+                return true;
+            } catch (e) { console.warn(e); dvSetMode(''); dvQuit(); dvBack(); showMsg('⚠ 그 폴더에는 저장할 수 없어요. 다른 폴더를 골라 주세요.'); return false; }
+        }
+        /* 📥 새 기기 : 백업 zip 으로 시작 → "이 기기에 저장할까요?" → (PC) 저장할 곳 고르기 → 넣기 */
+        async function dvStartWithBackup(file) {
+            const b = await bkOpen(file); if (!b) return;
+            const pc = dvCanDir();
+            if (!(await showMsg(`📥 백업 파일에 일기 <b>${b.days}일치</b> · 파일 ${b.items.length}개가 있어요.<br><b>이 기기</b>에 저장할까요?${pc ? '<br><span style="font-size:12px;color:#777;">다음 창에서 저장할 폴더를 골라 주세요.</span>' : ''}`, true))) return;
+            if (!(await dvPickFolder(false))) return;
+            await bkApply(b, '이 기기 폴더');
         }
         function dvAskAgain() {
-            const n = V.root ? dvEsc(V.root.name) : '';
+            const n = dvFolder(V.label);
             const c = dvCard(`<div class="gate-title dv-title">다시 오셨네요!</div>
-                <div class="gate-msg">지난번에 고른 <b>${n} / ${DV_TOP}</b> 폴더에서<br>이어서 쓸게요.</div>
+                <div class="gate-msg">지난번에 고른 ${n}에서<br>이어서 쓸게요.</div>
                 <button type="button" class="btn gate-btn dv-go">📁 폴더 열고 이어서 쓰기</button>
                 <button type="button" class="gate-guest dv-other">다른 폴더 고르기</button>
                 <button type="button" class="gate-guest dv-login">구글 계정으로 시작하기</button>`);
             c.querySelector('.dv-go').onclick = async () => {
-                let st = 'denied'; try { st = await V.root.requestPermission({ mode: 'readwrite' }); } catch (e) {}
+                let st = 'denied'; try { st = await V.top.requestPermission({ mode: 'readwrite' }); } catch (e) {}
                 if (st !== 'granted') { showMsg('폴더를 허용해야 이어서 쓸 수 있어요.<br><span style="font-size:12px;color:#777;">허용 창에서 <b>방문할 때마다 허용</b>을 누르면 다음부터는 바로 열려요.</span>'); return; }
                 try { dvBack(); showGate('wait', '📁 폴더를 여는 중…'); await dvStart('dir'); }
                 catch (e) { console.warn(e); dvQuit(); dvAskAgain(); showMsg('⚠ 폴더를 열지 못했어요. 폴더가 옮겨졌다면 <b>다른 폴더 고르기</b>를 눌러 주세요.'); }
             };
-            c.querySelector('.dv-other').onclick = () => dvPickFolder();
+            c.querySelector('.dv-other').onclick = () => dvPickFolder(true);
             c.querySelector('.dv-login').onclick = () => { dvSetMode(''); dvBack(); };
         }
-
-        /* ---------- 📦 백업 파일 (말랑달콤 폴더 통째로 .zip) ---------- */
-        const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-        function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
-        function zipMake(files) {                                          // files : [[이름, Uint8Array]] · 압축 없이 담기 (어디서나 열려요)
-            const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
-            const d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF, dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF;
-            for (const [name, data] of files) {
-                const nb = enc.encode(name), crc = crc32(data), h = new DataView(new ArrayBuffer(30));
-                h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
-                h.setUint16(10, dt, true); h.setUint16(12, dd, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
-                h.setUint16(26, nb.length, true); h.setUint16(28, 0, true);
-                parts.push(new Uint8Array(h.buffer), nb, data);
-                const c = new DataView(new ArrayBuffer(46));
-                c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
-                c.setUint16(12, dt, true); c.setUint16(14, dd, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true);
-                c.setUint16(28, nb.length, true); c.setUint32(42, off, true);
-                cen.push(new Uint8Array(c.buffer), nb);
-                off += 30 + nb.length + data.length;
-            }
-            const cs = cen.reduce((s, a) => s + a.length, 0), e = new DataView(new ArrayBuffer(22));
-            e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true);
-            return new Blob(parts.concat(cen, [new Uint8Array(e.buffer)]), { type: 'application/zip' });
-        }
-        async function zipRead(buf) {                                      // 우리 백업 · 구글 드라이브에서 내려받은 zip (압축 0 · 8)
-            const v = new DataView(buf), u8 = new Uint8Array(buf);
-            let e = -1; for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--) if (v.getUint32(i, true) === 0x06054b50) { e = i; break; }
-            if (e < 0) throw new Error('zip');
-            const n = v.getUint16(e + 10, true); let p = v.getUint32(e + 16, true);
-            const utf = new TextDecoder('utf-8'), out = [];
-            for (let i = 0; i < n; i++) {
-                if (v.getUint32(p, true) !== 0x02014b50) throw new Error('zip');
-                const method = v.getUint16(p + 10, true), csize = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
-                const name = utf.decode(u8.subarray(p + 46, p + 46 + nl));
-                p += 46 + nl + xl + cl;
-                if (name.endsWith('/')) continue;
-                const ds = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true), raw = u8.subarray(ds, ds + csize);
-                let data;
-                if (method === 0) data = raw;
-                else if (method === 8 && typeof DecompressionStream === 'function') data = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
-                else throw new Error('zip-method');
-                out.push([name, data]);
-            }
-            return out;
-        }
-        function dvSaveBlob(blob, name) {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
-            document.body.appendChild(a); a.click(); a.remove();
-            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        }
-        const DAY_FILE_RE = /\/다이어리\/페이지\/\d{4}년\/\d{1,2}월\/\d{1,2}일\.json$/;
-        async function dvBackup() {
-            if (!V.on) return;
+        /* ⚙ 설정 → 📁 폴더 바꾸기 (PC) : 다른 말랑달콤 폴더로 · 새 폴더가 비어 있으면 지금 일기를 옮길지 물어요 */
+        async function dvChangeFolder() {
+            if (!V.on || V.mode !== 'dir') return;
             try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
             await flushUpload({ force: true });
-            await vLoad();
-            const enc = new TextEncoder(), files = [];
-            for (const [p, e] of V.idx) {
-                if (e.k !== 'f' || !p.startsWith(DV_TOP + '/')) continue;
-                const t = await vRead(p); if (t == null) continue;
-                files.push([p, enc.encode(t)]);
-            }
-            if (!files.length) { showMsg('아직 저장된 일기가 없어요.'); return; }
-            const days = files.filter(f => DAY_FILE_RE.test(f[0])).length;
-            const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            dvSaveBlob(zipMake(files), `말랑달콤_백업_${stamp}.zip`);
-            showMsg(`📦 백업 파일을 만들었어요!<br>일기 <b>${days}일치</b> · 파일 ${files.length}개<br><span style="font-size:12px;color:#777;">새 기기에서 📁 폴더를 고른 뒤 ⚙ 설정 → 📥 백업 불러오기로 넣으면 그대로 이어서 써요.</span>`);
-        }
-        function dvRestorePick() {
-            let inp = document.getElementById('dvRestoreInput');
-            if (!inp) { inp = document.createElement('input'); inp.type = 'file'; inp.id = 'dvRestoreInput'; inp.accept = '.zip,.json,application/zip,application/json'; inp.hidden = true; document.body.appendChild(inp); inp.onchange = () => { const f = inp.files[0]; inp.value = ''; if (f) dvRestore(f); }; }
-            inp.click();
-        }
-        async function dvRestore(file) {
-            if (!V.on) return;
-            if (/\.json$/i.test(file.name)) { importJSON({ target: { files: [file], value: '' } }); return; }   // 예전 📂 PC로 백업 (.json)
-            let list;
-            try { list = await zipRead(await file.arrayBuffer()); } catch (e) { showMsg('⚠ 백업 파일을 읽지 못했어요.<br><span style="font-size:12px;color:#777;">말랑달콤 백업(.zip) 파일인지 확인해 주세요.</span>'); return; }
-            const utf = new TextDecoder('utf-8'), items = [];
-            list.forEach(([name, data]) => {
-                const i = name.indexOf(DV_TOP + '/'); if (i < 0) return;
-                const p = name.slice(i).split('/').filter(s => s && s !== '.' && s !== '..').join('/');
-                if (p.length > DV_TOP.length) items.push([p, utf.decode(data)]);
-            });
-            if (!items.length) { showMsg('⚠ 이 파일 안에 <b>말랑달콤</b> 폴더가 없어요.'); return; }
-            const days = items.filter(f => DAY_FILE_RE.test(f[0])).length;
-            if (!(await showMsg(`📥 백업 파일에 일기 <b>${days}일치</b> · 파일 ${items.length}개가 있어요.<br>이 기기의 말랑달콤 폴더에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 · 같은 파일은 백업 것으로 바뀌고, 나머지는 그대로 남아요.</span>`, true))) return;
+            let h; try { h = await showDirectoryPicker({ id: 'malang', mode: 'readwrite', startIn: 'documents' }); } catch (e) { return; }
             try {
-                try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
-                await flushUpload({ force: true });
-                for (const [p, t] of items) await vWrite(p, t);
-                await loadFromDrive();
-                showMsg(`📥 백업을 불러왔어요! 일기 <b>${days}일치</b>`);
-            } catch (e) { console.warn(e); showMsg('⚠ 백업을 다 넣지 못했어요. 기기 저장공간을 확인해 주세요.'); }
+                const old = { top: V.top, label: V.label }, t = await dvTopOf(h);
+                if (await t.top.isSameEntry(old.top)) { showMsg('지금 쓰는 폴더와 같은 폴더예요.'); return; }
+                bkBusy('📁 폴더를 바꾸는 중…');
+                const mine = await bkReadTree();                              // 지금 폴더의 것
+                V.top = t.top; V.label = t.label; await vLoad(); resetDriveCaches();   // 폴더 기억을 새로
+                let carry = false;
+                bkBusy(null);
+                if (mine.length && !dvDays()) carry = await showMsg(`📁 ${dvFolder(t.label)}가 비어 있어요.<br>지금 쓰던 일기 (파일 ${mine.length}개)를 새 폴더로 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않으면 빈 다이어리로 시작해요. 원래 폴더는 그대로 남아요.</span>`, true);
+                try { await dvTx(['meta'], 'readwrite', x => { x.objectStore('meta').put(t.top, 'top'); }); } catch (e) {}
+                try { localStorage.setItem(DV_MODE + '_label', t.label); } catch (e) {}
+                if (carry) await bkApply({ items: mine.map(([path, text]) => ({ path, text: async () => text })), days: mine.filter(f => /\/다이어리\/페이지\/\d{4}년\/\d{1,2}월\/\d{1,2}일\.json$/.test(f[0])).length }, '새 폴더');
+                else { await loadFromDrive(); const n = dvDays(); showMsg(n ? `📁 ${dvFolder(t.label)}의 일기 <b>${n}일치</b>로 이어서 쓸게요!` : `📁 이제 ${dvFolder(t.label)}에 저장해요.`); }
+                if (typeof updateStorageInfo === 'function') updateStorageInfo();
+            } catch (e) { console.warn(e); bkBusy(null); showMsg('⚠ 그 폴더로 바꾸지 못했어요.'); }
         }
 
         /* ---------- 구글로 옮겨 가기 · 그만 쓰기 ---------- */
-        async function dvBeforeLogin() {                                   // drive.js driveLogin 맨 앞 : 이 기기 일기를 모두 챙겨 두고 드라이브로
+        async function dvBeforeLogin() {                                   // drive.js driveLogin 맨 앞 : 이 기기 말랑달콤 폴더를 통째로 챙겨 두고 드라이브로
             if (!V.on) return null;
             try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
             await flushUpload({ force: true });
-            try { await loadAllDays(); } catch (e) {}
-            const o = {}; store.keys().forEach(k => { if (isDayKey(k) && store.getItem(k) !== null) o[k] = store.getItem(k); });
+            let files = [];
+            try { files = await bkReadTree(); } catch (e) { console.warn(e); }
             V.on = false; drive.local = false; drive.ready = false; window.dvWas = true;
             resetDriveCaches();
-            return Object.keys(o).length ? o : null;
+            return files.length ? files : null;
         }
         function dvAfterLogin() { dvSetMode(''); }
+        /* 로그인한 뒤 : 이 기기 폴더 통째로 드라이브로 */
+        async function dvCarry(files) {
+            const days = files.filter(f => /\/다이어리\/페이지\/\d{4}년\/\d{1,2}월\/\d{1,2}일\.json$/.test(f[0])).length;
+            if (!(await showMsg(`📁 이 기기 폴더에 일기 <b>${days}일치</b> · 파일 ${files.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 · 같은 파일은 이 기기 것으로 덮어써요 (덮어쓰기 전 것은 🕘 이전 버전에 남아요).<br>옮기지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>`, true))) return;
+            await bkApply({ items: files.map(([path, text]) => ({ path, text: async () => text })), days }, '구글 드라이브');
+        }
         async function dvStop() {
             if (!(await showMsg('이 기기 폴더에 저장하기를 그만둘까요?<br><span style="font-size:12px;color:#777;">폴더 안의 일기는 지우지 않고 그대로 둬요. 다시 📁 폴더를 고르면 이어서 쓸 수 있어요.</span>', true))) return;
             try { if (isCoverOpen && !turn) saveData(false); } catch (e) {}
@@ -444,10 +399,12 @@
             dvSetMode(''); location.reload();
         }
         const dvOn = () => V.on;
-        const dvWhere = () => V.mode === 'dir' ? (V.root ? V.root.name + ' / ' : '') + DV_TOP : '이 기기 / ' + DV_TOP;
+        const dvIsDir = () => V.on && V.mode === 'dir';
+        const dvFolder = l => l ? `<b>${dvEsc(l)}</b> 폴더` : '고른 폴더';
+        const dvWhere = () => V.mode === 'dir' ? (V.label ? `'${V.label}' 폴더` : '고른 폴더') : '이 기기 폴더';
 
-        window.dvAuto = dvAuto; window.dvChoose = dvChoose; window.vfsFetch = vfsFetch; window.dvOn = dvOn; window.dvWhere = dvWhere;
-        window.dvBackup = dvBackup; window.dvRestorePick = dvRestorePick; window.dvBeforeLogin = dvBeforeLogin; window.dvAfterLogin = dvAfterLogin; window.dvStop = dvStop;
+        window.dvAuto = dvAuto; window.dvChoose = dvChoose; window.vfsFetch = vfsFetch; window.dvOn = dvOn; window.dvIsDir = dvIsDir; window.dvWhere = dvWhere;
+        window.dvBeforeLogin = dvBeforeLogin; window.dvAfterLogin = dvAfterLogin; window.dvCarry = dvCarry; window.dvStop = dvStop; window.dvChangeFolder = dvChangeFolder;
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['devsave'] = true;

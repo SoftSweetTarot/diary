@@ -4,65 +4,16 @@
         /* 💾 데이터 관리 버튼 글씨 : 📁 이 기기 폴더로 쓰는 중이면 그에 맞게 (js/devsave.js) */
         function dmLabels() {
             const L = !!(typeof drive !== 'undefined' && drive.local), set = (id, t) => { const b = document.getElementById(id); if (b && b.textContent !== t) b.textContent = t; };
-            set('dmBackupBtn', L ? '📦 백업 파일 받기' : '📂 PC로 백업');
-            set('dmImportBtn', L ? '📥 백업 불러오기' : '📥 PC에서 불러오기');
-            set('dmReloadBtn', L ? '🔄 폴더에서 다시 불러오기' : '🔄 드라이브에서 다시 불러오기');
+            const D = L && window.dvIsDir && dvIsDir();
+            set('dmReloadBtn', D ? '📁 폴더 바꾸기' : L ? '🔄 폴더에서 다시 불러오기' : '🔄 드라이브에서 다시 불러오기');
+            const rb = document.getElementById('dmReloadBtn'); if (rb) rb.onclick = D ? () => dvChangeFolder() : () => reloadFromDrive();
             set('dmLogoutBtn', L ? '☁ 구글로 로그인' : '🚪 로그아웃');
             const lb = document.getElementById('dmLogoutBtn'); if (lb) lb.onclick = L ? () => driveLogin() : () => driveLogout();
             const q = document.getElementById('dmQuotaLabel'); if (q) q.innerHTML = L ? '📁 이 기기 저장공간 <span style="font-size:11px; color:#999;">(브라우저가 다이어리에 내어 준 칸)</span>' : '☁ 내 구글 저장공간 <span style="font-size:11px; color:#999;">(지메일·구글 포토와 함께 써요)</span>';
         }
-        async function exportJSON() {
-            if (drive.local && window.dvBackup) return dvBackup();               // 📁 이 기기 폴더 : 말랑달콤 폴더 통째로 .zip (js/devsave.js)
-            saveData(false);
-            if (drive.ready && !drive.guest) {
-                const st = document.getElementById('driveStatusText');
-                if (st) st.textContent = '📂 드라이브의 모든 일기를 불러오는 중…';
-                let failed = -1;
-                try { failed = await loadAllDays(); } catch (e) {}
-                updateStorageInfo();
-                if (failed !== 0) { showMsg('⚠ 일부 일기를 불러오지 못해 백업을 만들지 못했어요.<br>잠시 후 다시 시도해 주세요.'); return; }
-            }
-            const blob = new Blob([store.toJSONString()], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `SoftSweetDiary_Backup_${getDateKey(currentDate)}.json`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-        }
-
-        function triggerImportJSON() { if (drive.local && window.dvRestorePick) return dvRestorePick(); document.getElementById('jsonInput').click(); }
-
-        function importJSON(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(evt) {
-                try {
-                    const importedData = JSON.parse(evt.target.result);
-                    if (!importedData || typeof importedData !== 'object' || Array.isArray(importedData)) throw new Error('format');
-                    Object.keys(importedData).forEach(key => {
-                        if (key.startsWith('diary_') && key !== PAGE_SIZE_KEY) {
-                            store.setItem(key, JSON.stringify(importedData[key]));
-                            if (isDayKey(key)) drive.loadedDays.add(key);      // 가져온 내용이 그 날짜의 최신 내용
-                        }
-                    });
-                } catch (err) { showMsg('⚠ 올바르지 않은 JSON 파일입니다.'); return; }
-
-                applyLoadedData();
-                if (drive.ready && !drive.guest) {
-                    const ok = await flushUpload({ force: true });   // 날짜별 파일로 드라이브에 저장
-                    showMsg(ok
-                        ? '📥 데이터 복원이 완료되었고,<br>' + (drive.local ? '이 기기 폴더' : '구글 드라이브') + '의 날짜별 파일도 갱신했어요!'
-                        : '📥 복원은 되었지만 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
-                } else {
-                    showMsg('📥 데이터 복원이 완료되었어요.<br>(드라이브에 연결되지 않아 저장은 되지 않았어요)');
-                }
-            };
-            reader.readAsText(file);
-            e.target.value = '';
-        }
+        /* 💾 백업 · 불러오기 : 구글 로그인이든 📁 이 기기 폴더든 zip 하나 (js/backup.js) */
+        function exportJSON() { bkBackup(); }
+        function triggerImportJSON() { bkRestore(); }
 
         function roundedRectPath(ctx, x, y, w, h, radii) {
             const [tl, tr, br, bl] = radii;
@@ -190,7 +141,7 @@
                     t.innerText = q ? `${fmtBytes(q.used)} 사용 중 (용량 제한 없는 계정)` : '구글 저장공간을 읽지 못했어요';
                 }
                 const mine = S.diaryBytes + S.dollBytes + S.playBytes;
-                if (d) d.innerHTML = `└ 그중 <b>말랑달콤</b> : ${fmtBytes(mine)}<br>`
+                if (d) d.innerHTML = `└ 그중 <b>다이어리</b> : ${fmtBytes(mine)}<br>`
                     + `<span style="color:#999;">(📔 일기 ${S.days}일치 ${fmtBytes(S.diaryBytes)}` + (S.dolls ? ` · 👧 인형 ${S.dolls}개 ${fmtBytes(S.dollBytes)}` : '')
                     + (S.plays ? ` · 🎭 인형극 ${S.plays}개 ${fmtBytes(S.playBytes)}` : '') + ')</span>';
             } else {
@@ -200,8 +151,8 @@
             const st = document.getElementById('driveStatusText');
             if (st) st.textContent = drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST ? '💻 로컬 테스트 · 이 브라우저에만 저장 (처음부터 : 주소 뒤에 ?reset)'
                 : drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
-                : drive.local ? `📁 로그인 없이 · ${dvWhere()} / 다이어리 / 페이지 / 년도 / 월 / 일.json`
-                : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${ROOT_PATH_TEXT} / 년도 / 월 / 일.json` : '☁ 연결 안 됨';
+                : drive.local ? `📁 로그인 없이 · ${dvWhere()}에 저장 중 (다이어리 / 페이지 / 년도 / 월 / 일.json)`
+                : drive.ready ? `☁ 연결됨 · 구글 드라이브에 저장 중 (다이어리 / 페이지 / 년도 / 월 / 일.json)` : '☁ 연결 안 됨';
         }
 
         /* =====================================================================

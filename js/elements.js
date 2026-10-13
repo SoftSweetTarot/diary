@@ -786,9 +786,9 @@
                 return;
             }
             const ok = await flushUpload({ force: true });   // 파일이 없으면 생성, 있으면 덮어쓰기
-            if (drive.local) { showMsg(ok ? '📁 이 기기의 <b>말랑달콤</b> 폴더에 저장했어요!<br><span style="font-size:12px;color:#777;">' + dayPathText(currentDate).replace(/^말랑달콤/, dvWhere()) + '</span>' : '⚠ 이 기기 폴더에 저장하지 못했어요.<br>잠시 후 자동으로 다시 시도합니다.'); return; }   // 📁 (js/devsave.js)
+            if (drive.local) { showMsg(ok ? '📁 ' + dvWhere() + '에 저장했어요!<br><span style="font-size:12px;color:#777;">' + dayPathText(currentDate) + '</span>' : '⚠ 폴더에 저장하지 못했어요.<br>잠시 후 자동으로 다시 시도합니다.'); return; }   // 📁 (js/devsave.js)
             showMsg(ok
-                ? '☁ 웹(구글 드라이브)에 저장했어요!<br><span style="font-size:12px;color:#777;">' + dayPathText(currentDate) + '</span>'
+                ? '☁ 구글 드라이브에 저장했어요!<br><span style="font-size:12px;color:#777;">' + dayPathText(currentDate) + '</span>'
                 : '⚠ 구글 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
         }
 
@@ -900,7 +900,7 @@
         function openSaveChooser() {
             if (!isCoverOpen) { showMsg('먼저 다이어리를 열어주세요!'); return; }
             const web = document.getElementById('saveWebDesc');
-            if (web) web.textContent = drive.local ? '이 기기의 말랑달콤 폴더에 저장해요. 기기를 바꿀 땐 ⚙ 설정 → 📦 백업 파일 받기.' : drive.ready && !drive.guest
+            if (web) web.textContent = drive.local ? '이 기기 폴더에 저장해요. 기기를 바꿀 땐 ⚙ 설정 → 📦 백업 파일 받기.' : drive.ready && !drive.guest
                 ? '내 구글 드라이브에 저장해요. 다른 기기에서 로그인해도 이어서 볼 수 있어요.'
                 : '⚠ 지금은 로그인되어 있지 않아서 웹에 저장할 수 없어요.';
             openModal('saveChooser');

@@ -208,8 +208,8 @@
             try { if (sync) store.setItem(key, t); else localStorage.setItem(key, t); } catch (e) {}
         }
         function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
-        function dayPathText(date) {
-            return `${DAY_PATH.join('/')}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;
+        function dayPathText(date) {                                       // 안내문용 : 맨 위 폴더 이름은 빼요 (도련 · 2026-10-13)
+            return `${DAY_PATH.slice(1).join('/')}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;
         }
         function corruptError(what) { const er = new Error('corrupt'); er.type = 'corrupt'; er.what = what; return er; }
 
@@ -900,7 +900,7 @@
             if (t === 'scope') return '드라이브 파일 권한을 허용해야 일기를 저장할 수 있어요. 다시 시도해 주세요.';
             if (t === 'access_denied') return '권한이 거부됐어요. 다시 시도해 주세요.';
             if (t === 'timeout') return '응답이 없어요. 다시 시도해 주세요.';
-            if (t === 'corrupt') return '저장된 파일을 읽을 수 없어요. 데이터 보호를 위해 덮어쓰지 않았어요. 드라이브의 말랑달콤 폴더를 확인해 주세요.';
+            if (t === 'corrupt') return '저장된 파일을 읽을 수 없어요. 데이터 보호를 위해 덮어쓰지 않았어요. 구글 드라이브 폴더를 확인해 주세요.';
             return '연결에 실패했어요. (' + t + ')';
         }
 
@@ -948,17 +948,18 @@
                 try { await requestToken('none'); await loadFromDrive(); hideGate(); postLoginTasks(); return; }
                 catch (e) { if (e && e.type === 'corrupt') { showGate('login', driveErrorText(e)); return; } }
             }
-            showGate('login', '일기는 내 구글 드라이브의 <b>말랑달콤</b> 폴더에<br>하루에 파일 1개씩 저장돼요.' + fileHint);
+            showGate('login', '일기는 구글 드라이브에<br>하루에 파일 1개씩 저장돼요.' + fileHint);
         }
 
         async function driveLogin() {
-            const devDays = drive.local && window.dvBeforeLogin ? await dvBeforeLogin() : null;   // 📁 이 기기 폴더 일기를 모두 챙겨요 (js/devsave.js)
-            const guestDays = drive.guest ? guestSnapshot() : devDays;               // 👤 게스트로 쓴 일기 (로그인하면 메모리가 드라이브 것으로 바뀌어서 먼저 챙겨요)
+            const devFiles = drive.local && window.dvBeforeLogin ? await dvBeforeLogin() : null;   // 📁 이 기기 말랑달콤 폴더를 통째로 챙겨요 (js/devsave.js)
+            const guestDays = drive.guest ? guestSnapshot() : null;               // 👤 게스트로 쓴 일기 (로그인하면 메모리가 드라이브 것으로 바뀌어서 먼저 챙겨요)
             if (!drive.client && !driveClientMake() && await waitForGoogle(10000)) driveClientMake();   // 이 기기 폴더로 열었으면 구글 준비가 아직이에요
             showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
             try { await requestToken('select_account'); await loadFromDrive(); hideGate(); await postLoginTasks(); }
-            catch (e) { showGate('login', driveErrorText(e)); if (guestDays) guestHold = guestDays; return; }
+            catch (e) { showGate('login', driveErrorText(e)); if (guestDays) guestHold = guestDays; return; }   // 📁 이 기기 폴더로 쓰던 사람은 다시 열면 그대로 폴더로 열려요
             if (window.dvAfterLogin) dvAfterLogin();                              // 📁 이제 드라이브로 열려요 (이 기기 폴더 파일은 그대로)
+            if (devFiles && window.dvCarry) { await dvCarry(devFiles); return; }   // 📁 폴더 통째로 구글 드라이브 폴더에 넣을까요?
             if (guestDays || guestHold) guestCarry(Object.assign({}, guestHold || {}, guestDays || {}));
         }
         /* 👤 게스트 일기 → 내 드라이브로 옮기기 (물어본 뒤 · 드라이브에도 있는 날은 "어느 쪽?") */
@@ -973,7 +974,7 @@
             guestHold = null;
             const keys = Object.keys(days).filter(k => days[k] !== null).sort();
             if (!keys.length) return;
-            if (!(await showMsg((window.dvWas ? `📁 이 기기 폴더에 쓴 일기 <b>${keys.length}일치</b>가 있어요.<br>내 구글 드라이브에 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>` : `👤 게스트로 쓴 일기 <b>${keys.length}일치</b>가 있어요.<br>내 구글 드라이브에 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않으면 게스트 일기는 사라져요.</span>`), true))) return;
+            if (!(await showMsg(`👤 게스트로 쓴 일기 <b>${keys.length}일치</b>가 있어요.<br>내 구글 드라이브에 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않으면 게스트 일기는 사라져요.</span>`, true))) return;
             let moved = 0, left = keys.slice();
             for (let round = 0; left.length && round < 3; round++) {
                 const next = [];
@@ -1013,7 +1014,7 @@
 
         async function driveLogout() {
             if (drive.local && window.dvStop) return dvStop();                     // 📁 이 기기 폴더 그만 쓰기
-            const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">드라이브의 말랑달콤 폴더는 그대로 남아 있어요.</span>', true);
+            const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">구글 드라이브에 저장된 일기는 그대로 남아 있어요.</span>', true);
             if (!yes) return;
             if (drive.ready && drive.dirty) await flushUpload();
             try { localStorage.removeItem(AUTH_FLAG_KEY); } catch (e) {}
