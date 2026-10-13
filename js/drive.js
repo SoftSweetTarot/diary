@@ -853,7 +853,7 @@
             document.getElementById('gateMsg').innerHTML = msg;
             const login = state === 'login';
             document.getElementById('gateLoginBtn').style.display = login ? 'flex' : 'none';
-            document.getElementById('gateGuestBtn').style.display = login ? 'block' : 'none';
+            document.getElementById('gateGuestBtn').style.display = login ? 'flex' : 'none';
         }
         function hideGate() { document.getElementById('driveGate').style.display = 'none'; }
 
