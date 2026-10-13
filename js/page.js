@@ -49,6 +49,7 @@
             ta.style.fontFamily = font;
             ta.style.color = color;
             ta.style.fontSize = size + 'px';
+            if (ta.dataset.hl && window.mhlPaint) requestAnimationFrame(() => mhlPaint(ta));   // ✏️ 글씨체 · 크기가 바뀌면 형광펜 띠도 다시
         }
 
         function getSelectedTextarea() {
@@ -250,7 +251,7 @@
             return { type: ({ i: 'image', t: 'text', s: 'sticker', d: 'doll' })[d.t] || 'sticker', content: d.t === 'i' ? slimDec(d.c) : d.c,
                 posX: d.x || 0, posY: d.y || 0, scale: d.s || 1, rotation: d.r || 0,
                 width: d.w ? d.w + 'px' : '', height: d.h ? d.h + 'px' : '', zIndex: d.z || 1,
-                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp, frame: d.fr, caption: d.cp, float: d.fm, ts: d.ts, cm: d.cm, tk: d.tk, tb: d.tb && slimDec(d.tb) };
+                boxW: d.bw || 0, boxH: d.bh || 0, fontFamily: f ? f.css : undefined, color: d.k, fontSize: d.fs, paper: d.pp, frame: d.fr, caption: d.cp, float: d.fm, ts: d.ts, cm: d.cm, tk: d.tk, tb: d.tb && slimDec(d.tb), hl: d.hl, pn: d.pn };
         }
 
         function readDayData(date) {

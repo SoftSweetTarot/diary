@@ -267,8 +267,8 @@
                 + `<div class="pc-held" id="pcHeld" hidden></div><p class="pc-tipnote" id="pcTipNote" hidden>다 쓰면 필기구를 꾹 집어 <b>구석 연필통</b>에 꽂아요 ✏️</p>`
                 + `<button type="button" class="pc-mini" id="pcMini" hidden aria-label="연필통 (꽂으면 완료)"><span class="pc-mini-tops"><i style="--c:#e2556f"></i><i style="--c:#3d9be0"></i><i style="--c:#ffe14d"></i></span><span class="pc-mini-cup"></span></button>`;
             document.body.appendChild(r);
-            r.querySelector('.pc-x').onclick = () => penClose();
-            drq('pcMini').onclick = () => { if (pcS.held) pcPutBack(); };
+            r.querySelector('.pc-x').onclick = () => { if (pcS.memo) pcMemoSkip(); else penClose(); };
+            drq('pcMini').onclick = () => { if (pcS.held) pcPutBack(); else if (pcS.memo) pcMemoEnd(); };
             return r;
         }
         /* 페이지 가운데 길쭉한 연필통 · 작은 연필통은 페이지 오른쪽 아래 (하단 메뉴 밖으로 안 나가게) */
@@ -277,10 +277,12 @@
             const r = pg.getBoundingClientRect(), cw = cup.offsetWidth, ch = cup.offsetHeight;
             cup.style.left = Math.round(r.left + r.width / 2 - cw / 2) + 'px';
             cup.style.top = Math.round(Math.max(8, r.top + r.height / 2 - ch / 2 + 10)) + 'px';
-            if (mini) { mini.style.left = Math.round(r.right - 62 - 12) + 'px'; mini.style.top = Math.round(r.bottom - 84 - 12) + 'px'; }
-            if (note) { note.style.right = Math.round(innerWidth - r.right + 10) + 'px'; note.style.top = Math.round(r.bottom - 84 - 22) + 'px'; }
+            const vv = window.visualViewport, bot = Math.min(r.bottom, vv ? vv.offsetTop + vv.height : innerHeight);   // 📱 자판이 올라오면 그 위로
+            if (mini) { mini.style.left = Math.round(r.right - 62 - 12) + 'px'; mini.style.top = Math.round(bot - 84 - 12) + 'px'; }
+            if (note) { note.style.right = Math.round(innerWidth - r.right + 10) + 'px'; note.style.top = Math.round(bot - 84 - 22) + 'px'; }
         }
         addEventListener('resize', () => { const r = drq('pcRoom'); if (r && !r.hidden) pcLayout(); });
+        if (window.visualViewport) visualViewport.addEventListener('resize', () => { const r = drq('pcRoom'); if (r && !r.hidden) { pcLayout(); if (pcS.memo) mfAim(); } });
         function pcPlace(o) {
             const lift = o.lift || 0, a = o.a * (1 - Math.min(1, lift / 90));
             o.el.style.transform = `translate(${o.x}px, ${o.y - lift}px) rotate(${a}deg)`;   // 연필통 바닥이 돌아가는 점
@@ -288,7 +290,8 @@
         function pcOpen() {
             const r = pcBuild(); r.hidden = false;
             requestAnimationFrame(pcLayout);
-            Object.assign(pcS, { held: null, tip: null, carry: null, press: null, drag: null });
+            Object.assign(pcS, { held: null, tip: null, carry: null, press: null, drag: null, memo: null });
+            r.querySelector('.pc-hint').innerHTML = '필기구를 골라 <b>위로 쏙</b> 뽑아요 · 옆으로 밀면 비켜나요';
             const cup = drq('pcCup'); cup.classList.remove('gone'); cup.style.transform = '';
             drq('pcHeld').hidden = true; drq('pcMini').hidden = true; drq('pcTipNote').hidden = true;
             const box = drq('pcTools'); box.textContent = '';
@@ -332,8 +335,8 @@
         function pcPick(o, e) {
             pcS.drag = null; o.el.classList.remove('grab'); o.el.style.visibility = 'hidden';
             pcS.held = o;
-            dw.tool = o.tool; if (o.tool !== 'erase') dw.color[o.tool] = o.color; dw.size[o.tool] = o.size;
-            penSetTool(o.tool);
+            if (pcS.memo) mhlApply(pcS.memo, o);                                 // 📝 메모 : 고른 필기구로 글씨 모양이 바로 바뀌어요
+            else { dw.tool = o.tool; if (o.tool !== 'erase') dw.color[o.tool] = o.color; dw.size[o.tool] = o.size; penSetTool(o.tool); }
             drq('pcMini').hidden = false; pcLayout();
             const cup = drq('pcCup'), cr = cup.getBoundingClientRect(), mr = drq('pcMini').getBoundingClientRect();   // 연필통이 작은 연필통 자리로 쏙 줄어요
             cup.style.transform = `translate(${mr.left + mr.width / 2 - (cr.left + cr.width / 2)}px, ${mr.bottom - cr.bottom}px) scale(.22)`;
@@ -342,7 +345,8 @@
             pcS.carry = { id: e.pointerId, off: [0, 0] };                         // 뽑은 손 그대로 들고 있어요 (연필심 = 손가락)
             pcHeldAt(e.clientX, e.clientY);
             if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
-            const note = drq('pcTipNote'); note.hidden = false; clearTimeout(pcS.noteTm); pcS.noteTm = setTimeout(() => { note.hidden = true; }, 4200);
+            const note = drq('pcTipNote'); note.hidden = false; clearTimeout(pcS.noteTm);
+            note.innerHTML = pcS.memo ? '이제 글을 써요 · 다 쓰면 <b>구석 연필통</b>을 톡 ✏️' : '다 쓰면 필기구를 꾹 집어 <b>구석 연필통</b>에 꽂아요 ✏️'; pcS.noteTm = setTimeout(() => { note.hidden = true; }, 4200);
         }
         function pcHeldAt(x, y) {
             const h = drq('pcHeld'); if (!h || !pcS.held) return;
@@ -366,10 +370,11 @@
             pcS.carry = null; drq('pcHeld').classList.remove('carry'); drq('pcMini').classList.remove('over');
             if (e.type !== 'pointercancel' && pcOverMini(x, y)) { pcPutBack(); return; }                 // 🖊️ 꽂으면 완료
             if (x < 6 || y < 6 || x > innerWidth - 6 || y > innerHeight - 6) { pcThrow(); return; }        // 화면 밖으로 휙
+            if (pcS.memo) mfWrite();                                                                        // 📝 메모 : 손을 떼면 바로 써요 (자판이 올라와요)
         }
         /* 꾹 누르면 집어 들기 (그냥 쓰려고 누른 건 그대로 써져요) */
         document.addEventListener('pointerdown', e => {
-            if (!dw.on || !pcS.held || pcS.carry || !pcOnBody(e.clientX, e.clientY)) return;
+            if (!(dw.on || pcS.memo) || !pcS.held || pcS.carry || !pcOnBody(e.clientX, e.clientY)) return;
             const p = pcS.press = { id: e.pointerId, x: e.clientX, y: e.clientY };
             p.tm = setTimeout(() => {
                 if (pcS.press !== p) return;
@@ -396,9 +401,10 @@
             pcS.held = null; pcS.press = null; pcS.carry = null;
             h.classList.add('in'); h.style.transform = `translate(${m.left + m.width / 2}px, ${m.top + 6}px) rotate(-180deg) translate(-15px, -2px) scale(.35)`;
             if (navigator.vibrate) try { navigator.vibrate(8); } catch (er) {}
-            setTimeout(() => { h.classList.remove('in'); penDone(); }, 280);
+            setTimeout(() => { h.classList.remove('in'); if (pcS.memo) pcMemoEnd(); else penDone(); }, 280);
         }
         function pcThrow() {
+            if (pcS.memo) { pcMemoEnd(); return; }                               // 📝 메모 : 쓴 글은 그대로
             if (!dw.strokes.length) { penClose(); return; }
             showMsg('쓴 것을 모두 지울까요?', true).then(ok => { if (ok) penClose(); else pcHeldAt(innerWidth / 2, innerHeight / 2); });
         }
@@ -406,6 +412,144 @@
             const r = drq('pcRoom'); if (r) r.hidden = true;
             pcS.held = null; pcS.carry = null; pcS.press = null; pcS.drag = null;
         }
+        /* ---------- ✏️ 📒 수첩 모드 : 메모에 글 쓰기 (도련 · 2026-10-13)
+           - 페이지의 메모(글상자 · 떡메)를 톡 눌러 쓰려는 순간 연필통이 떠요 → 필기구를 위로 쏙 뽑아요
+           - 색연필 = 그 색 · 연필 느낌 글씨 / 형광펜 = 글씨가 있는 줄마다 칠한 띠 / 지우개 = 원래 글씨로
+           - 한 메모 = 마지막에 고른 필기구 하나 · 메모마다 저장돼요 (k 색 · hl 형광펜 색 · pn 연필 느낌)
+           - 자판으로 쓰면 손에 든 필기구 끝이 커서를 따라가며 사각사각 움직여요
+           - 다 쓰면 구석 작은 연필통을 톡 (또는 꾹 집어 꽂기 · 메모 밖을 눌러도 쏙 들어가요)
+           - ✕ 를 누르면 필기구 없이 그대로 써요 · 고르는 창 모드에서는 원래대로 바로 써요 ---------- */
+        const mhlOk = c => /^#[0-9a-f]{6}$/i.test(c || '');
+        function mhlLook(ta, hl, pn) {                                        // 불러올 때 · 고를 때
+            if (mhlOk(hl)) ta.dataset.hl = hl; else delete ta.dataset.hl;
+            if (pn) ta.dataset.pn = 1; else delete ta.dataset.pn;
+            ta.classList.toggle('pencil', !!pn);
+            if (!ta.dataset.hl) { const l = ta.parentElement && ta.parentElement.querySelector(':scope > .mhl'); if (l) l.remove(); return; }
+            mhlWatch(ta);
+        }
+        function mhlApply(ta, o) {
+            const font = ta.dataset.font, size = ta.dataset.size;
+            if (o.tool === 'pen') { styleTextarea(ta, font, o.color, size); mhlLook(ta, '', 1); }
+            else if (o.tool === 'hi') { styleTextarea(ta, font, DEFAULT_TEXT_COLOR, size); mhlLook(ta, o.color, 0); }
+            else { styleTextarea(ta, font, DEFAULT_TEXT_COLOR, size); mhlLook(ta, '', 0); }   // 지우개 = 원래 글씨
+            if (typeof updateTextPanel === 'function') updateTextPanel();
+            if (typeof saveData === 'function') saveData();
+        }
+        let mhlRO = null;
+        function mhlWatch(ta) {                                               // 상자 크기가 바뀌거나 처음 보일 때 다시 칠해요
+            if (!window.ResizeObserver) { requestAnimationFrame(() => mhlPaint(ta)); return; }
+            if (!mhlRO) mhlRO = new ResizeObserver(es => es.forEach(e => { if (e.target.dataset.hl) mhlPaint(e.target); }));
+            mhlRO.observe(ta);
+            if (ta.isConnected) requestAnimationFrame(() => mhlPaint(ta));
+        }
+        let mhlMir = null;
+        const MHL_COPY = ['boxSizing', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'letterSpacing', 'lineHeight', 'wordSpacing', 'textIndent', 'textAlign', 'tabSize'];
+        function mhlMeasure(ta, upto) {                                      // 보이지 않는 복사본에 글씨를 넣고 재요 (돌리기 · 크기와 상관없는 원래 크기)
+            if (!mhlMir) { mhlMir = document.createElement('div'); mhlMir.className = 'mhl-mirror'; mhlMir.setAttribute('aria-hidden', 'true'); document.body.appendChild(mhlMir); }
+            const cs = getComputedStyle(ta); MHL_COPY.forEach(k => { mhlMir.style[k] = cs[k]; });
+            mhlMir.style.width = ta.clientWidth + 'px'; mhlMir.style.boxSizing = 'border-box';   // 글씨가 줄 바뀌는 너비 (테두리 · 스크롤 막대 빼고)
+            mhlMir.textContent = upto == null ? ta.value : ta.value.slice(0, upto);
+            const lh = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 18) * 1.2;
+            return lh;
+        }
+        function mhlPaint(ta) {
+            const el = ta.parentElement; if (!el || !ta.isConnected) return;
+            let l = el.querySelector(':scope > .mhl');
+            const c = ta.dataset.hl;
+            if (!c) { if (l) l.remove(); return; }
+            if (!l) { l = document.createElement('div'); l.className = 'mhl'; l.setAttribute('aria-hidden', 'true'); ta.after(l); }
+            l.style.cssText = `left:${ta.offsetLeft}px;top:${ta.offsetTop}px;width:${ta.offsetWidth}px;height:${ta.offsetHeight}px`;
+            l.textContent = '';
+            if (!ta.value.trim()) return;
+            const lh = mhlMeasure(ta), node = mhlMir.firstChild; if (!node) return;
+            const rg = document.createRange(); rg.selectNodeContents(mhlMir);
+            const base = mhlMir.getBoundingClientRect(), st = ta.scrollTop;
+            let n = 0;
+            for (const r of rg.getClientRects()) {                                // 글씨가 있는 줄 조각마다 띠 하나 (살짝 삐뚤게)
+                if (r.width < 4) continue;
+                const i = document.createElement('i'), wob = (n++ % 3 - 1) * .6;
+                i.style.cssText = `left:${r.left - base.left - 3}px;top:${r.top - base.top + lh * .3 - st}px;width:${r.width + 6}px;height:${lh * .52}px;background:${c};transform:rotate(${wob}deg)`;
+                l.appendChild(i);
+            }
+        }
+        window.mhlLook = mhlLook; window.mhlPaint = mhlPaint;
+
+        /* 커서 자리 (화면 좌표) : 복사본으로 상자 안 자리를 재고 → 상자 안에 작은 점을 놓아 돌리기 · 크기 · 확대까지 그대로 */
+        function mfCaret(ta) {
+            const lh = mhlMeasure(ta, ta.selectionEnd == null ? ta.value.length : ta.selectionEnd);
+            const mk = document.createElement('span'); mk.textContent = '\u200b'; mhlMir.appendChild(mk);
+            const x = ta.offsetLeft + mk.offsetLeft + 1, y = ta.offsetTop + mk.offsetTop + lh * .78 - ta.scrollTop;
+            const el = ta.parentElement; let pr = el.querySelector(':scope > .mf-probe');
+            if (!pr) { pr = document.createElement('i'); pr.className = 'mf-probe'; el.appendChild(pr); }
+            pr.style.left = x + 'px'; pr.style.top = y + 'px';
+            const r = pr.getBoundingClientRect();
+            return [r.left + r.width / 2, r.top + r.height / 2];
+        }
+        const mf = { pos: null, target: null, raf: 0, wig: 0, last: 0 };
+        function mfAim() {
+            const ta = pcS.memo; if (!ta || !pcS.held || pcS.carry || document.activeElement !== ta) return;
+            mf.target = mfCaret(ta); if (!mf.pos) mf.pos = (pcS.tip || mf.target).slice();
+            if (!mf.raf) { mf.last = performance.now(); mf.raf = requestAnimationFrame(mfFrame); }
+        }
+        function mfFrame(now) {
+            mf.raf = 0; if (!mf.target || !pcS.held || pcS.carry || !pcS.memo) return;
+            const dt = Math.min(50, now - mf.last), k = 1 - Math.pow(.001, dt / 240); mf.last = now;
+            mf.pos[0] += (mf.target[0] - mf.pos[0]) * k; mf.pos[1] += (mf.target[1] - mf.pos[1]) * k; mf.wig = Math.max(0, mf.wig - dt / 220);
+            const t = now / 1000, dx = Math.sin(t * 46) * 2.2 * mf.wig, dy = Math.cos(t * 31) * 1.4 * mf.wig - mf.wig;   // 사각사각
+            pcHeldAt(mf.pos[0] + dx, mf.pos[1] + dy);
+            if (Math.abs(mf.target[0] - mf.pos[0]) > .2 || Math.abs(mf.target[1] - mf.pos[1]) > .2 || mf.wig > 0) mf.raf = requestAnimationFrame(mfFrame);
+        }
+        function mfWrite() {                                                   // 손을 뗀 그 자리에서 메모로 → 커서 따라가기
+            const ta = pcS.memo; if (!ta) return;
+            mf.pos = pcS.tip ? pcS.tip.slice() : null;
+            pcS.memoFocus = true;
+            try { ta.focus({ preventScroll: true }); } catch (e) { ta.focus(); }
+            pcS.memoFocus = false;
+            mfAim();
+        }
+        function pcOpenMemo(ta) {
+            if (dw.on) return;
+            pcOpen(); pcS.memo = ta; mf.pos = null;
+            drq('pcRoom').classList.add('memo');
+            drq('pcRoom').querySelector('.pc-hint').innerHTML = '쓸 필기구를 <b>위로 쏙</b> 뽑아요 · ✕ 는 그냥 쓰기';
+        }
+        function pcMemoSkip() {                                                // ✕ : 필기구 없이 그대로 써요
+            const ta = pcS.memo; pcMemoEnd();
+            if (ta && ta.isConnected) { pcS.memoFocus = true; try { ta.focus({ preventScroll: true }); } catch (e) {} pcS.memoFocus = false; }
+        }
+        function pcMemoEnd() {
+            if (!pcS.memo) return;
+            const ta = pcS.memo; pcS.memo = null; mf.target = null;
+            const pr = ta.parentElement && ta.parentElement.querySelector(':scope > .mf-probe'); if (pr) pr.remove();
+            const r = drq('pcRoom'); if (r) r.classList.remove('memo');
+            pcClose();
+        }
+        /* 수첩 모드에서 메모를 톡 눌러 쓰려는 순간 (끌어서 옮기는 건 그대로) */
+        let mfTapAt = 0, mfTapTa = null;
+        document.addEventListener('pointerdown', e => {
+            const ta = e.target && e.target.closest && e.target.closest('#canvasArea .element-box > textarea');
+            mfTapTa = ta; mfTapAt = ta ? performance.now() : 0;
+        }, true);
+        document.addEventListener('focusin', e => {
+            const ta = e.target;
+            if (!penNote() || dw.on || pcS.memoFocus || ta.tagName !== 'TEXTAREA' || ta.readOnly || !ta.closest('#canvasArea .element-box')) return;
+            if (pcS.memo === ta) { mfAim(); return; }
+            if (ta !== mfTapTa || performance.now() - mfTapAt > 1500) return;     // 손으로 누른 때만
+            if (pcS.memo) pcMemoEnd();
+            ta.blur();                                                         // 자판은 필기구를 뽑은 뒤에 올라와요
+            pcOpenMemo(ta);
+        });
+        document.addEventListener('focusout', e => {
+            const ta = pcS.memo; if (!ta || e.target !== ta) return;
+            setTimeout(() => {
+                if (pcS.memo !== ta || document.activeElement === ta || pcS.carry || pcS.press || !pcS.held) return;
+                pcPutBack();                                                   // 메모 밖을 누르면 필기구는 쏙 연필통으로
+            }, 300);
+        });
+        document.addEventListener('selectionchange', () => { if (pcS.memo) mfAim(); });
+        document.addEventListener('input', e => { const ta = e.target; if (ta && ta.dataset && ta.dataset.hl) mhlPaint(ta); if (pcS.memo === ta) { mf.wig = 1; mfAim(); } }, true);
+        document.addEventListener('compositionupdate', e => { if (pcS.memo === e.target) { mf.wig = 1; requestAnimationFrame(() => { if (e.target.dataset.hl) mhlPaint(e.target); mfAim(); }); } }, true);
+        ['keyup', 'click', 'scroll'].forEach(t => document.addEventListener(t, e => { if (pcS.memo && e.target === pcS.memo) { if (t === 'scroll' && pcS.memo.dataset.hl) mhlPaint(pcS.memo); mfAim(); } }, true));
         /* 그리는 동안에는 페이지 넘기기(끌기)를 막아요 */
         document.getElementById('diaryWrapper').addEventListener('pointerdown', e => {
             if (dw.on && !e.target.closest('#penLayer')) e.stopPropagation();

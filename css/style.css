@@ -3313,3 +3313,10 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .pc-tipnote { position: absolute; max-width: 220px; margin: 0; padding: 7px 12px; border-radius: 14px; background: rgba(255,255,255,.95); border: 1.5px solid var(--border-color, #ffb6c1); color: #7a5a66; font-size: 12.5px; word-break: keep-all; box-shadow: 0 3px 10px rgba(120,80,95,.15); transform: translateY(-100%); }
 .pc-tipnote[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .pc-tool, .pc-cup, .pc-held.in, .pc-mini { transition: none; } }
+
+/* ✏️ 📒 수첩 모드 : 메모에 필기구로 쓰기 (js/draw.js mhl · mf) */
+.element-box > .mhl { position: absolute; pointer-events: none; overflow: hidden; mix-blend-mode: multiply; z-index: 1; }   /* 형광펜은 글씨 위에 겹쳐 칠해요 (진짜 형광펜처럼 글씨가 비쳐요) */
+.element-box > .mhl i { position: absolute; border-radius: 3px 6px 4px 7px; opacity: .55; transform-origin: 0 50%; }
+.element-box textarea.pencil { text-shadow: .4px .3px 0 currentColor, -.2px 0 .5px rgba(255,255,255,.6); letter-spacing: .3px; }   /* 색연필로 쓴 듯 살짝 거칠게 */
+.mhl-mirror { position: absolute; left: -9999px; top: 0; visibility: hidden; white-space: pre-wrap; overflow-wrap: break-word; word-wrap: break-word; border: 0; margin: 0; }
+.element-box > .mf-probe { position: absolute; width: 0; height: 0; pointer-events: none; }

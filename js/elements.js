@@ -760,6 +760,8 @@
                     if ((textarea.dataset.color || DEFAULT_TEXT_COLOR) !== DEFAULT_TEXT_COLOR) item.k = textarea.dataset.color;
                     const fs = parseInt(textarea.dataset.size) || DEFAULT_TEXT_SIZE;
                     if (fs !== DEFAULT_TEXT_SIZE) item.fs = fs;
+                    if (textarea.dataset.hl) item.hl = textarea.dataset.hl;      // ✏️ 📒 형광펜으로 칠한 메모 (js/draw.js mhl)
+                    if (textarea.dataset.pn) item.pn = 1;                        // ✏️ 📒 색연필 느낌 글씨
                 }
                 elementsData.push(item);
             });
@@ -803,6 +805,7 @@
                 el.appendChild(ta);
                 if (data.paper && /^[a-z]{1,10}$/.test(data.paper)) { el.classList.add('pp-' + data.paper); el.dataset.paper = data.paper; }
                 if (data.tk && data.tb && window.tkNoteDress) tkNoteDress(el, data.tk, data.tb);
+                if (window.mhlLook) mhlLook(ta, data.hl, data.pn);             // ✏️ 📒 형광펜 띠 · 색연필 글씨 (js/draw.js)
             } else if (data.type === 'doll') {
                 buildPlacedDoll(el, data.content, interactive);                // 👧 붙인 인형 (js/doll-room.js)
             } else if (data.type === 'image') {
