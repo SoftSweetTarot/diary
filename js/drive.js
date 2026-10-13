@@ -1066,7 +1066,7 @@
                         if (keyFile(k) === 'cafe' && drive.cafeBase.has(k)) bv[k] = drive.cafeBase.get(k);   // ☕ 합칠 때 기준
                     }
                 });
-                const rec = { savedAt: Date.now(), tab: PEND_TAB, items, b, bv };
+                const rec = { savedAt: Date.now(), tab: PEND_TAB, who: pendWho(), items, b, bv };   // who : 어느 계정 · 어느 폴더 것인지
                 try { localStorage.setItem(PEND_LS, JSON.stringify(rec)); }
                 catch (e) { try { localStorage.removeItem(PEND_LS); } catch (x) {} }     // 너무 커서 못 담으면 옛 보관본이 남지 않게 지우고 IndexedDB 만
                 pendTx('readwrite', st => st.put(rec, PEND_TAB));
@@ -1077,19 +1077,22 @@
             pendTx('readwrite', st => st.delete(PEND_TAB));
         }
         /* 이 기기에 남아 있는 모든 탭의 보관본 → 하나로 (같은 내용 칸은 가장 나중에 보관한 것) */
+        /* 임시 보관본은 그것을 만든 곳(구글 계정 · 이 기기 폴더)에서만 복구해요 : 다른 계정 · 하드 폴더로 섞여 들어가지 않게 (도련 · 2026-10-13) */
+        function pendWho() { return drive.local ? 'device' : 'g:' + ((typeof COLL !== 'undefined' && COLL.who) || ''); }
         async function readAllPending() {
-            const recs = [], lsKeys = [];
+            const recs = [], lsKeys = [], tabs = [], who = pendWho();
+            const mine = r => r && r.items && (r.who ? r.who === who : !drive.local);   // 예전 보관본(who 없음)은 구글 쪽에서만
             try {
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
-                    if (k && k.startsWith(PENDING_KEY)) { lsKeys.push(k); try { const r = JSON.parse(localStorage.getItem(k)); if (r && r.items) recs.push(r); } catch (e) {} }
+                    if (k && k.startsWith(PENDING_KEY)) { try { const r = JSON.parse(localStorage.getItem(k)); if (mine(r)) { recs.push(r); lsKeys.push(k); } } catch (e) {} }
                 }
             } catch (e) {}
             const vals = await pendTx('readonly', st => st.getAll());
-            if (Array.isArray(vals)) vals.forEach(r => { if (r && r.items) recs.push(r); });
+            if (Array.isArray(vals)) vals.forEach(r => { if (mine(r)) { recs.push(r); if (r.tab) tabs.push(r.tab); } });
             const forget = async () => {
                 lsKeys.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
-                await pendTx('readwrite', st => st.clear());
+                if (tabs.length) await pendTx('readwrite', st => { tabs.forEach(t => st.delete(t)); });
             };
             if (!recs.length) return { p: null, forget };
             recs.sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0));               // 오래된 것부터 → 나중 것이 덮어요
