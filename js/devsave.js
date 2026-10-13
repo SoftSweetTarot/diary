@@ -146,6 +146,42 @@
             await vRemove(p);
         }
 
+        /* ---------- 🗑 휴지통 칸 : 말랑달콤 / 휴지통 / 시각-xxxx.json ({ path : 원래 자리, at : 지운 때, text : 내용 }) + 목록.json
+           - 30일이 지나거나 휴지통이 너무 커지면 (폰 · 아이패드 50MB · PC 폴더 200MB) 오래된 것부터 지워요
+           - 백업 zip · 구글로 옮기기에는 들어가지 않아요 (js/backup.js) ---------- */
+        const TRASH = DV_TOP + '/휴지통', TRASH_IDX = TRASH + '/목록.json', TRASH_DAYS = 30;
+        const trashCap = () => V.mode === 'dir' ? 200 * 1048576 : 50 * 1048576;
+        async function vTrashIdx() { try { const a = JSON.parse(await vRead(TRASH_IDX) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+        async function vTrashSave(a) { await vWrite(TRASH_IDX, JSON.stringify(a)); }
+        async function vTrashPut(path, text) {
+            if (text == null || path.startsWith(TRASH + '/')) return;
+            const at = Date.now(), f = `${at}-${Math.random().toString(36).slice(2, 6)}.json`, body = JSON.stringify({ v: 1, path, at, text });
+            await vWrite(TRASH + '/' + f, body);
+            const a = await vTrashIdx(); a.push({ f, path, at, size: body.length }); await vTrashSave(a);
+            await vTrashPurge();
+        }
+        async function vTrashPurge() {
+            let a = await vTrashIdx(); const n = a.length, old = Date.now() - TRASH_DAYS * 864e5;
+            a.sort((x, y) => x.at - y.at);
+            let total = a.reduce((s, e) => s + (e.size || 0), 0);
+            while (a.length && (a[0].at < old || total > trashCap())) { const e = a.shift(); total -= e.size || 0; try { await vRemove(TRASH + '/' + e.f); } catch (x) {} }
+            if (a.length !== n) await vTrashSave(a);
+        }
+        async function vToTrash(p) {                                       // 파일 하나 · 폴더째
+            const e = V.idx.get(p); if (!e) return;
+            const files = e.k === 'f' ? [p] : Array.from(V.idx.keys()).filter(k => k.startsWith(p + '/') && V.idx.get(k).k === 'f');
+            for (const f of files) { const t = await vRead(f); if (t != null) await vTrashPut(f, t); }
+            await vRemove(p);
+        }
+        const dvTrash = {
+            list: async () => (await vTrashIdx()).filter(e => V.idx.has(TRASH + '/' + e.f)),
+            take: async e => { try { return JSON.parse(await vRead(TRASH + '/' + e.f)); } catch (x) { return null; } },
+            drop: async e => { await vRemove(TRASH + '/' + e.f); await vTrashSave((await vTrashIdx()).filter(x => x.f !== e.f)); },
+            empty: async () => { await vRemove(TRASH); },
+            read: p => vRead(p), write: (p, t) => vWrite(p, t), put: vTrashPut, purge: vTrashPurge
+        };
+        window.dvTrash = dvTrash;
+
         /* ---------- 🪄 드라이브 API 흉내 : drive.js gfetch 가 이 기기 폴더일 때 여기로 와요 ---------- */
         const FOLDER = 'application/vnd.google-apps.folder';
         const vRes = (st, obj) => new Response(obj === undefined ? '' : typeof obj === 'string' ? obj : JSON.stringify(obj), { status: st, headers: { 'Content-Type': 'application/json' } });
@@ -223,7 +259,7 @@
                 if (method === 'PATCH' && upload) { const e = await vWrite(p, String(opts.body == null ? '' : opts.body)); return vRes(200, { id, modifiedTime: vIso(e.mt) }); }
                 if (method === 'PATCH') {
                     const add = u.searchParams.get('addParents'), meta = (() => { try { return JSON.parse(opts.body || '{}'); } catch (e) { return {}; } })();
-                    if (meta.trashed) { await vRemove(p); return vRes(200, { id }); }
+                    if (meta.trashed) { await vToTrash(p); return vRes(200, { id }); }   // 🗑 바로 지우지 않고 휴지통 칸으로 (js/trash.js)
                     let np = p;
                     if (add != null && vPath(add) != null) np = vJoin(vPath(add), vName(p));
                     if (meta.name) np = vJoin(vParent(np), meta.name);
@@ -246,6 +282,7 @@
             V.on = true; drive.local = true; drive.token = null;
             if (typeof waitForGoogle === 'function') waitForGoogle(15000).then(ok => { if (ok) driveClientMake(); });   // ☁ 구글로 로그인을 누르면 바로 창이 뜨게 미리 준비
             await loadFromDrive();                                         // 드라이브로 로그인할 때와 똑같이 읽어요 (설정 · 카페 · 모음 · 3일치)
+            vTrashPurge().catch(() => {});                                 // 🗑 30일 지난 것 비우기
             hideGate(); updateBadge();
             try { await postLoginTasks(); } catch (e) {}
             if (mode === 'idb' && navigator.storage && navigator.storage.persist && !/firefox/i.test(navigator.userAgent)) navigator.storage.persist().catch(() => {});   // 지우지 말아 주세요 (묻는 창 없이 되는 브라우저만)

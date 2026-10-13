@@ -668,6 +668,7 @@
                         if (!drive.dirtyKeys.has(key)) { store.putLoaded(key, theirs); dayShownAgain(key); }
                         return;
                     }
+                    if (window.trashKeepDay) await trashKeepDay(key, theirs);           // 🗑 다른 기기 것은 휴지통에 (js/trash.js)
                 }
             }
             if (val === null) {                                                     // 내용을 모두 지운 날 → 파일은 휴지통으로
@@ -685,7 +686,7 @@
                     if (theirs !== null && theirs !== 'null' && theirs !== val)
                         mine = await showAsk(`📱 다른 기기에서도 방금 <b>${dk.m}월 ${dk.d}일</b> 일기를 처음 저장했어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 드라이브 휴지통으로 가요.</span>`, '📝 내 것 저장', '📱 다른 기기 것');
                     let fin = first;
-                    if (mine && theirs !== val) fin = Object.assign({}, first, await driveUpsert(idx.folderId, name, first.id, val));
+                    if (mine && theirs !== val) { if (window.trashKeepDay) await trashKeepDay(key, theirs); fin = Object.assign({}, first, await driveUpsert(idx.folderId, name, first.id, val)); }
                     await driveTrash(saved.id);                                     // 내가 만든 쪽은 휴지통으로 (가장 먼저 만든 파일 하나만 남겨요)
                     idx.files.set(name, { id: first.id, name, modifiedTime: fin.modifiedTime });
                     drive.dayMeta.set(key, fin.modifiedTime);
@@ -959,6 +960,7 @@
                     const cur = store.getItem(k), mine = days[k];
                     if (cur === mine) continue;
                     if (cur !== null && !(await showAsk(`📅 <b>${dk.m}월 ${dk.d}일</b>은 드라이브에도 일기가 있어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 사라져요.</span>`, '👤 게스트로 쓴 것', '☁ 드라이브 것'))) continue;
+                    if (cur !== null && cur !== mine && window.trashKeepDay) await trashKeepDay(k, cur);   // 🗑 드라이브 것은 휴지통에
                     store.setItem(k, mine); moved++;
                 }
                 left = next;
@@ -1141,7 +1143,7 @@
                 for (const k of askDays) {
                     const dk = parseDayKey(k);
                     const mine = await showAsk(`📴 ${when} 화면이 꺼질 때 고친 <b>${dk.m}월 ${dk.d}일</b> 일기가 저장되지 못했는데,<br>그 사이 📱 다른 기기에서 이 날을 고쳤어요.<br>어느 쪽을 남길까요?<br><span style="font-size:12px;color:#777;">고르지 않은 쪽은 사라져요.</span>`, '📝 이 기기 것', '📱 다른 기기 것');
-                    if (mine) { put(k); any = true; }
+                    if (mine) { if (window.trashKeepDay) await trashKeepDay(k, store.getItem(k)); put(k); any = true; }   // 🗑 다른 기기 것은 휴지통에
                 }
                 if (askSet.length) {
                     const mine = await showAsk(`📴 ${when} 화면이 꺼질 때 바꾼 <b>설정 ${askSet.length}개</b>가 저장되지 못했는데,<br>그 사이 📱 다른 기기에서 설정을 바꿨어요.<br>어느 쪽을 남길까요?`, '📝 이 기기 것', '📱 다른 기기 것');

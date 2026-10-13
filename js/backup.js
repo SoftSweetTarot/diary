@@ -50,7 +50,7 @@
                 const at = name.indexOf(BK_TOP + '/');
                 if (name.endsWith('/') || at < 0) continue;
                 const path = name.slice(at).split('/').filter(s => s && s !== '.' && s !== '..').join('/');
-                if (path.length <= BK_TOP.length || !/\.json$/i.test(path)) continue;
+                if (path.length <= BK_TOP.length || !/\.json$/i.test(path) || path.startsWith(BK_TOP + '/휴지통/')) continue;
                 out.push({ path, text: async () => {
                     const ds = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true), raw = u8.subarray(ds, ds + csize);
                     if (method === 0) return utf.decode(raw);
@@ -71,6 +71,7 @@
             const files = [];
             const walk = async (id, path) => {
                 for (const f of await driveList(`'${id}' in parents and trashed=false`, 'id,name,mimeType')) {
+                    if (f.mimeType === FOLDER_MIME && path === BK_TOP && f.name === '휴지통') continue;   // 🗑 휴지통은 백업 · 옮기기에서 빼요
                     if (f.mimeType === FOLDER_MIME) await walk(f.id, path + '/' + f.name);
                     else if (/\.json$/i.test(f.name)) files.push({ id: f.id, path: path + '/' + f.name });
                 }
@@ -107,7 +108,12 @@
                 const parts = it.path.split('/'), name = parts.pop(), kind = bkKind(it.path);
                 const put = async body => {
                     const dir = await getFolder(parts, true), cur = await findFile(dir, name);
-                    if (cur && kind) body = bkMerge(kind, await readFileText(cur.id), body);
+                    if (cur) {
+                        const old = await readFileText(cur.id);
+                        if (kind) body = bkMerge(kind, old, body);
+                        if (old === body) return;                                      // 같으면 그대로
+                        await trashKeep(it.path, old);                                 // 🗑 덮어쓰기 전 모습은 휴지통에 (js/trash.js)
+                    }
                     await driveUpsert(dir, name, cur && cur.id, body);
                 };
                 if (kind !== 'skip') try {
