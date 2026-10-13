@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/stk-basic.js
    🆓 기본 스티커 : 처음부터 누구나 쓰는 🧩 조각스티커 봉투 · 📄 모조지 (✨ 스티커 → 그 종류 → 기본 칸)
-   + 🖼️ 개발자 그림 : 드라이브 '기본스티커' 폴더 (기본스티커 서버 · js/elements.js basicKit) 의 그림을 각 창 기본 칸 맨 앞에 섞어요
+   + 🖼️ 개발자 그림 : Cloudflare 그림 보관함의 기본스티커 (js/elements.js basicKit · KIT_BASE) 를 각 창 기본 칸 맨 앞에 섞어요
        🍭 포인트스티커 · 🧩 조각스티커 · 📄 모조지 = 숫자 폴더 1개가 한 묶음 (낱장 폴더는 그림 1개가 한 묶음) · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
        🗂 카테고리 칸 : 기본 칸 위에 카테고리 칸 ('전체' 없이 첫 카테고리부터) (씰 창과 같은 모양) · 스티커 이름은 안 보여요
        data-sbc="카테고리" 가 붙은 칸만 걸러요 (제가 그린 것도 각 파일에서 data-sbc 를 붙여요 : js/tape.js · js/stickerpack.js · js/leafpad.js · js/paper.js)
@@ -112,7 +112,7 @@
             if (/^srv:\d+$/.test(id)) {                                     // 🖼️ 개발자 그림 묶음
                 const x = SRV[kind] && SRV[kind][+id.slice(4)]; if (!x || !x.urls) return;
                 let srcs;
-                try { srcs = kind === 'piece' ? await Promise.all(x.urls.map(u => sbDie(u + '=w600'))) : await Promise.all(x.urls.map(u => sbData(u + '=w600').then(d => d.src))); }
+                try { srcs = kind === 'piece' ? await Promise.all(x.urls.map(u => sbDie(kitAt(u, 600)))) : await Promise.all(x.urls.map(u => sbData(kitAt(u, 600)).then(d => d.src))); }
                 catch (e) { sbFail(); return; }
                 if (kind === 'piece') { if (window.stkLeave) stkLeave(); else closeModal('stickerModal'); if (window.openPieceBag) openPieceBag(srcs, { t: '말랑달콤 조각', s: kitCat(x.c) || '기본 조각' }); return; }
                 let sheet = null;
@@ -134,13 +134,13 @@
             openPaperSheet(sheet);
         }
         /* =====================================================================
-           🖼️ 개발자 그림 (드라이브 기본스티커 폴더)
+           🖼️ 개발자 그림 (Cloudflare 그림 보관함의 기본스티커)
            ===================================================================== */
         const SRV = { mini: null, piece: null, paper: null, tape: null, tk: null, leaf: null, memo: null }, sbCache = new Map();
-        const okId = id => typeof id === 'string' && /^[\w-]{10,80}$/.test(id);
         const kitCat = c => (window.kitName ? kitName(String(c || '')) : String(c || '')).slice(0, 24);   // '1. 동물' → '동물'
         const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-        const thumb = (u, w) => u + '=w' + (w || 160);
+        const kitAt = (u, w) => window.kitSize ? kitSize(u, w) : u;           // 크기에 맞는 주소 (js/elements.js)
+        const thumb = (u, w) => kitAt(u, w || 160);
         async function sbList(kind) {                                   // [{ c, urls }] (묶음) · [{ c, url }] (1장) · c = 카테고리 (그대로 · 화면에는 앞 번호 뺀 이름)
             if (SRV[kind]) return SRV[kind];
             if (!window.basicKit) return [];
@@ -148,8 +148,8 @@
             return (SRV[kind] = a.map(x => {
                 if (!x) return null;
                 const c = String(x.c || '').slice(0, 40);
-                if (Array.isArray(x.ids)) { const urls = x.ids.filter(okId).slice(0, 30).map(driveImageUrl); return urls.length ? { c, urls } : null; }
-                return okId(x.id) ? { c, url: driveImageUrl(x.id) } : null;
+                if (Array.isArray(x.us)) return x.us.length ? { c, urls: x.us.slice(0, 30) } : null;
+                return x.u ? { c, url: x.u } : null;
             }).filter(Boolean));
         }
         /* 주소 그림 → data 주소 (투명한 곳이 있으면 PNG · 없으면 JPG) · 한 번 받은 건 기억 */
@@ -252,14 +252,14 @@
         function sbPack(id) {
             const i = +String(id).replace('srv:', ''), x = SRV.mini && SRV.mini[i];
             if (!x || !x.urls) return null;
-            return { id: 'srv' + i, icon: '🧸', name: '', sub: '', load: () => Promise.all(x.urls.map(u => sbDie(u + '=w600'))) };
+            return { id: 'srv' + i, icon: '🧸', name: '', sub: '', load: () => Promise.all(x.urls.map(u => sbDie(kitAt(u, 600)))) };
         }
         /* 🎀 🧻 📃 📝 그림 1장 쓰기 */
         async function sbUse(kind, i) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
             const x = SRV[kind] && SRV[kind][i]; if (!x || !x.url) return;
             let d;
-            try { d = await sbData(x.url + (kind === 'leaf' ? '=w900' : kind === 'tape' ? '=h120' : '=w600'), kind === 'leaf'); } catch (e) { sbFail(); return; }
+            try { d = await sbData(kitAt(x.url, kind === 'leaf' ? 900 : kind === 'tape' ? 'h120' : 600), kind === 'leaf'); } catch (e) { sbFail(); return; }
             if (kind === 'tape') {                                          // 무늬 한 칸을 옆으로 이어 붙여요 (테이프 높이 30)
                 if (typeof tapeUrl !== 'function' || !window.placeTape) return;
                 const h = 30, w = Math.max(6, Math.round(h * d.w / d.h * 10) / 10);

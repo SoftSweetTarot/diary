@@ -100,26 +100,49 @@
             else requestAnimationFrame(go);
         }
 
-        /* 📚 기본스티커 : 기본스티커 서버(라이브러리_앱스크립트.gs)가 드라이브 '기본스티커' 폴더를 읽어 목록을 보내 줘요
-           - 🏷️ 씰 : images [{ id, c }] 낱장 · sheets [{ c, ids }] 씰 종이 (c = 기본스티커/씰스티커 아래 폴더 이름 = 카테고리 · '' 이면 '기본' 카테고리)
-           - 나머지 종류 (🍭 🧩 📄 🎀 🧻 📃 📝) : kits [{ c, ids }] · [{ c, id }] → js/stk-basic.js 가 각 창의 기본 칸에 제가 그린 그림과 섞어서 카테고리 칸과 함께 보여요
+        /* 📚 기본스티커 : 그림과 목록은 Cloudflare 그림 보관함(KIT_BASE)에 있어요 (기본스티커_포장기.html 로 만든 zip 을 올려요)
+           - list.json : images [{ f, c }] 씰 낱장 · sheets [{ c, fs }] 씰 종이 · kits { 종류: [{ c, fs }] · [{ c, f }] } · t [미리보기가 있는 그림]
+             f = 그림 파일 이름 (같은 그림은 늘 같은 이름) → 원본 KIT_BASE/k/이름 · 미리보기 KIT_BASE/t/지문.webp (작게 보여 줄 때)
+           - 다이어리 안에서는 주소로 바꿔서 써요 : images [{ u, c }] · sheets [{ c, us }] · kits [{ c, us }] · [{ c, u }]
+           - c = 기본스티커/씰스티커 아래 폴더 이름 = 카테고리 ('' 이면 '기본' 카테고리) · 나머지 종류는 js/stk-basic.js 가 각 창의 기본 칸에 제가 그린 그림과 섞어서 보여요
+           - 예전에 붙인 스티커의 드라이브 주소(lh3)도 그대로 보여요 (kitSize 가 크기만 맞춰요)
            - 카테고리만 이름이 보여요 ('1. 캐릭터' 처럼 앞 번호는 순서용 · 화면에는 '캐릭터') · 스티커 이름은 없어요
            - 목록은 앱을 켠 동안 한 번만 받아요 (basicKit) */
-        const LIB_API_URL = 'https://script.google.com/macros/s/AKfycbzpe6ZEbSpety1CASpu6whbYRNp5JE5P_PBCL9_fkCTSBXlXMfKem4vBTeRGyUtE4p5uA/exec';                        // ← 그림모음 앱스크립트 웹 앱 주소 (…/exec)
+        const KIT_BASE = 'https://malang-img.pages.dev';                    // ← 🖼️ 그림 보관함 (Cloudflare Pages 주소 · 끝에 / 없이)
         let libItems = null, libLoading = false, libCats = [], libCat = '';
-
-        function driveImageUrl(id) { return 'https://lh3.googleusercontent.com/d/' + id; }
+        const KIT_THUMB = new Set();                                         // 미리보기(t/)가 따로 있는 그림 지문
+        const kitOk = f => typeof f === 'string' && /^[0-9a-f]{16}\.(png|jpg|gif|webp|svg)$/.test(f);
+        const kitUrl = f => KIT_BASE + '/k/' + f;
+        /* 보여 줄 크기에 맞는 주소 : 작게(400 이하)는 미리보기 · 크게는 원본 · 예전 드라이브 주소는 =w 크기 */
+        function kitSize(u, w) {
+            u = String(u || '');
+            if (u.startsWith(KIT_BASE + '/k/')) { const f = u.slice(KIT_BASE.length + 3), h = f.split('.')[0]; return w <= 400 && KIT_THUMB.has(h) ? KIT_BASE + '/t/' + h + '.webp' : u; }
+            if (/lh3\.googleusercontent\.com\/d\//.test(u)) return u + (/^h/.test(String(w)) ? '=' : '=w') + w;
+            return u;
+        }
         const libCatName = c => c.replace(/^\d+\s*[.)_\-]?\s*/, '') || c;
         function libView() { return !libItems ? [] : libCat ? libItems.filter(x => x.c === libCat) : libItems; }
 
         async function fetchLibraryList() {
-            if (!LIB_API_URL) throw new Error('setup');
+            if (!KIT_BASE) throw new Error('setup');
             const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), KT_WAIT_SLOW);   // 기다리는 시간은 keepTrying 이 정해요 (5초 · 느리면 10초)
             try {
-                const res = await fetch(LIB_API_URL, { signal: ctl.signal });
-                const data = await res.json();
-                if (!data || !data.ok || !Array.isArray(data.images)) throw new Error('server');
-                return { images: data.images, sheets: Array.isArray(data.sheets) ? data.sheets : [], kits: data.kits && typeof data.kits === 'object' ? data.kits : {} };
+                const res = await fetch(KIT_BASE + '/list.json', { signal: ctl.signal, cache: 'no-cache' });
+                if (!res.ok) throw new Error('server');
+                const d = await res.json();
+                if (!d || !Array.isArray(d.images)) throw new Error('server');
+                (Array.isArray(d.t) ? d.t : []).forEach(h => { if (/^[0-9a-f]{16}$/.test(h)) KIT_THUMB.add(h); });
+                const us = fs => (Array.isArray(fs) ? fs : []).filter(kitOk).slice(0, 30).map(kitUrl);
+                const kits = {};
+                Object.keys(d.kits && typeof d.kits === 'object' ? d.kits : {}).forEach(k => {
+                    kits[k] = (Array.isArray(d.kits[k]) ? d.kits[k] : []).map(x => !x ? null : Array.isArray(x.fs) ? { c: String(x.c || ''), us: us(x.fs) } : kitOk(x.f) ? { c: String(x.c || ''), u: kitUrl(x.f) } : null)
+                        .filter(x => x && (x.u || (x.us && x.us.length)));
+                });
+                return {
+                    images: d.images.filter(x => x && kitOk(x.f)).map(x => ({ u: kitUrl(x.f), c: String(x.c || '') })),
+                    sheets: (Array.isArray(d.sheets) ? d.sheets : []).map(x => x && { c: String(x.c || ''), us: us(x.fs) }).filter(x => x && x.us.length),
+                    kits
+                };
             } finally { clearTimeout(timer); }
         }
         /* 기본스티커 목록 (앱을 켠 동안 한 번) : { images, sheets, kits }
@@ -144,7 +167,7 @@
             const st = document.getElementById('libStatus');
             if (st && libLoading) st.textContent = `⏳ 목록을 다시 불러오는 중이에요… (${e.detail.n + 1}번째)`;
         });
-        window.basicKit = basicKit; window.driveImageUrl = driveImageUrl; window.kitName = libCatName;
+        window.basicKit = basicKit; window.kitSize = kitSize; window.kitName = libCatName;
 
         /* ---------- 📚 라이브러리 페이지 넘기기 · 배치 설정 ----------
            - 한 페이지에 (몇 줄 × 한 줄에 몇 개)개씩 보여 주고, ◀ 이전 / 다음 ▶ 버튼(또는 옆으로 밀기)으로 넘김
@@ -290,13 +313,10 @@
             st.textContent = '⏳ 이미지 목록을 불러오는 중...';
             grid.innerHTML = '';
             try {
-                const kit = await basicKit(force), seen = new Set(), okId = id => typeof id === 'string' && /^[\w-]{10,80}$/.test(id);
+                const kit = await basicKit(force), seen = new Set();
                 libItems = [];
-                kit.sheets.forEach(x => {                                          // 🏷️ 씰 종이 (폴더 1개 = 종이 1장) : 카테고리 맨 앞에
-                    const ids = Array.isArray(x && x.ids) ? x.ids.filter(okId).slice(0, 30) : [];
-                    if (ids.length) libItems.push({ u: driveImageUrl(ids[0]), s: ids.map(driveImageUrl), c: String(x.c || '기본') });
-                });
-                kit.images.forEach(x => { if (x && okId(x.id) && !seen.has(x.id)) { seen.add(x.id); libItems.push({ u: driveImageUrl(x.id), c: String(x.c || '기본') }); } });   // 카테고리 폴더 밖 그림 = '기본'
+                kit.sheets.forEach(x => libItems.push({ u: x.us[0], s: x.us, c: x.c || '기본' }));   // 🏷️ 씰 종이 (폴더 1개 = 종이 1장) : 카테고리 맨 앞에
+                kit.images.forEach(x => { if (!seen.has(x.u)) { seen.add(x.u); libItems.push({ u: x.u, c: x.c || '기본' }); } });   // 카테고리 폴더 밖 그림 = '기본'
                 libCats = [...new Set(libItems.map(x => x.c).filter(Boolean))];
                 if (!libCats.includes(libCat)) libCat = libCats[0] || '';      // '전체' 칸 없이 첫 카테고리부터 (한꺼번에 다 그리지 않아서 빨라요)
                 libPage = 0;
@@ -331,7 +351,7 @@
         /* 🏷️ 씰 종이 : 한 종이에 씰 여러 개 → 하나씩 떼어 붙여요 (js/stickerpeel.js) */
         async function libPickSheet(urls) {
             if (window.stkLeave) stkLeave();
-            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await Promise.all(urls.map(u => pelBake(u + '=w600'))))) return; } catch (e) {}
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await Promise.all(urls.map(u => pelBake(kitSize(u, 600)))))) return; } catch (e) {}
             showMsg('⚠ 씰 종이를 열지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
             if (window.stkReturn) stkReturn(700);
         }
@@ -355,7 +375,6 @@
             st.textContent = (nSheet ? `씰 종이 ${nSheet}장 · ` : '') + `씰 ${view.length - nSheet}개 · 누르면 씰스티커로 나와요`;
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
             const frag = document.createDocumentFragment(), cur = all[libPage] || [];
-            const big = u => u.includes('lh3.googleusercontent.com/d/');
             let usedSlots = 0;
             cur.forEach(x => {
                 const { u: url, s: sheet } = x;
@@ -365,11 +384,11 @@
                 if (sheet) {                                                       // 🏷️ 씰 종이 : 옆으로 2칸 · 안에 든 씰을 작게 최대한 많이 + 총 개수
                     item.style.gridColumn = 'span ' + libSpan(x);
                     item.title = '스티커 ' + sheet.length + '개';
-                    item.innerHTML = sbThumbs(sheet.map(u => big(u) ? u + '=w96' : u)) + `<small class="lib-cnt">스티커 ${sheet.length}개</small>`;
+                    item.innerHTML = sbThumbs(sheet.map(u => kitSize(u, 96))) + `<small class="lib-cnt">스티커 ${sheet.length}개</small>`;
                 } else {
                     const img = document.createElement('img');
                     img.loading = 'lazy';
-                    img.src = big(url) ? url + '=w' + thumbW : url;
+                    img.src = kitSize(url, thumbW);
                     img.onerror = () => item.classList.add('bad');
                     item.appendChild(img);
                 }

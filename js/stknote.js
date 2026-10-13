@@ -592,7 +592,7 @@
             const mu = sh._mu, g = sh.querySelector('.snb-sh-in');
             let urls = [], k = 'pack';
             try {
-                if (mu.lib) { urls = mu.lib.map(u => /lh3\.googleusercontent\.com\/d\//.test(u) ? u + '=w400' : u); k = 'seal'; }   // 🏷️ 씰 종이
+                if (mu.lib) { urls = mu.lib.map(u => window.kitSize ? kitSize(u, 400) : u); k = 'seal'; }   // 🏷️ 씰 종이
                 else if (mu.pack) {
                     const P = (typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack)) || (window.sbPack && sbPack(mu.pack));   // 🖼️ 개발자 그림 묶음(srv:N)도
                     urls = P ? await keepTrying(() => spkSrcs(P), { alive: () => sh.isConnected }) : [];
