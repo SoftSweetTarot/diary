@@ -1,7 +1,18 @@
 /* 말랑달콤 다이어리 - js/settings.js
    PC 백업/불러오기 · PNG 저장 · 용량 확인 · 페이지 · 창 열기/닫기
    ※ 파일 불러오는 순서: drive → app → page → elements → settings → service (index.html 참고) */
+        /* 💾 데이터 관리 버튼 글씨 : 📁 이 기기 폴더로 쓰는 중이면 그에 맞게 (js/devsave.js) */
+        function dmLabels() {
+            const L = !!(typeof drive !== 'undefined' && drive.local), set = (id, t) => { const b = document.getElementById(id); if (b && b.textContent !== t) b.textContent = t; };
+            set('dmBackupBtn', L ? '📦 백업 파일 받기' : '📂 PC로 백업');
+            set('dmImportBtn', L ? '📥 백업 불러오기' : '📥 PC에서 불러오기');
+            set('dmReloadBtn', L ? '🔄 폴더에서 다시 불러오기' : '🔄 드라이브에서 다시 불러오기');
+            set('dmLogoutBtn', L ? '☁ 구글로 로그인' : '🚪 로그아웃');
+            const lb = document.getElementById('dmLogoutBtn'); if (lb) lb.onclick = L ? () => driveLogin() : () => driveLogout();
+            const q = document.getElementById('dmQuotaLabel'); if (q) q.innerHTML = L ? '📁 이 기기 저장공간 <span style="font-size:11px; color:#999;">(브라우저가 다이어리에 내어 준 칸)</span>' : '☁ 내 구글 저장공간 <span style="font-size:11px; color:#999;">(지메일·구글 포토와 함께 써요)</span>';
+        }
         async function exportJSON() {
+            if (drive.local && window.dvBackup) return dvBackup();               // 📁 이 기기 폴더 : 말랑달콤 폴더 통째로 .zip (js/devsave.js)
             saveData(false);
             if (drive.ready && !drive.guest) {
                 const st = document.getElementById('driveStatusText');
@@ -21,7 +32,7 @@
             setTimeout(() => URL.revokeObjectURL(a.href), 1000);
         }
 
-        function triggerImportJSON() { document.getElementById('jsonInput').click(); }
+        function triggerImportJSON() { if (drive.local && window.dvRestorePick) return dvRestorePick(); document.getElementById('jsonInput').click(); }
 
         function importJSON(e) {
             const file = e.target.files[0];
@@ -43,7 +54,7 @@
                 if (drive.ready && !drive.guest) {
                     const ok = await flushUpload({ force: true });   // 날짜별 파일로 드라이브에 저장
                     showMsg(ok
-                        ? '📥 데이터 복원이 완료되었고,<br>구글 드라이브의 날짜별 파일도 갱신했어요!'
+                        ? '📥 데이터 복원이 완료되었고,<br>' + (drive.local ? '이 기기 폴더' : '구글 드라이브') + '의 날짜별 파일도 갱신했어요!'
                         : '📥 복원은 되었지만 드라이브 저장에 실패했어요.<br>잠시 후 자동으로 다시 시도합니다.');
                 } else {
                     showMsg('📥 데이터 복원이 완료되었어요.<br>(드라이브에 연결되지 않아 저장은 되지 않았어요)');
@@ -151,6 +162,7 @@
         }
 
         function updateStorageInfo() {
+            dmLabels();
             const t = document.getElementById('lsText');
             const d = document.getElementById('lsDetail');
             const gauge = document.getElementById('lsGauge');
@@ -187,8 +199,8 @@
             }
             const st = document.getElementById('driveStatusText');
             if (st) st.textContent = drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST ? '💻 로컬 테스트 · 이 브라우저에만 저장 (처음부터 : 주소 뒤에 ?reset)'
-                : drive.guest && window.dvOn && dvOn() ? '📁 로그인 없이 · ' + dvWhere() + ' 폴더에 저장 중'
                 : drive.guest ? '☁ 구글 드라이브에 연결되지 않음 (저장 안 됨)'
+                : drive.local ? `📁 로그인 없이 · ${dvWhere()} / 다이어리 / 페이지 / 년도 / 월 / 일.json`
                 : drive.ready ? `☁ 연결됨 · ${USE_APP_DATA_FOLDER ? '앱 전용 공간' : '내 드라이브'} / ${ROOT_PATH_TEXT} / 년도 / 월 / 일.json` : '☁ 연결 안 됨';
         }
 

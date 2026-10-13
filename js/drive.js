@@ -65,6 +65,7 @@
         const drive = {
             client: null, token: null, expiresAt: 0,
             ready: false,      // 설정을 성공적으로 불러온 상태 (이때부터만 업로드 허용)
+            local: false,      // 📁 로그인 없이 이 기기 폴더 (js/devsave.js) : 드라이브와 똑같이 움직여요
             guest: false, uploading: false, needAuth: false, error: false, lastSaved: null,
             gen: 0,            // 다시 불러오기 할 때마다 증가 (예전 요청의 결과가 뒤늦게 섞이는 것 방지)
             inflight: null,    // 지금 업로드 중인 키
@@ -86,7 +87,7 @@
         let pendingToken = null;
 
         function markDirty(key) {
-            if (drive.guest) { if (window.dvOn && dvOn()) dvDirty(key); else if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestSave === 'function') localTestSave(); updateBadge(); return; }   // 📁 이 기기 폴더 (js/devsave.js)
+            if (drive.guest) { if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestSave === 'function') localTestSave(); updateBadge(); return; }
             drive.dirtyKeys.add(key);
             if (drive.ready) {
                 clearTimeout(uploadTimer);
@@ -117,6 +118,7 @@
         }
 
         async function ensureToken() {
+            if (drive.local) { const er = new Error('auth'); er.code = 'auth'; throw er; }   // 📁 이 기기 폴더 : 구글 계정이 필요한 서버 기능은 로그인해야 해요
             if (drive.token && Date.now() < drive.expiresAt) return;
             try { await requestToken('none'); }
             catch (e) {
@@ -126,6 +128,7 @@
         }
 
         async function gfetch(url, opts = {}, retried = false) {
+            if (drive.local && window.vfsFetch) return vfsFetch(url, opts);        // 📁 로그인 없이 이 기기 폴더 : 드라이브 대신 (js/devsave.js)
             await ensureToken();
             const res = await fetch(url, Object.assign({}, opts, {
                 headers: Object.assign({}, opts.headers || {}, { Authorization: 'Bearer ' + drive.token })
@@ -861,8 +864,7 @@
             const el = document.getElementById('driveBadge');
             if (!el) return;
             let text = '', warn = false, stay = false;
-            if (drive.guest && window.dvOn && dvOn()) { text = ''; }                     // 📁 이 기기 폴더에 저장 중 : 알림 없음
-            else if (drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST) { text = ''; }   // 💻 로컬 테스트 : 이 브라우저에 저장 중이라 알림 없음 (녹화에도 안 찍혀요)
+            if (drive.guest && typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST) { text = ''; }   // 💻 로컬 테스트 : 이 브라우저에 저장 중이라 알림 없음 (녹화에도 안 찍혀요)
             else if (drive.guest) { text = '☁ 저장 안 됨 · 눌러서 로그인'; warn = true; }
             else if (!drive.ready) { return; }
             else if (drive.needAuth) { text = '⚠ 로그인이 만료됐어요 · 눌러서 다시 연결'; warn = true; stay = true; }
@@ -914,6 +916,16 @@
             });
         }
 
+        function driveClientMake() {
+            if (drive.client || !(window.google && google.accounts && google.accounts.oauth2)) return !!drive.client;
+            drive.client = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: DRIVE_SCOPE,
+                callback: (r) => { if (pendingToken) (r && r.error) ? pendingToken.err(r) : pendingToken.ok(r); },
+                error_callback: (e) => { if (pendingToken) pendingToken.err(e); }
+            });
+            return true;
+        }
         async function initDrive() {
             if (window.dvAuto && await dvAuto()) return;                    // 📁 로그인 없이 이 기기 폴더에 쓰기로 했으면 바로 열어요 (js/devsave.js)
             if (typeof LOCAL_TEST !== 'undefined' && LOCAL_TEST && typeof localTestStart === 'function') { await localTestStart(); return; }   // 💻 내 컴퓨터(localhost) : 로그인 없이 · 이 브라우저에 저장 (js/localtest.js)
@@ -928,12 +940,7 @@
                 showGate('login', '구글 로그인 스크립트를 불러오지 못했어요.<br>인터넷 연결을 확인하고 새로고침해 주세요.' + fileHint);
                 return;
             }
-            drive.client = google.accounts.oauth2.initTokenClient({
-                client_id: GOOGLE_CLIENT_ID,
-                scope: DRIVE_SCOPE,
-                callback: (r) => { if (pendingToken) (r && r.error) ? pendingToken.err(r) : pendingToken.ok(r); },
-                error_callback: (e) => { if (pendingToken) pendingToken.err(e); }
-            });
+            driveClientMake();
             /* 이전에 로그인한 적이 있으면 창 없이 자동 로그인 시도 */
             let authed = false;
             try { authed = localStorage.getItem(AUTH_FLAG_KEY) === '1'; } catch (e) {}
@@ -945,11 +952,13 @@
         }
 
         async function driveLogin() {
-            const guestDays = drive.guest ? guestSnapshot() : null;                 // 👤 게스트로 쓴 일기 (로그인하면 메모리가 드라이브 것으로 바뀌어서 먼저 챙겨요)
+            const devDays = drive.local && window.dvBeforeLogin ? await dvBeforeLogin() : null;   // 📁 이 기기 폴더 일기를 모두 챙겨요 (js/devsave.js)
+            const guestDays = drive.guest ? guestSnapshot() : devDays;               // 👤 게스트로 쓴 일기 (로그인하면 메모리가 드라이브 것으로 바뀌어서 먼저 챙겨요)
+            if (!drive.client && !driveClientMake() && await waitForGoogle(10000)) driveClientMake();   // 이 기기 폴더로 열었으면 구글 준비가 아직이에요
             showGate('wait', '☁ 구글 로그인 창에서 계정을 선택해 주세요…');
             try { await requestToken('select_account'); await loadFromDrive(); hideGate(); await postLoginTasks(); }
             catch (e) { showGate('login', driveErrorText(e)); if (guestDays) guestHold = guestDays; return; }
-            if (window.dvOff) dvOff();                                            // 📁 이제 드라이브로 열려요 (이 기기 폴더 파일은 그대로)
+            if (window.dvAfterLogin) dvAfterLogin();                              // 📁 이제 드라이브로 열려요 (이 기기 폴더 파일은 그대로)
             if (guestDays || guestHold) guestCarry(Object.assign({}, guestHold || {}, guestDays || {}));
         }
         /* 👤 게스트 일기 → 내 드라이브로 옮기기 (물어본 뒤 · 드라이브에도 있는 날은 "어느 쪽?") */
@@ -996,13 +1005,14 @@
 
         async function reloadFromDrive() {
             if (!drive.ready) { showMsg('먼저 구글 드라이브에 연결해 주세요.'); return; }
-            const yes = await showMsg('드라이브에 저장된 내용으로 현재 내용을 바꿔서 다시 불러올까요?<br><span style="font-size:12px;color:#777;">아직 저장되지 않은 변경은 사라져요.</span>', true);
+            const yes = await showMsg((drive.local ? '이 기기 폴더에' : '드라이브에') + ' 저장된 내용으로 현재 내용을 바꿔서 다시 불러올까요?<br><span style="font-size:12px;color:#777;">아직 저장되지 않은 변경은 사라져요.</span>', true);
             if (!yes) return;
-            try { await loadFromDrive(); clearPending(); showMsg('🔄 드라이브에서 다시 불러왔어요!'); }
+            try { await loadFromDrive(); clearPending(); showMsg(drive.local ? '🔄 이 기기 폴더에서 다시 불러왔어요!' : '🔄 드라이브에서 다시 불러왔어요!'); }
             catch (e) { showMsg('⚠ ' + driveErrorText(e)); }
         }
 
         async function driveLogout() {
+            if (drive.local && window.dvStop) return dvStop();                     // 📁 이 기기 폴더 그만 쓰기
             const yes = await showMsg('로그아웃할까요?<br><span style="font-size:12px;color:#777;">드라이브의 말랑달콤 폴더는 그대로 남아 있어요.</span>', true);
             if (!yes) return;
             if (drive.ready && drive.dirty) await flushUpload();
