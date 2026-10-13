@@ -14,7 +14,8 @@
             studio: false,    // 🎀 페이지 꾸미기 (🎨 페이지 창)
             stkmake: false,   // ✂️ 나만의 스티커 만들기 · 스티커 창들의 '내가만든' 칸
             share: false,     // 📥 '공유받은' 칸 · 💾 공유용 파일 저장 (카페로 주고받는 것)
-            caps: false       // 🎁 캡슐스티커 (카페 랜덤박스에서 받아요)
+            caps: false,      // 🎁 캡슐스티커 (카페 랜덤박스에서 받아요)
+            fphone: true      // 📞 반짝이 피처폰 메신저 (로그인한 회원끼리 · 서버 말랑달콤사람들 .gs 새 버전이 필요해요)
         };
         /* 💻 내 컴퓨터(index.html 더블클릭 · localhost)에서는 모든 기능이 보여요 → 새 기능 소개 영상용 (사이트는 위 FEATURES 그대로) */
         const FT_LOCAL = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
