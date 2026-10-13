@@ -390,7 +390,8 @@
             el.style.zIndex = zIndexCounter++;
             let posX = 100, posY = 100, scale = 1, rotation = 0;
 
-            /* 네 꼭짓점 : 잡고 돌리면 회전 (눈에 안 보이는 터치 칸) · 손가락 2개로 벌리면 확대/축소 + 비틀면 회전 */
+            /* 네 꼭짓점 : 잡고 돌리면 회전 + 가운데로 당기면 작게 · 바깥으로 밀면 크게 (눈에 안 보이는 터치 칸 · 도련 · 2026-10-13)
+               · 손가락 2개로 벌리면 확대/축소 + 비틀면 회전 · 마우스 휠로 확대/축소 */
             ['tl', 'tr', 'bl', 'br'].forEach(c => {
                 const z = document.createElement('div');
                 z.className = 'rot-zone rot-' + c;
@@ -441,7 +442,7 @@
             updateTransform();
 
             let actionType = null;
-            let startX, startY, startAngle, initialX, initialY, pinch = null;
+            let startX, startY, startAngle, initialX, initialY, pinch = null, rotD0 = 0, rotS0 = 1;
 
             function getClientPos(e) {
                 if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -466,6 +467,7 @@
                     actionType = 'rotate';
                     const rect = el.getBoundingClientRect();
                     startAngle = Math.atan2(pos.y - (rect.top + rect.height / 2), pos.x - (rect.left + rect.width / 2)) * (180 / Math.PI) - rotation;
+                    rotD0 = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2)); rotS0 = scale;   // 가운데(피봇)까지 거리 → 크기
                 } else if (stretchHandle && e.target === stretchHandle) {
                     actionType = 'stretch';
                     initialW = parseFloat(el.style.width) || el.offsetWidth;
@@ -522,6 +524,8 @@
                     const currentAngle = Math.atan2(pos.y - (rect.top + rect.height / 2), pos.x - (rect.left + rect.width / 2)) * (180 / Math.PI);
                     rotation = currentAngle - startAngle;
                     el.dataset.rotation = rotation;
+                    const d = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
+                    if (rotD0 > 8) { scale = Math.max(0.2, Math.min(5, rotS0 * d / rotD0)); el.dataset.scale = scale; }   // 가까이 → 작게 · 멀리 → 크게
                 } else if (actionType === 'stretch') {
                     const a = rotation * Math.PI / 180;
                     const d = ((pos.x - startX) * Math.cos(a) + (pos.y - startY) * Math.sin(a)) / (scale || 1);
