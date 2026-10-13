@@ -17,7 +17,7 @@
            - jpg · png · webp · 움직이는 gif 모두 표시됩니다.
            ===================================================================== */
         const NOTICE_IMAGE_SRC = '';                          // 겉표지 카드 그림 (비우면 기본 환영 카드)
-        const NOTICE_FILE = 'notice.json';                    // 공지 내용 파일 (사이트 맨 위)
+        const NOTICE_FILE = location.protocol === 'file:' ? 'https://softsweetdiary.com/notice.json' : 'notice.json';   // 공지 내용 파일 (사이트 맨 위 · index.html 을 바로 열면 사이트 것을)
         const NOTICE_SEEN_KEY = 'diary_notice_seen';          // 드라이브 설정에 남는 '본 공지 번호'
         const NOTICE_LOCAL_KEY = 'malang_notice_seen';        // 이 기기에도 같이 (게스트 · 로그인 전)
         const NOTICE_RECHECK_MS = 10 * 60 * 1000;             // 앱으로 돌아왔을 때 10분 넘게 지났으면 공지를 다시 확인
@@ -266,7 +266,7 @@
         const FEEDBACK_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEDrtkCkcmmbxIL30fgzmGXTb4r5BoO7RP59M930O66duHgvy-xkYEDK3PDZWUcd1l/exec";
 
         /* ☕ 서버 미리 깨우기 : 앱스크립트는 쉬다가 처음 요청을 받으면 깨어나는 데 몇 초~십몇 초 걸려요.
-           창을 여는 순간 '일어나' 신호(doGet · 시트에는 아무것도 안 씀)를 미리 보내 두면,
+           그 기능을 여는 순간 그 서버 하나에만 '일어나' 신호(doGet · 시트에는 아무것도 안 씀)를 미리 보내 두면,
            사용자가 글을 쓰거나 고르는 동안 깨어나서 실제 요청은 금방 끝나요. (같은 서버는 4분에 한 번만) */
         const warmedAt = {};
         function warmServer(url) {
