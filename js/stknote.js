@@ -22,7 +22,7 @@
             try { v = snbSync() ? store.getItem(SNB_KEY) : localStorage.getItem(SNB_LOCAL); } catch (e) {}
             try { v = JSON.parse(v); } catch (e) {}
             if (typeof ftOn === 'function' && !ftOn('notebook')) return 'list';   // 🔓 수첩을 숨겨 둔 동안은 늘 고르는 창 (js/features.js)
-            return v === 'note' ? 'note' : 'list';
+            return v === 'list' ? 'list' : 'note';                              // 📒 기본은 수첩 (도련 · 2026-10-13 · 고르는 창을 직접 고른 사람만 고르는 창)
         }
         function snbSet(v) {
             const t = JSON.stringify(v === 'note' ? 'note' : 'list');

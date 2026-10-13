@@ -123,7 +123,7 @@ let fontList = [
 
         function fontIdOf(css) { const f = fontList.find(x => x.css === css); return f ? f.id : 'sys'; }
         const DEFAULT_UI_FONT = fontList[0].css;
-        const DEFAULT_TEXT_FONT = fontList[0].css;
+        const DEFAULT_TEXT_FONT = "'Gaegu', cursive";                      // ✍️ 새 메모 기본 글씨체 = 개구 (도련 · 2026-10-13 · 화면 글씨체는 그대로)
         const DEFAULT_TEXT_COLOR = '#444444';
         const DEFAULT_TEXT_SIZE = 18;
 

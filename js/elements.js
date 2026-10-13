@@ -801,7 +801,7 @@
                 const ta = document.createElement('textarea');
                 ta.value = data.content || '';
                 if (!interactive) ta.readOnly = true;
-                styleTextarea(ta, data.fontFamily, data.color, data.fontSize);
+                styleTextarea(ta, data.fontFamily || SYSTEM_FONT, data.color, data.fontSize);   // 글씨체 기록이 없는 예전 메모 = 기기 기본 폰트 그대로
                 el.appendChild(ta);
                 if (data.paper && /^[a-z]{1,10}$/.test(data.paper)) { el.classList.add('pp-' + data.paper); el.dataset.paper = data.paper; }
                 if (data.tk && data.tb && window.tkNoteDress) tkNoteDress(el, data.tk, data.tb);
