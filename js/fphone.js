@@ -4,18 +4,22 @@
    - 구글로 로그인한 회원끼리 · 둘 다 다이어리를 켜 둔 동안만 쓰는 1:1 문자 (부재중 · 기록 없음)
    - 닉네임 : 전화기에서 정해요 → 서버 '회원 목록' R 칸 (겹치면 다른 닉네임 추천)
    - 연락처 = 내 전화기에 등록한 닉네임들 (설정에 저장 · 구글 드라이브) · 서버는 몰라요
-   - 걸기 : 친구를 고르고 📞 → 서버가 상대 앞으로 신호를 맡겨요 (상대가 꺼져 있으면 바로 '자리에 없어요')
-     받는 쪽 : 10초마다 신호 확인 → 내 목록에 건 사람이 있으면 알람 · 진동 · 벨소리 / 없으면 울리지 않고 '전화를 걸 수 없습니다'
+   - 걸기 : 친구를 고르고 📞 → 파이어스토어 '상대 우편함'에 신호를 넣어요 (등록 안 된 닉네임이면 바로 알려 줘요)
+     받는 쪽 : 내 우편함을 듣고 있다가 바로 → 내 목록에 건 사람이 있으면 알람 · 진동 · 벨소리 / 없으면 울리지 않고 '전화를 걸 수 없습니다'
      30초 안에 안 받으면 '자리에 없어요' · 받으면 WebRTC 로 두 브라우저가 직접 연결 → 서버는 빠져요
    - 문자 중에 다른 친구가 걸면 또 울려요 → 받으면 대화가 하나 더 (위 이름표로 바꿔요) · 받든 말든 사용자 마음
    - 연결이 잘 안 되면 끊고 포기 · 끊으면 대화는 사라져요 · 친구를 지우면 그 친구와의 대화도 바로 끊겨요
-   - 서버 : 말랑달콤사람들_앱스크립트.gs 의 fp_hello · fp_nick · fp_poll · fp_send (js/presence.js 의 MEMBER_API_URL)
+   - 서버 : 말랑달콤사람들_앱스크립트.gs 의 fp_hello · fp_nick (구글 로그인 확인 → 닉네임 + 파이어스토어 출입증)
+            신호 : 파이어스토어 softsweetdiary-phone · inbox/{받는 닉네임 소문자}/sig · users/{닉네임 소문자} (보안 규칙은 파이어베이스 콘솔)
+            읽은 신호는 바로 지워요 · 오래된 신호(90초)는 무시하고 지워요 · 하루 무료량을 넘으면 '오늘은 쉬어요'
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
 
         const FP_CONTACTS = 'diary_fp_contacts', FP_POS = 'malang_fp_pos';
-        const FP_POLL = 10000, FP_POLL_FAST = 2000, FP_RING = 30000, FP_LINK = 15000;
+        const FP_RING = 30000, FP_LINK = 15000, FP_OLD = 90000;
+        const FP_FB = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
+        const FP_FBCFG = { apiKey: 'AIzaSyDg3q7ki9HS_6h-Txv9J1kGc9VTmo2b8lc', authDomain: 'softsweetdiary-phone.firebaseapp.com', projectId: 'softsweetdiary-phone', storageBucket: 'softsweetdiary-phone.firebasestorage.app', messagingSenderId: '666233690853', appId: '1:666233690853:web:7e6be0cca2e150a489520c' };
         const FP_ICE = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
-        const fp = { el: null, open: false, key: '', nick: '', view: 'home', sel: 0, convs: new Map(), cur: '', ring: [], calling: null, timer: 0, busy: false, err: '', toastT: 0, ringT: 0, buzzT: 0, tone: null, nickTry: null };
+        const fp = { el: null, open: false, fb: null, on: false, unsub: null, nick: '', view: 'home', sel: 0, convs: new Map(), cur: '', ring: [], calling: null, timer: 0, busy: false, err: '', toastT: 0, ringT: 0, buzzT: 0, tone: null, nickTry: null };
         const fpq = s => fp.el && fp.el.querySelector(s);
         const fpEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
         const fpUsable = () => typeof drive !== 'undefined' && drive.ready && !drive.guest && !drive.local && typeof MEMBER_API_URL !== 'undefined' && !!MEMBER_API_URL;
@@ -25,37 +29,58 @@
         function fpSaveContacts(a) { store.setItem(FP_CONTACTS, JSON.stringify(a)); }
         const fpHas = n => fpContacts().some(x => x.toLowerCase() === String(n).toLowerCase());
 
-        /* ---------- 서버 ---------- */
+        /* ---------- 서버 (앱스크립트 : 닉네임 · 출입증) ---------- */
         async function fpApi(action, data) {
-            const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ action }, data || {})), credentials: 'omit' });
+            await ensureToken();
+            const res = await fetch(MEMBER_API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ action, token: drive.token }, data || {})), credentials: 'omit' });
             return res.json();
         }
-        async function fpHello() {
-            await ensureToken();
-            const r = await fpApi('fp_hello', { token: drive.token });
-            if (!r || !r.ok) throw new Error(r && r.error || 'hello');
-            fp.key = r.key; fp.nick = r.nick || '';
-        }
-        async function fpKeyed(action, data) {                                 // 열쇠가 끝났으면 한 번 다시 받아요
-            if (!fp.key) await fpHello();
-            let r = await fpApi(action, Object.assign({ k: fp.key }, data));
-            if (r && r.error === 'key') { await fpHello(); r = await fpApi(action, Object.assign({ k: fp.key }, data)); }
-            return r || {};
-        }
-        const fpSend = (t, to, id, sdp) => fpKeyed('fp_send', { t, to, id, sdp: sdp || '' });
 
-        /* ---------- 10초마다 신호 확인 (보고 있을 때만 · 거는 중이면 2초) ---------- */
-        function fpSchedule(ms) { clearTimeout(fp.timer); fp.timer = setTimeout(fpPoll, ms == null ? (fp.calling ? FP_POLL_FAST : FP_POLL) : ms); }
-        async function fpPoll() {
-            if (!fp.el || fp.el.hidden || !fpUsable() || document.hidden || !fp.nick) { fpSchedule(); return; }
-            try {
-                const r = await fpKeyed('fp_poll', {});
-                (r.in || []).forEach(fpSignal);
-                fp.err = '';
-            } catch (e) { fp.err = 'net'; }
-            fpSchedule();
+        /* ---------- 파이어스토어 (신호 우편함) ---------- */
+        async function fpFirebase() {
+            if (fp.fb) return fp.fb;
+            const [A, U, F] = await Promise.all(['app', 'auth', 'firestore'].map(n => import(FP_FB + n + '.js')));
+            const app = A.getApps().find(x => x.name === 'fphone') || A.initializeApp(FP_FBCFG, 'fphone');
+            fp.fb = { U, F, auth: U.getAuth(app), db: F.getFirestore(app) };
+            return fp.fb;
         }
-        document.addEventListener('visibilitychange', () => { if (!document.hidden && fp.el && !fp.el.hidden) fpSchedule(300); });
+        const fpNl = n => String(n).toLowerCase();
+        const fpQuota = e => e && /resource-exhausted/.test(e.code || e.message || '');
+        const FP_QUOTA_MSG = '오늘은 전화가 너무 많아서 쉬어요… 오후 5시쯤 다시 해 주세요';
+        function fpStopListen() { if (fp.unsub) { try { fp.unsub(); } catch (e) {} } fp.unsub = null; fp.on = false; }
+        /* 출입증으로 들어가서 내 우편함을 들어요 */
+        async function fpConnect(ft) {
+            fpStopListen();
+            if (!ft || !fp.nick) { fp.err = ft ? '' : 'setup'; return; }
+            const { U, F, auth, db } = await fpFirebase();
+            await U.signInWithCustomToken(auth, ft);
+            const me = fpNl(fp.nick);
+            await F.setDoc(F.doc(db, 'users', me), { nd: fp.nick, at: F.serverTimestamp() });   // '등록된 닉네임' 표시 (한 번)
+            fp.unsub = F.onSnapshot(F.collection(db, 'inbox', me, 'sig'), snap => {
+                fp.err = '';
+                snap.docChanges().forEach(ch => {
+                    if (ch.type !== 'added') return;
+                    const s = ch.doc.data(), at = s.at && s.at.toMillis ? s.at.toMillis() : Date.now();
+                    F.deleteDoc(ch.doc.ref).catch(() => {});                   // 읽은 신호는 바로 지워요
+                    if (Date.now() - at > (s.t === 'call' ? FP_RING : FP_OLD)) return;   // 오래된 신호는 무시
+                    fpSignal(s);
+                });
+            }, e => { console.warn('📞 우편함:', e); fp.on = false; fp.unsub = null; fp.err = fpQuota(e) ? 'quota' : 'net'; fpRender(); });
+            fp.on = true; fp.err = '';
+        }
+        async function fpSend(t, to, id, sdp) {
+            if (!fp.on) return { ok: false, error: 'net' };
+            const { F, db } = fp.fb;
+            try {
+                await F.addDoc(F.collection(db, 'inbox', fpNl(to), 'sig'), { t, from: fp.nick, fl: fpNl(fp.nick), id, sdp: sdp || '', at: F.serverTimestamp() });
+                return { ok: true };
+            } catch (e) { console.warn('📞 신호:', e); return { ok: false, error: fpQuota(e) ? 'quota' : 'net' }; }
+        }
+        async function fpKnown(nick) {                                          // 등록된 닉네임인지 (users)
+            const { F, db } = fp.fb;
+            try { return (await F.getDoc(F.doc(db, 'users', fpNl(nick)))).exists() ? 'ok' : 'nonick'; }
+            catch (e) { return fpQuota(e) ? 'quota' : 'net'; }
+        }
 
         /* ---------- WebRTC ---------- */
         function fpPC() { return new RTCPeerConnection({ iceServers: FP_ICE }); }
@@ -109,6 +134,7 @@
         async function fpCall(nick) {
             if (!nick || fp.calling) return;
             if (fp.convs.has(nick)) { fp.cur = nick; fp.view = 'chat'; fpRender(); return; }
+            if (!fp.on) { fpToast(fp.err === 'quota' ? FP_QUOTA_MSG : '📶 연결 중이에요. 잠시 후 다시 걸어 주세요'); if (fp.err !== 'quota') fpStart(); return; }
             const id = fpId(), pc = fpPC(), c = { nick, pc, dc: null, msgs: [], state: 'link', unread: 0, linkT: 0 };
             fp.calling = { nick, id, pc, c, t0: Date.now() };
             fp.view = 'calling'; fpRender();
@@ -117,13 +143,14 @@
                 await pc.setLocalDescription(await pc.createOffer());
                 await fpGather(pc);
                 if (!fp.calling || fp.calling.id !== id) return;
-                const r = await fpSend('call', nick, id, pc.localDescription.sdp);
+                const known = await fpKnown(nick);
+                const r = known === 'ok' ? await fpSend('call', nick, id, pc.localDescription.sdp) : { ok: false, error: known };
+                if (!fp.calling || fp.calling.id !== id) return;
                 if (!r.ok) {
                     fpStopCalling();
-                    fpToast(r.error === 'nonick' ? `'${nick}'은 등록되지 않은 닉네임이에요` : r.error === 'away' ? `${nick} · 자리에 없어요` : r.error === 'mynick' ? '내 닉네임을 먼저 정해 주세요' : '전화를 걸지 못했어요');
+                    fpToast(r.error === 'nonick' ? `'${nick}'은 등록되지 않은 닉네임이에요` : r.error === 'quota' ? FP_QUOTA_MSG : '전화를 걸지 못했어요');
                     return;
                 }
-                fpSchedule(FP_POLL_FAST);
                 fp.calling.giveUp = setTimeout(() => {                         // 30초 안에 안 받으면
                     if (!fp.calling || fp.calling.id !== id) return;
                     fpSend('cancel', nick, id).catch(() => {});
@@ -226,9 +253,13 @@
             if (!/^[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9_♡♥★☆]{2,10}$/.test(n)) { fpToast('2~10글자 · 한글 영어 숫자로 지어 주세요'); return; }
             fp.busy = true; fpRender();
             try {
-                await ensureToken();
-                const r = await fpApi('fp_nick', { token: drive.token, nick: n });
-                if (r && r.ok) { fp.nick = r.nick; fp.nickTry = null; fp.view = 'home'; fpToast(`반가워요, ${r.nick} ♡`); fpSchedule(500); }
+                const old = fp.nick;
+                const r = await fpApi('fp_nick', { nick: n });
+                if (r && r.ok) {
+                    if (old && fp.on && fpNl(old) !== fpNl(r.nick)) { const { F, db } = fp.fb; await F.deleteDoc(F.doc(db, 'users', fpNl(old))).catch(() => {}); }   // 옛 닉네임은 '등록 안 됨'으로
+                    fp.nick = r.nick; fp.nickTry = null; fp.view = 'home'; fpToast(`반가워요, ${r.nick} ♡`);
+                    try { await fpConnect(r.ft); } catch (e) { console.warn(e); fp.err = fpQuota(e) ? 'quota' : 'net'; }
+                }
                 else if (r && r.error === 'taken') { fp.nickTry = { n, suggest: r.suggest || [] }; fpToast('이미 있는 닉네임이에요'); }
                 else fpToast(r && r.error === 'rule' ? '쓸 수 없는 닉네임이에요' : '닉네임을 정하지 못했어요');
             } catch (e) { fpToast('인터넷 연결을 확인해 주세요'); }
@@ -243,7 +274,7 @@
         }
         function fpScreenHTML() {
             if (!fpUsable()) return `<div class="fp-pad fp-center">📵<br>구글로 로그인하면<br>친구와 문자할 수 있어요</div>`;
-            if (!fp.key && !fp.nick && fp.err !== 'net' && fp.view !== 'nick') return `<div class="fp-pad fp-center">📶 연결 중…</div>`;
+            if (fp.starting && !fp.nick && fp.view !== 'nick') return `<div class="fp-pad fp-center">📶 연결 중…</div>`;
             if (fp.ring.length) {
                 const r = fp.ring[0];
                 return `<div class="fp-pad fp-center fp-ringv"><div class="fp-big">📞</div><b>${fpEsc(r.from)}</b><div class="fp-dim">전화가 왔어요${fp.ring.length > 1 ? ` (+${fp.ring.length - 1})` : ''}</div>
@@ -271,7 +302,7 @@
             if (fp.sel >= list.length) fp.sel = Math.max(0, list.length - 1);
             return `${tabs}<div class="fp-head">♥ ${fpEsc(fp.nick)}<button type="button" class="fp-mini" data-a="nickedit" aria-label="닉네임 바꾸기">✎</button></div>
                 <div class="fp-list">${list.length ? list.map((n, i) => `<div class="fp-item${i === fp.sel ? ' on' : ''}" data-a="sel" data-i="${i}"><span>${fpEsc(n)}</span><button type="button" class="fp-mini call" data-a="call" data-n="${fpEsc(n)}" aria-label="${fpEsc(n)}에게 전화">📞</button><button type="button" class="fp-mini" data-a="del" data-n="${fpEsc(n)}" aria-label="${fpEsc(n)} 지우기">✕</button></div>`).join('') : `<div class="fp-dim fp-center">아직 친구가 없어요</div>`}</div>
-                <button type="button" class="fp-link" data-a="add">＋ 친구 등록</button>${fp.err === 'net' ? `<div class="fp-dim">📶 연결이 불안정해요</div>` : ''}`;
+                <button type="button" class="fp-link" data-a="add">＋ 친구 등록</button>${fp.err === 'quota' ? `<div class="fp-dim">💤 ${FP_QUOTA_MSG}</div>` : fp.err === 'setup' ? `<div class="fp-dim">🔧 전화 서비스 준비 중이에요</div>` : fp.err ? `<div class="fp-dim">📶 연결이 불안정해요</div>` : ''}`;
         }
         function fpRender(keepFocus) {
             if (!fp.el) return;
@@ -342,7 +373,7 @@
         }
         function fpSetOpen(o) {
             fp.open = o;
-            if (o && fpUsable() && !fp.key) fpStart();
+            if (o && fpUsable() && !fp.on && Date.now() >= (fp.retryAt || 0)) fpStart();
             fpRender(); fpClamp();
         }
 
@@ -453,17 +484,27 @@
         /* ---------- 켜기 : 다이어리가 열리면 페이지 옆에 ---------- */
         async function fpStart() {
             if (fp.starting || !fpUsable()) return;
-            fp.starting = true;
-            try { await fpHello(); fp.err = ''; } catch (e) { fp.err = 'net'; }
+            fp.starting = true; fp.retryAt = Date.now() + 60000; fpRender();
+            try {
+                const r = await fpApi('fp_hello');
+                if (!r || !r.ok) throw new Error(r && r.error || 'hello');
+                fp.nick = r.nick || '';
+                await fpConnect(r.ft);
+            } catch (e) { console.warn('📞 켜기:', e); fp.err = fpQuota(e) ? 'quota' : 'net'; }
             fp.starting = false;
-            if (!fp.nick) fp.view = 'nick';
-            fpRender(); fpSchedule(300);
+            if (fp.err === 'quota') fp.retryAt = Date.now() + 600000;
+            if (!fp.nick && !fp.err) { fp.view = 'nick'; fp.retryAt = Infinity; }   // 닉네임을 정하면 그때 들어가요
+            fpRender();
         }
         function fpSync() {
             const show = typeof isCoverOpen !== 'undefined' && isCoverOpen && typeof drive !== 'undefined' && drive.ready && !drive.guest && !drive.local && (typeof ftOn !== 'function' || ftOn('fphone'));
-            if (!show) { if (fp.el) fp.el.hidden = true; return; }
+            if (!show) {
+                if (fp.el && !fp.el.hidden) { fp.el.hidden = true; fpStopListen(); fp.nick = ''; fp.retryAt = 0; if (fp.fb) fp.fb.U.signOut(fp.fb.auth).catch(() => {}); fp.err = ''; fp.ring = []; fpRingOff(); fp.convs.forEach(c => fpEnd(c, '', false)); fpStopCalling(); }
+                return;
+            }
             fpBuild();
-            if (fp.el.hidden) { fp.el.hidden = false; fpPlace(); fpRender(); if (!fp.key) fpStart(); }
+            if (fp.el.hidden) { fp.el.hidden = false; fpPlace(); fpRender(); }
+            if (!fp.on && !fp.starting && Date.now() >= (fp.retryAt || 0)) fpStart();   // 안 되면 1분 뒤 다시 (하루 무료량을 넘었으면 10분 뒤)
         }
         setInterval(fpSync, 1500);
         window.fpSync = fpSync;
