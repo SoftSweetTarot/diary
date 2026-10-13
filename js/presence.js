@@ -11,15 +11,15 @@
    - 🖼️ 배경화면 : 로그인 신호의 답 walls 로 '내가 받은 배경화면'을 맞추고(wlSetMine) · 도착 신호 w 는 링크 창(wlGift)으로 보여 줘요 (js/wall.js)
    - 🎁 선물 도착 : 주인이 저금 확인 · 아이템 주기를 하면 서버에 도착 신호가 남아요 → 🪙 · 🎀 · 🎁 · 🖼️ 를 알림 창 하나로 보여 줘요 (js/arrival.js 의 arPush)
        신호는 다이어리가 '받아서 저장했어요' 하고 알릴 때까지 서버에 남아 있어요 → 다이어리를 안 쓰는 동안 받은 선물도, 접속하면 바로 떠요
-       다이어리를 보고 있는 동안 1분마다 살짝 물어봐요 (로그인 확인 없이 회원번호로 · 서버가 시트를 열지 않아서 아주 가벼워요)
-       다른 탭 · 앱에 가 있는 동안은 묻지 않고, 다이어리로 돌아오는 순간(창을 다시 누르거나 인터넷이 다시 연결될 때도) 바로 물어봐요
+       🔔 선물 벨 (js/fbase.js) : 주인이 선물을 주는 순간 파이어스토어가 벨을 울려 줘요 → 그때 한 번만 물어봐요 (로그인 확인 없이 회원번호로 · 아주 가벼워요)
+       벨이 안 될 때만(연결 안 됨 · 하루 무료량) 예전처럼 보고 있는 동안 1분마다 · 다이어리로 돌아오는 순간 물어봐요
    - 처음 온 사람이면(답의 first) 🎁 캡슐 스티커 첫 선물을 받아요 → capsWelcome (js/gacha.js)
    - 게스트는 보내지 않아요
    ※ 이 파일이 없어도 다이어리는 정상 동작 */
 
         const MEMBER_API_URL = 'https://script.google.com/macros/s/AKfycbzuhJ24tR7VbfKfX-lGI8-BRpPDx3d_J0UwR9x94RxPd2H3mvJiea-vn7EvRRCt2IgMag/exec';   // ← '말랑달콤 사람들' 앱스크립트 웹 앱 주소
         const PR_EVERY = 3 * 60 * 60 * 1000;            // 3시간
-        const PR_GIFT_EVERY = 60 * 1000;                // 🎁 선물 신호 물어보기 : 1분마다
+        const PR_GIFT_EVERY = 60 * 1000;                // 🎁 선물 신호 물어보기 : 1분마다 (🔔 벨이 안 될 때만)
         const pr = { last: 0, me: '', code: '', gLast: 0, gBusy: false };
         const prOk = () => MEMBER_API_URL && typeof drive !== 'undefined' && drive.ready && !drive.guest;
         function prDevice() {
@@ -45,8 +45,8 @@
         }
 
         /* 🎁 선물 도착 신호 물어보기 (가벼운 GET · 답 : { gift: { t: {…}, p: {…} } | '' }) */
-        async function prGiftAsk() {
-            if (!pr.me || pr.gBusy || document.hidden || !prOk()) return;
+        async function prGiftAsk(bell) {
+            if (!pr.me || pr.gBusy || (!bell && document.hidden) || !prOk()) { if (bell) pr.gAgain = true; return; }
             pr.gBusy = true; pr.gLast = Date.now();
             try {
                 const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);         // 응답이 안 오면 포기하고 다음에 다시 (영원히 기다리지 않아요)
@@ -56,13 +56,15 @@
                 if (j && j.ok && j.gift) prGift(j.gift);
             } catch (e) {}
             pr.gBusy = false;
+            if (pr.gAgain) { pr.gAgain = false; setTimeout(() => prGiftAsk(true), 1500); }   // 묻는 사이 벨이 또 울렸으면
         }
+        const prBell = () => typeof fbBellOn === 'function' && fbBellOn();
         function prGift(g) {                                  // g : { t · p · s : { all | 이름: [끝나는 날, 늘어남, 더한 일수] }, c: [더한 코인, 지금 코인], w: { 배경화면 번호: [이름, 링크] }, n: 신호 번호 } (받은 것만 들어 있어요)
             if (typeof arPush === 'function') arPush(g);                           // 저장 → 서버에 '받았어요' → 도착 창 하나 (js/arrival.js)
         }
-        setInterval(() => { if (Date.now() - pr.gLast >= PR_GIFT_EVERY) prGiftAsk(); }, 10000);
-        document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pr.gLast >= 10000) prGiftAsk(); });   // 다이어리로 돌아오면 바로
-        window.addEventListener('focus', () => { if (Date.now() - pr.gLast >= 10000) prGiftAsk(); });
+        setInterval(() => { if (!prBell() && Date.now() - pr.gLast >= PR_GIFT_EVERY) prGiftAsk(); }, 10000);                              // 벨이 안 될 때만
+        document.addEventListener('visibilitychange', () => { if (!prBell() && !document.hidden && Date.now() - pr.gLast >= 10000) prGiftAsk(); });   // 다이어리로 돌아오면 바로
+        window.addEventListener('focus', () => { if (!prBell() && Date.now() - pr.gLast >= 10000) prGiftAsk(); });
         window.addEventListener('online', () => { if (!pr.me) prHere(); else prGiftAsk(); });                                       // 인터넷이 다시 연결되면 바로
         function prBye() {
             if (!prOk() || !pr.last || !drive.token) return;
