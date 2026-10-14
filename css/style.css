@@ -1910,7 +1910,7 @@
         .se-box { width: min(520px, 100%); height: min(760px, calc(100dvh - 24px)); display: flex; flex-direction: column; gap: 8px; padding: 12px; box-sizing: border-box; border-radius: 22px; background: #fff; box-shadow: 0 12px 34px rgba(90,50,70,.3); }
         .se-top { display: flex; align-items: center; justify-content: space-between; color: #8a3354; font-size: 17px; }
         .se-x { width: 40px; height: 40px; border: 0; border-radius: 50%; background: #fff0f5; color: #8a3354; font-size: 17px; cursor: pointer; }
-        .se-stage { flex: 1 1 auto; min-height: 160px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background-color: #fff; background-image: linear-gradient(45deg, #f6eaf0 25%, transparent 25%, transparent 75%, #f6eaf0 75%), linear-gradient(45deg, #f6eaf0 25%, transparent 25%, transparent 75%, #f6eaf0 75%); background-size: 18px 18px; background-position: 0 0, 9px 9px; overflow: hidden; }
+        .se-stage { flex: 1 1 0; min-height: 160px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background-color: #fff; background-image: linear-gradient(45deg, #f6eaf0 25%, transparent 25%, transparent 75%, #f6eaf0 75%), linear-gradient(45deg, #f6eaf0 25%, transparent 25%, transparent 75%, #f6eaf0 75%); background-size: 18px 18px; background-position: 0 0, 9px 9px; overflow: hidden; }
         .se-stage canvas { touch-action: none; }
         .se-stage canvas[data-tool="erase"], .se-stage canvas[data-tool="crop"], .se-stage canvas[data-tool="text"] { cursor: crosshair; }
         .se-tools { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
@@ -2657,10 +2657,16 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .spk-card b { font-size: 14px; } .spk-card small { font-size: 11.5px; color: #a98a96; }
 .spk-room { position: fixed; inset: 0; z-index: 95; display: none; pointer-events: none; }   /* 판 바깥은 페이지가 그대로 받아요 · 꾸미기 도구(.toolbar)는 그 위 */
 .spk-room.show { display: block; }
-.spk-board { position: absolute; width: min(330px, calc(100vw - 24px)); padding: 26px 12px 12px; border: 1.5px solid var(--border-color); border-radius: 18px; background: #fff; box-shadow: 0 6px 18px rgba(120,80,95,.16); pointer-events: auto; touch-action: none; }
+.spk-board { position: absolute; width: min(330px, calc(100vw - 24px)); padding: 40px 12px 12px; border: 1.5px solid var(--border-color); border-radius: 18px; background: #fff; box-shadow: 0 6px 18px rgba(120,80,95,.16); pointer-events: auto; touch-action: none; }
 .spk-tape { position: absolute; left: 50%; top: -13px; transform: translateX(-50%) rotate(-2deg); padding: 4px 16px; background: repeating-linear-gradient(90deg, rgba(255,198,214,.92) 0 9px, rgba(255,222,232,.92) 9px 14px); color: #9b5a6e; font-size: 12px; font-weight: bold; white-space: nowrap; cursor: grab; touch-action: none; clip-path: polygon(0 0, 100% 0, 97% 25%, 100% 50%, 97% 75%, 100% 100%, 0 100%, 3% 75%, 0 50%, 3% 25%); }
 .spk-x { right: 4px; top: 2px; }
-.spk-title { display: block; margin: -16px 0 6px; font-size: 13px; color: #a07a88; text-align: left; padding-left: 4px; }
+.spk-ed { position: absolute; left: 6px; top: 4px; min-height: 30px; padding: 0 10px; border: 1.5px solid var(--border-color); border-radius: 15px; background: #fff; color: #8a3354; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }   /* 🎨 다듬기 (js/stickerpack.js spkEditMode) */
+.spk-ed[aria-pressed="true"] { background: #c2385c; color: #fff; border-color: #c2385c; z-index: 2; }
+.spk-ed:focus-visible { outline: 3px solid #f59ab6; outline-offset: 2px; }
+.spk-editing .spk-it { animation: snbEdWiggle .9s ease-in-out infinite; }
+.spk-it.spk-edited { position: relative; }
+.spk-it.spk-edited::after { content: '🎨'; position: absolute; right: 0; bottom: 0; font-size: 10px; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .spk-editing .spk-it { animation: none; outline: 2px dashed #f0a6bf; outline-offset: -2px; } }
 .spk-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .spk-it { display: flex; align-items: center; justify-content: center; height: 44px; cursor: pointer; touch-action: none; }
 .spk-it img { max-width: 40px; max-height: 40px; pointer-events: none; -webkit-user-drag: none; user-select: none; }

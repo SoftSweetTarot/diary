@@ -735,6 +735,28 @@
             zIndexCounter = L.length + 1;
             layerMark();
         }
+        /* 🎨 페이지에 붙인 스티커 · 사진 다시 다듬기 (꾹 누르기 메뉴 · js/tapmenu.js) → js/stkedit.js
+           - 테이프 · 종이(메모지 · 떡메 · 모조지 · 속지) · 사진틀 · 글 · 인형 · 움직이는 캡슐(svg)은 빼요
+           - 잘라서 작아지면 붙인 크기도 그만큼 작아져요 (남은 부분은 페이지에서 같은 크기) */
+        function elEditable(el) {
+            if (!window.openStickerEdit || !el || el.dataset.doll || el.dataset.float || el.dataset.frame || el.querySelector('textarea')) return false;
+            const img = el.querySelector(':scope > img'), s = img && (img.dataset.src || img.src);
+            return !!(img && img.naturalWidth && !img.classList.contains('broken') && !/^data:image\/svg/.test(s) && !(typeof isTapeSrc === 'function' && isTapeSrc(s)));
+        }
+        async function elEdit(el) {
+            if (!elEditable(el)) return;
+            const img = el.querySelector(':scope > img'), nw = img.naturalWidth, k = Math.min(1, 600 / Math.max(nw, img.naturalHeight));
+            const out = await openStickerEdit(img.src); if (!out || !el.isConnected) return;
+            const im = new Image(); im.src = out; try { await im.decode(); } catch (e) { return; }
+            const w0 = parseFloat(el.style.width) || el.offsetWidth, h0 = w0 * img.naturalHeight / nw;
+            const w1 = Math.max(20, Math.round(w0 * im.naturalWidth / (nw * k))), h1 = w1 * im.naturalHeight / im.naturalWidth;   // 다듬기 창은 긴 변 600 까지 줄여서 열어요
+            const x = Math.round((parseFloat(el.dataset.posX) || 0) + (w0 - w1) / 2), y = Math.round((parseFloat(el.dataset.posY) || 0) + (h0 - h1) / 2);   // 가운데는 그 자리 그대로
+            el.dataset.posX = x; el.dataset.posY = y; el.style.width = w1 + 'px';
+            el.style.transform = `translate(${x}px, ${y}px) scale(${el.dataset.scale || 1}) rotate(${el.dataset.rotation || 0}deg)`;
+            img.dataset.src = out; img.src = out;
+            if (typeof saveData === 'function') saveData(false);
+        }
+        window.elEditable = elEditable; window.elEdit = elEdit;
         function deleteSelected() {
             if (selectedElement) { selectedElement.remove(); selectedElement = null; }
             updateTextPanel();

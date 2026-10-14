@@ -170,6 +170,7 @@
             v.addEventListener('pointerup', seUp); v.addEventListener('pointercancel', seUp);
             el.addEventListener('keydown', e => { if (e.key === 'Escape') seClose(null); });
             window.addEventListener('resize', () => { if (se.on) seFit(); });
+            if (window.ResizeObserver) new ResizeObserver(() => { if (se.on) seFit(); }).observe(seq('seStage'));   // 아래 칸이 늘거나 줄면 그림도 맞춰요
         }
         function seFit() {
             const v = se.view, box = seq('seStage'), dpr = Math.min(window.devicePixelRatio || 1, 2);
