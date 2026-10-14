@@ -252,8 +252,7 @@
         function sbPack(id) {
             const i = +String(id).replace('srv:', ''), x = SRV.mini && SRV.mini[i];
             if (!x || !x.urls) return null;
-            const raws = x.urls.map(u => kitAt(u, 600));                       // 🎨 다듬기는 하얀 테두리 전 그림으로 (js/stickerpack.js spkEditIt)
-            return { id: 'srv' + i, raws, load: () => Promise.all(raws.map(sbDie)) };
+            return { id: 'srv' + i, load: () => Promise.all(x.urls.map(u => sbDie(kitAt(u, 600)))) };
         }
         /* 🎀 🧻 📃 📝 그림 1장 쓰기 */
         async function sbUse(kind, i) {

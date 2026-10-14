@@ -6,7 +6,6 @@
      1) 스티커를 톡 누르면 살짝 커지며 떠올라요 (말려 떼지는 연출 없이)
      2) 그대로 끌어서 페이지에 놓으면 작아지며 꾹 붙어요 → 빨간 점선이 생겨 옮기기 · 돌리기 · 크기 조절 (다른 스티커와 같아요)
         페이지 밖이나 판 위에 놓으면 제자리로 돌아가요 · 떠 있을 때 다른 곳을 누르면 제자리로
-   - 🎨 다듬기 (판 왼쪽 위) : 누른 뒤 스티커를 톡 → 스티커 다듬기 창 (js/stkedit.js) → 판 위 그 스티커가 바뀌어요 (다이어리를 새로 열 때까지)
    - 판 위쪽 테이프(✋)를 끌면 판이 옮겨져요 · 오른쪽 위 끝 ✕ 로 닫아요 · 판 바깥은 그대로 페이지라 붙인 스티커를 바로 고칠 수 있어요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (포인트스티커 칸만 '준비 중') */
 
@@ -17,7 +16,7 @@
             { id: 'num', g: '숫자', items: '0123456789!?'.split('') },
             { id: 'heart', g: '도형', items: Array.from({ length: 16 }, (_, i) => 'h' + i) },
         ];
-        const spkS = { cache: {}, edRaw: {}, editing: false, pack: null, lift: null, mv: null, drag: null, press: null };
+        const spkS = { cache: {}, pack: null, lift: null, mv: null, drag: null, press: null };
         const spkq = id => document.getElementById(id);
         const spkMk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 
@@ -124,9 +123,8 @@
             const el = document.createElement('div');
             el.id = 'spkRoom'; el.className = 'spk-room';
             el.innerHTML = `<div class="spk-board" id="spkBoard"><div class="spk-tape" id="spkTape">✋ 잡고 옮겨요</div><button type="button" class="pm-x spk-x" onclick="closeStickerPack()" aria-label="닫기">✕</button>
-                <button type="button" class="spk-ed" id="spkEd" aria-pressed="false" hidden>🎨 다듬기</button><div class="spk-grid" id="spkGrid"></div></div>`;
+                <div class="spk-grid" id="spkGrid"></div></div>`;
             document.body.appendChild(el);
-            spkq('spkEd').onclick = () => spkEditMode(!spkS.editing);
             spkq('spkTape').addEventListener('pointerdown', e => {
                 e.preventDefault(); spkPutBack(); try { e.target.setPointerCapture(e.pointerId); } catch (er) {}
                 const b = spkq('spkBoard').getBoundingClientRect(); spkS.drag = { dx: e.clientX - b.left, dy: e.clientY - b.top };
@@ -136,7 +134,7 @@
             const g = spkq('spkGrid');
             g.addEventListener('pointerdown', spkDown); g.addEventListener('pointermove', spkGridMove);
             g.addEventListener('pointerup', spkGridUp); g.addEventListener('pointercancel', spkGridUp);
-            spkq('spkBoard').addEventListener('pointerdown', e => { if (!e.target.closest('.spk-it, .spk-tape, .spk-x, .spk-ed')) spkPutBack(); });
+            spkq('spkBoard').addEventListener('pointerdown', e => { if (!e.target.closest('.spk-it, .spk-tape, .spk-x')) spkPutBack(); });
             window.addEventListener('resize', () => { const b = spkq('spkBoard'); if (spkq('spkRoom').classList.contains('show')) { const r = b.getBoundingClientRect(); spkPlace(r.left, r.top); } });
         }
         /* 판 자리 : 화면 안으로 */
@@ -152,7 +150,6 @@
             spkBuild(); spkPutBack(); spkS.pack = p;
             let srcs;
             try { srcs = await spkSrcs(p); } catch (e) { showMsg('⚠ 포인트스티커를 불러오지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>'); if (window.stkReturn) stkReturn(); return; }
-            spkEditMode(false); spkq('spkEd').hidden = !window.openStickerEdit;
             spkq('spkGrid').innerHTML = srcs.map((u, i) => `<span class="spk-it" data-i="${i}"><img src="${u}" alt="" draggable="false"></span>`).join('');
             spkq('spkRoom').classList.add('show');
             const b = spkq('spkBoard'), W = window.innerWidth, H = window.innerHeight, pg = spkq('diaryBook') || spkq('diaryWrapper'), r = pg.getBoundingClientRect();
@@ -161,14 +158,13 @@
             if (W - r.right >= b.offsetWidth + 12) spkPlace(r.right + 8, Math.max(80, r.top + 40));
             else spkPlace((W - b.offsetWidth) / 2, nt - b.offsetHeight - 10);
         }
-        function closeStickerPack() { spkEditMode(false); spkPutBack(); const r = spkq('spkRoom'); if (r) r.classList.remove('show'); if (window.stkReturn) stkReturn(); }   // ✨ 스티커 창에서 왔으면 다시 떠요
+        function closeStickerPack() { spkPutBack(); const r = spkq('spkRoom'); if (r) r.classList.remove('show'); if (window.stkReturn) stkReturn(); }   // ✨ 스티커 창에서 왔으면 다시 떠요
 
         /* ---------- 누르면 🏷️ 씰스티커처럼 떼어져서(js/peelfx.js) 떠오르기 · 끌기 → 붙이기 ---------- */
         /* 누른 채 끌면 🏷️ 씰스티커처럼 손가락을 따라 가장자리부터 떼어져요 (js/peelfx.js pfxSeal) · 톡 누르면 저절로 떼어져 떠올라요 */
         function spkDown(e) {
             const it = e.target.closest('.spk-it'); if (!it) return;
             e.preventDefault(); spkPutBack();
-            if (spkS.editing) { spkEditIt(it); return; }
             spkS.press = { it, x: e.clientX, y: e.clientY, seal: null };
             try { spkq('spkGrid').setPointerCapture(e.pointerId); } catch (er) {}
         }
@@ -194,22 +190,6 @@
             const p = spkS.press; if (!p) return; spkS.press = null;
             if (p.seal) { p.seal.up(); return; }
             spkLift(p.it, p.x, p.y, e.pointerId);
-        }
-        /* 🎨 다듬기 : 버튼을 누르면 스티커들이 살랑살랑 → 하나를 톡 누르면 다듬기 창 (js/stkedit.js)
-           - 🖼️ 개발자 그림 묶음은 하얀 테두리 전 그림을 다듬고 테두리를 다시 둘러요 · 코드로 그린 글자 · 하트는 그대로 다듬어요 */
-        function spkEditMode(on) {
-            spkS.editing = !!on; const b = spkq('spkEd'), bd = spkq('spkBoard'); if (!b) return;
-            bd.classList.toggle('spk-editing', spkS.editing); b.setAttribute('aria-pressed', spkS.editing);
-            b.textContent = spkS.editing ? '✕ 스티커를 톡' : '🎨 다듬기';
-        }
-        async function spkEditIt(it) {
-            spkEditMode(false);
-            const p = spkS.pack, i = +it.dataset.i, img = it.querySelector('img'), key = p.id + ':' + i;
-            const out = await openStickerEdit(spkS.edRaw[key] || (p.raws && p.raws[i]) || img.src); if (!out) return;
-            spkS.edRaw[key] = out;
-            let src = out; if (p.raws && window.pelBake) try { src = await pelBake(out); } catch (e) {}
-            img.src = src; it.classList.add('spk-edited');
-            if (spkS.cache[p.id]) spkS.cache[p.id][i] = src;                      // 📒 수첩 시트도 같은 그림
         }
         /* 톡 : 저절로 떼어져서 떠 있어요 (다시 끌거나 다른 곳을 누르면 제자리) */
         function spkLift(it, ex, ey, pid) {

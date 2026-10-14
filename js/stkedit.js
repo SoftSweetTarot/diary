@@ -1,5 +1,6 @@
 /* 말랑달콤 다이어리 - js/stkedit.js
-   🎨 스티커 다듬기 (도련 · 2026-10-15) : 씰 종이에서 떼기 전에 그림을 고쳐요 (js/stickerpeel.js 의 🎨 다듬기 버튼)
+   🎨 스티커 다듬기 (도련 · 2026-10-15) : 페이지에 붙인 뒤 꾹 누르기(오른쪽 클릭) 메뉴의 🎨 다듬기 (js/elements.js elEdit · js/leafpad.js 속지)
+   - 붙이기 전 창(씰 · 포인트 · 📒 수첩)에는 없어요 : 다듬기는 붙인 뒤 고를 것을 골라 고치는 것 (도련 · 2026-10-15)
    - 🎨 색 : 색 돌리기 · 진하기 · 밝기 · 원래 / 흑백 / 빈티지 / 파스텔 / 쨍하게
    - ↔ 뒤집기 : 좌우 · 상하
    - ✂️ 자르기 : 손가락 · 네모 · 둥근 네모 · 동그라미 · 하트 · 별 · 꽃 모양 (끌어서 그리고, 안쪽을 끌면 옮겨요)
@@ -8,7 +9,9 @@
    - ✨ 반짝이 : 금 · 은 · 무지개 가루를 뿌려요 (그림 위에만)
    - ↶ 되돌리기 · 처음으로 · ✓ 다듬기 끝 → PNG 그림 (투명한 가장자리는 잘라내요)
    - 색 계산은 직접 해요 (캔버스 filter 를 못 쓰는 예전 사파리에서도 같은 결과)
-   openStickerEdit(src) → Promise<'data:image/png…' | null(그만두기)>
+   openStickerEdit(src, opt) → Promise<'data:image/png…' | null(그만두기)>
+     opt.tools : 쓸 도구만 ['color', 'flip', …] (하나뿐이면 도구 줄을 숨겨요) · opt.max : 긴 변 (기본 600)
+     opt.trim === false : 투명한 가장자리를 자르지 않아요 · opt.jpeg : JPG 로 · opt.matrix : 그림 대신 SVG feColorMatrix 값 (🎀 마테)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (🎨 다듬기 버튼만 안 보여요) */
 
         const SE_MAX = 600, SE_UNDO = 25;
@@ -18,7 +21,7 @@
         const SE_INK = ['#5a3a48', '#ffffff', '#ff5c8a', '#9b74ff', '#3f9df5', '#22a67f'];
         const SE_CROPS = [['free', '✍️', '손가락'], ['rect', '⬜', '네모'], ['round', '▢', '둥근 네모'], ['circle', '⚪', '동그라미'], ['heart', '🤍', '하트'], ['star', '⭐', '별'], ['flower', '🌸', '꽃']];
         const SE_GLIT = [['', '없음'], ['gold', '금'], ['silver', '은'], ['rainbow', '무지개']];
-        const se = { on: false, done: null, tool: 'color', cshape: 'free', W: 0, H: 0, src: null, mask: null, out: null, colored: null, ckey: '', st: null, undo: [], view: null, vk: 1, drag: null, textSel: -1 };
+        const se = { on: false, done: null, opt: {}, tool: 'color', cshape: 'free', W: 0, H: 0, src: null, mask: null, out: null, colored: null, ckey: '', st: null, undo: [], view: null, vk: 1, drag: null, textSel: -1 };
         const seq = id => document.getElementById(id);
         const seMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
         const seFresh = () => ({ hue: 0, s: 100, b: 100, sep: 0, pas: 0, fx: 1, fy: 1, crop: null, glit: '', gd: 50, texts: [] });
@@ -156,7 +159,7 @@
             el.innerHTML = `<div class="se-box">
                 <div class="se-top"><b>🎨 스티커 다듬기</b><button type="button" class="se-x" id="seX" aria-label="그만두기">✕</button></div>
                 <div class="se-stage" id="seStage"><canvas id="seView"></canvas></div>
-                <div class="se-tools" id="seTools" role="tablist">${SE_TOOLS.map(([id, ic, n]) => `<button type="button" role="tab" data-t="${id}"><span>${ic}</span>${n}</button>`).join('')}</div>
+                <div class="se-tools" id="seTools" role="tablist"></div>
                 <div class="se-panel" id="sePanel"></div>
                 <div class="se-foot"><button type="button" class="se-b" id="seUndo">↶ 되돌리기</button><button type="button" class="se-b" id="seReset">처음으로</button><button type="button" class="se-b se-ok" id="seOk">✓ 다듬기 끝</button></div>
             </div>`;
@@ -289,29 +292,41 @@
             sePanel(); seLater();
         }
 
+        /* 🎀 마테 : 그림 대신 SVG 색 행렬 (sRGB · 4×5) = 다듬기 창의 색 계산과 같아요 */
+        function seFeMatrix() {
+            const st = se.st, M = seMatrix(st), br = st.b / 100, pa = st.pas / 100, k = br * (1 - pa), r = v => Math.round(v * 10000) / 10000;
+            return [0, 1, 2].map(i => [M[i * 3] * k, M[i * 3 + 1] * k, M[i * 3 + 2] * k, 0, pa].map(r).join(' ')).join(' ') + ' 0 0 0 1 0';
+        }
         /* ---------- 내보내기 : 자르기 모양만 남기기 → 투명한 가장자리 잘라내기 ---------- */
         function seExport() {
+            if (se.opt.matrix) return seFeMatrix();
             const out = seCompose(), c = seMk(se.W, se.H), x = c.getContext('2d'); x.drawImage(out, 0, 0);
             if (se.st.crop) { x.globalCompositeOperation = 'destination-in'; seCropPath(x, se.st.crop); x.fill(); x.globalCompositeOperation = 'source-over'; }
+            if (se.opt.trim === false) return se.opt.jpeg ? seJpeg(c) : c.toDataURL('image/png');   // 📃 속지 : 크기 그대로
             const d = x.getImageData(0, 0, c.width, c.height).data; let l = c.width, t = c.height, r = -1, b = -1;
             for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) if (d[(y * c.width + xx) * 4 + 3] > 8) { if (xx < l) l = xx; if (xx > r) r = xx; if (y < t) t = y; if (y > b) b = y; }
             if (r < 0) return null;                                              // 다 지웠어요
             const f = seMk(r - l + 1, b - t + 1); f.getContext('2d').drawImage(c, -l, -t);
             return f.toDataURL('image/png');
         }
+        function seJpeg(c) { const j = seMk(c.width, c.height), x = j.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, j.width, j.height); x.drawImage(c, 0, 0); return j.toDataURL('image/jpeg', .9); }
 
         /* ---------- 열기 · 닫기 ---------- */
-        function openStickerEdit(src) {
+        function openStickerEdit(src, opt) {
             return new Promise(async ok => {
                 let im;
                 try { im = await new Promise((y, n) => { const i = new Image(); if (/^https?:/i.test(src)) i.crossOrigin = 'anonymous'; i.onload = () => y(i); i.onerror = n; i.src = src; }); }
                 catch (e) { showMsg('그림을 열지 못했어요.'); ok(null); return; }
                 seBuild();
-                const k = Math.min(1, SE_MAX / Math.max(im.naturalWidth, im.naturalHeight));
+                se.opt = opt || {};
+                const tools = SE_TOOLS.filter(t => !se.opt.tools || se.opt.tools.includes(t[0])), tb = seq('seTools');
+                tb.innerHTML = tools.map(([id, ic, n]) => `<button type="button" role="tab" data-t="${id}"><span>${ic}</span>${n}</button>`).join('');
+                tb.hidden = tools.length < 2;
+                const k = Math.min(1, (se.opt.max || SE_MAX) / Math.max(im.naturalWidth, im.naturalHeight));
                 se.W = Math.max(1, Math.round(im.naturalWidth * k)); se.H = Math.max(1, Math.round(im.naturalHeight * k));
                 se.src = seMk(se.W, se.H); se.src.getContext('2d').drawImage(im, 0, 0, se.W, se.H);
                 se.mask = seMk(se.W, se.H); se.out = seMk(se.W, se.H); se.colored = null; se.ckey = '';
-                se.st = seFresh(); se.undo = []; se.tool = 'color'; se.textSel = -1; se.view = seq('seView'); se.done = ok; se.on = true;
+                se.st = seFresh(); se.undo = []; se.tool = tools[0][0]; se.textSel = -1; se.view = seq('seView'); se.done = ok; se.on = true;
                 const room = seq('seRoom'); room.hidden = false;
                 sePanel(); seBtns(); requestAnimationFrame(seFit);
                 if (document.fonts && document.fonts.load) document.fonts.load("700 40px 'Gaegu'").then(seLater).catch(() => {});

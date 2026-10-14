@@ -45,12 +45,6 @@
             const pgno = document.createElement('div'); pgno.className = 'snb-pgno'; pgno.hidden = true;   // 📄 지금 장 / 모두 몇 장
             const net = document.createElement('div'); net.className = 'snb-net'; net.hidden = true;        // 📶 목록을 받는 중 · 다시 받는 중
             box.append(pgno, net);
-            if (m.id === 'stickerModal' && window.openStickerEdit) {          // 🎨 다듬기 : 켜고 시트의 스티커를 누르면 다듬기 창 (js/stkedit.js)
-                const eb = document.createElement('button'); eb.type = 'button'; eb.className = 'snb-edbtn'; eb.textContent = '🎨 다듬기'; eb.setAttribute('aria-pressed', 'false');
-                const tip = document.createElement('div'); tip.className = 'snb-edtip'; tip.textContent = '🎨 다듬을 스티커를 눌러 주세요';
-                eb.onclick = () => snbEditMode(!m.classList.contains('snb-editing'));
-                box.append(eb, tip);
-            }
             const cover = document.createElement('div'); cover.className = 'snb-cover'; cover.hidden = true;
             snbCoverDrag(cover);
             box.prepend(rings); box.append(...ears, cover);
@@ -63,8 +57,8 @@
         function snbUnwrap(m) {
             const box = m.querySelector('.modal-content'), body = box.querySelector(':scope > .snb-body'); if (!body) return;
             [...body.children].forEach(c => box.insertBefore(c, body));
-            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover, :scope > .snb-edbtn, :scope > .snb-edtip, .snb-sheets').forEach(e => e.remove());
-            m.classList.remove('snb-sheet', 'snb-editing');
+            box.querySelectorAll(':scope > .snb-body, :scope > .snb-rings, :scope > .snb-ear, :scope > .snb-under, :scope > .snb-flaps, :scope > .snb-cover, .snb-sheets').forEach(e => e.remove());
+            m.classList.remove('snb-sheet');
             m.classList.remove('snb-on');
             box.style.left = box.style.top = box.style.width = box.style.height = '';
         }
@@ -138,7 +132,6 @@
         });
         function snbOnHide(m) {
             m.classList.remove('snb-back'); const w = snbq('diaryWrapper'); if (w) w.classList.remove('snb-front');
-            if (m.classList.contains('snb-editing')) snbEditMode(false, m);
             if (snb.m !== m || snb.skipCover || snb.dropping) return;
             if (snb.libSaved && typeof libLayout !== 'undefined') {           // 🏷️ 그림 모음 배치는 원래대로 (수첩일 때만 장에 맞춰요)
                 const first = libPage * libLayout.rows * libLayout.cols;
@@ -352,8 +345,7 @@
         function snbBind(m, body) {
             body.addEventListener('dragstart', e => e.preventDefault());
             body.parentElement.addEventListener('pointerdown', e => {         // 먼저 들어요 (🧻 떡메 칸처럼 눌림을 스스로 막는 칸도 있어서) · 제목 줄 아래 어디서든
-                if (e.button > 0 || !m.classList.contains('snb-on') || !e.target.closest || e.target.closest('.modal-title, .snb-cover, .snb-ear, .snb-edbtn')) return;
-                if (m.classList.contains('snb-editing') && e.target.closest('.snb-pc')) return;   // 🎨 다듬기 중 : 떼지 않고 톡 (click 에서 다듬기 창)
+                if (e.button > 0 || !m.classList.contains('snb-on') || !e.target.closest || e.target.closest('.modal-title, .snb-cover, .snb-ear')) return;
                 if (snb.press) { if (snb.press.drag) return; clearTimeout(snb.press.timer); }
                 const it = snbItemOf(e.target, body);
                 const p = snb.press = { body, id: e.pointerId, x: e.clientX, y: e.clientY, t: e.target, it, mouse: e.pointerType === 'mouse', touch: e.pointerType === 'touch', drag: false, timer: 0 };
@@ -391,7 +383,6 @@
             body.addEventListener('click', e => {                              // 🧾 시트의 그림을 톡 : 그 그림 하나만 붙여요
                 const pc = e.target.closest && e.target.closest('.snb-pc'); if (!pc) return;
                 e.stopPropagation(); e.preventDefault();
-                if (m.classList.contains('snb-editing')) { snbEditPc(pc); return; }
                 if (!pc._src) { snbPcStick(pc); return; }
                 const t = snbTap(pc._src);
                 snb.fire = true; try { t.click(); } finally { snb.fire = false; }
@@ -621,7 +612,7 @@
             g.style.setProperty('--pc', Math.max(28, Math.min(120, pc)) + 'px');
             g.textContent = '';
             urls.forEach(u => {
-                const p = document.createElement('span'); p.className = 'snb-pc'; p._url = u; p._k = k; p._full = mu.lib ? mu.lib[urls.indexOf(u)] : u;
+                const p = document.createElement('span'); p.className = 'snb-pc'; p._url = u; p._k = k;
                 const im = document.createElement('img'); im.src = u; im.alt = ''; im.draggable = false; p.appendChild(im);
                 g.appendChild(p);
             });
@@ -677,26 +668,6 @@
             snbPlace(el, cx, cy);
             if (typeof selectElement === 'function') selectElement(el);
             if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}
-        }
-
-        /* ---------- 🎨 다듬기 (js/stkedit.js) : 시트의 스티커 하나를 다듬어서 그 자리에 다시 놓아요 → 평소처럼 떼어 붙여요 ---------- */
-        function snbEditMode(on, mm) {
-            const m = mm || snb.m; if (!m) return;
-            m.classList.toggle('snb-editing', !!on);
-            const b = m.querySelector('.snb-edbtn'); if (b) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = on ? '✕ 다듬기 그만' : '🎨 다듬기'; }
-        }
-        async function snbEditPc(pc) {
-            snbEditMode(false);
-            const o = pc._src, im = pc.querySelector('img');
-            if (!im || im.classList.contains('snb-tape') || (o && (o.classList.contains('cs-it') || o.classList.contains('tpm-it'))) || /^data:image\/svg/.test(im.src)) {
-                showMsg('이 스티커는 다듬을 수 없어요.<br><span style="font-size:12px;color:#777;">씰 · 포인트 · 내가 만든 스티커 같은 그림 스티커만 다듬어요.</span>'); return;
-            }
-            const seal = pc._k === 'seal' || !!(o && o.classList.contains('lib-item'));
-            const src = pc._full || (o && o.dataset.u) || pc._url || im.currentSrc || im.src;
-            const out = await openStickerEdit(src); if (!out) return;
-            pc._url = pc._full = out; pc._k = seal ? 'seal' : 'mine'; pc._src = null;            // 이제 이 그림으로 떼어져요 (🏷️ 씰은 붙일 때 하얀 테두리)
-            im.src = out; pc.classList.add('snb-edited');
-            snbNetSay('다듬었어요 ✨ 이제 떼어 붙여 보세요'); setTimeout(() => snbNetSay(''), 1800);
         }
 
         window.snbSkipCover = id => { if (snb.m && snb.m.id === id) snb.skipCover = true; }; window.snbState = () => ({ page: snb.page, pages: snb.pages.length, curl: !!snb.curl }); window.snbMode = snbMode; window.snbSet = snbSet; window.snbRender = snbRender; window.snbGo = snbGo;

@@ -1,8 +1,8 @@
 /* 말랑달콤 다이어리 - js/tapmenu.js
-   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 필기구 · 💾 저장)가 나와요. (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
+   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 필기구 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
-   📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 🎨 다듬기(스티커 · 사진만) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
+   📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 🎨 다듬기(그림이 있는 것만 · js/elements.js elEditKind) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
         /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
@@ -88,7 +88,9 @@
             const canvas = document.getElementById('canvasArea'), r = canvas.getBoundingClientRect();
             const k = r.width / (canvas.offsetWidth || r.width) || 1;
             tmAnchor = { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k, t: Date.now() };
-            tmShow(TM_ITEMS, { x: e.clientX, y: e.clientY });
+            const lf = window.lfMenu ? lfMenu() : {};
+            tmShow(TM_ITEMS.concat(lf.edit ? [{ key: 'p_lfedit', icon: TM_ICONS.palette, label: '속지 다듬기', run: () => { tmAnchor = null; lfEdit(); } }] : [],
+                lf.off ? [{ key: 'p_lfoff', icon: TM_ICONS.trash, label: '속지 빼기', run: () => { tmAnchor = null; pickLeaf('line'); } }] : []), { x: e.clientX, y: e.clientY });
         }
 
         /* 📌 놓아 둔 그림 · 글 위에서 나오는 메뉴 : 🎨 다듬기(js/elements.js elEditable) · ↕️ 순서 · 🗑️ 삭제 */

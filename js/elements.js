@@ -349,13 +349,13 @@
         /* 🏷️ 씰 종이 : 한 종이에 씰 여러 개 → 하나씩 떼어 붙여요 (js/stickerpeel.js) */
         async function libPickSheet(urls) {
             if (window.stkLeave) stkLeave();
-            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await Promise.all(urls.map(u => pelBake(kitSize(u, 600)))), { raw: urls.map(u => kitSize(u, 600)) })) return; } catch (e) {}
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await Promise.all(urls.map(u => pelBake(kitSize(u, 600)))))) return; } catch (e) {}
             showMsg('⚠ 씰 종이를 열지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
             if (window.stkReturn) stkReturn(700);
         }
         async function libPick(url) {
             if (window.stkLeave) stkLeave();
-            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url), { raw: [url] })) return; } catch (e) {}
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url))) return; } catch (e) {}
             addImage(url); if (window.stkReturn) stkReturn(700);
         }
         function renderLibrary() {
@@ -377,7 +377,7 @@
             cur.forEach(x => {
                 const { u: url, s: sheet } = x;
                 const item = document.createElement('div');
-                item.className = 'lib-item' + (sheet ? ' lib-sheet' : ''); item.dataset.u = url;   // 원본 주소 (📒 수첩 · 🎨 다듬기가 써요)
+                item.className = 'lib-item' + (sheet ? ' lib-sheet' : ''); item.dataset.u = url;   // 원본 주소 (📒 수첩이 붙일 때 써요)
                 usedSlots += libSpan(x);
                 if (sheet) {                                                       // 🏷️ 씰 종이 : 옆으로 2칸 · 안에 든 씰을 작게 최대한 많이 + 총 개수
                     item.style.gridColumn = 'span ' + libSpan(x);
@@ -735,25 +735,67 @@
             zIndexCounter = L.length + 1;
             layerMark();
         }
-        /* 🎨 페이지에 붙인 스티커 · 사진 다시 다듬기 (꾹 누르기 메뉴 · js/tapmenu.js) → js/stkedit.js
-           - 테이프 · 종이(메모지 · 떡메 · 모조지 · 속지) · 사진틀 · 글 · 인형 · 움직이는 캡슐(svg)은 빼요
-           - 잘라서 작아지면 붙인 크기도 그만큼 작아져요 (남은 부분은 페이지에서 같은 크기) */
-        function elEditable(el) {
-            if (!window.openStickerEdit || !el || el.dataset.doll || el.dataset.float || el.dataset.frame || el.querySelector('textarea')) return false;
+        /* 🎨 페이지에 붙인 것 다시 다듬기 (꾹 누르기 · 오른쪽 클릭 메뉴 · js/tapmenu.js) → js/stkedit.js · 종류마다 맞는 도구만 (도련 · 2026-10-15)
+           - 스티커 · 사진 (씰 · 조각 · 포인트 · 내 스티커) : 전부
+           - 📄 모조지 · 🧻 떡메 · 📝 메모지(그림) : 글씨 빼고 (종이 위에는 원래 글을 써요) · 긴 변 1000 까지
+           - 🎀 마테 : 색만 (무늬가 이어져 늘어나서 자르면 이음새가 어긋나요) → 테이프 SVG 에 색 행렬을 넣어요 (늘이기 그대로)
+           - 빼요 : 사진틀 · 글 · 인형 · 움직이는 캡슐(svg) · 그림 없는 기본 메모지
+           - 잘라서 작아지면 붙인 크기도 그만큼 작아지고 · 가운데는 그 자리 그대로 */
+        const EL_ED_PAPER = ['color', 'flip', 'crop', 'erase', 'glit'];
+        function elEditKind(el) {
+            if (!window.openStickerEdit || !el || el.dataset.doll || el.dataset.frame) return null;
+            if (el.dataset.tk && el.dataset.tkSrc) { const b = el.querySelector(':scope > img.tk-bg'); return b && b.naturalWidth ? { k: 'note', img: b, src: el.dataset.tkSrc } : null; }
+            if (el.querySelector('textarea')) return null;
             const img = el.querySelector(':scope > img'), s = img && (img.dataset.src || img.src);
-            return !!(img && img.naturalWidth && !img.classList.contains('broken') && !/^data:image\/svg/.test(s) && !(typeof isTapeSrc === 'function' && isTapeSrc(s)));
+            if (!img || !img.naturalWidth || img.classList.contains('broken')) return null;
+            if (typeof isTapeSrc === 'function' && isTapeSrc(s)) return { k: 'tape', img, src: img.getAttribute('src') };   // dataset.src 는 줄인 모양(sv:)일 수 있어요
+            if (/^data:image\/svg/.test(s)) return null;
+            return { k: el.dataset.float ? 'paper' : 'sticker', img, src: img.src };
+        }
+        const elEditable = el => !!elEditKind(el);
+        /* 🎀 테이프 SVG 에 색 행렬 넣기 (다시 다듬으면 앞의 색 위에 겹쳐요) */
+        const elMx = v => v.trim().split(/\s+/).map(Number);
+        function elMxMul(N, O) {                                               // 4×5 두 개 → N(O(색))
+            const R = [];
+            for (let i = 0; i < 4; i++) for (let j = 0; j < 5; j++) {
+                let v = j === 4 ? N[i * 5 + 4] : 0;
+                for (let t = 0; t < 4; t++) v += N[i * 5 + t] * O[t * 5 + j];
+                R.push(Math.round(v * 10000) / 10000);
+            }
+            return R.join(' ');
+        }
+        function elTapeTint(src, vals) {
+            let svg = decodeURIComponent(src.slice(src.indexOf(',') + 1));
+            const old = svg.match(/<feColorMatrix id="mlc" type="matrix" values="([^"]+)"/);
+            if (old) svg = svg.replace(old[0], `<feColorMatrix id="mlc" type="matrix" values="${elMxMul(elMx(vals), elMx(old[1]))}"`);
+            else {
+                const a = svg.indexOf('>', svg.indexOf('<svg')) + 1, z = svg.lastIndexOf('</svg>');
+                svg = svg.slice(0, a) + `<filter id="mlcf" color-interpolation-filters="sRGB"><feColorMatrix id="mlc" type="matrix" values="${vals}"/></filter><g filter="url(#mlcf)">` + svg.slice(a, z) + '</g>' + svg.slice(z);
+            }
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
         }
         async function elEdit(el) {
-            if (!elEditable(el)) return;
-            const img = el.querySelector(':scope > img'), nw = img.naturalWidth, k = Math.min(1, 600 / Math.max(nw, img.naturalHeight));
-            const out = await openStickerEdit(img.src); if (!out || !el.isConnected) return;
+            const K = elEditKind(el); if (!K) return;
+            const img = K.img;
+            if (K.k === 'tape') {                                                // 🎀 붙인 길이 그대로 미리 보기 → 색 행렬만 받아요
+                const w = Math.max(40, Math.round(img.offsetWidth)), h = Math.max(10, Math.round(img.offsetHeight));
+                const pv = K.src.replace(/width%3D%22100%25%22%20height%3D%22100%25%22/, `width%3D%22${w}%22%20height%3D%22${h}%22`);
+                const vals = await openStickerEdit(pv, { tools: ['color'], matrix: true }); if (!vals || !el.isConnected) return;
+                const out = elTapeTint(K.src, vals); img.dataset.src = out; img.src = out;
+                if (typeof saveData === 'function') saveData(false);
+                return;
+            }
+            const MAX = K.k === 'sticker' ? 600 : 1000, nw = img.naturalWidth, nh = img.naturalHeight, k = Math.min(1, MAX / Math.max(nw, nh));
+            const out = await openStickerEdit(K.src, K.k === 'sticker' ? {} : { tools: EL_ED_PAPER, max: MAX }); if (!out || !el.isConnected) return;
             const im = new Image(); im.src = out; try { await im.decode(); } catch (e) { return; }
-            const w0 = parseFloat(el.style.width) || el.offsetWidth, h0 = w0 * img.naturalHeight / nw;
-            const w1 = Math.max(20, Math.round(w0 * im.naturalWidth / (nw * k))), h1 = w1 * im.naturalHeight / im.naturalWidth;   // 다듬기 창은 긴 변 600 까지 줄여서 열어요
-            const x = Math.round((parseFloat(el.dataset.posX) || 0) + (w0 - w1) / 2), y = Math.round((parseFloat(el.dataset.posY) || 0) + (h0 - h1) / 2);   // 가운데는 그 자리 그대로
-            el.dataset.posX = x; el.dataset.posY = y; el.style.width = w1 + 'px';
+            const fw = im.naturalWidth / (nw * k), fh = im.naturalHeight / (nh * k);   // 다듬기 창은 긴 변 MAX 까지 줄여서 열어요
+            const w0 = parseFloat(el.style.width) || el.offsetWidth, hs = parseFloat(el.style.height), h0 = hs || w0 * nh / nw;
+            const w1 = Math.max(20, Math.round(w0 * fw)), h1 = hs ? Math.max(20, Math.round(h0 * fh)) : w1 * im.naturalHeight / im.naturalWidth;
+            const x = Math.round((parseFloat(el.dataset.posX) || 0) + (w0 - w1) / 2), y = Math.round((parseFloat(el.dataset.posY) || 0) + (h0 - h1) / 2);
+            el.dataset.posX = x; el.dataset.posY = y; el.style.width = w1 + 'px'; if (hs) el.style.height = h1 + 'px';
             el.style.transform = `translate(${x}px, ${y}px) scale(${el.dataset.scale || 1}) rotate(${el.dataset.rotation || 0}deg)`;
-            img.dataset.src = out; img.src = out;
+            if (K.k === 'note') el.dataset.tkSrc = out; else img.dataset.src = out;
+            img.src = out;
             if (typeof saveData === 'function') saveData(false);
         }
         window.elEditable = elEditable; window.elEdit = elEdit;

@@ -70,7 +70,15 @@
             try { sl.animate([{ transform: 'translateX(104%) rotate(2deg)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.3,.8,.3,1)' }).onfinish = done; }
             catch (e) { done(); }
         }
-        window.openLeafPicker = openLeafPicker; window.pickLeaf = pickLeaf; window.lfStatic = lfStatic;
+        /* 📍 빈 곳 메뉴(js/tapmenu.js)의 📃 속지 칸 : 🎨 속지 다듬기 (그림 속지만 · 색만 · 페이지를 꽉 채워야 해서 자르지 않아요) · 🗑️ 속지 빼기 (기본 줄노트로) */
+        const lfMenu = () => ({ edit: pageLeaf === 'my' && !!window.openStickerEdit, off: pageLeaf !== 'line' });
+        async function lfEdit() {
+            if (pageLeaf !== 'my' || !window.openStickerEdit) return;
+            const img = pageLeafImg, out = await openStickerEdit(img, { tools: ['color'], max: 1000, trim: false, jpeg: !/^data:image\/png/.test(img) });
+            if (!out || pageLeafImg !== img) return;
+            setPageLeaf('my', out); if (typeof saveData === 'function') saveData(false);
+        }
+        window.openLeafPicker = openLeafPicker; window.pickLeaf = pickLeaf; window.lfStatic = lfStatic; window.lfMenu = lfMenu; window.lfEdit = lfEdit;
 
         /* =====================================================================
            🧻 떡메모지
