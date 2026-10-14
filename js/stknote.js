@@ -110,7 +110,7 @@
             }).observe(m, { attributes: true, attributeFilter: ['style'] });
         });
         function snbOnShow(m) {
-            if (snbMode() !== 'note') { snbUnwrap(m); if (snb.m === m) snb.m = null; return; }
+            if (snbMode() !== 'note') { snbUnwrap(m); if (snb.m === m) snb.m = null; if (window.sbRefreshAll) sbRefreshAll(); return; }   // 고르는 창으로 열면 다시 카테고리 · 쪽 (⚙️ 설정에서 수첩 ↔ 고르는 창을 바꿨을 때)
             snbWrap(m);
             m.classList.add('snb-on');
             snbSize(m); snbPlaceBox(m.querySelector('.modal-content'));
@@ -137,7 +137,6 @@
             basicKit().then(() => snbNetSay(''), () => {});
         });
         function snbOnHide(m) {
-            if (snb.m === m && !snb.skipCover && !snb.dropping && window.sbRefreshAll) setTimeout(sbRefreshAll, 0);   // 고르는 창으로 돌아가면 다시 카테고리 · 쪽
             m.classList.remove('snb-back'); const w = snbq('diaryWrapper'); if (w) w.classList.remove('snb-front');
             if (m.classList.contains('snb-editing')) snbEditMode(false, m);
             if (snb.m !== m || snb.skipCover || snb.dropping) return;
