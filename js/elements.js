@@ -100,7 +100,7 @@
             else requestAnimationFrame(go);
         }
 
-        /* 📚 기본스티커 : 그림과 목록은 Cloudflare 그림 보관함(KIT_BASE)에 있어요 (기본스티커_포장기.html 로 만든 zip 을 올려요)
+        /* 📚 기본스티커 : 그림과 목록은 Cloudflare 그림 보관함(KIT_BASE)에 있어요 (도구/말랑달콤_포장기.html 로 만든 zip 을 올려요)
            - list.json : images [{ f, c }] 씰 낱장 · sheets [{ c, fs }] 씰 종이 · kits { 종류: [{ c, fs }] · [{ c, f }] } · t [미리보기가 있는 그림]
              f = 그림 파일 이름 (같은 그림은 늘 같은 이름) → 원본 KIT_BASE/k/이름 · 미리보기 KIT_BASE/t/지문.webp (작게 보여 줄 때)
            - 다이어리 안에서는 주소로 바꿔서 써요 : images [{ u, c }] · sheets [{ c, us }] · kits [{ c, us }] · [{ c, u }]
