@@ -377,7 +377,7 @@
             cur.forEach(x => {
                 const { u: url, s: sheet } = x;
                 const item = document.createElement('div');
-                item.className = 'lib-item' + (sheet ? ' lib-sheet' : '');
+                item.className = 'lib-item' + (sheet ? ' lib-sheet' : ''); item.dataset.u = url;   // 원본 주소 (📒 수첩 · 🎨 다듬기가 써요)
                 usedSlots += libSpan(x);
                 if (sheet) {                                                       // 🏷️ 씰 종이 : 옆으로 2칸 · 안에 든 씰을 작게 최대한 많이 + 총 개수
                     item.style.gridColumn = 'span ' + libSpan(x);

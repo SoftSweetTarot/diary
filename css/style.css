@@ -3017,7 +3017,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-pc img.snb-tape { width: 100%; height: 50%; object-fit: cover; border-radius: 3px; }
 .snb-pc b { font-size: calc(var(--pc, 64px) * .66); line-height: 1; font-weight: normal; pointer-events: none; }
 @media (hover: hover) { .snb-pc:hover { transform: scale(1.08); transition: transform .1s; } }
-.snb-pc { touch-action: none; }
+.snb-pc { touch-action: none; position: relative; }
 .snb-pc.out { visibility: hidden; }
 .snb-pc.again { animation: snbAgain .45s ease-out; }
 @keyframes snbAgain { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
@@ -3297,6 +3297,16 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-pgno.bot { left: 50% !important; bottom: 10px; top: auto !important; transform: translateX(-50%); }
 .snb-net { position: absolute; z-index: 7; left: 50%; top: 46%; transform: translate(-50%, -50%); max-width: 80%; padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.95); border: 1.5px solid var(--border-color); color: #7a5a66; font-size: 13.5px; text-align: center; word-break: keep-all; pointer-events: none; box-shadow: 0 3px 10px rgba(120,80,95,.15); }
 .modal:not(.snb-on) .snb-pgno, .modal:not(.snb-on) .snb-net { display: none !important; }
+.snb-edbtn { position: absolute; z-index: 6; left: 66px; bottom: 6px; display: none; min-height: 32px; padding: 0 12px; border: 1.5px solid var(--border-color); border-radius: 16px; background: #fff; color: #8a3354; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(120,80,95,.15); }   /* 🎨 다듬기 (📒 수첩 · 시트일 때만 · js/stknote.js) */
+#stickerModal.snb-on.snb-sheet .snb-edbtn { display: inline-flex; align-items: center; }
+#stickerModal.snb-editing .snb-edbtn { background: #c2385c; color: #fff; border-color: #c2385c; }
+.snb-edbtn:focus-visible { outline: 3px solid #f59ab6; outline-offset: 2px; }
+.snb-edtip { position: absolute; z-index: 7; left: 50%; top: 54px; transform: translateX(-50%); display: none; padding: 6px 14px; border-radius: 14px; background: #c2385c; color: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; pointer-events: none; box-shadow: 0 3px 10px rgba(120,80,95,.2); }
+#stickerModal.snb-on.snb-editing .snb-edtip { display: block; }
+#stickerModal.snb-editing .snb-pc { cursor: pointer; animation: snbEdWiggle .9s ease-in-out infinite; }
+@keyframes snbEdWiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { #stickerModal.snb-editing .snb-pc { animation: none; outline: 2px dashed #f0a6bf; } }
+.snb-pc.snb-edited::after { content: '🎨'; position: absolute; right: -2px; top: -4px; font-size: 12px; }
 
 
 /* ✏️ 📒 수첩 모드 연필통 (js/draw.js pcOpen) : 페이지 가운데 길쭉한 연필통에 섞여 꽂힌 필기구 · 위로 뽑기 · 페이지 오른쪽 아래 작은 연필통에 꽂으면 완료 */
