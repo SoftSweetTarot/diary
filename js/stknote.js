@@ -148,12 +148,15 @@
             }
         }
 
-        /* 📐 수첩 크기 : 480 × 620 고정 (도련 · 2026-10-09) · 화면이 그보다 작으면 화면 안에 들어오게만 줄여요 */
-        const SNB_W = 480, SNB_H = 620;
+        /* 📐 수첩 크기 : 480 × 620 모양 그대로 · 다이어리 페이지보다 조금 작게 (페이지의 88%) (도련 · 2026-10-15)
+           화면이 그보다 작으면 화면 안에 들어오게만 줄여요 */
+        const SNB_W = 480, SNB_H = 620, SNB_OF_PAGE = 0.88;
         function snbSize(m) {
             const box = m && m.querySelector('.modal-content'); if (!box) return;
-            box.style.width = Math.min(SNB_W, innerWidth - 12) + 'px';
-            box.style.height = Math.min(SNB_H, innerHeight - 12) + 'px';
+            const pg = document.getElementById('canvasArea'), r = pg && pg.getBoundingClientRect();
+            const k = r && r.width > 100 ? Math.min(1, r.width / SNB_W, r.height / SNB_H) * SNB_OF_PAGE : 1;
+            box.style.width = Math.round(Math.min(SNB_W * k, innerWidth - 12)) + 'px';
+            box.style.height = Math.round(Math.min(SNB_H * k, innerHeight - 12)) + 'px';
         }
         window.addEventListener('resize', () => { if (snb.m && snb.m.classList.contains('snb-on')) { snbSize(snb.m); snbPlaceBox(snb.m.querySelector('.modal-content')); } });
 

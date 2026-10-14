@@ -2,7 +2,7 @@
    🎨 스티커 다듬기 (도련 · 2026-10-15) : 씰 종이에서 떼기 전에 그림을 고쳐요 (js/stickerpeel.js 의 🎨 다듬기 버튼)
    - 🎨 색 : 색 돌리기 · 진하기 · 밝기 · 원래 / 흑백 / 빈티지 / 파스텔 / 쨍하게
    - ↔ 뒤집기 : 좌우 · 상하
-   - ✂️ 자르기 : 그림 위를 끌어서 남길 네모를 그려요
+   - ✂️ 자르기 : 손가락 · 네모 · 둥근 네모 · 동그라미 · 하트 · 별 · 꽃 모양 (끌어서 그리고, 안쪽을 끌면 옮겨요)
    - 🧽 지우개 : 손가락으로 문질러 지워요 (굵기)
    - ✏️ 글씨 : 쓰고 → 그림을 누른 자리에 놓여요 (끌면 옮겨요) · 색 · 크기
    - ✨ 반짝이 : 금 · 은 · 무지개 가루를 뿌려요 (그림 위에만)
@@ -16,8 +16,9 @@
         const SE_LOOKS = [['원래', { s: 100, b: 100, sep: 0, pas: 0 }], ['흑백', { s: 0, b: 100, sep: 0, pas: 0 }], ['빈티지', { s: 80, b: 104, sep: 60, pas: 0 }], ['파스텔', { s: 70, b: 110, sep: 0, pas: 30 }], ['쨍하게', { s: 150, b: 102, sep: 0, pas: 0 }]];
         const SE_HUES = [['원래', 0, '#ff8fb2'], ['보라', 40, '#b48cf2'], ['파랑', 100, '#6fb0ff'], ['민트', 160, '#5fd1b0'], ['노랑', -130, '#ffd166'], ['주황', -60, '#ffa36c']];
         const SE_INK = ['#5a3a48', '#ffffff', '#ff5c8a', '#9b74ff', '#3f9df5', '#22a67f'];
+        const SE_CROPS = [['free', '✍️', '손가락'], ['rect', '⬜', '네모'], ['round', '▢', '둥근 네모'], ['circle', '⚪', '동그라미'], ['heart', '🤍', '하트'], ['star', '⭐', '별'], ['flower', '🌸', '꽃']];
         const SE_GLIT = [['', '없음'], ['gold', '금'], ['silver', '은'], ['rainbow', '무지개']];
-        const se = { on: false, done: null, tool: 'color', W: 0, H: 0, src: null, mask: null, out: null, colored: null, ckey: '', st: null, undo: [], view: null, vk: 1, drag: null, textSel: -1 };
+        const se = { on: false, done: null, tool: 'color', cshape: 'free', W: 0, H: 0, src: null, mask: null, out: null, colored: null, ckey: '', st: null, undo: [], view: null, vk: 1, drag: null, textSel: -1 };
         const seq = id => document.getElementById(id);
         const seMk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
         const seFresh = () => ({ hue: 0, s: 100, b: 100, sep: 0, pas: 0, fx: 1, fy: 1, crop: null, glit: '', gd: 50, texts: [] });
@@ -78,6 +79,33 @@
             });
             return c;
         }
+        /* ---------- ✂️ 자르기 모양 (그림 좌표로 길을 그려요) ---------- */
+        function seCropPath(x, c) {
+            const { x: X, y: Y, w: W, h: H } = c, cx = X + W / 2, cy = Y + H / 2;
+            x.beginPath();
+            if (c.sh === 'free') { const p = c.pts; x.moveTo(p[0][0], p[0][1]); for (let i = 1; i < p.length; i++) { const m = [(p[i - 1][0] + p[i][0]) / 2, (p[i - 1][1] + p[i][1]) / 2]; x.quadraticCurveTo(p[i - 1][0], p[i - 1][1], m[0], m[1]); } x.lineTo(p[p.length - 1][0], p[p.length - 1][1]); }
+            else if (c.sh === 'rect') x.rect(X, Y, W, H);
+            else if (c.sh === 'round') { const r = Math.min(W, H) * .22; x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); }
+            else if (c.sh === 'circle') x.ellipse(cx, cy, W / 2, H / 2, 0, 0, Math.PI * 2);
+            else if (c.sh === 'heart') {
+                const P = (u, v) => [X + u * W, Y + (v - .15) / .85 * H];
+                const cv = (a, b, d) => { const A = P(...a), B = P(...b), D = P(...d); x.bezierCurveTo(A[0], A[1], B[0], B[1], D[0], D[1]); };
+                const s0 = P(.5, .3); x.moveTo(s0[0], s0[1]);
+                cv([.5, .27], [.45, .15], [.25, .15]); cv([0, .15], [0, .45], [0, .45]); cv([0, .62], [.2, .82], [.5, 1]);
+                cv([.8, .82], [1, .62], [1, .45]); cv([1, .45], [1, .15], [.75, .15]); cv([.6, .15], [.5, .27], [.5, .3]);
+            } else {                                                            // 별 · 꽃 : 가운데에서 도는 모양
+                const n = c.sh === 'star' ? 10 : 120;
+                for (let i = 0; i <= n; i++) {
+                    const a = -Math.PI / 2 + i / n * Math.PI * 2;
+                    const r = c.sh === 'star' ? (i % 2 ? .42 : 1) : .68 + .32 * Math.abs(Math.cos(a * 3 - Math.PI * 1.5));
+                    const px = c.sh === 'star' ? cx + Math.cos(a) * r * W / 1.902 : cx + Math.cos(a) * r * W / 2;
+                    const py = c.sh === 'star' ? Y + (Math.sin(a) * r + 1) / 1.809 * H : cy + Math.sin(a) * r * H / 2;   // 별은 꼭짓점이 네모에 꼭 맞게
+                    if (i) x.lineTo(px, py); else x.moveTo(px, py);
+                }
+            }
+            x.closePath();
+        }
+        const seBox = pts => { let l = 1e9, t = 1e9, r = -1e9, b = -1e9; pts.forEach(([a, c]) => { l = Math.min(l, a); r = Math.max(r, a); t = Math.min(t, c); b = Math.max(b, c); }); return { x: l, y: t, w: r - l, h: b - t }; };
         function seDraw() {
             if (!se.on) return;
             const out = seCompose(), v = se.view, x = v.getContext('2d'), k = se.vk, dpr = v.width / v.clientWidth || 1;
@@ -85,8 +113,14 @@
             x.setTransform(dpr * k, 0, 0, dpr * k, 0, 0); x.drawImage(out, 0, 0);
             const cr = se.st.crop;
             if (cr) {                                                            // 남길 곳 바깥은 어둡게
-                x.fillStyle = 'rgba(60,30,45,.45)'; x.beginPath(); x.rect(0, 0, se.W, se.H); x.rect(cr.x, cr.y, cr.w, cr.h); x.fill('evenodd');
-                x.setLineDash([6 / k, 4 / k]); x.lineWidth = 2 / k; x.strokeStyle = '#fff'; x.strokeRect(cr.x, cr.y, cr.w, cr.h); x.setLineDash([]);
+                x.fillStyle = 'rgba(60,30,45,.5)'; x.fillRect(0, 0, se.W, se.H);
+                x.save(); seCropPath(x, cr); x.clip(); x.clearRect(0, 0, se.W, se.H); x.drawImage(out, 0, 0); x.restore();
+                seCropPath(x, cr); x.setLineDash([6 / k, 4 / k]); x.lineWidth = 2 / k; x.strokeStyle = '#fff'; x.stroke(); x.setLineDash([]);
+            }
+            const d = se.drag;
+            if (d && d.pts && d.pts.length > 1) {                               // ✍️ 손가락으로 그리는 중
+                x.beginPath(); x.moveTo(d.pts[0][0], d.pts[0][1]); d.pts.forEach(q => x.lineTo(q[0], q[1]));
+                x.lineWidth = 3 / k; x.lineCap = x.lineJoin = 'round'; x.strokeStyle = '#ff5c8a'; x.stroke();
             }
             if (se.tool === 'text' && se.textSel >= 0 && se.st.texts[se.textSel]) {
                 const t = se.st.texts[se.textSel], ox = out.getContext('2d'); ox.font = `700 ${t.size}px 'Gaegu', 'Jua', cursive`;
@@ -165,7 +199,15 @@
                 p.innerHTML = `<div class="se-chips"><button type="button" class="se-c se-big" data-f="x">↔ 좌우 뒤집기</button><button type="button" class="se-c se-big" data-f="y">↕ 위아래 뒤집기</button></div>`;
                 p.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { seSnap(); if (b.dataset.f === 'x') st.fx *= -1; else st.fy *= -1; seLater(); });
             } else if (t === 'crop') {
-                p.innerHTML = `<p class="se-tip">그림 위를 끌어서 <b>남길 곳</b>을 네모로 그려요</p><div class="se-chips"><button type="button" class="se-c" id="seCropNo"${st.crop ? '' : ' disabled'}>자르기 없애기</button></div>`;
+                const free = se.cshape === 'free';
+                p.innerHTML = `<div class="se-chips">${SE_CROPS.map(([k, ic, n]) => `<button type="button" class="se-c${se.cshape === k ? ' on' : ''}" data-cs="${k}" aria-pressed="${se.cshape === k}">${ic} ${n}</button>`).join('')}</div>
+                    <p class="se-tip">${free ? '남길 곳을 손가락으로 <b>빙 둘러</b> 그려요' : '그림 위를 끌어서 <b>남길 곳</b>을 그려요'}${st.crop ? ' · 안쪽을 끌면 옮겨요' : ''}</p>
+                    <div class="se-chips"><button type="button" class="se-c" id="seCropNo"${st.crop ? '' : ' disabled'}>자르기 없애기</button></div>`;
+                p.querySelectorAll('[data-cs]').forEach(b => b.onclick = () => {
+                    se.cshape = b.dataset.cs;
+                    if (st.crop && se.cshape !== 'free' && st.crop.sh !== se.cshape) { seSnap(); st.crop = { sh: se.cshape, x: st.crop.x, y: st.crop.y, w: st.crop.w, h: st.crop.h }; }   // 그린 자리 그대로 모양만 바꿔요
+                    sePanel(); seLater();
+                });
                 seq('seCropNo').onclick = () => { seSnap(); st.crop = null; sePanel(); seLater(); };
             } else if (t === 'erase') {
                 p.innerHTML = `<p class="se-tip">지울 곳을 손가락으로 문질러요</p>${seRange('seEr', '지우개 굵기', 4, 60, se.er || 18, 'px')}`;
@@ -208,7 +250,11 @@
             e.preventDefault(); const P = sePt(e), t = se.tool;
             try { se.view.setPointerCapture(e.pointerId); } catch (x) {}
             if (t === 'erase') { seSnap(); se.drag = { last: P }; seErase(P, P); seLater(); }
-            else if (t === 'crop') { seSnap(); se.drag = { a: P }; }
+            else if (t === 'crop') {
+                seSnap(); const c = se.st.crop, x = se.out.getContext('2d');
+                if (c) { seCropPath(x, c); if (x.isPointInPath(P[0], P[1])) { se.drag = { mv: P, o: JSON.parse(JSON.stringify(c)) }; return; } }   // 안쪽 → 옮기기
+                se.drag = se.cshape === 'free' ? { pts: [P] } : { a: P };
+            }
             else if (t === 'text') {
                 const i = seTextAt(P);
                 if (i >= 0) { se.textSel = i; seSnap(); se.drag = { off: [P[0] - se.st.texts[i].x, P[1] - se.st.texts[i].y] }; sePanel(); seLater(); return; }
@@ -221,17 +267,31 @@
         function seMove(e) {
             const d = se.drag; if (!d) return; const P = sePt(e), t = se.tool;
             if (t === 'erase') { seErase(d.last, P); d.last = P; seLater(); }
-            else if (t === 'crop') {
+            else if (t === 'crop' && d.mv) {
+                const o = d.o, dx = Math.max(-o.x - o.w * .8, Math.min(se.W - o.x - o.w * .2, P[0] - d.mv[0])), dy = Math.max(-o.y - o.h * .8, Math.min(se.H - o.y - o.h * .2, P[1] - d.mv[1]));
+                const c = Object.assign({}, o, { x: o.x + dx, y: o.y + dy }); if (o.pts) c.pts = o.pts.map(q => [q[0] + dx, q[1] + dy]);
+                se.st.crop = c; seLater();
+            } else if (t === 'crop' && d.pts) {
+                const L = d.pts[d.pts.length - 1]; if (Math.hypot(P[0] - L[0], P[1] - L[1]) * se.vk < 4) return;
+                d.pts.push([Math.max(0, Math.min(se.W, P[0])), Math.max(0, Math.min(se.H, P[1]))]); seLater();
+            } else if (t === 'crop') {
                 const x0 = Math.max(0, Math.min(d.a[0], P[0])), y0 = Math.max(0, Math.min(d.a[1], P[1])), x1 = Math.min(se.W, Math.max(d.a[0], P[0])), y1 = Math.min(se.H, Math.max(d.a[1], P[1]));
-                se.st.crop = x1 - x0 > 8 && y1 - y0 > 8 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null; seLater();
+                se.st.crop = x1 - x0 > 8 && y1 - y0 > 8 ? { sh: se.cshape, x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null; seLater();
             } else if (t === 'text' && se.textSel >= 0) { const tx = se.st.texts[se.textSel]; tx.x = P[0] - d.off[0]; tx.y = P[1] - d.off[1]; seLater(); }
         }
-        function seUp() { if (se.drag && se.tool === 'crop') sePanel(); se.drag = null; }
+        function seUp() {
+            const d = se.drag; se.drag = null;
+            if (!d || se.tool !== 'crop') return;
+            if (d.pts) { const b = seBox(d.pts); se.st.crop = d.pts.length > 3 && b.w > 8 && b.h > 8 ? Object.assign({ sh: 'free', pts: d.pts }, b) : se.st.crop; }
+            const u = se.undo[se.undo.length - 1];
+            if (u && JSON.stringify(u.st) === JSON.stringify(se.st)) { se.undo.pop(); seBtns(); }   // 바뀐 게 없으면 되돌리기 칸을 안 써요
+            sePanel(); seLater();
+        }
 
-        /* ---------- 내보내기 : 자르기 → 투명한 가장자리 잘라내기 ---------- */
+        /* ---------- 내보내기 : 자르기 모양만 남기기 → 투명한 가장자리 잘라내기 ---------- */
         function seExport() {
-            const out = seCompose(), cr = se.st.crop || { x: 0, y: 0, w: se.W, h: se.H };
-            const c = seMk(cr.w, cr.h), x = c.getContext('2d'); x.drawImage(out, cr.x, cr.y, cr.w, cr.h, 0, 0, c.width, c.height);
+            const out = seCompose(), c = seMk(se.W, se.H), x = c.getContext('2d'); x.drawImage(out, 0, 0);
+            if (se.st.crop) { x.globalCompositeOperation = 'destination-in'; seCropPath(x, se.st.crop); x.fill(); x.globalCompositeOperation = 'source-over'; }
             const d = x.getImageData(0, 0, c.width, c.height).data; let l = c.width, t = c.height, r = -1, b = -1;
             for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) if (d[(y * c.width + xx) * 4 + 3] > 8) { if (xx < l) l = xx; if (xx > r) r = xx; if (y < t) t = y; if (y > b) b = y; }
             if (r < 0) return null;                                              // 다 지웠어요
