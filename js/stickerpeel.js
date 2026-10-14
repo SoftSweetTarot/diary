@@ -48,8 +48,9 @@
             if (pelq('pelRoom')) return;
             const el = document.createElement('div');
             el.id = 'pelRoom'; el.className = 'pel-room';
-            el.innerHTML = `<canvas id="pelCv"></canvas><p class="pel-hint" id="pelHint"></p><button type="button" class="pel-x pel-bx" id="pelX" onclick="closeStickerPeel()" aria-label="닫기">✕</button>`;
+            el.innerHTML = `<canvas id="pelCv"></canvas><p class="pel-hint" id="pelHint"></p><button type="button" class="pel-x pel-bx" id="pelX" onclick="closeStickerPeel()" aria-label="닫기">✕</button><button type="button" class="pel-ed" id="pelEd" hidden>🎨 다듬기</button>`;
             document.body.appendChild(el);
+            pelq('pelEd').onclick = pelEditBtn;
             const cv = pelq('pelCv');
             cv.addEventListener('pointerdown', pelDown); cv.addEventListener('pointermove', pelMove);
             cv.addEventListener('pointerup', pelUp); cv.addEventListener('pointercancel', pelUp);
@@ -107,7 +108,9 @@
             pelBuild();
             const S = pelS;
             S.cv = pelq('pelCv'); S.ctx = S.cv.getContext('2d');
-            S.items = imgs.map((im, i) => ({ a: pelAsset(im), src: list[i], st: { state: 'on' } })); pelPick(S.items[0]);
+            const raw = opt && Array.isArray(opt.raw) ? opt.raw : [];          // 하얀 테두리를 두르기 전 그림 (🎨 다듬기는 이걸 고쳐서 테두리를 다시 둘러요)
+            S.items = imgs.map((im, i) => ({ a: pelAsset(im), src: list[i], raw: raw[i] || '', st: { state: 'on' } })); pelPick(S.items[0]);
+            S.editPick = false; pelq('pelEd').classList.remove('on');
             S.ts = !!(opt && opt.ts); S.drag = null; S.gone = 0; S.back = 0; S.mv = { x: 0, y: 0 }; S.on = true;
             pelLayout();
             pelq('pelRoom').classList.add('show'); document.body.classList.add('fc-lock');
@@ -178,6 +181,8 @@
             if (bo > 0 && S.items.length > 1) { ctx.save(); ctx.globalAlpha = bo; pelDrawTape(ctx); ctx.restore(); }   // 여러 개 씰 종이 : 위쪽 '✋ 잡고 옮겨요' (포인트스티커처럼)
             const bx = pelq('pelX');                                             // ✕ : 하얀 종이 오른쪽 위 끝 (모조지처럼 · 종이를 따라 다녀요)
             if (bx) { const B = S.board; bx.style.left = (B.cx + B.w / 2 - 26) + 'px'; bx.style.top = (B.cy - B.h / 2) + 'px'; bx.style.opacity = bo; bx.style.visibility = bo > 0 ? '' : 'hidden'; }
+            const eb = pelq('pelEd');                                            // 🎨 다듬기 : 하얀 종이 왼쪽 위 바깥 (종이를 따라 다녀요)
+            if (eb) { const B = S.board; eb.hidden = !window.openStickerEdit; eb.style.left = (B.cx - B.w / 2) + 'px'; eb.style.top = Math.max(4, B.cy - B.h / 2 - 38) + 'px'; eb.style.opacity = bo; eb.style.visibility = bo > 0 && !S.drag && S.st.state === 'on' ? '' : 'hidden'; }
             const d = S.drag, cur = S.items.find(o => o.st === st);
             for (const o of S.items) {                                           // 종이 위에 남은 스티커들 (잡은 건 맨 위에)
                 if (o.st.state !== 'on') continue;
@@ -224,6 +229,12 @@
         function pelDown(e) {
             const S = pelS; if (!S.on || S.drag || S.st.state === 'free') return;
             e.preventDefault(); const P = [e.clientX, e.clientY];
+            if (S.editPick) {                                                    // 🎨 다듬을 씰 고르기
+                const o = S.items.find(q => q.st.state === 'on' && (([lx, ly]) => q.a.alpha(lx, ly) > 60)(pelToLocal(q.st, P[0], P[1])));
+                if (o) { S.editPick = false; pelq('pelEd').classList.remove('on'); pelEdit(o); }
+                else pelSay('🎨 다듬을 <b>씰</b>을 눌러 주세요');
+                return;
+            }
             if (S.items.length > 1 && S.board && !S.gone) {                    // ✋ 테이프를 잡으면 종이 옮기기
                 const t = pelTape();
                 if (P[0] > t.x - 8 && P[0] < t.x + t.w + 8 && P[1] > t.y - 8 && P[1] < t.y + t.h + 8) {
@@ -296,6 +307,25 @@
             pelStick();
         }
         function pelWiggle(st) { const r = st.rot, t0 = performance.now(); (function w() { const q = (performance.now() - t0) / 300; st.rot = r + Math.sin(q * Math.PI * 4) * .04 * (1 - q); if (q < 1) requestAnimationFrame(w); else st.rot = r; })(); }
+
+        /* ---------- 🎨 다듬기 (js/stkedit.js) : 한 개면 바로 · 여러 개면 다듬을 씰을 골라요 ---------- */
+        function pelEditBtn() {
+            const S = pelS; if (!S.on || S.drag || !window.openStickerEdit) return;
+            const left = S.items.filter(o => o.st.state === 'on');
+            if (left.length === 1) return pelEdit(left[0]);
+            S.editPick = !S.editPick; pelq('pelEd').classList.toggle('on', S.editPick);
+            pelSay(S.editPick ? '🎨 다듬을 <b>씰</b>을 눌러 주세요' : '스티커 <b>가장자리</b>를 집어 떼어 보세요');
+        }
+        async function pelEdit(o) {
+            const S = pelS, out = await openStickerEdit(o.raw || o.src);
+            if (!out || !S.on) return;
+            try {
+                const src = o.raw ? await pelBake(out) : out, im = await pelLoad(src);   // 테두리 전 그림을 고쳤으면 하얀 테두리를 다시 둘러요
+                o.a = pelAsset(im); o.src = src; if (o.raw) o.raw = out;
+                if (S.items.find(q => q.st === S.st) === o) pelPick(o);
+                pelLayout(); S.hint = ''; pelSay('다듬었어요 ✨ 이제 <b>가장자리</b>를 집어 떼어 보세요');
+            } catch (e) { showMsg('다듬은 그림을 붙이지 못했어요.'); }
+        }
 
         /* 놓은 자리에 붙이기 : 화면에 보이던 크기 · 기울기 그대로 페이지에 붙어요 */
         function pelStick() {

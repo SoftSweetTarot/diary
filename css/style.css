@@ -1902,6 +1902,38 @@
         @keyframes pelHintPop { 50% { transform: translateX(-50%) scale(1.06); } }
         .pel-x { position: absolute; right: 12px; top: max(12px, env(safe-area-inset-top)); width: 38px; height: 38px; border: 1.5px solid var(--border-color); border-radius: 50%; background: #fff; color: #7a5a66; font-size: 16px; cursor: pointer; }   /* 🧩 조각 봉투 */
         .pel-x.pcb-bx { right: auto; left: 0; top: 0; width: 19px; height: 19px; padding: 0; border: 0; border-radius: 0; background: none; color: #8a6a76; font-size: 12px; line-height: 19px; text-align: center; text-shadow: 0 1px 0 #fff; visibility: hidden; }   /* 🧩 뜯은 봉투 안쪽 오른쪽 위 ✕ (동그라미 없이 · js/piecebag.js pcbFrame) */
+        .pel-ed { position: absolute; left: 0; top: 0; height: 30px; padding: 0 12px; border: 1.5px solid var(--border-color); border-radius: 15px; background: #fff; color: #8a3354; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(120,80,95,.15); white-space: nowrap; }   /* 🎨 다듬기 : 하얀 종이 왼쪽 위 (js/stickerpeel.js pelFrame) */
+        .pel-ed.on { background: #c2385c; color: #fff; border-color: #c2385c; }
+        /* 🎨 스티커 다듬기 (js/stkedit.js) */
+        .se-room { position: fixed; inset: 0; z-index: 1700; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(70,40,55,.35); touch-action: none; }
+        .se-room[hidden] { display: none; }
+        .se-box { width: min(520px, 100%); height: min(760px, calc(100dvh - 24px)); display: flex; flex-direction: column; gap: 8px; padding: 12px; box-sizing: border-box; border-radius: 22px; background: #fff; box-shadow: 0 12px 34px rgba(90,50,70,.3); }
+        .se-top { display: flex; align-items: center; justify-content: space-between; color: #8a3354; font-size: 17px; }
+        .se-x { width: 40px; height: 40px; border: 0; border-radius: 50%; background: #fff0f5; color: #8a3354; font-size: 17px; cursor: pointer; }
+        .se-stage { flex: 1 1 auto; min-height: 160px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background-color: #fff; background-image: linear-gradient(45deg, #f6eaf0 25%, transparent 25%, transparent 75%, #f6eaf0 75%), linear-gradient(45deg, #f6eaf0 25%, transparent 25%, transparent 75%, #f6eaf0 75%); background-size: 18px 18px; background-position: 0 0, 9px 9px; overflow: hidden; }
+        .se-stage canvas { touch-action: none; }
+        .se-stage canvas[data-tool="erase"], .se-stage canvas[data-tool="crop"], .se-stage canvas[data-tool="text"] { cursor: crosshair; }
+        .se-tools { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+        .se-tools button { flex: 1 0 50px; min-height: 52px; padding: 0 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 1.5px solid #f3d0dc; border-radius: 12px; background: #fff; color: #7a5a66; font: inherit; font-size: 12px; cursor: pointer; }
+        .se-tools button span { font-size: 18px; line-height: 1; }
+        .se-tools button[aria-selected="true"] { border-color: #c2385c; background: #fff0f5; color: #c2385c; font-weight: 700; }
+        .se-panel { min-height: 96px; max-height: 34%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; color: #6e4c5a; font-size: 13.5px; }
+        .se-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .se-c { min-height: 36px; display: inline-flex; align-items: center; gap: 5px; padding: 0 12px; border: 1.5px solid #f0c4d3; border-radius: 18px; background: #fff; color: #7a3c55; font: inherit; font-size: 13px; cursor: pointer; }
+        .se-c i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+        .se-c.on { border-color: #c2385c; background: #fff0f5; font-weight: 700; }
+        .se-c:disabled { opacity: .4; cursor: default; }
+        .se-c.se-big { flex: 1 1 140px; justify-content: center; min-height: 44px; font-size: 14px; }
+        .se-c.se-ink { width: 40px; padding: 0; justify-content: center; } .se-c.se-ink i { width: 20px; height: 20px; }
+        .se-r { display: grid; grid-template-columns: 72px 1fr 48px; align-items: center; gap: 8px; }
+        .se-r input { width: 100%; accent-color: #c2385c; } .se-r output { text-align: right; font-variant-numeric: tabular-nums; }
+        .se-row { display: flex; gap: 6px; } .se-row input { flex: 1; min-width: 0; min-height: 38px; padding: 0 12px; border: 1.5px solid #f0c4d3; border-radius: 12px; font: inherit; font-size: 15px; }
+        .se-row input.se-need { animation: seNeed .4s; } @keyframes seNeed { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
+        .se-tip { margin: 0; } .se-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+        .se-foot { display: flex; gap: 6px; }
+        .se-b { flex: 1; min-height: 46px; border: 1.5px solid #f0c4d3; border-radius: 23px; background: #fff; color: #8a3354; font: inherit; font-size: 14px; cursor: pointer; }
+        .se-b:disabled { opacity: .4; cursor: default; } .se-b.se-ok { flex: 1.4; border: 0; background: #c2385c; color: #fff; font-weight: 700; }
+        .se-x:focus-visible, .se-tools button:focus-visible, .se-c:focus-visible, .se-b:focus-visible, .pel-ed:focus-visible { outline: 3px solid #f59ab6; outline-offset: 2px; }
         .pel-x.pel-bx { right: auto; left: 0; top: 0; width: 26px; height: 26px; padding: 0; border: 0; background: none; color: #8a6a76; font-size: 16px; line-height: 26px; text-align: center; cursor: pointer; text-shadow: 0 1px 0 #fff; }   /* 하얀 종이 오른쪽 위 끝 ✕ (모조지처럼 · js/stickerpeel.js pelFrame) */
         /* 📄 모조지 만들기 (js/papermaker.js · 화면 모양은 .smk-* 를 같이 써요) */
         /* 결과창의 🧩 · 🏷️ · 📄 만들기 버튼 3개 (사진 스티커 · 포토부스) */

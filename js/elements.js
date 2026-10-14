@@ -349,13 +349,13 @@
         /* 🏷️ 씰 종이 : 한 종이에 씰 여러 개 → 하나씩 떼어 붙여요 (js/stickerpeel.js) */
         async function libPickSheet(urls) {
             if (window.stkLeave) stkLeave();
-            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await Promise.all(urls.map(u => pelBake(kitSize(u, 600)))))) return; } catch (e) {}
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await Promise.all(urls.map(u => pelBake(kitSize(u, 600)))), { raw: urls.map(u => kitSize(u, 600)) })) return; } catch (e) {}
             showMsg('⚠ 씰 종이를 열지 못했어요.<br><span style="font-size:12px;color:#777;">인터넷 연결을 확인해 주세요.</span>');
             if (window.stkReturn) stkReturn(700);
         }
         async function libPick(url) {
             if (window.stkLeave) stkLeave();
-            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url))) return; } catch (e) {}
+            try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url), { raw: [url] })) return; } catch (e) {}
             addImage(url); if (window.stkReturn) stkReturn(700);
         }
         function renderLibrary() {
