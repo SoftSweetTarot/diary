@@ -5,15 +5,15 @@
    - 그림은 이 기기에서만 처리돼요 (서버 · 드라이브로 올라가지 않아요). 일기에 붙일 때 그림 그대로 일기 파일에 담겨요.
    - 칠하는 곳(마스크) : 💨 살랑(머리카락 · 치마 · 꼬리) · 👀 깜빡(눈) · 🫧 말랑(볼 · 귀 · 리본) → 작은 PNG 한 장(R · G · B 칸)으로 저장
    - 움직임은 WebGL 셰이더 하나가 그려요 : 그림 한 장을 칠한 곳만 살짝 휘어서 보여주는 방식(메시 없이 '거꾸로 찾아 그리기')
-   - WebGL 은 화면 밖에 하나만 만들어 모든 캐릭터가 같이 써요 (일기에 여러 마리를 붙여도 WebGL 개수 제한에 안 걸려요)
+   - WebGL · 움직이기(초당 30번 · 안 보이면 쉬기)는 ✨ 공용 셰이더 실행기(js/glrun.js)가 해요 → 셰이더 스티커와 WebGL 하나를 같이 써요
    - 일기에 붙인 캐릭터 = 평범한 그림 요소(image) + 데이터 cm { m 칠한 곳 PNG, b 숨쉬기, j 통통, v 속도, a 세기 }
-       → 위에 움직이는 캔버스(canvas.cmv-live)를 겹쳐요 · 그림은 그대로 남아 있어서 PNG 저장 · 다른 기기에서도 안전해요
-   ※ 파일 불러오는 순서: … → elements → … → doll-room → doll-move → char-move → service */
+       → 위에 움직이는 캔버스(canvas.gl-live)를 겹쳐요 · 그림은 그대로 남아 있어서 PNG 저장 · 다른 기기에서도 안전해요
+   ※ 파일 불러오는 순서: … → elements → … → doll-room → doll-move → glrun → char-move → service */
 
         const CMV_MAX = 640;                 // 그림 긴 변 (여백 빼고)
         const CMV_PAD = 0.12;                // 가장자리 투명 여백 비율 (휘어도 안 잘려요)
         const CMV_MS = 128;                  // 칠하는 칸 긴 변
-        const CMV_GL = 1024;                 // 공용 WebGL 그림판 크기
+        const CMV_GL = GLR_SIZE;             // 공용 WebGL 그림판 크기 (js/glrun.js)
         const CMV_TOOLS = [
             ['poke', '👆 콕', '그림을 톡 눌러 보세요! 콩 뛰어요.'],
             ['sway', '💨 살랑', '머리카락 · 치마 · 꼬리를 칠해요. 위쪽은 가만히 있고 아래쪽이 살랑거려요.'],
@@ -25,7 +25,7 @@
         const CMV_COL = [[255, 120, 170], [90, 160, 255], [90, 200, 140]];       // 칠한 곳 보기 색 (살랑 · 깜빡 · 말랑)
 
         /* =====================================================================
-           🎨 공용 WebGL (화면 밖 · 한 개)
+           🎨 캐릭터 셰이더 (WebGL 은 js/glrun.js 의 공용 하나를 빌려 써요)
            ===================================================================== */
         const CMV_VS = 'attribute vec2 a;varying vec2 uv;void main(){uv=vec2(a.x*.5+.5,.5-a.y*.5);gl_Position=vec4(a,0.,1.);}';
         const CMV_FS = `precision mediump float;
@@ -49,23 +49,20 @@ void main(){
   p+=m.b*.014*amp*vec2(sin(t*3.3+uv.y*11.),cos(t*2.9+uv.x*11.));
   gl_FragColor=texture2D(img,p);
 }`;
-        let cmvG = null, cmvGen = 0;                                        // null = 아직 · false = 못 만듦
+        let cmvG = null;                                                    // null = 아직 · false = 셰이더를 못 만듦
         function cmvGL() {
-            if (cmvG && cmvG.gl.isContextLost()) cmvG = null;
-            if (cmvG !== null) return cmvG || null;
+            const R = glrGL(); if (!R) return null;
+            if (cmvG === false) return null;
+            if (cmvG && cmvG.gen === R.gen) return cmvG;                    // WebGL 을 다시 만들었으면 셰이더도 다시
             try {
-                const cv = document.createElement('canvas'); cv.width = cv.height = CMV_GL;
-                const gl = cv.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false });
-                if (!gl) { cmvG = false; return null; }
+                const gl = R.gl;
                 const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
                 const pr = gl.createProgram();
                 gl.attachShader(pr, sh(gl.VERTEX_SHADER, CMV_VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, CMV_FS));
                 gl.linkProgram(pr);
                 if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
                 gl.useProgram(pr);
-                const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-                const la = gl.getAttribLocation(pr, 'a'); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
+                const la = gl.getAttribLocation(pr, 'a');
                 const u = {}; ['img', 'msk', 't', 'amp', 'pk', 'br', 'bo', 'bly', 'blh', 'piv', 'swr'].forEach(n => { u[n] = gl.getUniformLocation(pr, n); });
                 gl.uniform1i(u.img, 0); gl.uniform1i(u.msk, 1);
                 /* 🧩 조각 그리기용 (그물 메시) */
@@ -81,20 +78,10 @@ void main(){
                 m.pos = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, m.pos); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv.length), gl.DYNAMIC_DRAW);
                 m.idx = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.idx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
                 m.n = idx.length;
-                gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ZERO);
-                cv.addEventListener('webglcontextlost', e => { e.preventDefault(); cmvG = null; });
-                cmvG = { cv, gl, u, pr, buf, la, m, gen: ++cmvGen };
-            } catch (e) { console.warn('캐릭터 움직이기: WebGL 을 쓸 수 없어요', e); cmvG = false; }
+                cmvG = { cv: R.cv, gl, u, pr, buf: R.buf, la, m, gen: R.gen };
+            } catch (e) { console.warn('캐릭터 움직이기: 셰이더를 만들 수 없어요', e); cmvG = false; }
             return cmvG || null;
         }
-        function cmvTex(gl, unit, filter) {
-            const tx = gl.createTexture();
-            gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tx);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            return tx;
-        }
-
         /* ---------- 캐릭터 한 마리 (그림 + 칠한 곳 + 움직임 설정) ---------- */
         function cmvNew(src, w, h, o) {
             const mw = w >= h ? CMV_MS : Math.max(8, Math.round(CMV_MS * w / h)), mh = h > w ? CMV_MS : Math.max(8, Math.round(CMV_MS * h / w));
@@ -115,10 +102,10 @@ void main(){
         function cmvUpload(pl, G) {
             const gl = G.gl;
             if (pl.tex) { try { gl.deleteTexture(pl.tex); gl.deleteTexture(pl.mtex); } catch (e) {} }
-            pl.tex = cmvTex(gl, 0, gl.LINEAR);
+            pl.tex = glrTex(gl, 0, gl.LINEAR);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pl.src);
-            pl.mtex = cmvTex(gl, 1, gl.LINEAR);
+            pl.mtex = glrTex(gl, 1, gl.LINEAR);
             pl.gen = G.gen; pl.dirty = true;
         }
         function cmvDraw(pl, tSec) {
@@ -152,32 +139,17 @@ void main(){
         }
 
         function cmvFree(pl) {                                              // 더 안 쓰는 캐릭터의 그림 메모리 돌려주기
-            cmvLive.delete(pl);
+            glrDel(pl);
             try { if (cmvG && pl.tex) { cmvG.gl.deleteTexture(pl.tex); cmvG.gl.deleteTexture(pl.mtex); } } catch (e) {}
             if (pl.parts) pl.parts.forEach(P => { try { if (cmvG && P.tex) cmvG.gl.deleteTexture(P.tex); } catch (e) {} P.tex = null; });
             pl.tex = pl.mtex = null; pl.gen = 0;
         }
 
-        /* ---------- 살아 움직이게 (모든 캐릭터를 한 번에 돌려요 · 초당 30번) ---------- */
-        const cmvLive = new Set();
-        let cmvRaf = 0, cmvLastT = 0;
-        const cmvStill = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-        function cmvTick(now) {
-            cmvRaf = 0;
-            if (now - cmvLastT >= 30) {
-                cmvLastT = now;
-                cmvLive.forEach(pl => {
-                    const cv = pl.ctx && pl.ctx.canvas;
-                    if (!cv || !cv.isConnected) { if (pl.seen || now - pl.born > 6000) cmvFree(pl); return; }
-                    pl.seen = true;
-                    if (cv.offsetParent === null) return;                    // 안 보이는 곳(닫힌 창 · 다른 쪽)은 쉬어요
-                    (pl.pp ? cpDraw : cmvDraw)(pl, cmvStill() ? 0 : (now - pl.t0) / 1000);
-                });
-            }
-            if (cmvLive.size && !document.hidden) cmvRaf = requestAnimationFrame(cmvTick);
+        /* ---------- 살아 움직이게 : ✨ 공용 실행기(js/glrun.js)에 맡겨요 ---------- */
+        function cmvRun(pl) {
+            pl.draw = t => (pl.pp ? cpDraw : cmvDraw)(pl, t); pl.free = () => cmvFree(pl);
+            glrAdd(pl);
         }
-        function cmvKick() { if (!cmvRaf && cmvLive.size) cmvRaf = requestAnimationFrame(cmvTick); }
-        document.addEventListener('visibilitychange', cmvKick);
 
         /* ---------- 칠한 곳 PNG 로 줄이기 / 풀기 ---------- */
         function cmvPack(pl) {
@@ -220,13 +192,13 @@ void main(){
             if (!cmvGL()) return;                                           // WebGL 이 없으면 그림만 보여요                                              // 사진 꾸미기 창이 안 떠요 (움직이는 캐릭터에는 필터가 안 먹어요)
             if (cm.k === 'p') { cpDress(el, img, cm); return; }
             const go = () => {
-                if (!img.naturalWidth || el.querySelector('canvas.cmv-live')) return;
+                if (!img.naturalWidth || el.querySelector('canvas.gl-live')) return;
                 const pl = cmvNew(img, img.naturalWidth, img.naturalHeight, cm);
-                const cv = document.createElement('canvas'); cv.className = 'cmv-live'; cv.width = pl.w; cv.height = pl.h;
+                const cv = document.createElement('canvas'); cv.className = 'gl-live'; cv.width = pl.w; cv.height = pl.h;
                 pl.ctx = cv.getContext('2d');
                 el.appendChild(cv); img.style.opacity = 0;
                 cmvUnpack(pl, cm.m);
-                cmvLive.add(pl); cmvKick();
+                cmvRun(pl);
             };
             if (img.complete && img.naturalWidth) go(); else img.addEventListener('load', go, { once: true });
         }
@@ -362,7 +334,7 @@ void main(){
             const hi = !still && pl.hi && now < pl.hi.until ? pl.hi.P : null;
             pl.parts.forEach(P => {
                 if (!P.tex) {
-                    P.tex = cmvTex(gl, 0, gl.LINEAR);
+                    P.tex = glrTex(gl, 0, gl.LINEAR);
                     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, P.cv);
                 } else gl.bindTexture(gl.TEXTURE_2D, P.tex);
@@ -481,7 +453,7 @@ void main(){
             let ims;
             try { ims = await Promise.all(cm.P.map(q => loadImg(q.s))); } catch (e) { return; }
             const go = () => {
-                if (!img.naturalWidth || el.querySelector('canvas.cmv-live')) return;
+                if (!img.naturalWidth || el.querySelector('canvas.gl-live')) return;
                 const pl = cpNew(cm.W, cm.H, cm);
                 pl.parts = cm.P.map((q, i) => {
                     const cv = document.createElement('canvas'); cv.width = ims[i].naturalWidth; cv.height = ims[i].naturalHeight;
@@ -489,14 +461,14 @@ void main(){
                     return { cv, x: q.x, y: q.y, w: cv.width, h: cv.height, role: q.r, d: q.d, tex: null, url: q.s };
                 });
                 cpGeo(pl);
-                const cv = document.createElement('canvas'); cv.className = 'cmv-live'; cv.width = pl.w; cv.height = pl.h;
+                const cv = document.createElement('canvas'); cv.className = 'gl-live'; cv.width = pl.w; cv.height = pl.h;
                 pl.ctx = cv.getContext('2d');
                 el.appendChild(cv); img.style.opacity = 0;
                 el.addEventListener('pointerdown', e => {                     // 👆 일기에서 만지면 그쪽을 보고 콩!
                     const r = cv.getBoundingClientRect(); if (!r.width) return;
                     cpLookAt(pl, (e.clientX - r.left) / r.width * pl.w, (e.clientY - r.top) / r.height * pl.h);
                 });
-                cmvLive.add(pl); cmvKick();
+                cmvRun(pl);
             };
             if (img.complete && img.naturalWidth) go(); else img.addEventListener('load', go, { once: true });
         }
@@ -640,7 +612,7 @@ void main(){
             document.querySelectorAll('#cmvModes [data-cmvmode]').forEach(b => b.classList.toggle('on', b.dataset.cmvmode === m));
             document.getElementById('cmvPaint').style.display = m === 'paint' ? '' : 'none';
             document.getElementById('cpPane').style.display = m === 'parts' ? '' : 'none';
-            cmvKick();
+            glrKick();
         }
         async function closeCharMove() {
             if (((CMV.pl && CMV.dirty) || (CMV.pp && CMV.ppDirty)) && !(await showMsg('만들어 둔 움직임이 사라져요.<br>그래도 닫을까요?<br><span style="font-size:12px;color:#777;">📔 일기에 붙이면 움직임이 그대로 저장돼요.</span>', true))) return;
@@ -686,7 +658,7 @@ void main(){
             document.getElementById('cmvBrush').value = CMV.brush; document.getElementById('cmvShow').checked = true;
             document.getElementById('cmvStart').style.display = 'none'; document.getElementById('cmvEdit').style.display = '';
             cmvTool('sway'); cmvOverlay();
-            cmvLive.add(pl); cmvKick();
+            cmvRun(pl);
         }
 
         /* ---------- 칠하기 ---------- */
@@ -776,7 +748,7 @@ void main(){
             document.querySelectorAll('#cpFlags [data-cpf]').forEach(c => { c.checked = !!(pl.f & +c.dataset.cpf); });
             CMV.ppDirty = true;
             cpSyncParams(); cpRenderParts();
-            cmvLive.add(pl); cmvKick();
+            cmvRun(pl);
             return true;
         }
         function cpPt(e) { const r = e.currentTarget.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * CMV.pp.w, (e.clientY - r.top) / r.height * CMV.pp.h]; }
@@ -825,7 +797,7 @@ void main(){
             if (e.target.closest('[data-cpx]')) {
                 if (pl.parts.length <= 1) { showMsg('조각이 하나는 있어야 해요.'); return; }
                 if (!(await showMsg(`'${P.name}' 조각을 뺄까요?`, true))) return;
-                cmvFree(pl); pl.parts.splice(pl.parts.indexOf(P), 1); cpGeo(pl); cmvLive.add(pl); cmvKick();
+                cmvFree(pl); pl.parts.splice(pl.parts.indexOf(P), 1); cpGeo(pl); cmvRun(pl);
                 CMV.ppDirty = true; cpRenderParts();
             }
         }
