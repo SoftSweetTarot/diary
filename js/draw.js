@@ -255,7 +255,8 @@
         const pcS = { tools: [], held: null, tip: null, carry: null, press: null, drag: null, z: 10 };
         const pcSvg = o => o.tool === 'erase' ? penEraserSvg(o.size) : o.tool === 'hi' ? penMarkerSvg(o.color, 1) : penPencilSvg(o.color, 1);
         const pcTipOf = o => o.tool === 'erase' ? [15, 37] : o.tool === 'hi' ? [15, 5] : [15, 2];   // 그림 안 닿는 점
-        function pcList() {
+        function pcList() {                                // 👝 필통에서 고른 것만 (js/pencase.js · 없으면 기본 16자루)
+            if (window.pkCupList) return pkCupList();
             const all = DRAW_PEN_COLORS.map(c => ({ tool: 'pen', color: c, size: 1 })).concat(DRAW_HI_COLORS.map(c => ({ tool: 'hi', color: c, size: 1 })), [{ tool: 'erase', size: 0 }, { tool: 'erase', size: 2 }]);
             return [0, 8, 3, 14, 1, 11, 5, 9, 15, 2, 12, 6, 10, 4, 13, 7].map(i => all[i]).filter(Boolean);   // 섞어서 꽂아요
         }
@@ -263,11 +264,13 @@
             let r = drq('pcRoom'); if (r) return r;
             r = document.createElement('div'); r.id = 'pcRoom'; r.className = 'pc-room'; r.hidden = true;
             r.innerHTML = `<div class="pc-cup" id="pcCup"><p class="pc-hint">필기구를 골라 <b>위로 쏙</b> 뽑아요 · 옆으로 밀면 비켜나요</p>`
-                + `<button type="button" class="pc-x" aria-label="닫기">✕</button><div class="pc-back"></div><div class="pc-tools" id="pcTools"></div><div class="pc-front"><i></i><b>♡</b></div></div>`
+                + `<button type="button" class="pc-x" aria-label="닫기">✕</button>`
+                + `<button type="button" class="pc-case" id="pcCase" aria-label="필통 열기 (연필통에 꽂을 필기구 고르기)" hidden><i class="pc-case-lid"></i><i class="pc-case-box"></i><b>필통</b></button><div class="pc-back"></div><div class="pc-tools" id="pcTools"></div><div class="pc-front"><i></i><b>♡</b></div></div>`
                 + `<div class="pc-held" id="pcHeld" hidden></div><p class="pc-tipnote" id="pcTipNote" hidden>다 쓰면 필기구를 꾹 집어 <b>구석 연필통</b>에 꽂아요 ✏️</p>`
                 + `<button type="button" class="pc-mini" id="pcMini" hidden aria-label="연필통 (꽂으면 완료)"><span class="pc-mini-tops"><i style="--c:#e2556f"></i><i style="--c:#3d9be0"></i><i style="--c:#ffe14d"></i></span><span class="pc-mini-cup"></span></button>`;
             document.body.appendChild(r);
             r.querySelector('.pc-x').onclick = () => { if (pcS.memo) pcMemoSkip(); else penClose(); };
+            drq('pcCase').onclick = () => { if (window.openPencase && !pcS.held) openPencase(); };
             drq('pcMini').onclick = () => { if (pcS.held) pcPutBack(); else if (pcS.memo) pcMemoEnd(); };
             return r;
         }
@@ -294,12 +297,16 @@
             r.querySelector('.pc-hint').innerHTML = '필기구를 골라 <b>위로 쏙</b> 뽑아요 · 옆으로 밀면 비켜나요';
             const cup = drq('pcCup'); cup.classList.remove('gone'); cup.style.transform = '';
             drq('pcHeld').hidden = true; drq('pcMini').hidden = true; drq('pcTipNote').hidden = true;
+            drq('pcCase').hidden = !window.openPencase;
+            pcFill();
+        }
+        function pcFill() {                                // 연필통에 필기구 꽂기 (👝 필통에서 바꾸면 다시 꽂아요)
             const box = drq('pcTools'); box.textContent = '';
             const L = pcList(), n = L.length;
             pcS.tools = L.map((o, i) => {
                 const el = document.createElement('div'); el.className = 'pc-tool' + (o.tool === 'erase' ? ' er' : ''); el.innerHTML = pcSvg(o);
                 const sv = el.querySelector('svg'); if (sv && o.tool !== 'erase') sv.setAttribute('preserveAspectRatio', 'none');   // 실제처럼 길쭉하게
-                o.el = el; o.x = Math.round(-76 + i * 152 / (n - 1)); o.a = o.x * .17 + (i % 3 - 1) * 1.5; o.y = -((i * 7) % 3 * 14) + (o.tool === 'hi' ? 12 : 0); o.lift = 0;   // 넓은 통에 부채꼴로 기대어요 (윗부분이 넉넉히 벌어져 고르기 쉬워요)
+                o.el = el; o.x = Math.round(-76 + i * 152 / Math.max(1, n - 1)); o.a = o.x * .17 + (i % 3 - 1) * 1.5; o.y = -((i * 7) % 3 * 14) + (o.tool === 'hi' ? 12 : 0); o.lift = 0;   // 넓은 통에 부채꼴로 기대어요 (윗부분이 넉넉히 벌어져 고르기 쉬워요)
                 el.style.zIndex = o.tool === 'erase' ? 3 : i % 2 ? 2 : 1;   // 짧은 지우개는 앞쪽에
                 pcPlace(o); box.appendChild(el); pcBindTool(o);
                 return o;
@@ -555,4 +562,4 @@
         document.getElementById('diaryWrapper').addEventListener('pointerdown', e => {
             if (dw.on && !e.target.closest('#penLayer')) e.stopPropagation();
         }, true);
-        window.openDraw = openDraw;
+        window.openDraw = openDraw; window.pcFill = pcFill;
