@@ -1,7 +1,8 @@
 /* 말랑달콤 다이어리 - js/stickerpack.js
    🍭 포인트스티커 : ✨ 스티커 창 → 🍭 포인트스티커 → 위쪽 '🍭 포인트스티커' 칸 (첫 칸 · 😀 이모지는 둘째 칸)
    - 비슷한 것끼리 묶은 작은 스티커 모음 : 🔤 말랑 알파벳 A~Z · 🔢 말랑 숫자 0~9 · 💗 하트 모음
-     그림 파일 없이 코드로 그려요 (말랑 버블 글씨 + 하얀 다이컷 테두리 · spkDraw) → 한 번 그린 건 기억해 둬요
+     🎵 음표 · 📅 요일 · 🗓 달 · ✅ 기호(체크 · 번호 · 화살표) · 💬 한마디 · 🌤 날씨 · ✨ 반짝이 (도련 · 2026-10-15)
+     그림 파일 없이 코드로 그려요 (말랑 버블 글씨 · 젤리 모양 + 하얀 다이컷 테두리 · spkGlyph · spkShape) → 한 번 그린 건 기억해 둬요
    - 팩을 고르면 하얀 판에 스티커가 올려진 채 페이지 옆(자리가 없으면 아래쪽)에 떠 있어요
      1) 스티커를 톡 누르면 살짝 커지며 떠올라요 (말려 떼지는 연출 없이)
      2) 그대로 끌어서 페이지에 놓으면 작아지며 꾹 붙어요 → 빨간 점선이 생겨 옮기기 · 돌리기 · 크기 조절 (다른 스티커와 같아요)
@@ -14,7 +15,14 @@
         const SPK_PACKS = [
             { id: 'abc', g: '글자', items: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
             { id: 'num', g: '숫자', items: '0123456789!?'.split('') },
-            { id: 'heart', g: '도형', items: Array.from({ length: 16 }, (_, i) => 'h' + i) },
+            { id: 'heart', g: '도형', items: Array.from({ length: 16 }, (_, i) => 'h' + i), draw: (it, i) => spkHeart(i) },
+            { id: 'note', g: '음표', items: () => SPK_NOTES, draw: spkShape },
+            { id: 'day', g: '요일', items: ['월', '화', '수', '목', '금', '토', '일', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] },
+            { id: 'month', g: '달', items: Array.from({ length: 12 }, (_, i) => (i + 1) + '월') },
+            { id: 'mark', g: '기호', items: () => SPK_MARKS, draw: spkShape },
+            { id: 'word', g: '한마디', items: ['최고!', '수고했어', '행복', '냠냠', '두근두근', '힘내', '좋아', '고마워', '사랑해', '오늘도', '완료!', '굿밤'], draw: spkWord },
+            { id: 'sky', g: '날씨', items: () => SPK_SKY, draw: spkShape },
+            { id: 'twinkle', g: '반짝이', items: () => SPK_TWINKLE, draw: spkShape },
         ];
         const spkS = { cache: {}, pack: null, lift: null, mv: null, drag: null, press: null };
         const spkq = id => document.getElementById(id);
@@ -32,7 +40,7 @@
         function spkGlyph(ch, i) {
             const c = spkMk(160, 160), x = c.getContext('2d'), [fill, line] = SPK_COLORS[i % SPK_COLORS.length];
             x.translate(80, 84); x.rotate([-.07, .05, -.03, .08, -.06, .03][i % 6]);
-            x.font = `700 ${ch.length > 1 ? 80 : 108}px ${SPK_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+            x.font = `700 ${ch.length > 2 ? 54 : ch.length > 1 ? 80 : 108}px ${SPK_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
             x.save(); x.lineWidth = 26; x.strokeStyle = '#fff'; x.strokeText(ch, 0, 0); x.restore();
             x.lineWidth = 26; x.strokeStyle = '#fff'; x.strokeText(ch, 0, 0);
             x.lineWidth = 7; x.strokeStyle = line; x.strokeText(ch, 0, 0);
@@ -94,11 +102,136 @@
             }
             return spkTrim(c);
         }
+        /* ---------- 🎵 ✅ 🌤 ✨ 젤리 모양 : 100 × 100 칸에 그린 모양 → 하얀 테두리 → 진한 테두리 → 파스텔 → 윗부분 반짝 ----------
+           ['e', cx, cy, rx, ry, 기울기] 채운 타원 · ['o', cx, cy, rx, ry, 기울기, 굵기] 고리 · ['l', x1, y1, x2, y2, 굵기] 선
+           ['p', 'SVG 길'] 채운 모양 · ['s', 'SVG 길', 굵기] 선 모양 · ['t', 글, 크기, 'in'] 글자 ('in' = 모양 안 글씨)
+           맨 끝에 색 번호(SPK_COLORS)나 [바탕, 선] 을 붙이면 그 칸만 그 색 · 없으면 스티커 색 */
+        const spkRR = (x, y, w, h, r) => `M${x + r} ${y}H${x + w - r}Q${x + w} ${y} ${x + w} ${y + r}V${y + h - r}Q${x + w} ${y + h} ${x + w - r} ${y + h}H${x + r}Q${x} ${y + h} ${x} ${y + h - r}V${y + r}Q${x} ${y} ${x + r} ${y}Z`;
+        const SPK_HEARTP = 'M50 88 C32 74 12 62 12 40 C12 26 22 18 33 18 C41 18 47 23 50 30 C53 23 59 18 67 18 C78 18 88 26 88 40 C88 62 68 74 50 88Z';
+        const SPK_STARP = (cx, cy, r) => { let d = ''; for (let i = 0; i < 10; i++) { const q = i % 2 ? r * .46 : r, a = -Math.PI / 2 + i * Math.PI / 5; d += (i ? 'L' : 'M') + (cx + Math.cos(a) * q).toFixed(1) + ' ' + (cy + Math.sin(a) * q).toFixed(1); } return d + 'Z'; };
+        const SPK_SPARK = (cx, cy, r) => `M${cx} ${cy - r} C${cx + r * .1} ${cy - r * .2} ${cx + r * .2} ${cy - r * .1} ${cx + r} ${cy} C${cx + r * .2} ${cy + r * .1} ${cx + r * .1} ${cy + r * .2} ${cx} ${cy + r} C${cx - r * .1} ${cy + r * .2} ${cx - r * .2} ${cy + r * .1} ${cx - r} ${cy} C${cx - r * .2} ${cy - r * .1} ${cx - r * .1} ${cy - r * .2} ${cx} ${cy - r}Z`;
+        const SPK_CLOUD = (x, y, k) => `M${x} ${y + 20 * k} C${x - 16 * k} ${y + 20 * k} ${x - 16 * k} ${y} ${x} ${y} C${x} ${y - 16 * k} ${x + 20 * k} ${y - 22 * k} ${x + 28 * k} ${y - 10 * k} C${x + 34 * k} ${y - 20 * k} ${x + 54 * k} ${y - 16 * k} ${x + 52 * k} ${y} C${x + 66 * k} ${y} ${x + 66 * k} ${y + 20 * k} ${x + 52 * k} ${y + 20 * k}Z`;
+        const SPK_Q = (cx, cy) => [['e', cx, cy, 15, 11, -.35], ['l', cx + 13, cy - 4, cx + 13, cy - 64, 8]];   // ♩ 머리 + 기둥
+        const SPK_FLAG = (x, y) => ['p', `M${x - 4} ${y} C${x + 2} ${y + 14} ${x + 22} ${y + 18} ${x + 20} ${y + 38} C${x + 18} ${y + 28} ${x + 10} ${y + 22} ${x - 4} ${y + 20}Z`];
+        const SPK_NOTES = [
+            { c: 0, ops: [...SPK_Q(38, 80), SPK_FLAG(55, 16)] },                                                    // ♪
+            { c: 4, ops: [...SPK_Q(26, 82), ...SPK_Q(66, 74), ['p', 'M35 14 L83 6 L83 20 L35 28Z']] },                 // ♫
+            { c: 6, ops: SPK_Q(40, 80) },                                                                           // ♩
+            { c: 2, ops: [...SPK_Q(26, 82), ...SPK_Q(66, 74), ['p', 'M35 14 L83 6 L83 18 L35 26Z'], ['p', 'M35 32 L83 24 L83 34 L35 42Z']] },   // ♬
+            { c: 5, ops: [['o', 38, 80, 14, 10, -.35, 7], ['l', 51, 76, 51, 16, 8]] },                               // 2분음표
+            { c: 1, ops: [['o', 50, 52, 24, 16, -.3, 10]] },                                                         // 온음표
+            { c: 3, ops: [...SPK_Q(38, 80), SPK_FLAG(55, 16), SPK_FLAG(55, 32)] },                                  // 16분음표
+            { c: 0, ops: [['p', 'M36 92 C26 84 16 78 16 66 C16 58 22 54 28 54 C32 54 35 57 36 60 C37 57 40 54 44 54 C50 54 56 58 56 66 C56 78 46 84 36 92Z'], ['l', 53, 66, 53, 12, 8], SPK_FLAG(57, 12)] },   // 하트 음표
+            { c: 1, ops: [['p', SPK_STARP(34, 76, 20)], ['l', 50, 70, 50, 12, 8], SPK_FLAG(54, 12)] },             // 별 음표
+            { c: 4, ops: [['p', 'M24 90 C16 84 8 79 8 70 C8 64 13 61 17 61 C20 61 23 63 24 66 C25 63 28 61 31 61 C35 61 40 64 40 70 C40 79 32 84 24 90Z'], ['p', 'M66 82 C58 76 50 71 50 62 C50 56 55 53 59 53 C62 53 65 55 66 58 C67 55 70 53 73 53 C77 53 82 56 82 62 C82 71 74 76 66 82Z'], ['l', 38, 66, 38, 18, 7], ['l', 80, 58, 80, 10, 7], ['p', 'M34 14 L84 4 L84 18 L34 28Z']] },   // 하트 둘
+            { c: 0, ops: [['s', 'M50 94 C36 96 32 82 44 79 M48 90 C62 88 60 74 55 68 L48 6 C70 10 66 30 50 42 C30 54 24 70 44 78 C62 86 76 64 60 56 C48 50 38 62 48 68', 11]] },   // 높은음자리표
+            { c: 2, ops: [['l', 40, 14, 36, 88, 7], ['l', 63, 10, 59, 84, 7], ['l', 22, 40, 80, 30, 10], ['l', 20, 66, 78, 56, 10]] },   // ♯
+            { c: 5, ops: [['l', 36, 10, 36, 88, 8], ['s', 'M36 86 C62 72 68 56 54 50 C46 46 38 52 36 60', 9]] },    // ♭
+            { c: 1, ops: [['l', 36, 12, 36, 72, 8], ['l', 64, 30, 64, 90, 8], ['l', 36, 44, 64, 38, 10], ['l', 36, 72, 64, 66, 10]] },   // ♮
+            { c: 4, ops: [['s', 'M42 10 L60 30 L44 48 L62 66 C48 60 38 70 52 90', 10]] },                            // 쉼표
+            { c: 6, ops: [...SPK_Q(36, 82), SPK_FLAG(53, 18), ['p', SPK_SPARK(78, 58, 14), 1], ['p', SPK_SPARK(20, 30, 9), 0]] },   // 반짝 음표
+        ];
+        const SPK_MARKS = [
+            { c: 3, ops: [['s', 'M20 52 L42 74 L82 26', 15]] },                                                       // ✔
+            { c: 2, ops: [['s', spkRR(18, 18, 64, 64, 14), 9]] },                                                   // ☐
+            { c: 0, ops: [['s', spkRR(18, 18, 64, 64, 14), 9], ['s', 'M30 50 L46 66 L76 30', 11, 3]] },              // ☑
+            { c: 0, ops: [['l', 24, 24, 76, 76, 15], ['l', 76, 24, 24, 76, 15]] },                                  // ✕
+            { c: 5, ops: [['l', 14, 50, 78, 50, 12], ['s', 'M56 28 L82 50 L56 72', 12]] },                          // →
+            { c: 4, ops: [['s', 'M16 74 C26 34 64 24 80 42', 11], ['s', 'M66 26 L82 44 L60 52', 11]] },            // ↪
+            { c: 2, ops: [['l', 50, 86, 50, 22, 12], ['s', 'M28 44 L50 18 L72 44', 12]] },                          // ↑
+            { c: 1, ops: [['l', 50, 14, 50, 60, 15], ['e', 50, 82, 9, 9, 0]] },                                     // !
+            { c: 6, ops: [['s', 'M30 34 C30 10 72 8 70 34 C68 50 50 50 50 64', 13], ['e', 50, 84, 9, 9, 0]] },     // ?
+            ...[1, 2, 3, 4, 5].map((n, k) => ({ c: [0, 1, 2, 3, 4][k], ops: [['e', 50, 50, 38, 38, 0], ['t', String(n), 52, 'in']] })),   // ① ~ ⑤
+            { c: 3, ops: [['l', 50, 18, 50, 82, 15], ['l', 18, 50, 82, 50, 15]] },                                  // +
+            { c: 0, ops: [['p', spkRR(4, 30, 92, 40, 20)], ['t', 'NEW', 28, 'in']] },                                // NEW
+        ];
+        const SPK_SKY = [
+            { c: 1, ops: [...[0, 1, 2, 3, 4, 5, 6, 7].map(k => { const a = k * Math.PI / 4; return ['l', 50 + Math.cos(a) * 34, 50 + Math.sin(a) * 34, 50 + Math.cos(a) * 44, 50 + Math.sin(a) * 44, 8]; }), ['e', 50, 50, 24, 24, 0]] },   // 해
+            { c: 2, ops: [['p', SPK_CLOUD(26, 44, 1), ['#ffffff', '#8fb8e0']]] },                                   // 구름
+            { c: 2, ops: [['p', SPK_CLOUD(26, 34, 1), ['#ffffff', '#8fb8e0']], ['l', 34, 70, 30, 82, 7], ['l', 52, 70, 48, 86, 7], ['l', 70, 70, 66, 82, 7]] },   // 비
+            { c: 2, ops: [0, 1, 2].map(k => { const a = k * Math.PI / 3; return ['l', 50 + Math.cos(a) * 40, 50 + Math.sin(a) * 40, 50 - Math.cos(a) * 40, 50 - Math.sin(a) * 40, 8]; }).concat([['e', 50, 50, 9, 9, 0]]) },   // 눈
+            { c: 0, ops: [['s', 'M12 76 C12 30 88 30 88 76', 10, 0], ['s', 'M24 76 C24 44 76 44 76 76', 10, 1], ['s', 'M36 76 C36 58 64 58 64 76', 10, 3]] },   // 무지개
+            { c: 1, ops: [['p', 'M58 6 L24 54 L46 54 L36 94 L76 40 L54 40 L66 6Z']] },                               // 번개
+            { c: 4, ops: [['p', 'M60 12 C36 18 26 44 36 64 C44 80 66 88 84 78 C60 78 44 60 46 40 C48 26 54 18 60 12Z'], ['p', SPK_SPARK(76, 30, 10), 1]] },   // 달
+            { c: 0, ops: [['p', 'M10 52 C14 26 34 14 50 14 C66 14 86 26 90 52 C82 46 74 46 70 52 C64 46 56 46 50 52 C44 46 36 46 30 52 C26 46 18 46 10 52Z'], ['s', 'M50 52 L50 84 C50 92 38 92 38 84', 7, ['#c9a27e', '#8a6644']]] },   // 우산
+            { c: 1, ops: [['e', 38, 40, 20, 20, 0], ['p', SPK_CLOUD(36, 56, .9), ['#ffffff', '#8fb8e0']]] },        // 구름 조금
+            { c: 6, ops: [['s', 'M10 40 H62 C76 40 76 22 64 22', 9], ['s', 'M10 60 H74 C88 60 88 80 74 80', 9], ['s', 'M18 50 H50', 9]] },   // 바람
+        ];
+        const SPK_TWINKLE = [
+            { c: 1, ops: [['p', SPK_SPARK(50, 50, 44)]] }, { c: 0, ops: [['p', SPK_SPARK(50, 50, 44)]] },
+            { c: 4, ops: [['p', SPK_SPARK(50, 50, 44)]] }, { c: 6, ops: [['p', SPK_SPARK(50, 50, 44)]] },
+            { c: 0, ops: [['p', 'M30 26 H70 L88 46 L50 90 L12 46Z'], ['s', 'M12 46 H88 M30 26 L40 46 L50 90 L60 46 L70 26 M40 46 L50 26 L60 46', 2.5, 'in']] },   // 보석
+            { c: 2, ops: [['p', 'M30 26 H70 L88 46 L50 90 L12 46Z'], ['s', 'M12 46 H88 M30 26 L40 46 L50 90 L60 46 L70 26 M40 46 L50 26 L60 46', 2.5, 'in']] },
+            { c: 1, ops: [['p', 'M14 76 L10 30 L32 50 L50 20 L68 50 L90 30 L86 76Z'], ['e', 50, 20, 6, 6, 0, 0], ['e', 10, 30, 5, 5, 0, 4], ['e', 90, 30, 5, 5, 0, 4]] },   // 왕관
+            { c: 0, ops: [['e', 50, 50, 34, 34, 0, ['#fff4f8', '#d9a3b8']]] },                                     // 진주
+            { c: 0, ops: [['p', 'M50 50 C34 30 10 28 12 46 C14 62 34 60 50 50 C66 60 86 62 88 46 C90 28 66 30 50 50Z'], ['s', 'M46 54 L34 84 M54 54 L66 84', 9], ['e', 50, 50, 9, 8, 0]] },   // 리본
+            { c: 1, ops: [['p', SPK_SPARK(40, 54, 34)], ['p', SPK_SPARK(78, 22, 16), 0], ['p', SPK_SPARK(80, 76, 11), 4]] },   // 반짝 셋
+            { c: 4, ops: [['l', 26, 90, 54, 46, 7, ['#ffffff', '#b79bf2']], ['p', SPK_STARP(62, 34, 28), 1]] },   // 요술봉
+            { c: 3, ops: [['p', SPK_HEARTP], ['p', SPK_SPARK(80, 22, 13), 1]] },                                          // 반짝 하트
+        ];
+        const spkCol = (v, base) => v == null ? base : Array.isArray(v) ? v : SPK_COLORS[v % SPK_COLORS.length];
+        function spkShape(it, i) {
+            const c = spkMk(170, 170), x = c.getContext('2d'), K = 1.25, base = SPK_COLORS[(it.c != null ? it.c : i) % SPK_COLORS.length];
+            const toPath = op => {
+                const t = op[0], p = new Path2D();
+                if (t === 'e') p.ellipse(op[1], op[2], op[3], op[4], op[5] || 0, 0, Math.PI * 2);
+                else if (t === 'o') p.ellipse(op[1], op[2], op[3], op[4], op[5] || 0, 0, Math.PI * 2);
+                else if (t === 'l') { p.moveTo(op[1], op[2]); p.lineTo(op[3], op[4]); }
+                else if (t === 'p' || t === 's') p.addPath(new Path2D(op[1]));
+                return p;
+            };
+            const W = op => op[0] === 'o' ? op[6] : op[0] === 'l' ? op[5] : op[0] === 's' ? op[2] : 0;   // 선 굵기 (0 = 채운 모양)
+            const CI = { p: 2, s: 3, l: 6, e: 6, o: 7, t: 3 };                     // 색 번호 · 'in' 자리
+            const colOf = op => { const v = op[CI[op[0]]]; return typeof v === 'number' || Array.isArray(v) ? spkCol(v, base) : base; };
+            const inner = op => op[CI[op[0]]] === 'in';
+            const ops = it.ops.map(op => ({ op, path: op[0] === 't' ? null : toPath(op), w: W(op), col: colOf(op), in: inner(op) }));
+            x.translate(85 - 50 * K, 85 - 50 * K); x.scale(K, K); x.lineJoin = 'round'; x.lineCap = 'round';
+            const text = (o, f) => { x.font = `700 ${o.op[2]}px ${SPK_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; f(o.op[1], 50, 52); };
+            for (const o of ops) {                                                   // 1) 하얀 다이컷 테두리
+                if (o.in) continue; x.strokeStyle = '#fff'; x.fillStyle = '#fff';
+                if (!o.path) { x.lineWidth = 20; text(o, (s, a, b) => x.strokeText(s, a, b)); continue; }
+                x.lineWidth = (o.w || 0) + 20; x.stroke(o.path); if (!o.w) x.fill(o.path);
+            }
+            for (const o of ops) {                                                   // 2) 진한 테두리
+                if (o.in || !o.path) continue; x.strokeStyle = o.col[1]; x.lineWidth = (o.w || 0) + 6; x.stroke(o.path); if (!o.w) { x.fillStyle = o.col[1]; x.fill(o.path); }
+            }
+            for (const o of ops) {                                                   // 3) 파스텔
+                if (o.in) continue;
+                if (!o.path) { x.fillStyle = o.col[0]; text(o, (s, a, b) => x.fillText(s, a, b)); continue; }
+                if (o.w) { x.strokeStyle = o.col[0]; x.lineWidth = o.w; x.stroke(o.path); } else { x.fillStyle = o.col[0]; x.fill(o.path); }
+            }
+            const g = spkMk(170, 170), gx = g.getContext('2d');                       // 4) 반짝 : 모양 안에서만
+            gx.setTransform(x.getTransform()); gx.lineJoin = gx.lineCap = 'round'; gx.fillStyle = gx.strokeStyle = '#000';
+            ops.forEach(o => { if (o.in || !o.path) return; if (o.w) { gx.lineWidth = o.w; gx.stroke(o.path); } else gx.fill(o.path); });
+            gx.setTransform(1, 0, 0, 1, 0, 0); gx.globalCompositeOperation = 'source-in'; gx.fillStyle = 'rgba(255,255,255,.55)'; gx.beginPath(); gx.ellipse(66, 52, 34, 16, -.45, 0, 7); gx.fill();
+            x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(g, 0, 0); x.restore();
+            for (const o of ops) {                                                   // 5) 모양 안 글씨 · 무늬
+                if (!o.in) continue;
+                if (!o.path) { x.fillStyle = base[1]; text(o, (s, a, b) => x.fillText(s, a, b)); continue; }
+                x.strokeStyle = 'rgba(255,255,255,.75)'; x.lineWidth = o.w || 2; x.stroke(o.path);
+            }
+            return spkTrim(c);
+        }
+        /* 💬 한마디 : 둥근 이름표 + 글씨 */
+        function spkWord(w, i) {
+            const c = spkMk(190, 120), x = c.getContext('2d'), [fill, line] = SPK_COLORS[i % SPK_COLORS.length], n = [...w].length;
+            const fs = n <= 2 ? 44 : n === 3 ? 38 : 31;
+            x.font = `700 ${fs}px ${SPK_FONT}`; const tw = Math.min(150, x.measureText(w).width), bw = tw + 36, bh = fs + 26, bx = 95 - bw / 2, by = 60 - bh / 2;
+            x.translate(95, 60); x.rotate([-.05, .04, -.02, .06][i % 4]); x.translate(-95, -60);
+            const P = new Path2D(spkRR(bx, by, bw, bh, bh / 2));
+            x.lineJoin = 'round'; x.lineWidth = 20; x.strokeStyle = '#fff'; x.stroke(P); x.fillStyle = '#fff'; x.fill(P);
+            x.lineWidth = 6; x.strokeStyle = line; x.stroke(P); x.fillStyle = fill; x.fill(P);
+            x.save(); x.clip(P); x.fillStyle = 'rgba(255,255,255,.5)'; x.beginPath(); x.ellipse(bx + bw * .3, by + bh * .28, bw * .26, bh * .16, -.15, 0, 7); x.fill(); x.restore();
+            x.font = `700 ${fs}px ${SPK_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+            x.lineWidth = 6; x.strokeStyle = '#fff'; x.strokeText(w, 95, 62, 150); x.fillStyle = line; x.fillText(w, 95, 62, 150);
+            return spkTrim(c);
+        }
         async function spkSrcs(pack) {
             if (spkS.cache[pack.id]) return spkS.cache[pack.id];
             if (pack.load) return (spkS.cache[pack.id] = await pack.load());   // 🖼️ 개발자 그림 포인트스티커 (js/stk-basic.js sbPack)
-            if (pack.id !== 'heart' && document.fonts && document.fonts.load) await Promise.race([document.fonts.load(`700 100px ${SPK_FONT}`), new Promise(r => setTimeout(r, 1500))]).catch(() => {});
-            return (spkS.cache[pack.id] = pack.items.map((it, i) => pack.id === 'heart' ? spkHeart(i) : spkGlyph(it, i)));
+            if (document.fonts && document.fonts.load) await Promise.race([document.fonts.load(`700 100px ${SPK_FONT}`), new Promise(r => setTimeout(r, 1500))]).catch(() => {});
+            const items = typeof pack.items === 'function' ? pack.items() : pack.items;
+            return (spkS.cache[pack.id] = items.map((it, i) => (pack.draw || spkGlyph)(it, i)));
         }
 
         /* ---------- 🍭 포인트스티커 창 : 위쪽 '🍭 포인트스티커 · 😀 이모지' 두 칸 (js/stickermaker.js openStickerList) ---------- */
