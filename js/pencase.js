@@ -1,6 +1,6 @@
 /* 말랑달콤 다이어리 - js/pencase.js
    👝 필통 : 필기구를 모두 보관하는 틴 케이스 → 필기구에 보일 것만 골라요 (도련 · 2026-10-15)
-   - 페이지 빈 곳을 누르면 나오는 메뉴(js/tapmenu.js) 맨 앞 '필통' 을 누르면 닫힌 필통이 나와요 → 걸쇠(뚜껑)를 톡 누르거나 위로 밀면 뚜껑이 휙 열려요
+   - 페이지 빈 곳을 누르면 나오는 메뉴(js/tapmenu.js) 맨 앞 '필통' 을 누르면 닫힌 필통이 나와요 → 걸쇠(뚜껑)를 톡 누르거나 왼쪽으로 밀면 뚜껑이 오른쪽에서 왼쪽으로 휙 열려요 · 필통은 늘 페이지 한가운데 (pkPlace)
    - 안에는 색연필 16 · 형광펜 9 · 지우개 3 이 칸칸이 누워 있어요 → 톡 누르면 연필통에 꽂기 / 빼기 (꽂은 것은 하트 꼬리표)
    - '뚜껑 닫기' 를 누르면 저장 → 📒 수첩 모드 연필통에는 고른 것만 꽂히고 · 고르는 창 모드 필기구 줄에는 고른 색만 나와요 (js/draw.js pcList · penSetTool)
    - 연필통에는 1 ~ 20 자루 (너무 많으면 고르기 어려워요)
@@ -74,10 +74,11 @@
             const lid = pkq('pkLid');
             lid.onclick = () => { if (!pkq('pkCase').classList.contains('open')) pkOpenLid(); };
             lid.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lid.onclick(); } };
-            let y0 = null;                                                     // 위로 밀어도 열려요
-            lid.addEventListener('pointerdown', e => { y0 = e.clientY; });
-            lid.addEventListener('pointermove', e => { if (y0 != null && y0 - e.clientY > 30) { y0 = null; lid.onclick(); } });
-            addEventListener('pointerup', () => { y0 = null; });
+            let x0 = null;                                                     // 왼쪽으로 밀어도 열려요
+            lid.addEventListener('pointerdown', e => { x0 = e.clientX; });
+            lid.addEventListener('pointermove', e => { if (x0 != null && x0 - e.clientX > 30) { x0 = null; lid.onclick(); } });
+            addEventListener('pointerup', () => { x0 = null; });
+            addEventListener('resize', () => { if (pk.on) pkPlace(); });
             r.querySelectorAll('.pk-t').forEach(b => b.onclick = () => pkToggle(b));
             pkq('pkDone').onclick = pkClose;
             pkq('pkX').onclick = pkClose;
@@ -99,13 +100,24 @@
         }
         function pkSay(t) { const p = pkq('pkTip'); p.innerHTML = t; p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); clearTimeout(pk.tm); pk.tm = setTimeout(pkRender, 1600); }
 
+        /* 페이지 한가운데에 맞춰요 : 닫혀 있을 땐 한가운데 · 뚜껑을 열면 젖혀질 자리(몸통 폭의 약 28%)만큼 오른쪽으로 비켜요 → 페이지 안에 들어오게 줄여요 */
+        function pkPlace() {
+            const c = pkq('pkCase'), pg = document.getElementById('canvasArea'); if (!c) return;
+            const r = pg ? pg.getBoundingClientRect() : { left: 0, top: 0, width: innerWidth, height: innerHeight };
+            const W = c.offsetWidth, H = c.offsetHeight, lid = W * .28;
+            const s = Math.min(1, (r.width - 12) / (W + lid), (r.height - 12) / H, (innerHeight - 16) / H);
+            const x = r.left + (r.width - W * s) / 2, y = Math.max(8, r.top + (r.height - H * s) / 2);
+            c.style.setProperty('--s', s.toFixed(3)); c.style.setProperty('--x', Math.round(x) + 'px'); c.style.setProperty('--y', Math.round(y) + 'px');
+            c.style.setProperty('--ox', Math.round(lid * s / 2) + 'px');
+        }
+
         /* ---------- 열고 닫기 ---------- */
         function openPencase() {
             if (pk.on || pk.busy) return;
             const r = pkBuild(); pk.on = true; pk.pick = new Set(pkRead());
             pkRender();
             const c = pkq('pkCase'); c.classList.remove('open', 'shut');
-            r.hidden = false; requestAnimationFrame(() => r.classList.add('show'));
+            r.hidden = false; pkPlace(); requestAnimationFrame(() => r.classList.add('show'));
             setTimeout(() => pkq('pkLid').focus({ preventScroll: true }), 50);
         }
         function pkOpenLid() {
