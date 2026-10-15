@@ -368,8 +368,7 @@
             if (!view.length) { st.textContent = '기본스티커 / 씰스티커 폴더에 그림이 없어요.'; updateLibPager(); return; }
             const per = libPerPage(), all = libPages(), pages = all.length;
             libPage = Math.max(0, Math.min(pages - 1, libPage));
-            const nSheet = view.filter(x => x.s).length;
-            st.textContent = (nSheet ? `씰 종이 ${nSheet}장 · ` : '') + `씰 ${view.length - nSheet}개 · 누르면 씰스티커로 나와요`;
+            st.textContent = '';                                                // 안내 글은 없이 (공간 아끼기 · 도련 2026-10-15) · 불러오는 중 · 오류만 보여요
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
             const frag = document.createDocumentFragment(), cur = all[libPage] || [];
             let usedSlots = 0;

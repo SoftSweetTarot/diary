@@ -278,6 +278,7 @@
         @media (hover: hover) { .lib-content .btn:disabled:hover { background: #fff; color: #444; } }
         .lib-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
         .lib-status { font-size: 13px; color: #666; min-width: 0; }
+        .lib-toolbar:has(> .lib-status:empty):not(:has(> .lib-layout-btn:not([hidden]))) { display: none; }   /* 안내 글이 없으면 줄째 숨겨요 */
         .lib-layout-btn { flex-shrink: 0; font-size: 13px; padding: 3px 10px; }
         .lib-layout-btn.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
         .lib-layout-btn[hidden] { display: none; }
@@ -311,6 +312,8 @@
         .gate-card { display: flex; flex-direction: column; align-items: center; gap: 14px; }
         .gate-title { font-size: 1.4rem; font-weight: bold; color: var(--primary-accent); }
         .gate-msg { font-size: 14px; color: #555; line-height: 1.7; }
+        .gate-msg:empty { display: none; }
+        .gate-pick { max-width: 340px; }
         .gate-btn { justify-content: center; width: 100%; padding: 10px 12px; }
         .gate-guest { background: none; border: none; color: #888; font-size: 12px; text-decoration: underline; cursor: pointer; font-family: inherit; }
         /* ☁ 드라이브 저장 알림 : 다이어리 페이지 왼쪽 하단 · 저장 기록이 바뀔 때만 부드럽게 나왔다 사라져요 (js/drive.js updateBadge) */
@@ -2943,8 +2946,16 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .modal.snb-on .lib-box { margin: 0; }
 .modal.snb-on .smk-mine, .modal.snb-on .sticker-grid .smk-in-modal { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
 .modal.snb-on .paper-pick { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
-.modal.snb-on .lf-picks { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
-.modal.snb-on .tk-list { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); margin-top: 4px; }
+/* 📒 수첩 : 🎀 마테는 한 줄에 하나 길게 · 🧻 떡메 · 📃 속지는 한 장에 하나 크게 (도련 · 2026-10-15) */
+.modal.snb-on .sticker-grid .tp-item { grid-column: 1 / -1; padding: 12px 6px; }
+.modal.snb-on .sticker-grid .tp-item span { max-width: none; height: 34px; transform: rotate(-2deg); }
+.modal.snb-on .lf-picks { grid-template-columns: 1fr; justify-items: center; }
+.modal.snb-on .lf-pick { width: min(100%, calc((var(--snb-h, 520px) - 44px) * .68)); }
+.modal.snb-on .lf-pick .lf-sw { aspect-ratio: .68; }
+.modal.snb-on .tk-list { grid-template-columns: 1fr; }
+.modal.snb-on .tk-list .tk-it { min-height: calc(var(--snb-h, 520px) - 24px); justify-content: center; }
+.modal.snb-on .tk-mini { width: calc(150px * var(--tk-s, .44)); height: calc(173px * var(--tk-s, .44)); }
+.modal.snb-on .tk-mini .tk-pad { transform: scale(var(--tk-s, .44)); }
 .modal.snb-on .stk-tabs { flex-shrink: 0; }
 /* 링 : 수첩 왼쪽에 꽂힌 은색 고리 */
 .snb-rings { position: absolute; left: -7px; top: 26px; bottom: 26px; width: 30px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; z-index: 7; }
@@ -3006,6 +3017,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-sh { position: relative; box-sizing: border-box; height: calc(var(--snb-h, 560px) - 12px); margin: 4px 6px 8px; padding: 12px 12px 34px;   /* 아래는 📄 장 번호 자리 */ border-radius: 16px; overflow: hidden;
     background: linear-gradient(115deg, rgba(255,255,255,.95) 0 12%, rgba(255,255,255,0) 30% 62%, rgba(255,255,255,.55) 74%, rgba(255,255,255,0) 86%), color-mix(in srgb, var(--primary-accent) 7%, #fff);
     box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.95), inset 0 0 0 3px color-mix(in srgb, var(--primary-accent) 14%, transparent), 0 2px 0 rgba(0,0,0,.04), 0 6px 14px rgba(0,0,0,.1); }
+.snb-sh.paper { border-radius: 4px; background: radial-gradient(rgba(150,120,90,.05) 1px, transparent 1.2px) 0 0 / 5px 5px, #fffaf0; box-shadow: inset 0 0 0 1px rgba(200,180,150,.35), 0 2px 0 rgba(0,0,0,.04), 0 6px 14px rgba(0,0,0,.1); }   /* 📄 모조지 시트 : 도톰한 미색 종이 */
 .snb-sh-in { height: 100%; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 8px; overflow: hidden; }
 .snb-sh-wait { margin: auto; font-size: 12px; color: #a08a94; }
 .snb-pc { width: var(--pc, 64px); height: var(--pc, 64px); display: flex; align-items: center; justify-content: center; cursor: grab; }
@@ -3248,7 +3260,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 
 /* 🔓 기능 공개 스위치 (js/features.js) : 숨긴 기능의 버튼 · 칸 */
 .ft-no-cafe [data-ft~="cafe"], .ft-no-notebook [data-ft~="notebook"], .ft-no-dday [data-ft~="dday"], .ft-no-pattern [data-ft~="pattern"],
-.ft-no-studio [data-ft~="studio"], .ft-no-stkmake [data-ft~="stkmake"], .ft-no-share [data-ft~="share"], .ft-no-caps [data-ft~="caps"] { display: none !important; }
+.ft-no-studio [data-ft~="studio"], .ft-no-stkmake [data-ft~="stkmake"], .ft-no-share [data-ft~="share"], .ft-no-caps [data-ft~="caps"], .ft-no-bgm [data-ft~="bgm"] { display: none !important; }
 
 /* 🆓 기본 스티커 : 🧩 봉투 · 📄 모조지 카드 (js/stk-basic.js) */
 .sticker-grid .sb-card { grid-column: span 3; position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 0 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: #5b3f4a; cursor: pointer; overflow: hidden; }

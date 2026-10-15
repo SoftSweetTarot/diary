@@ -239,6 +239,9 @@
             const body = m.querySelector('.snb-body'); if (!body) return;
             snbCatsSync(m, body);                                              // 🗂 카테고리를 먼저 놓아야 장 높이가 맞아요
             if (!body.clientHeight) return;
+            const tkS = Math.max(.44, Math.min((body.clientWidth - 48) / 150, (body.clientHeight - 70) / 173));   // 🧻 떡메 한 장 크기 (150 × 173 그림을 장에 맞게)
+            if (body.style.getPropertyValue('--tk-s') !== tkS.toFixed(3)) body.style.setProperty('--tk-s', tkS.toFixed(3));
+            if (!body.style.getPropertyValue('--snb-h')) body.style.setProperty('--snb-h', body.clientHeight + 'px');
             if (snbLibOn(m)) {
                 if (snbLibFit(body)) return;                                   // 다시 그려지면 또 불려요
             }
@@ -533,9 +536,10 @@
            그림이 하나뿐인 스티커는 '낱장 모음 시트'로 한 장에 모아요 · 시트의 그림은 하나씩 떼어 붙여요
            원래 목록은 몸통 안에 숨겨 두고(눌렀을 때 하는 일 · 더 불러오기는 그대로) 시트만 보여요
            ✨ 스티커 창 수첩은 늘 시트로만 보여요 (목록으로 보기 · 목록에서 끌어 붙이기 없음 · 도련 · 2026-10-10) ---------- */
-        const SNB_SRC = '.lib-item:not(.empty), .sticker-item, .smk-it, .spk-card, .cs-it, .tpm-it';
-        /* 여러 그림이 든 칸인지 : 포인트스티커 묶음 · 'N장 / Npcs' 표시가 2 이상인 내 스티커 · 공유받은 스티커 */
+        const SNB_SRC = '.lib-item:not(.empty), .sticker-item, .smk-it, .spk-card, .sb-card, .cs-it, .tpm-it';
+        /* 여러 그림이 든 칸인지 : 포인트스티커 묶음 · 🧩 조각 봉투 · 📄 모조지 · 'N장 / Npcs' 표시가 2 이상인 내 스티커 · 공유받은 스티커 */
         function snbMulti(e) {
+            if (e.classList.contains('sb-card')) { const a = (e.getAttribute('onclick') || '').match(/stkBasicOpen\('(piece|paper)','([^']+)'\)/); return a ? { sb: [a[1], a[2]] } : null; }
             if (e.classList.contains('spk-card')) { const id = ((e.getAttribute('onclick') || '').match(/'([^']+)'/) || [])[1]; return id ? { pack: id } : null; }
             if (!e.classList.contains('smk-it') || !e.dataset.id) return null;
             const n = parseInt((e.querySelector('.smk-n') || {}).textContent, 10) || 1; if (n < 2) return null;
@@ -570,8 +574,9 @@
             };
             multi.forEach(([e, mu]) => {
                 const im = e.querySelector('img'), b = e.querySelector('b:not(.smk-n)');
-                const name = mu.lib ? '씰 종이' : mu.pack ? (b ? b.textContent : '포인트스티커') : ((im && im.alt) || '내 스티커 시트');
+                const name = mu.lib ? '씰 종이' : mu.sb ? (mu.sb[0] === 'piece' ? '조각 봉투' : '모조지') : mu.pack ? (b ? b.textContent : '포인트스티커') : ((im && im.alt) || '내 스티커 시트');
                 const sh = sheet(name);
+                if (mu.sb && mu.sb[0] === 'paper') sh.classList.add('paper');      // 📄 모조지 : 도톰한 종이 시트
                 sh._mu = mu; sh.querySelector('.snb-sh-in').innerHTML = '<small class="snb-sh-wait">시트를 펼치는 중…</small>';
             });
             const W = body.clientWidth - 8 - 24, H = body.clientHeight - 12 - 46, PC = 64, GAP = 8;
@@ -608,6 +613,7 @@
             let urls = [], k = 'pack';
             try {
                 if (mu.lib) { urls = mu.lib.map(u => window.kitSize ? kitSize(u, 400) : u); k = 'seal'; }   // 🏷️ 씰 종이
+                else if (mu.sb) { const o = window.sbSheet && sbSheet(mu.sb[0], mu.sb[1]); if (o) { urls = o.urls; k = o.k; } }   // 🧩 조각 봉투 · 📄 모조지 (js/stk-basic.js)
                 else if (mu.pack) {
                     const P = (typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack)) || (window.sbPack && sbPack(mu.pack));   // 🖼️ 개발자 그림 묶음(srv:N)도
                     urls = P ? await keepTrying(() => spkSrcs(P), { alive: () => sh.isConnected }) : [];
@@ -636,7 +642,7 @@
             let s = pc._url;
             if (pc._k === 'seal' && window.pelBake) try { s = await pelBake(s); } catch (e) {}
             if (!addImage(s)) return;
-            const el = document.querySelector('#canvasArea > .element-box:last-child'); if (el) el.style.width = (pc._k === 'pack' ? 80 : 110) + 'px';
+            const el = document.querySelector('#canvasArea > .element-box:last-child'); if (el) { el.style.width = (pc._k === 'pack' ? 80 : 110) + 'px'; if (pc._k === 'paper') el.dataset.float = 1; }   // 📄 모조지 : 옮길 때 살짝 떠요
             if (typeof saveData === 'function') saveData(false);
         }
 
@@ -678,6 +684,7 @@
             if (!el) return;
             const deg = Math.round(rot * 180 / Math.PI * 10) / 10;
             el.style.width = Math.round(r.width / k * (pc._k === 'seal' ? 1.12 : 1)) + 'px'; el.dataset.rotation = deg;
+            if (pc._k === 'paper') el.dataset.float = 1;                             // 📄 모조지 : 옮길 때 살짝 떠요
             snbPlace(el, cx, cy);
             if (typeof selectElement === 'function') selectElement(el);
             if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}

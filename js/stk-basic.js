@@ -255,6 +255,16 @@
             if (!x || !x.urls) return null;
             return { id: 'srv' + i, load: () => Promise.all(x.urls.map(u => sbDie(kitAt(u, 600)))) };
         }
+        /* 📒 수첩 시트 (js/stknote.js) : 🧩 조각 봉투 · 📄 모조지 한 장 → 그 안의 그림 전부를 시트 한 장으로
+           k = 붙일 때 모양 : 'seal' 하얀 다이컷 테두리를 둘러서 (조각 그림) · 'pack' 그대로 (이미 테두리가 있는 그림) · 'paper' 모조지 종이째 (옮길 때 살짝 떠요) */
+        function sbSheet(kind, id) {
+            if (/^srv:\d+$/.test(id)) {
+                const x = SRV[kind] && SRV[kind][+id.slice(4)]; if (!x || !x.urls) return null;
+                return { urls: x.urls.map(u => kitAt(u, 400)), k: kind === 'piece' ? 'seal' : 'paper' };
+            }
+            const b = sbOn(kind === 'piece' ? SB_BAGS : SB_SHEETS).find(x => x.id === id); if (!b) return null;
+            return { urls: b.k.map(k => sbSvg(k, kind === 'piece')), k: kind === 'piece' ? 'pack' : 'paper' };
+        }
         /* 🎀 🧻 📃 📝 그림 1장 쓰기 */
         async function sbUse(kind, i) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
@@ -278,7 +288,7 @@
             }
         }
         window.stkBasicSrv = stkBasicSrv; window.sbPack = sbPack; window.sbUse = sbUse;
-        window.sbThumbs = sbThumbs; window.stkBasicHtml = stkBasicHtml; window.stkBasicOpen = stkBasicOpen;
+        window.sbThumbs = sbThumbs; window.stkBasicHtml = stkBasicHtml; window.stkBasicOpen = stkBasicOpen; window.sbSheet = sbSheet;
     })();
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */

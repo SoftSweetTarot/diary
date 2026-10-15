@@ -319,7 +319,7 @@
         function dvBack() {
             const c = document.querySelector('#driveGate .gate-card');
             if (c && c.dataset.orig) { c.innerHTML = c.dataset.orig; delete c.dataset.orig; }
-            showGate('login', '일기는 구글 드라이브에<br>하루에 파일 1개씩 저장돼요.');
+            showGate('login', '');
         }
         function dvChoose() {
             const pc = dvCanDir();

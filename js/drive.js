@@ -924,7 +924,7 @@
                 try { await requestToken('none'); await loadFromDrive(); hideGate(); postLoginTasks(); return; }
                 catch (e) { if (e && e.type === 'corrupt') { showGate('login', driveErrorText(e)); return; } }
             }
-            showGate('login', '일기는 구글 드라이브에<br>하루에 파일 1개씩 저장돼요.' + fileHint);
+            showGate('login', fileHint.replace(/^<br><br>/, ''));               // 설명은 두 버튼 안에 있어요
         }
 
         async function driveLogin() {
