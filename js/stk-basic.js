@@ -211,7 +211,8 @@
             let bar = box.querySelector(':scope > .sb-cats');
             items.forEach(el => { el.hidden = false; });
             if (labels.length < 2 || sbNote(box)) { if (bar) bar.remove(); sbPage(box, kind, items); return; }   // 카테고리가 하나뿐이면 칸 없이 · 📒 수첩은 전부
-            if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.insertBefore(bar, box.querySelector(':scope > .sb-srv') || box.firstChild); }
+            if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.prepend(bar); }   // 🗂 맨 위 (제목 바로 아래) → 그 아래 ◀ ▶
+            const pgr = box.querySelector(':scope > .sb-pager'); if (pgr && bar.nextElementSibling !== pgr) bar.after(pgr);
             let cur = sbCatOn[kind] || '';
             if (!labels.includes(cur)) cur = labels[0];                   // '전체' 칸 없이 첫 카테고리부터
             const btn = (v, n) => `<button type="button" class="lib-cat${v === cur ? ' on' : ''}" data-c="${esc(v)}">${esc(v)}<small>${n}</small></button>`;
@@ -231,8 +232,8 @@
             if (!pg) {
                 pg = document.createElement('div'); pg.className = 'lib-pager sb-pager';
                 pg.innerHTML = '<button type="button" class="btn">◀ 이전</button><span class="lib-page-info sb-pg-info"></span><button type="button" class="btn">다음 ▶</button>';
-                const bar = box.querySelector(':scope > .sb-cats');           // ◀ ▶ 위 · 🗂 카테고리는 그림 목록 바로 위
-                box.insertBefore(pg, bar || box.querySelector(':scope > .sb-srv') || box.firstChild);
+                const bar = box.querySelector(':scope > .sb-cats');           // 🗂 카테고리 아래 · 그림 목록 바로 위 (큰 갈래가 위)
+                if (bar) bar.after(pg); else box.insertBefore(pg, box.querySelector(':scope > .sb-srv') || box.firstChild);
                 const [p, n] = pg.querySelectorAll('.btn');
                 p.onclick = () => { sbPgOn[kind] = (sbPgOn[kind] || 0) - 1; sbCats(box, kind); };
                 n.onclick = () => { sbPgOn[kind] = (sbPgOn[kind] || 0) + 1; sbCats(box, kind); };
