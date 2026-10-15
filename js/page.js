@@ -57,15 +57,23 @@
         }
 
         /* 📷 사진 틀을 씌울 수 있는 사진 (SVG 그림 · 스티커 · 테이프 · 펜 그림은 제외) */
-        function getSelectedPhoto() {
-            const img = selectedElement && !selectedElement.querySelector('textarea') ? selectedElement.querySelector('img') : null;
-            if (!img || typeof setFrame !== 'function' || selectedElement.dataset.ts) return null;   // 🔤 글씨스티커는 글씨가 이미 정해져 있어서 꾸미기 창이 안 떠요
-            if (typeof showRead === 'function' && showRead().photo === 0) return null;      // ⚙ 설정 → 👀 페이지에 보이는 것 → 📷 사진 꾸미기 창 (js/show.js)
+        function photoOf(el) {
+            const img = el && !el.querySelector('textarea') ? el.querySelector('img') : null;
+            if (!img || typeof setFrame !== 'function' || el.dataset.ts) return null;   // 🔤 글씨스티커는 글씨가 이미 정해져 있어서 꾸미기 창이 안 떠요
             return /^data:image\/svg/i.test(img.dataset.src || '') ? null : img;
         }
+        const getSelectedPhoto = () => photoOf(selectedElement);
 
-        /* 📦 글씨체 · 사진 꾸미기 창은 늘 접힌 채로 나와요 (▾ 를 눌러 펼침) · 다른 그림을 고르거나 선택을 풀었다가 다시 고르면 또 접힘 */
-        let panelFor = null;
+        /* 📦 글씨체 · 사진 꾸미기 창 : 고르기만 해서는 안 떠요 → 꾹 누르기 · 오른쪽 클릭 메뉴의 ✥ 글씨체 · 사진 꾸미기 로 열어요 (도련 · 2026-10-15 · js/tapmenu.js)
+           다른 것을 고르거나 선택을 풀면 닫혀요 · ▾ 로 접었다 폈다 */
+        let panelFor = null, panelReq = null;
+        function openTextPanel(el) {                                          // 메뉴에서 연 그 요소에만 창이 떠요
+            if (!el || !el.isConnected) return;
+            if (typeof selectElement === 'function') selectElement(el);
+            panelReq = el; panelFor = null; updateTextPanel();
+        }
+        const panelKindOf = el => el ? (el.querySelector('textarea') ? 'text' : photoOf(el) ? 'photo' : '') : '';
+        window.openTextPanel = openTextPanel; window.panelKindOf = panelKindOf;
         function setPanelFold(f) {
             const panel = document.getElementById('textPanel'), b = document.getElementById('textPanelFold');
             panel.classList.toggle('folded', f);
@@ -75,8 +83,9 @@
         function toggleTextPanelFold() { setPanelFold(!document.getElementById('textPanel').classList.contains('folded')); }
         function updateTextPanel() {
             const panel = document.getElementById('textPanel');
-            const nowFor = selectedElement && (getSelectedTextarea() || getSelectedPhoto()) ? selectedElement : null;
-            if (nowFor !== panelFor) { panelFor = nowFor; if (nowFor) setPanelFold(true); }
+            const nowFor = selectedElement && selectedElement === panelReq && (getSelectedTextarea() || getSelectedPhoto()) ? selectedElement : null;
+            if (!nowFor) { panelReq = null; panelFor = null; panel.style.display = 'none'; return; }
+            if (nowFor !== panelFor) { panelFor = nowFor; setPanelFold(false); }   // 메뉴로 열면 펼친 채로
             const ta = getSelectedTextarea();
             if (!ta && getSelectedPhoto()) {                 // 사진 → 사진 꾸미기 (틀 · 글씨)
                 panel.dataset.mode = 'photo';
