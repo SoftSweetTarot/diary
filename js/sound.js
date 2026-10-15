@@ -2,7 +2,7 @@
    🔊 연출 소리 : 카페 연출의 효과음을 한곳에서 켜고 꺼요 (모든 소리는 파일 없이 브라우저가 만들어요)
    - 쓰는 곳 : 포춘카드 · 꿈해몽 · 토정비결 · 심리테스트 · 이름 궁합 · 익명 편지함 · 랜덤박스 · 오락실
    - 연출 화면 첫 화면의 🔊 버튼 = 설정의 '✨ 연출 소리' 스위치 (하나를 끄면 모두 꺼져요)
-   - 소리 크기 : 연출 소리의 크기 (🎵 배경음악은 따로 조절)
+   - 소리 크기 : 연출 소리의 크기
    - 설정 저장 : 내 드라이브 설정.json 'diary_sound' (이 기기에도 같이 기억 → 로그인 전에도 바로 적용)
    - 아이폰 · 아이패드 무음 모드에서도 들리게 (audioSession 'playback' · 예전 기기는 무음 소리 한 번 재생)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (소리만 나지 않아요) */
@@ -93,8 +93,7 @@
             const box = document.getElementById('sndSwitches'); if (!box) return;
             const o = sndPref();
             box.innerHTML = `<label class="show-row"><span><b>✨ 연출 소리</b><small>운세 · 테스트 · 궁합 · 편지 · 랜덤박스 · 오락실</small></span><input type="checkbox" class="show-sw" ${o.fx ? 'checked' : ''} onchange="sndSet('fx', this.checked); if (this.checked) sndChime()"></label>`
-                + `<div class="snd-vol"><span>🔈</span><input type="range" min="0" max="100" step="5" value="${o.vol}" oninput="sndVol(this.value)" onchange="sndVol(this.value, true)" aria-label="연출 소리 크기"><span>🔊</span><b id="sndVolNum">${o.vol}</b></div>`
-                + '<p class="snd-note">🎵 배경음악은 툴바의 배경음악 버튼에서 따로 조절해요.</p>';
+                + `<div class="snd-vol"><span>🔈</span><input type="range" min="0" max="100" step="5" value="${o.vol}" oninput="sndVol(this.value)" onchange="sndVol(this.value, true)" aria-label="연출 소리 크기"><span>🔊</span><b id="sndVolNum">${o.vol}</b></div>`;
         }
         function sndVol(v, done) {
             v = +v; const o = sndPref(); o.vol = v;
