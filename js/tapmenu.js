@@ -1,5 +1,5 @@
 /* 말랑달콤 다이어리 - js/tapmenu.js
-   📍 빈 곳을 누르면 그 자리에 추가 메뉴(👝 필통 · 🖍️ 필기구 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
+   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 필기구 · 👝 필통 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
    📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 🎨 다듬기(그림이 있는 것만 · js/elements.js elEditKind) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
@@ -16,8 +16,8 @@
             trash: TM_SVG('<path d="M9.5 5.2V4a1.2 1.2 0 0 1 1.2-1.2h2.6A1.2 1.2 0 0 1 14.5 4v1.2" fill="none" stroke="#d9577a" stroke-width="1.8"/><path d="M6 9h12l-.9 10a2 2 0 0 1-2 1.8H8.9a2 2 0 0 1-2-1.8z" fill="#ee7f9f"/><rect x="4.5" y="5.2" width="15" height="2.8" rx="1.4" fill="#d9577a"/><path d="M10 11.5v6M14 11.5v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>')
         };
         const TM_ITEMS = [
-            { key: 'p_case', icon: TM_ICONS.case, label: '필통', run: () => { tmAnchor = null; window.openPencase ? openPencase() : comingSoon('👝 필통'); } },
             { key: 'p_pen', icon: TM_ICONS.pen, label: '필기구', run: () => { tmAnchor = null; window.openDraw ? openDraw() : comingSoon('🖍️ 필기구'); } },
+            { key: 'p_case', icon: TM_ICONS.case, label: '필통', run: () => { tmAnchor = null; window.openPencase ? openPencase() : comingSoon('👝 필통'); } },
             { key: 'p_save', icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } }
         ];
         const TM_ANCHOR_MS = 120000;

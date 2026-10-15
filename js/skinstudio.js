@@ -21,7 +21,7 @@
         /* 바꿀 수 있는 아이콘 자리 */
         const STU_SLOTS = [
             { k: 'b1', t: '하단 · 스티커' }, { k: 'b2', t: '하단 · 페이지' }, { k: 'b3', t: '하단 · 카페' }, { k: 'b4', t: '하단 · 설정' },
-            { k: 'p_case', t: '팝업 · 필통' }, { k: 'p_pen', t: '팝업 · 필기구' }, { k: 'p_save', t: '팝업 · 저장' }, { k: 'p_order', t: '팝업 · 순서' }, { k: 'p_trash', t: '팝업 · 삭제' },
+            { k: 'p_pen', t: '팝업 · 필기구' }, { k: 'p_case', t: '팝업 · 필통' }, { k: 'p_save', t: '팝업 · 저장' }, { k: 'p_order', t: '팝업 · 순서' }, { k: 'p_trash', t: '팝업 · 삭제' },
             { k: 'h_prev', t: '날짜 · 이전 <' }, { k: 'h_next', t: '날짜 · 다음 >' }, { k: 'h_cal', t: '날짜 · 달력' }, { k: 'h_search', t: '날짜 · 검색' }
         ];
         const STU_SLOT_OK = {}; STU_SLOTS.forEach(s => { STU_SLOT_OK[s.k] = 1; });
