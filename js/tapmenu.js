@@ -103,9 +103,9 @@
             tmAnchor = null;
             selectElement(el);
             tmShow([
-                ...(window.elEditable && elEditable(el) ? [{ key: 'p_edit', icon: TM_ICONS.palette, label: '다듬기', run: () => elEdit(el) }] : []),
                 ...(window.panelKindOf && panelKindOf(el) === 'text' ? [{ key: 'p_font', icon: TM_ICONS.font, label: '글씨체', run: () => openTextPanel(el) }] : []),
                 ...(window.panelKindOf && panelKindOf(el) === 'photo' ? [{ key: 'p_frame', icon: TM_ICONS.frame, label: '사진 꾸미기', run: () => openTextPanel(el) }] : []),
+                ...(window.elEditable && elEditable(el) ? [{ key: 'p_edit', icon: TM_ICONS.palette, label: '다듬기', run: () => elEdit(el) }] : []),
                 { key: 'p_order', icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } },
                 { key: 'p_trash', icon: TM_ICONS.trash, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }
             ], { x, y, above: !!byTouch }, 0, 'elem');
