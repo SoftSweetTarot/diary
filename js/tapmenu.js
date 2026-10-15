@@ -1,11 +1,12 @@
 /* 말랑달콤 다이어리 - js/tapmenu.js
-   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 필기구 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
+   📍 빈 곳을 누르면 그 자리에 추가 메뉴(👝 필통 · 🖍️ 필기구 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
    📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 🎨 다듬기(그림이 있는 것만 · js/elements.js elEditKind) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
         /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
+            case: TM_SVG('<rect x="2.5" y="9" width="19" height="11" rx="3" fill="#ee7f9f"/><path d="M2.5 9.5a3 3 0 0 1 3-3h13a3 3 0 0 1 3 3V12h-19z" fill="#f7a8c4"/><path d="M5 7.4h14" stroke="#fff" stroke-width="1" stroke-dasharray="1.6 1.6" opacity=".8"/><rect x="10" y="10.6" width="4" height="3.6" rx="1.2" fill="#f6c445"/><rect x="6" y="15.6" width="12" height="1.6" rx=".8" fill="#fff" opacity=".6"/>'),
             pen: TM_SVG('<g transform="rotate(45 12 12)"><rect x="9.4" y="2.5" width="5.2" height="9" rx="1.4" fill="#6c9be8"/><rect x="9" y="11" width="6" height="2" rx=".8" fill="#3f6fc4"/><path d="M9.8 13h4.4l-1.3 5.6L12 21l-.9-2.4z" fill="#f6c445"/><path d="M12 15.2v3" stroke="#8a5a3a" stroke-width="1" stroke-linecap="round"/></g>'),
             save: TM_SVG('<path d="M4 6a2.5 2.5 0 0 1 2.5-2.5H17l3.5 3.5v10.5A2.5 2.5 0 0 1 18 20H6.5A2.5 2.5 0 0 1 4 17.5z" fill="#5b8fe0"/><rect x="7.5" y="3.5" width="8" height="5" rx="1" fill="#fff"/><rect x="12.4" y="4.6" width="1.9" height="2.8" rx=".5" fill="#5b8fe0"/><rect x="7" y="12.5" width="10" height="7.5" rx="1.5" fill="#dbe8fc"/>'),
             order: TM_SVG('<path d="M3.5 16.6L12 20.8l8.5-4.2" fill="none" stroke="#cdbcf2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 12.2L12 16.4l8.5-4.2" fill="none" stroke="#b39ae8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 3l9 4.6-9 4.6-9-4.6z" fill="#8e6fd6"/>'),
@@ -15,6 +16,7 @@
             trash: TM_SVG('<path d="M9.5 5.2V4a1.2 1.2 0 0 1 1.2-1.2h2.6A1.2 1.2 0 0 1 14.5 4v1.2" fill="none" stroke="#d9577a" stroke-width="1.8"/><path d="M6 9h12l-.9 10a2 2 0 0 1-2 1.8H8.9a2 2 0 0 1-2-1.8z" fill="#ee7f9f"/><rect x="4.5" y="5.2" width="15" height="2.8" rx="1.4" fill="#d9577a"/><path d="M10 11.5v6M14 11.5v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>')
         };
         const TM_ITEMS = [
+            { key: 'p_case', icon: TM_ICONS.case, label: '필통', run: () => { tmAnchor = null; window.openPencase ? openPencase() : comingSoon('👝 필통'); } },
             { key: 'p_pen', icon: TM_ICONS.pen, label: '필기구', run: () => { tmAnchor = null; window.openDraw ? openDraw() : comingSoon('🖍️ 필기구'); } },
             { key: 'p_save', icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } }
         ];

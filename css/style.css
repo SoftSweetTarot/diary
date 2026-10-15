@@ -3421,18 +3421,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .fp-ringv b { font-size: 14px; color: #c2385c; }
 @media (prefers-reduced-motion: reduce) { .fp-phone.ringing, .fp-phone.buzz, .fp-charm, .fp-wave { animation: none; } }
 
-/* 👝 필통 (js/pencase.js) : 연필통 왼쪽 위 작은 틴 필통 → 누르면 진짜 필통이 나와요 · 걸쇠를 누르면 뚜껑이 위로 열리고 · 안의 필기구를 톡 골라 연필통에 꽂아요 */
-.pc-case { position: absolute; left: -10px; top: 26px; z-index: 30; width: 66px; height: 52px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent; transition: transform .2s; }
-.pc-case[hidden] { display: none; }
-.pc-case:hover, .pc-case:focus-visible { transform: rotate(-5deg) scale(1.08); }
-.pc-case-box { position: absolute; left: 4px; right: 4px; top: 14px; height: 22px; border-radius: 3px 3px 7px 7px; background: linear-gradient(#f2a9bf, #e48aa6); box-shadow: 0 4px 8px rgba(150,70,100,.3), inset 0 -3px 0 rgba(120,40,70,.15); }
-.pc-case-lid { position: absolute; left: 2px; right: 2px; top: 4px; height: 14px; z-index: 1; border-radius: 5px 5px 2px 2px; transform-origin: 50% 0; transition: transform .25s;
+/* 👝 필통 (js/pencase.js) : 빈 곳 메뉴의 '필통' → 진짜 필통이 나와요 · 걸쇠를 누르면 뚜껑이 위로 열리고 · 안의 필기구를 톡 골라 필기구에 보이게 해요 */
   background: repeating-linear-gradient(90deg, rgba(255,255,255,.5) 0 4px, transparent 4px 8px), repeating-linear-gradient(0deg, rgba(255,255,255,.5) 0 4px, transparent 4px 8px), #f7a3bd; box-shadow: inset 0 0 0 1.5px #fbd3df, 0 1px 2px rgba(120,40,70,.25); }
-.pc-case-lid::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 8px; height: 7px; margin-left: -4px; border-radius: 2px 2px 4px 4px; background: linear-gradient(#fff6c8, #e8c26a); box-shadow: 0 1px 1px rgba(120,80,30,.3); }
-.pc-case:hover .pc-case-lid { transform: rotateX(28deg) translateY(-3px); }
-.pc-case b { position: absolute; left: 0; right: 0; bottom: 0; font-size: 11px; font-weight: 700; color: #b05a7a; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
-.pc-cup.pk-away { opacity: .18; pointer-events: none; }
-.pc-cup.pk-away * { pointer-events: none !important; }
 
 .pk-room { position: fixed; inset: 0; z-index: 1600; display: flex; align-items: center; justify-content: center; padding: 12px 16px; box-sizing: border-box; background: rgba(90,60,72,.32); opacity: 0; transition: opacity .22s; overflow: auto; }
 .pk-room.show { opacity: 1; }
