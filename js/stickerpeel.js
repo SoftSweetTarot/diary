@@ -5,6 +5,7 @@
              하얀 종이의 빈 곳을 누른 채 끌면 종이째 화면 안에서 옮겨져요 · 종이 바깥 날짜바를 끌면 페이지가 옮겨져요
              소리 : 떼어 낼 때 '찌익' 소리만
    - pelBake(src) : 📸 포토부스 사진처럼 네모난 그림 둘레에 하얀 칼선 테두리를 둘러요 (긴 변 PEL_MAX 이하 PNG)
+                    ⚙ 설정 '🏷️ 씰 하얀 테두리'가 꺼져 있으면(기본) 테두리 없이 크기만 맞춰요 (js/show.js showOn('die'))
    - 소리는 ⚙ 설정의 '✨ 연출 소리'를 따라요 (js/sound.js)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (스티커가 바로 붙어요) */
 
@@ -21,9 +22,10 @@
         async function pelBake(src) {
             const im = await pelLoad(src);
             const k = Math.min(1, PEL_MAX / Math.max(im.width, im.height)), iw = Math.round(im.width * k), ih = Math.round(im.height * k);
-            const b = PEL_EDGE, c = pelMk(iw + b * 2 + 4, ih + b * 2 + 4), x = c.getContext('2d');
+            const die = typeof showOn !== 'function' || showOn('die');
+            const b = die ? PEL_EDGE : 0, c = pelMk(iw + b * 2 + 4, ih + b * 2 + 4), x = c.getContext('2d');
             const one = pelMk(c.width, c.height); one.getContext('2d').drawImage(im, b + 2, b + 2, iw, ih);
-            x.drawImage(pelTint(pelGrow(pelTint(one, '#fff'), b, 10), '#fff'), 0, 0);
+            if (die) x.drawImage(pelTint(pelGrow(pelTint(one, '#fff'), b, 10), '#fff'), 0, 0);
             x.drawImage(one, 0, 0);
             return c.toDataURL('image/png');
         }
