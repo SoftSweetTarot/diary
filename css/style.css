@@ -239,6 +239,7 @@
             border-bottom: 1px solid #eee; scrollbar-width: none; flex-shrink: 0; touch-action: pan-x pan-y; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
         }
         #stickerModal .modal-title { font-size: 1.05rem; margin-bottom: 2px; }
+        #paperModal .modal-title, #tteokModal .modal-title, #leafModal .modal-title { margin-bottom: 2px; }   /* 📏 제목 → 카테고리 바짝 (모든 고르는 창 같게) */
         .sticker-categories::-webkit-scrollbar { display: none; }
         @media (hover: hover) and (pointer: fine) { .sticker-categories { flex-wrap: wrap; overflow-x: visible; } }
         .cat-btn {
@@ -249,7 +250,7 @@
 
         .sticker-grid {
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-            overflow-y: auto; height: min(360px, 54vh); align-content: start; padding: 4px;   /* 스티커가 적거나 없어도 창 크기는 그대로 */
+            overflow-y: auto; height: min(360px, 54vh); align-content: start; padding: 2px 4px 4px; --sbg: 6px;   /* 스티커가 적거나 없어도 창 크기는 그대로 */
         }
         .sticker-grid[hidden] { display: none; }   /* 🏷️ 씰스티커 → 기본 : 그림 모음 목록이 대신 보일 때 */
         .sticker-item { font-size: 1.8rem; text-align: center; cursor: pointer; padding: 4px; border-radius: 8px; }
@@ -263,22 +264,23 @@
         .element-box img.broken { min-width: 60px; min-height: 40px; background: #ffe3e3; border: 1px dashed var(--primary-accent); font-size: 11px; color: #a33; word-break: break-all; }
         /* 📚 이미지 라이브러리 : 페이지 넘기기 + 행·열·크기 설정 */
         .lib-content { max-width: min(95vw, var(--lib-w, 520px)); min-width: min(90vw, 320px); }
-        .lib-cats { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+        .lib-cats { display: flex; gap: 6px; overflow-x: auto; padding: 2px; margin-bottom: 2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
         .lib-cats[hidden] { display: none; }
         .lib-cat { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--border-color); background: #fff; color: #6a5560; font: inherit; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; transition: transform .12s, background .15s; }
         .lib-cat small { font-size: 11px; font-weight: normal; opacity: .7; }
         @media (hover: hover) { .lib-cat:hover { border-color: var(--primary-accent); } }
         .lib-cat:active { transform: scale(.94); }
         .lib-cat.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; box-shadow: 0 2px 8px rgba(255, 120, 160, .3); }
-        .lib-pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .lib-pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
         .lib-pager .btn { padding: 5px 12px; }
         .lib-page-info { flex: 1; text-align: center; font-weight: bold; font-size: 16px; color: var(--primary-accent); font-variant-numeric: tabular-nums; }
         .lib-content .btn:disabled { opacity: .4; cursor: default; }
         @media (hover: hover) { .lib-content .btn:disabled:hover { background: #fff; color: #444; } }
-        .lib-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .lib-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
         .lib-status { font-size: 13px; color: #666; min-width: 0; }
         .lib-layout-btn { flex-shrink: 0; font-size: 13px; padding: 3px 10px; }
         .lib-layout-btn.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
+        .lib-layout-btn[hidden] { display: none; }
         .lib-layout {
             display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
             background: #fff0f5; border: 1px dashed var(--border-color); border-radius: 12px;
@@ -2628,7 +2630,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .stk-menu { gap: 10px; }
 .stk-menu .service-btn { padding: 14px 4px 12px; font-size: 13.5px; word-break: keep-all; }
 .stk-menu .service-icon { font-size: 1.9rem; }
-.stk-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin: 2px 0 8px; }
+.stk-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin: 2px 0; }
 .stk-tabs[hidden] { display: none; }
 .stk-tab { padding: 6px 1px; border: 1.5px solid var(--border-color); border-radius: 12px; background: #fff; font: inherit; font-size: 12px; font-weight: bold; line-height: 1.2; color: #7a5a66; cursor: pointer; word-break: keep-all; letter-spacing: -.02em; }
 .stk-tab.on { background: var(--primary-accent); border-color: var(--primary-accent); color: #fff; }
@@ -2637,7 +2639,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .sticker-grid .stk-go span, .lf-other .stk-go span { font-size: 2rem; line-height: 1; }
 .sticker-grid .stk-go b, .lf-other .stk-go b { font-size: 14px; }
 .sticker-grid .stk-go small, .lf-other .stk-go small { font-size: 11.5px; color: #a08890; }
-.paper-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.paper-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; --sbg: 8px; }
 .paper-pick .pp-pick-btn { flex-direction: column; gap: 4px; padding: 14px 4px 8px; font-size: 12px; justify-content: center; }
 .paper-pick .pp-pick-btn small { font-size: 11.5px; color: inherit; line-height: 1.2; }
 .paper-pick .pp-chip { transform: scale(1.5); margin: 8px 0 10px; }
@@ -2647,7 +2649,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lf-other[hidden] { display: none; }
 .lf-tabs .stk-tab { font-size: 11.5px; letter-spacing: -.05em; }
 .stk-tabs.two { grid-template-columns: repeat(2, 1fr); }
-.spk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 4px 2px; }
+.spk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 0 2px 4px; --sbg: 10px; }
 .sticker-grid > .spk-cards { grid-column: 1 / -1; align-content: start; }      /* 창 너비를 다 써요 (한 칸에 갇히지 않게) */
 .spk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: #6b4f5a; cursor: pointer; }   /* 조각스티커 칸처럼 두께 없이 */
 .spk-card:active { transform: translateY(1px); }
@@ -2734,7 +2736,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lf-slide { position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit; box-shadow: -6px 0 14px rgba(90,40,60,.18); background:
         var(--lf-holes), linear-gradient(90deg, transparent 10.5cqw, color-mix(in srgb, var(--primary-accent) 45%, #fff) 10.5cqw 10.9cqw, transparent 10.9cqw),
         linear-gradient(transparent calc(7cqw - 1px), color-mix(in srgb, var(--border-color) 45%, transparent) 0) 0 2cqw / 100% 7cqw, var(--page-bg); }
-.lf-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.lf-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; --sbg: 10px; }
 .lf-pick { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--dk-ink, #7b5a63); background: none; border: 0; padding: 0; cursor: pointer; container-type: inline-size; }
 .lf-pick .lf-sw { --lf-holes: radial-gradient(circle at 4.6cqw 50%, color-mix(in srgb, var(--border-color) 55%, #fff) 1.5cqw, color-mix(in srgb, var(--border-color) 90%, #000 5%) 1.55cqw 1.9cqw, transparent 1.95cqw) 0 3cqw / 9cqw 9cqw repeat-y;
     display: block; aspect-ratio: 1; height: auto; border-radius: 10px; margin-bottom: 4px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--border-color) 55%, #fff); }
@@ -2748,11 +2750,11 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lf-pick.on { color: var(--primary-accent); } .lf-pick.on .lf-sw { box-shadow: 0 0 0 3px var(--primary-accent); }
 
 /* 🧻 떡메모지 (js/leafpad.js) : 풀칠한 묶음 · 맨 윗장 · 뜯긴 자국 */
-.tk-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 8px 0 0; }
+.tk-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 0 0 2px; }
 .tk-row[hidden] { display: none; }
 .tk-chip { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--dk-ink, #7b5a63); background: #fff; border: 2px solid color-mix(in srgb, var(--border-color) 55%, #fff); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
 .tk-chip.on { background: color-mix(in srgb, var(--primary-accent) 14%, #fff); border-color: var(--primary-accent); color: color-mix(in srgb, var(--primary-accent) 88%, #4a2030); }
-.tk-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 10px 0 4px; }
+.tk-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 4px; --sbg: 8px; }
 .tk-it { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 2px 8px; border: 2px solid color-mix(in srgb, var(--border-color) 55%, #fff); border-radius: 14px; background: #fff; font: inherit; color: var(--dk-ink, #7b5a63); cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
 .tk-it b { font-size: 12.5px; }
 .tk-it:active { transform: scale(.96); }
@@ -2931,7 +2933,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .modal.snb-on, .modal.snb-on *, .snb-ghost, .snb-ghost * { -webkit-tap-highlight-color: transparent; }   /* 누를 때 생기는 회색 네모 없애기 */
 .modal.snb-on .snb-body :focus, .modal.snb-on .snb-body :focus-visible { outline: none; }
 .snb-ghost > :not(img) { background: transparent !important; box-shadow: none !important; border-color: transparent !important; }
-.modal.snb-on .lib-cats, .modal.snb-on .lib-pager, .modal.snb-on .lib-toolbar, .modal.snb-on .lib-layout,
+.modal.snb-on .snb-body .lib-cats, .modal.snb-on .lib-pager, .modal.snb-on .lib-toolbar, .modal.snb-on .lib-layout,
 .modal.snb-on .svc-tip, .modal.snb-on .tp-note, .modal.snb-on #tkEdgePick, .modal.snb-on .shx-bar, .modal.snb-on .sub-modal-btns { display: none !important; }
 .snb-body { flex: 1; min-height: 0; overflow: hidden; position: relative; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: 2px 2px 0; }
 .snb-body::after { content: ''; display: block; height: var(--snb-h, 0); }    /* 마지막 장도 맨 위부터 보이게 */
@@ -3001,12 +3003,9 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 /* 🧾 스티커 수첩 · 시트 스타일 (js/stknote.js snbSheetSync) : 한 장에 세로로 긴 시트 하나 */
 .modal.snb-sheet .snb-body > :not(.snb-sheets) { position: absolute; left: 0; top: 0; width: 100%; visibility: hidden; pointer-events: none; }
 .snb-sheets { display: block; }
-.snb-sh { position: relative; box-sizing: border-box; height: calc(var(--snb-h, 560px) - 12px); margin: 4px 6px 8px; padding: 42px 12px 12px; border-radius: 16px; overflow: hidden;
+.snb-sh { position: relative; box-sizing: border-box; height: calc(var(--snb-h, 560px) - 12px); margin: 4px 6px 8px; padding: 12px 12px 34px;   /* 아래는 📄 장 번호 자리 */ border-radius: 16px; overflow: hidden;
     background: linear-gradient(115deg, rgba(255,255,255,.95) 0 12%, rgba(255,255,255,0) 30% 62%, rgba(255,255,255,.55) 74%, rgba(255,255,255,0) 86%), color-mix(in srgb, var(--primary-accent) 7%, #fff);
     box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.95), inset 0 0 0 3px color-mix(in srgb, var(--primary-accent) 14%, transparent), 0 2px 0 rgba(0,0,0,.04), 0 6px 14px rgba(0,0,0,.1); }
-.snb-sh-head { position: absolute; top: 10px; left: 14px; right: 14px; display: flex; align-items: baseline; gap: 8px; }
-.snb-sh-head b { font-size: 14px; color: color-mix(in srgb, var(--primary-accent) 70%, #5a1a30); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.snb-sh-head small { font-size: 11px; color: #a08a94; white-space: nowrap; }
 .snb-sh-in { height: 100%; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 8px; overflow: hidden; }
 .snb-sh-wait { margin: auto; font-size: 12px; color: #a08a94; }
 .snb-pc { width: var(--pc, 64px); height: var(--pc, 64px); display: flex; align-items: center; justify-content: center; cursor: grab; }
@@ -3266,8 +3265,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 
 /* 🖼️ 개발자 그림 (드라이브 기본스티커 폴더 · js/stk-basic.js) : 각 창 기본 칸 맨 앞에 섞여요 */
 .sb-srv { display: contents; }
-.sb-cats { grid-column: 1 / -1; margin-bottom: 0; min-width: 0; }               /* 🗂 기본 칸 카테고리 (js/stk-basic.js sbCats) · 씰 창과 같은 모양 */
-.sb-pager { grid-column: 1 / -1; margin: 2px 0 4px; min-width: 0; }                 /* ◀ 이전 · 다음 ▶ (js/stk-basic.js sbPage) */
+.sb-cats { grid-column: 1 / -1; margin-bottom: calc(2px - var(--sbg, 0px)); min-width: 0; }   /* 🗂 기본 칸 카테고리 (js/stk-basic.js sbCats) · 씰 창과 같은 모양 · 📏 아래 칸과 바짝 (격자 틈 --sbg 만큼 당겨요) */
+.sb-pager { grid-column: 1 / -1; margin: 0 0 calc(4px - var(--sbg, 0px)); min-width: 0; }   /* ◀ 이전 · 다음 ▶ (js/stk-basic.js sbPage) */
 .sb-pager[hidden] { display: none !important; }
 [data-sbc][hidden] { display: none !important; }
 .sticker-grid .sb-bag .sb-top { min-height: 22px; }                               /* 이름 없는 봉투 윗띠 */
@@ -3290,9 +3289,10 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .modal.snb-on.snb-away { opacity: 0 !important; pointer-events: none !important; }
 
 /* 📒 스티커 수첩 : 시트 이름 대신 '3 / 10' (지금 장 / 모두) · 목록 받는 상황 글씨 (js/stknote.js) */
-.modal.snb-on .snb-sh-head { visibility: hidden; }
-.snb-pgno { position: absolute; z-index: 6; padding: 2px 10px; border-radius: 999px; background: rgba(255,255,255,.92); color: color-mix(in srgb, var(--primary-accent) 70%, #5a1a30); font-size: 13px; font-weight: bold; font-variant-numeric: tabular-nums; pointer-events: none; box-shadow: 0 1px 3px rgba(120,80,95,.15); }
-.snb-pgno.bot { left: 50% !important; bottom: 10px; top: auto !important; transform: translateX(-50%); }
+.snb-pgno { position: absolute; z-index: 6; padding: 2px 10px; border-radius: 999px; background: rgba(255,255,255,.92); color: color-mix(in srgb, var(--primary-accent) 70%, #5a1a30); font-size: 13px; font-weight: bold; font-variant-numeric: tabular-nums; pointer-events: none; box-shadow: 0 1px 3px rgba(120,80,95,.15);
+    left: 50%; bottom: 10px; transform: translateX(-50%); }   /* 📄 모든 창 아래 가운데 */
+.modal.snb-on > .modal-content > .snb-cats { flex-shrink: 0; margin: 0 0 2px; }   /* 🗂 수첩 : 제목(위 칸) 바로 아래 카테고리 (js/stknote.js snbCatsSync) */
+.snb-cats[hidden] { display: none; }
 .snb-net { position: absolute; z-index: 7; left: 50%; top: 46%; transform: translate(-50%, -50%); max-width: 80%; padding: 8px 14px; border-radius: 14px; background: rgba(255,255,255,.95); border: 1.5px solid var(--border-color); color: #7a5a66; font-size: 13.5px; text-align: center; word-break: keep-all; pointer-events: none; box-shadow: 0 3px 10px rgba(120,80,95,.15); }
 .modal:not(.snb-on) .snb-pgno, .modal:not(.snb-on) .snb-net { display: none !important; }
 

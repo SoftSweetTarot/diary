@@ -210,7 +210,7 @@
             const label = c => kitCat(c) || c || '기본', labels = [...new Set(items.map(el => label(el.dataset.sbc)))];
             let bar = box.querySelector(':scope > .sb-cats');
             items.forEach(el => { el.hidden = false; });
-            if (labels.length < 2 || sbNote(box)) { if (bar) bar.remove(); sbPage(box, kind, items); return; }   // 카테고리가 하나뿐이면 칸 없이 · 📒 수첩은 전부
+            if (labels.length < 2) { if (bar) bar.remove(); sbPage(box, kind, items); return; }   // 카테고리가 하나뿐이면 칸 없이 (📒 수첩은 이 칸을 제목 아래로 옮겨 보여줘요 · js/stknote.js snbCatsSync)
             if (!bar) { bar = document.createElement('div'); bar.className = 'lib-cats sb-cats'; box.prepend(bar); }   // 🗂 맨 위 (제목 바로 아래) → 그 아래 ◀ ▶
             const pgr = box.querySelector(':scope > .sb-pager'); if (pgr && bar.nextElementSibling !== pgr) bar.after(pgr);
             let cur = sbCatOn[kind] || '';
@@ -222,7 +222,7 @@
         }
         /* ◀ 이전 · 다음 ▶ : 씰스티커 창처럼 한 쪽씩 (한 줄 칸 수 × SB_ROWS 줄) · 쪽 수가 1이면 숨겨요 */
         const SB_ROWS = { mini: 2, piece: 2, paper: 2, tape: 4, memo: 4, tk: 3, leaf: 3 }, sbPgOn = {};
-        /* 📒 스티커 수첩으로 보고 있는지 (js/stknote.js) : 수첩은 카테고리 · ◀ ▶ 없이 전부 펼치고 수첩이 장을 나눠요 */
+        /* 📒 스티커 수첩으로 보고 있는지 (js/stknote.js) : 수첩은 ◀ ▶ 없이 고른 카테고리를 전부 펼치고 수첩이 장을 나눠요 */
         const sbNote = box => !!(box.closest && box.closest('.modal.snb-on'));
         function sbRefreshAll() { document.querySelectorAll('.sb-srv[data-sbk]').forEach(el => sbCats(el.parentElement, el.dataset.sbk)); }
         window.sbRefreshAll = sbRefreshAll;

@@ -361,8 +361,7 @@
         function renderLibrary() {
             const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');
             grid.innerHTML = '';
-            const note = (document.getElementById('stickerModal') || { classList: { contains: () => false } }).classList.contains('snb-on');   // 📒 수첩은 카테고리 없이 전부 (js/stknote.js)
-            if (!note && libCats.length && !libCats.includes(libCat)) libCat = libCats[0];   // 고르는 창은 '전체' 없이 늘 한 카테고리
+            if (libCats.length && !libCats.includes(libCat)) libCat = libCats[0];   // '전체' 없이 늘 한 카테고리 (📒 수첩도 · 카테고리 칸은 제목 아래 js/stknote.js snbCatsSync)
             applyLibLayoutStyle();
             renderLibCats();
             const view = libView();
