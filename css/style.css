@@ -122,7 +122,7 @@
         .element-box:not([class*="fr-"]) > :not(.handle):not(.rot-zone), .element-box[class*="fr-"] { transition: filter .16s ease-out; }
         .element-box.lifting:not([class*="fr-"]) > :not(.handle):not(.rot-zone), .element-box.lifting[class*="fr-"] { filter: drop-shadow(3px 7px 6px rgba(120, 70, 90, .28)); }
         .element-box img { width: 100%; height: 100%; pointer-events: none; display: block; -webkit-user-drag: none; -webkit-touch-callout: none; }
-        /* 🪄 실제 문구처럼 : 스티커는 살짝 두께 그림자 · 이모지 스티커는 하얀 칼선 · 📄 모조지는 얇은 종이 그림자 (🎀 테이프 · 🧻 떡메 · 📷 액자는 따로) */
+        /* 🪄 실제 문구처럼 : 스티커는 살짝 두께 그림자 · 이모지 스티커는 하얀 칼선 · 📄 모조지스티커는 얇은 종이 그림자 (🎀 테이프 · 🧻 떡메 · 📷 액자는 따로) */
         #canvasArea .element-box:not([class*="fr-"]):not(.tk-note):not(.is-tape):not([data-float]):not([data-ts]) > img { filter: drop-shadow(0 1px .8px rgba(90, 60, 70, .2)) drop-shadow(0 2px 3px rgba(90, 60, 70, .08)); }
         #canvasArea .element-box[data-float] > img { filter: drop-shadow(0 .6px .6px rgba(90, 70, 50, .22)); }
         /* 옮기는 동안 살짝 뜬 그림자 (위 두 줄보다 강하게 · 모든 스티커 · 사진 · 메모 공통) */
@@ -1863,7 +1863,7 @@
             border: 1px solid rgba(190, 165, 175, .55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 1px 2px rgba(120, 80, 95, .14); }
         .smk-bag button::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 13px; background: linear-gradient(rgba(255,255,255,.85), rgba(240,232,236,.85)); border-bottom: 1.5px dashed rgba(190, 160, 172, .8); }
         .smk-bag img { position: relative; filter: drop-shadow(0 1px 1px rgba(90, 60, 70, .25)); }
-        /* ✂️ 내가만든 칸 : 씰 · 사진 스티커는 하얀 스티커 대지 위 · 📄 모조지는 도톰한 미색 종이 */
+        /* ✂️ 내가만든 칸 : 씰 · 사진 스티커는 하얀 스티커 대지 위 · 📄 모조지스티커는 도톰한 미색 종이 */
         #stickerGrid[data-mine="seal"] .smk-it button, #stickerGrid[data-mine="piece"] .smk-it:not(.smk-bag) button, #stickerGrid[data-share="seal"] .smk-it button, #stickerGrid[data-share="piece"] .smk-it:not(.smk-bag) button { border-radius: 10px; background: linear-gradient(160deg, #fff 0%, #fdfbfc 60%, #f7f3f5 100%); border: 1.5px solid #efe4e8; box-shadow: inset 0 0 0 3px #fff, 0 1px 2px rgba(120, 80, 95, .12); }
         #stickerGrid[data-mine="seal"] .smk-it img, #stickerGrid[data-mine="piece"] .smk-it:not(.smk-bag) img, #stickerGrid[data-share="seal"] .smk-it img, #stickerGrid[data-share="piece"] .smk-it:not(.smk-bag) img { filter: drop-shadow(1.2px 0 0 #fff) drop-shadow(-1.2px 0 0 #fff) drop-shadow(0 1.2px 0 #fff) drop-shadow(0 -1.2px 0 #fff) drop-shadow(0 1px 1.2px rgba(90, 60, 70, .3)); }
         #stickerGrid[data-mine="paper"] .smk-it button, #stickerGrid[data-share="paper"] .smk-it button { border-radius: 3px; border: 1px solid #e9dfcd; box-shadow: 0 1px 2px rgba(110, 90, 60, .16), 0 3px 0 -1px #f4eee2, 0 3px 1px -1px rgba(110, 90, 60, .14);
@@ -1938,8 +1938,8 @@
         .se-b { flex: 1; min-height: 46px; border: 1.5px solid #f0c4d3; border-radius: 23px; background: #fff; color: #8a3354; font: inherit; font-size: 14px; cursor: pointer; }
         .se-b:disabled { opacity: .4; cursor: default; } .se-b.se-ok { flex: 1.4; border: 0; background: #c2385c; color: #fff; font-weight: 700; }
         .se-x:focus-visible, .se-tools button:focus-visible, .se-c:focus-visible, .se-b:focus-visible { outline: 3px solid #f59ab6; outline-offset: 2px; }
-        .pel-x.pel-bx { right: auto; left: 0; top: 0; width: 26px; height: 26px; padding: 0; border: 0; background: none; color: #8a6a76; font-size: 16px; line-height: 26px; text-align: center; cursor: pointer; text-shadow: 0 1px 0 #fff; }   /* 하얀 종이 오른쪽 위 끝 ✕ (모조지처럼 · js/stickerpeel.js pelFrame) */
-        /* 📄 모조지 만들기 (js/papermaker.js · 화면 모양은 .smk-* 를 같이 써요) */
+        .pel-x.pel-bx { right: auto; left: 0; top: 0; width: 26px; height: 26px; padding: 0; border: 0; background: none; color: #8a6a76; font-size: 16px; line-height: 26px; text-align: center; cursor: pointer; text-shadow: 0 1px 0 #fff; }   /* 하얀 종이 오른쪽 위 끝 ✕ (모조지스티커처럼 · js/stickerpeel.js pelFrame) */
+        /* 📄 모조지스티커 만들기 (js/papermaker.js · 화면 모양은 .smk-* 를 같이 써요) */
         /* 결과창의 🧩 · 🏷️ · 📄 만들기 버튼 3개 (사진 스티커 · 포토부스) */
         .smk-three, .pb-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .smk-three .smk-go, .pb-three .pb-go { padding: 10px 2px; font-size: 13px; line-height: 1.3; word-break: keep-all; }
@@ -1948,12 +1948,12 @@
         #pmPens { position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 3px 10px rgba(120,80,95,.14); }
         #pmPens[hidden] { display: none; }
         .pel-room.pm-room { z-index: 95; }   /* 페이지 위 · 붙인 스티커의 꾸미기 도구(.toolbar) · 팝업메뉴 · 창은 그 위에 */
-        .pm-room, .pm-room canvas { pointer-events: none; }   /* 📄 모조지 (js/papermaker.js) : 모조지 · 오린 스티커 자리(.pm-z)만 손가락을 받고 나머지는 페이지로 */
+        .pm-room, .pm-room canvas { pointer-events: none; }   /* 📄 모조지스티커 (js/papermaker.js) : 모조지스티커 · 오린 스티커 자리(.pm-z)만 손가락을 받고 나머지는 페이지로 */
         #pmHit { position: absolute; inset: 0; pointer-events: none; }
         .pm-z { position: absolute; pointer-events: auto; touch-action: none; }
         .pm-z[hidden] { display: none; }
         #pmPens { pointer-events: auto; }
-        .pm-x { position: absolute; width: 32px; height: 32px; padding: 0; border: 0; background: none; color: #8a6a76; font-size: 19px; line-height: 32px; text-align: center; cursor: pointer; pointer-events: auto; text-shadow: 0 1px 0 #fff; }   /* 모조지 오른쪽 위 끝 ✕ (동그라미 없이) */
+        .pm-x { position: absolute; width: 32px; height: 32px; padding: 0; border: 0; background: none; color: #8a6a76; font-size: 19px; line-height: 32px; text-align: center; cursor: pointer; pointer-events: auto; text-shadow: 0 1px 0 #fff; }   /* 모조지스티커 오른쪽 위 끝 ✕ (동그라미 없이) */
         .pm-pens { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
         .pm-pens button[data-c] { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; background: var(--c); box-shadow: 0 0 0 1.5px var(--border-color); cursor: pointer; padding: 0; }
         .pm-pens button[data-c].on { box-shadow: 0 0 0 3px #5aa8e0; }
@@ -3017,7 +3017,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-sh { position: relative; box-sizing: border-box; height: calc(var(--snb-h, 560px) - 12px); margin: 4px 6px 8px; padding: 12px 12px 34px;   /* 아래는 📄 장 번호 자리 */ border-radius: 16px; overflow: hidden;
     background: linear-gradient(115deg, rgba(255,255,255,.95) 0 12%, rgba(255,255,255,0) 30% 62%, rgba(255,255,255,.55) 74%, rgba(255,255,255,0) 86%), color-mix(in srgb, var(--primary-accent) 7%, #fff);
     box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.95), inset 0 0 0 3px color-mix(in srgb, var(--primary-accent) 14%, transparent), 0 2px 0 rgba(0,0,0,.04), 0 6px 14px rgba(0,0,0,.1); }
-.snb-sh.paper { border-radius: 4px; background: radial-gradient(rgba(150,120,90,.05) 1px, transparent 1.2px) 0 0 / 5px 5px, #fffaf0; box-shadow: inset 0 0 0 1px rgba(200,180,150,.35), 0 2px 0 rgba(0,0,0,.04), 0 6px 14px rgba(0,0,0,.1); }   /* 📄 모조지 시트 : 도톰한 미색 종이 */
+.snb-sh.paper { border-radius: 4px; background: radial-gradient(rgba(150,120,90,.05) 1px, transparent 1.2px) 0 0 / 5px 5px, #fffaf0; box-shadow: inset 0 0 0 1px rgba(200,180,150,.35), 0 2px 0 rgba(0,0,0,.04), 0 6px 14px rgba(0,0,0,.1); }   /* 📄 모조지스티커 시트 : 도톰한 미색 종이 */
 .snb-sh-in { height: 100%; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 8px; overflow: hidden; }
 .snb-sh-wait { margin: auto; font-size: 12px; color: #a08a94; }
 .snb-pc { width: var(--pc, 64px); height: var(--pc, 64px); display: flex; align-items: center; justify-content: center; cursor: grab; }
@@ -3262,7 +3262,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .ft-no-cafe [data-ft~="cafe"], .ft-no-notebook [data-ft~="notebook"], .ft-no-dday [data-ft~="dday"], .ft-no-pattern [data-ft~="pattern"],
 .ft-no-studio [data-ft~="studio"], .ft-no-stkmake [data-ft~="stkmake"], .ft-no-share [data-ft~="share"], .ft-no-caps [data-ft~="caps"], .ft-no-bgm [data-ft~="bgm"] { display: none !important; }
 
-/* 🆓 기본 스티커 : 🧩 봉투 · 📄 모조지 카드 (js/stk-basic.js) */
+/* 🆓 기본 스티커 : 🧩 봉투 · 📄 모조지스티커 카드 (js/stk-basic.js) */
 .sticker-grid .sb-card { grid-column: span 3; position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 0 8px; border: 2px solid var(--border-color); border-radius: 16px; background: #fff; font: inherit; color: #5b3f4a; cursor: pointer; overflow: hidden; }
 .sticker-grid .sb-top { align-self: stretch; background: var(--c); padding: 7px 4px 9px; font-size: 13px; position: relative; }
 .sticker-grid .sb-top::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: 3px; border-bottom: 2px dashed rgba(255, 255, 255, .95); }

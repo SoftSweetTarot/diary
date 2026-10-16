@@ -145,7 +145,7 @@
         }
         /* 기본스티커 목록 (앱을 켠 동안 한 번) : { images, sheets, kits }
            실패하면 받을 때까지 5초마다 알아서 다시 해요 (js/drive.js keepTrying · 창을 닫아도 뒤에서 계속)
-           씰 · 포인트 · 조각 · 모조지 · 테이프 · 메모지 · 떡메 · 속지 창이 모두 이 목록 하나를 같이 기다려요 */
+           씰 · 포인트 · 조각 · 모조지스티커 · 테이프 · 메모지 · 떡메 · 속지 창이 모두 이 목록 하나를 같이 기다려요 */
         let basicKitP = null, basicKitTry = 0;
         async function basicKitLoop() {
             basicKitTry = 1;
@@ -521,9 +521,9 @@
                     if (!lifted && Math.hypot(ddx, ddy) > 6) {
                         lifted = true;
                         el.style.zIndex = zIndexCounter++;
-                        /* 🏷️ 씰스티커처럼 떼었다 붙이기 : 지금은 꺼 뒀어요 (모든 것이 모조지처럼 살짝 떠서 옮겨져요)
+                        /* 🏷️ 씰스티커처럼 떼었다 붙이기 : 지금은 꺼 뒀어요 (모든 것이 모조지스티커처럼 살짝 떠서 옮겨져요)
                            다시 켜려면 아래 두 줄의 // 를 지우고, 그 밑의 '살짝 떠서' 한 줄을 지우면 돼요 (sealStart 함수는 그대로 있어요)
-                        if (!(seal = sealStart())) { el.classList.add('lifting'); liftTo(1.06); }   // 📝 메모지 · 🧻 떡메 · 📄 모조지 · 테이프 : 살짝 떠서 옮겨요
+                        if (!(seal = sealStart())) { el.classList.add('lifting'); liftTo(1.06); }   // 📝 메모지 · 🧻 떡메 · 📄 모조지스티커 · 테이프 : 살짝 떠서 옮겨요
                         else { seal.move(pos.x, pos.y); return; } */
                         el.classList.add('lifting'); liftTo(1.06);                      // 모두 살짝 떠서 옮겨요 (그림자 : css .lifting)
                         /* 🏷️ 스티커만 살짝 들렸다가 평평해지며 뜨기 (v373) : 지금은 꺼 뒀어요 (도련 · 2026-10-13 · 그냥 떠서 옮겨요)
@@ -655,7 +655,7 @@
         };
         ['mousedown', 'touchstart', 'mouseup', 'touchend', 'touchcancel'].forEach(t => document.addEventListener(t, idleTouch, { capture: true, passive: true }));
         /* ✏️ 애플펜슬 : 아이패드는 펜슬로 끌자마자 그림 끌어 옮기기 · 글자 고르기를 시작해서 (손가락은 꾹 눌러야 시작) 끌기가 중간에 끊겨요
-           → 페이지 스티커 · 🍭 포인트스티커 · 🏷️ 씰스티커 · 🧩 조각스티커(비닐 찢기) · 📄 모조지 화면에서는 펜슬일 때 그 동작을 막아요 (글상자 · 버튼은 그대로) */
+           → 페이지 스티커 · 🍭 포인트스티커 · 🏷️ 씰스티커 · 🧩 조각스티커(비닐 찢기) · 📄 모조지스티커 화면에서는 펜슬일 때 그 동작을 막아요 (글상자 · 버튼은 그대로) */
         document.addEventListener('touchstart', e => {
             const t = e.touches[0], tg = e.target;
             if (!e.cancelable || !t || t.touchType !== 'stylus' || !tg.closest) return;
@@ -735,7 +735,7 @@
         }
         /* 🎨 페이지에 붙인 것 다시 다듬기 (꾹 누르기 · 오른쪽 클릭 메뉴 · js/tapmenu.js) → js/stkedit.js · 종류마다 맞는 도구만 (도련 · 2026-10-15)
            - 스티커 · 사진 (씰 · 조각 · 포인트 · 내 스티커) : 전부
-           - 📄 모조지 · 🧻 떡메 · 📝 메모지(그림) : 글씨 빼고 (종이 위에는 원래 글을 써요) · 긴 변 1000 까지
+           - 📄 모조지스티커 · 🧻 떡메 · 📝 메모지(그림) : 글씨 빼고 (종이 위에는 원래 글을 써요) · 긴 변 1000 까지
            - 🎀 마테 : 색만 (무늬가 이어져 늘어나서 자르면 이음새가 어긋나요) → 테이프 SVG 에 색 행렬을 넣어요 (늘이기 그대로)
            - 빼요 : 사진틀 · 글 · 인형 · 움직이는 캡슐(svg) · 그림 없는 기본 메모지
            - 잘라서 작아지면 붙인 크기도 그만큼 작아지고 · 가운데는 그 자리 그대로 */
@@ -831,7 +831,7 @@
                 if (img && el.dataset.float) item.fm = 1;
                 if (img && el.dataset.cm) { try { item.cm = JSON.parse(el.dataset.cm); } catch (e) {} }   // 🪄 움직이는 캐릭터 : 칠한 곳 · 움직임 설정 (js/char-move.js)
                 if (img && el.dataset.sh) { try { item.sh = JSON.parse(el.dataset.sh); } catch (e) {} }   // ✨ 셰이더 스티커 : 효과 이름 · GLSL 글자 · 속도 · 세기 (js/glrun.js)
-                if (img && el.dataset.ts) item.ts = 1;                          // 🔤 글씨스티커 : 📷 사진 꾸미기 창이 안 떠요 (js/page.js getSelectedPhoto)                       // 📄 모조지 : 옮길 때 떼지 않고 살짝 떠서 (아래 makeTransformable)
+                if (img && el.dataset.ts) item.ts = 1;                          // 🔤 글씨스티커 : 📷 사진 꾸미기 창이 안 떠요 (js/page.js getSelectedPhoto)                       // 📄 모조지스티커 : 옮길 때 떼지 않고 살짝 떠서 (아래 makeTransformable)
                 if (img && el.dataset.frame) {                                  // 📷 사진 틀 (js/frame.js)
                     item.fr = el.dataset.frame;
                     if (el.dataset.caption) item.cp = el.dataset.caption;

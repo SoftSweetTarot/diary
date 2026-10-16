@@ -511,7 +511,7 @@
            - 살짝 누르기(탭)는 그대로 날짜바 버튼 (PGM_MIN px 넘게 끌어야 옮겨져요) · 양쪽 끝은 그대로 페이지 넘기기
            - 옮긴 자리는 기억하지 않아요 : 앱을 켜거나 로그인해서 다이어리를 열면 늘 가운데에서 시작 · 화면 크기가 바뀌어도 배경 밖으로 안 나가게 맞춰요
            - #diaryWrapper 의 left · top 만 바꿔요 (페이지 안 좌표 posX · posY 는 그대로라 스티커 자리는 안 바뀌어요)
-           - 🏷️ 씰 종이 · 🧩 봉투 · 📄 모조지가 떠 있을 때는 날짜바 위에서 누른 손가락을 그 화면이 pgmOnBar 로 보고 pgmBegin 으로 넘겨줘요 */
+           - 🏷️ 씰 종이 · 🧩 봉투 · 📄 모조지스티커가 떠 있을 때는 날짜바 위에서 누른 손가락을 그 화면이 pgmOnBar 로 보고 pgmBegin 으로 넘겨줘요 */
         const PGM_MIN = 8;
         let pgmPos = { x: 0, y: 0 }, pgmDrag = null, pgmAt = 0;
         function pgmApply() {

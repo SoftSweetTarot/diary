@@ -178,7 +178,7 @@
                 g.addColorStop(0, '#fdfdff'); g.addColorStop(.5, '#f4f6fb'); g.addColorStop(1, '#fbfcff'); ctx.fillStyle = g; ctx.fill(); ctx.restore();
             }
             if (bo > 0 && S.items.length > 1) { ctx.save(); ctx.globalAlpha = bo; pelDrawTape(ctx); ctx.restore(); }   // 여러 개 씰 종이 : 위쪽 '✋ 잡고 옮겨요' (포인트스티커처럼)
-            const bx = pelq('pelX');                                             // ✕ : 하얀 종이 오른쪽 위 끝 (모조지처럼 · 종이를 따라 다녀요)
+            const bx = pelq('pelX');                                             // ✕ : 하얀 종이 오른쪽 위 끝 (모조지스티커처럼 · 종이를 따라 다녀요)
             if (bx) { const B = S.board; bx.style.left = (B.cx + B.w / 2 - 26) + 'px'; bx.style.top = (B.cy - B.h / 2) + 'px'; bx.style.opacity = bo; bx.style.visibility = bo > 0 ? '' : 'hidden'; }
             const d = S.drag, cur = S.items.find(o => o.st === st);
             for (const o of S.items) {                                           // 종이 위에 남은 스티커들 (잡은 건 맨 위에)

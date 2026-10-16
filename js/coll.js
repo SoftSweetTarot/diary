@@ -484,7 +484,7 @@
         }
 
         /* ---------- ✨ 스티커 모음 : 말랑달콤 / 스티커 / 씰 / 내씰 · 받은씰 … ---------- */
-        const STK_FOLDERS = { seal: '씰', piece: '조각', paper: '모조지', tape: '마테', tk: '떡메', leaf: '속지' };   // tk = 🧻 떡메 (js/leafpad.js)
+        const STK_FOLDERS = { seal: '씰', piece: '조각', paper: '모조지스티커', tape: '마테', tk: '떡메', leaf: '속지' };   // tk = 🧻 떡메 (js/leafpad.js)
         function stkColl(kind, got) { const n = STK_FOLDERS[kind]; return collOf(STICKER_PATH.concat(n, (got ? '받은' : '내') + n)); }
         /* 글자 → 짧은 확인 글자 (같은 그림인지 보기) */
         function collHash(s) { s = String(s || ''); let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); }

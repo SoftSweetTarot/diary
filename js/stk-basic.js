@@ -1,14 +1,14 @@
 /* 말랑달콤 다이어리 - js/stk-basic.js
-   🆓 기본 스티커 : 처음부터 누구나 쓰는 🧩 조각스티커 봉투 · 📄 모조지 (✨ 스티커 → 그 종류 → 기본 칸)
+   🆓 기본 스티커 : 처음부터 누구나 쓰는 🧩 조각스티커 봉투 · 📄 모조지스티커 (✨ 스티커 → 그 종류 → 기본 칸)
    + 🖼️ 개발자 그림 : Cloudflare 그림 보관함의 기본스티커 (js/elements.js basicKit · KIT_BASE) 를 각 창 기본 칸 맨 앞에 섞어요
-       🍭 포인트스티커 · 🧩 조각스티커 · 📄 모조지 = 숫자 폴더 1개가 한 묶음 (낱장 폴더는 그림 1개가 한 묶음) · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
+       🍭 포인트스티커 · 🧩 조각스티커 · 📄 모조지스티커 = 숫자 폴더 1개가 한 묶음 (낱장 폴더는 그림 1개가 한 묶음) · 🎀 마스킹테이프 · 🧻 떡메모지 · 📃 속지 · 📝 메모지 = 그림 1장이 1종
        🗂 카테고리 칸 : 기본 칸 위에 카테고리 칸 ('전체' 없이 첫 카테고리부터) (씰 창과 같은 모양) · 스티커 이름은 안 보여요
        data-sbc="카테고리" 가 붙은 칸만 걸러요 (제가 그린 것도 각 파일에서 data-sbc 를 붙여요 : js/tape.js · js/stickerpack.js · js/leafpad.js · js/paper.js)
        (🏷️ 씰은 js/elements.js 의 씰 목록이 낱장 · 씰 종이로 보여 줘요)
        붙일 때 그림을 받아 data 로 바꿔서 일기에 담아요 (사진과 같아요 · 나중에 드라이브에서 지워도 붙인 건 그대로)
    - 그림은 모두 이 파일 안의 SVG (파일 없음) · 다이어리에 붙이면 그 그림(SVG)이 일기에 담겨요
    - 🧩 봉투를 누르면 지금 연출 그대로 봉투가 나와요 (js/piecebag.js openPieceBag) · 조각마다 하얀 다이컷 테두리
-   - 📄 모조지를 누르면 그림들이 모조지 한 장에 인쇄돼서 나와요 (js/papermaker.js pmMakeSheet → openPaperSheet) · 열 때마다 배치가 조금씩 달라요
+   - 📄 모조지스티커를 누르면 그림들이 모조지스티커 한 장에 인쇄돼서 나와요 (js/papermaker.js pmMakeSheet → openPaperSheet) · 열 때마다 배치가 조금씩 달라요
    - hold: true = 만들어 두고 아직 안 보여 줘요
    ※ 이 파일이 없어도 다이어리는 정상 동작 (기본 칸만 '준비 중') */
 
@@ -47,7 +47,7 @@
             sparkle: `<path d="M44 10 C48 34 52 38 76 42 C52 46 48 50 44 74 C40 50 36 46 12 42 C36 38 40 34 44 10Z" fill="#ffe680" ${L}/><path d="M76 60 C78 70 80 72 90 74 C80 76 78 78 76 88 C74 78 72 76 62 74 C72 72 74 70 76 60Z" fill="#c9b6ff" ${L}/>`,
             flower: `${[0, 72, 144, 216, 288].map(a => `<ellipse cx="50" cy="28" rx="14" ry="18" fill="#ffc2d1" ${L} transform="rotate(${a} 50 50)"/>`).join('')}<circle cx="50" cy="50" r="13" fill="#ffd36b" ${L}/>`,
             love: `<rect x="10" y="32" width="80" height="36" rx="18" fill="#fff" ${L}/><text x="50" y="58" text-anchor="middle" font-family="Jua, sans-serif" font-size="22" fill="#ff6b81">LOVE</text>`,
-            /* 모조지용 (가는 선 · 인쇄 느낌) */
+            /* 모조지스티커용 (가는 선 · 인쇄 느낌) */
             pencil: `<path d="M20 80 L28 62 L70 20 L80 30 L38 72Z" fill="#ffd36b" ${L}/><path d="M70 20 L80 30 L86 24 C88 20 82 14 78 14Z" fill="#ff9fc0" ${L}/><path d="M20 80 L28 62 L38 72Z" fill="#f6dcc0" ${L}/><path d="M20 80 l4 -8 4 4z" fill="${INK}"/>`,
             eraser: `<rect x="18" y="34" width="64" height="32" rx="6" fill="#fff" ${L} transform="rotate(-12 50 50)"/><rect x="18" y="34" width="30" height="32" rx="6" fill="#8fd3ff" ${L} transform="rotate(-12 50 50)"/>`,
             clip: `<path d="M40 24 V70 A10 10 0 0 0 60 70 V18 A14 14 0 0 0 32 18 V74 A18 18 0 0 0 68 74 V30" fill="none" stroke="#c9b6ff" stroke-width="6" stroke-linecap="round"/>`,
@@ -74,7 +74,7 @@
             starfish: `<path d="M50 12 C56 30 58 34 86 38 C64 52 64 56 72 84 C54 68 46 68 28 84 C36 56 36 52 14 38 C42 34 44 30 50 12Z" fill="#ffa58f" ${L}/>${face(50, 50, 10)}`
         };
 
-        /* 그림 하나 → SVG 주소 : die = 하얀 다이컷 테두리 (조각스티커) · 아니면 인쇄 그림 (모조지) */
+        /* 그림 하나 → SVG 주소 : die = 하얀 다이컷 테두리 (조각스티커) · 아니면 인쇄 그림 (모조지스티커) */
         function sbSvg(k, die) {
             const body = ICON[k]; if (!body) return '';
             const s = die
@@ -95,7 +95,7 @@
             { id: 's-sea', g: '여름', k: ['whale', 'shell', 'starfish', 'watermelon', 'icecream', 'sunglass', 'sun', 'drop', 'cloud'] }
         ];
         const sbOn = a => a.filter(x => !x.hold);
-        /* 🖼️ 여러 개 묶음 미리보기 (씰 종이 · 포인트 · 조각 · 모조지 같은 모양) : 작은 칸에 최대한 많이 · 2줄 · 넘치는 건 안 보여요 (개수는 카드 글씨가 총개수) */
+        /* 🖼️ 여러 개 묶음 미리보기 (씰 종이 · 포인트 · 조각 · 모조지스티커 같은 모양) : 작은 칸에 최대한 많이 · 2줄 · 넘치는 건 안 보여요 (개수는 카드 글씨가 총개수) */
         const sbThumbs = urls => `<span class="sb-thumbs">${urls.slice(0, 30).map(u => `<img alt="" loading="lazy" src="${u}">`).join('')}</span>`;
         const sbMini = (ks, die) => sbThumbs(ks.map(k => sbSvg(k, die)));
         const sbc = c => ` data-sbc="${esc(c || '')}"`;
@@ -116,7 +116,7 @@
                 catch (e) { sbFail(); return; }
                 if (kind === 'piece') { if (window.stkLeave) stkLeave(); else closeModal('stickerModal'); if (window.openPieceBag) openPieceBag(srcs, { t: '말랑달콤 조각', s: kitCat(x.c) || '기본 조각' }); return; }
                 let sheet = null;
-                try { sheet = await pmMakeSheet(srcs); } catch (e) { showMsg('모조지를 만들지 못했어요.'); return; }
+                try { sheet = await pmMakeSheet(srcs); } catch (e) { showMsg('모조지스티커를 만들지 못했어요.'); return; }
                 if (window.stkLeave) stkLeave(); else closeModal('stickerModal');
                 openPaperSheet(sheet);
                 return;
@@ -129,7 +129,7 @@
             }
             const s = sbOn(SB_SHEETS).find(x => x.id === id); if (!s || !window.openPaperSheet || !window.pmMakeSheet) return;
             let sheet = null;
-            try { sheet = await pmMakeSheet(s.k.map(k => sbSvg(k, false))); } catch (e) { showMsg('모조지를 만들지 못했어요.'); return; }
+            try { sheet = await pmMakeSheet(s.k.map(k => sbSvg(k, false))); } catch (e) { showMsg('모조지스티커를 만들지 못했어요.'); return; }
             if (window.stkLeave) stkLeave(); else closeModal('stickerModal');
             openPaperSheet(sheet);
         }
@@ -255,8 +255,8 @@
             if (!x || !x.urls) return null;
             return { id: 'srv' + i, load: () => Promise.all(x.urls.map(u => sbDie(kitAt(u, 600)))) };
         }
-        /* 📒 수첩 시트 (js/stknote.js) : 🧩 조각 봉투 · 📄 모조지 한 장 → 그 안의 그림 전부를 시트 한 장으로
-           k = 붙일 때 모양 : 'seal' 하얀 다이컷 테두리를 둘러서 (조각 그림) · 'pack' 그대로 (이미 테두리가 있는 그림) · 'paper' 모조지 종이째 (옮길 때 살짝 떠요) */
+        /* 📒 수첩 시트 (js/stknote.js) : 🧩 조각 봉투 · 📄 모조지스티커 한 장 → 그 안의 그림 전부를 시트 한 장으로
+           k = 붙일 때 모양 : 'seal' 하얀 다이컷 테두리를 둘러서 (조각 그림) · 'pack' 그대로 (이미 테두리가 있는 그림) · 'paper' 모조지스티커 종이째 (옮길 때 살짝 떠요) */
         function sbSheet(kind, id) {
             if (/^srv:\d+$/.test(id)) {
                 const x = SRV[kind] && SRV[kind][+id.slice(4)]; if (!x || !x.urls) return null;
