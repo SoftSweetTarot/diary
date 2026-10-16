@@ -694,6 +694,7 @@
             el.style.width = Math.round(r.width / k * (pc._k === 'seal' ? 1.12 : 1)) + 'px'; el.dataset.rotation = deg;
             if (pc._k === 'paper') el.dataset.float = 1;                             // 📄 모조지스티커 : 옮길 때 살짝 떠요
             snbPlace(el, cx, cy);
+            if (window.elNatural) elNatural(el);                                 // 🧾 시트(묶음)에서는 작게 보여도 붙는 순간 원래 해상도로 (js/elements.js)
             if (typeof selectElement === 'function') selectElement(el);
             if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}
         }

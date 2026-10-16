@@ -394,6 +394,7 @@
                     const x = Math.round((L.cx - r.left) / k - (w + PADB) / 2), y = Math.round((L.cy - r.top) / k - (h + PADB) / 2);
                     put(x, y); const bb = el.getBoundingClientRect();
                     put(Math.round(x + (L.cx - (bb.left + bb.width / 2)) / k), Math.round(y + (L.cy - (bb.top + bb.height / 2)) / k));
+                    if (window.elNatural) elNatural(el);                             // 🧾 판(묶음)에서는 작게 보여도 붙는 순간 원래 해상도로 (js/elements.js)
                     if (typeof selectElement === 'function') selectElement(el);
                 }
                 if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}
