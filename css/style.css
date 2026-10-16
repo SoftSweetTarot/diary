@@ -3305,6 +3305,10 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 
 /* 📱 스티커 수첩 : 스티커를 떼는 동안 수첩이 비켜요 (js/stknote.js snbAway) */
 .modal.snb-on { transition: opacity .2s; }
+.modal.snb-on.lf-peek { opacity: 0; }
+.modal.snb-on.lf-peek > .modal-content { pointer-events: none; }   /* 📱 속지를 고르면 잠깐 비켜요 (js/leafpad.js pickLeaf) */
+.modal.snb-on > .modal-content { transition: opacity .18s; }
+.modal.snb-on.snb-peek > .modal-content { opacity: 0; pointer-events: none; }   /* 📃 속지를 고르면 잠깐 사라져서 페이지를 보여 줘요 (js/leafpad.js pickLeaf) */
 .modal.snb-on.snb-away { opacity: 0 !important; pointer-events: none !important; }
 
 /* 📒 스티커 수첩 : 시트 이름 대신 '3 / 10' (지금 장 / 모두) · 목록 받는 상황 글씨 (js/stknote.js) */

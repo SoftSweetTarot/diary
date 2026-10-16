@@ -1,7 +1,7 @@
 /* 말랑달콤 다이어리 - js/features.js
    🔓 기능 공개 스위치 : 기본 기능만 먼저 보여 주고, 앱 업그레이드처럼 조금씩 공개해요
    - 아래 FEATURES 에서 true 로 바꾸면 그 기능이 보여요 (false = 숨김) → index.html 의 ?v= 숫자만 올려서 배포
-   - 💻 로컬 테스트(내 컴퓨터에서 열기)에서는 FEATURES 와 상관없이 모든 기능이 보여요
+   - 💻 로컬 테스트(내 컴퓨터에서 열기)에서는 FEATURES 와 상관없이 모든 기능이 보여요 (FT_OFF_LOCAL 에 적은 것은 로컬에서도 숨겨요)
    - 숨겨도 코드와 사용자 데이터는 그대로예요 (다시 켜면 예전 그대로 보여요)
    - 숨기는 방법 : <html> 에 'ft-no-이름' 표시 → css 가 data-ft="이름" 붙은 버튼 · 칸을 숨겨요 + js 몇 곳은 ftOn('이름') 으로 확인
    ※ 다른 파일보다 먼저 읽어요 (<head>) · 이 파일이 없으면 모든 기능이 보여요 */
@@ -16,11 +16,12 @@
             share: false,     // 📥 '공유받은' 칸 · 💾 공유용 파일 저장 (카페로 주고받는 것)
             caps: false,      // 🎁 캡슐스티커 (카페 랜덤박스에서 받아요)
             bgm: false,       // 🎵 배경음악 (⚙ 설정 메뉴의 '배경음악' 칸 · 10-15 숨김)
-            fphone: true      // 📞 반짝이 피처폰 메신저 (로그인한 회원끼리 · 서버 말랑달콤사람들 .gs 새 버전이 필요해요)
+            fphone: false     // 📞 반짝이 피처폰 메신저 (로그인한 회원끼리 · 서버 말랑달콤사람들 .gs 새 버전이 필요해요)
         };
         /* 💻 내 컴퓨터(index.html 더블클릭 · localhost)에서는 모든 기능이 보여요 → 새 기능 소개 영상용 (사이트는 위 FEATURES 그대로) */
         const FT_LOCAL = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-        function ftOn(name) { return FT_LOCAL || !(name in FEATURES) || FEATURES[name] !== false; }
+        const FT_OFF_LOCAL = ['fphone'];   // 💻 로컬 테스트에서도 숨겨요 (📞 피처폰 · 도련 · 2026-10-16)
+        function ftOn(name) { if (FT_OFF_LOCAL.includes(name) && FEATURES[name] === false) return false; return FT_LOCAL || !(name in FEATURES) || FEATURES[name] !== false; }
         (function () {
             const root = document.documentElement;
             Object.keys(FEATURES).forEach(k => root.classList.toggle('ft-no-' + k, !ftOn(k)));

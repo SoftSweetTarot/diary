@@ -59,16 +59,21 @@
             closeModal('stickerMakeModal'); openModal('leafModal');
         }
         /* 고르면 새 속지가 오른쪽에서 스르륵 끼워져요 (붙인 것들은 그 위에 그대로)
-           📒 수첩이면 창이 그대로 있어서 마음에 드는 속지를 계속 골라 볼 수 있어요 (도련 · 2026-10-16) */
+           📒 수첩이면 창이 그대로 있어서 마음에 드는 속지를 계속 골라 볼 수 있어요 (도련 · 2026-10-16)
+              고르면 수첩이 잠깐 사라져서 씌운 속지를 보여 주고 (끼워지는 동안 + 0.5초) 다시 나타나요 */
+        let lfPeekTm = 0;
         function pickLeaf(id, img) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
             const m = lfq('leafModal'), keep = m && m.classList.contains('snb-on');
             if (id === pageLeaf && (id !== 'my' || img === pageLeafImg)) { if (!keep) closeModal('leafModal'); return; }
             const c = lfq('canvasArea');
             if (!keep) closeModal('leafModal');
+            else { clearTimeout(lfPeekTm); m.classList.add('snb-peek'); lfPeekTm = setTimeout(() => m.classList.remove('snb-peek'), 980); }
             const sl = document.createElement('div'); sl.className = 'lf-slide'; lfApply(sl, id, img);
             c.appendChild(sl); lfSlideSnd();
-            const done = () => { sl.remove(); setPageLeaf(id, img); if (typeof saveData === 'function') saveData(false); };
+            const peek = keep && innerWidth < 700;                                // 📱 폰 수첩 : 창이 잠깐 비켜서 씌운 속지를 보여 줘요 (0.5초 뒤 다시 나타나요 · 도련 · 2026-10-16)
+            if (peek) { clearTimeout(m._peek); m.classList.add('lf-peek'); }
+            const done = () => { sl.remove(); setPageLeaf(id, img); if (typeof saveData === 'function') saveData(false); if (peek) m._peek = setTimeout(() => m.classList.remove('lf-peek'), 500); };
             try { sl.animate([{ transform: 'translateX(104%) rotate(2deg)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.3,.8,.3,1)' }).onfinish = done; }
             catch (e) { done(); }
         }
