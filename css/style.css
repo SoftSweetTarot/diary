@@ -3302,6 +3302,10 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .spk-card .sb-thumbs { margin-bottom: 2px; padding: 0; }
 .spk-card:has(.sb-thumbs) { padding: 10px 4px 8px; }
 .sticker-grid .sb-card .sb-thumbs { margin-top: 4px; }
+/* 🧾 묶음 스티커 (🏷️ 씰 종이 · 🍭 포인트스티커 · 🧩 조각 봉투 · 📄 모조지스티커) : 씰 1개 칸 가로 2 × 세로 2 크기의 정사각형 · 안의 그림도 크게 3 × 3 (도련 · 2026-10-16) */
+.lib-item.lib-sheet, .sticker-grid .sb-card, .spk-card { aspect-ratio: 1 / 1; container-type: inline-size; justify-content: center; }
+.lib-item.lib-sheet .sb-thumbs, .sticker-grid .sb-card .sb-thumbs, .spk-card .sb-thumbs { --tw: calc((100cqw - 26px) / 3.4); grid-template-columns: repeat(3, var(--tw)); height: auto; max-height: calc(var(--tw) * 3 + 4px); padding: 0; }
+.sticker-grid .sb-bag .sb-thumbs { --tw: calc((100cqw - 26px) / 3.3); max-height: calc(var(--tw) * 2 + 2px); }   /* 🧩 봉투는 위 색 띠가 있어서 2줄까지 */
 
 /* 📱 스티커 수첩 : 스티커를 떼는 동안 수첩이 비켜요 (js/stknote.js snbAway) */
 .modal.snb-on { transition: opacity .2s; }

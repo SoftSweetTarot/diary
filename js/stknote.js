@@ -226,7 +226,7 @@
             const g = 8, w = body.clientWidth - 12, h = body.clientHeight - 12;
             if (w < 100 || h < 100) return false;
             const cols = Math.max(3, Math.min(10, Math.round(w / 92))), size = Math.max(50, Math.min(140, Math.floor((w - (cols - 1) * g) / cols)));
-            const n = typeof libView === 'function' ? libView().reduce((a, x) => a + (x.s ? Math.min(2, cols) : 1), 0) : 0, rows = Math.max(1, Math.ceil(n / cols) + 1);   // 씰 종이는 2칸
+            const n = typeof libView === 'function' ? libView().reduce((a, x) => a + (x.s ? Math.min(2, cols) * 2 : 1), 0) : 0, rows = Math.max(1, Math.ceil(n / cols) + 2);   // 씰 종이는 2 × 2칸
             if (libLayout.cols === cols && libLayout.rows === rows && libLayout.size === size) return false;
             if (!snb.libSaved) snb.libSaved = libLayout;
             libLayout = { rows, cols, size };

@@ -213,16 +213,23 @@
             try { localStorage.setItem(LIB_LAYOUT_KEY, JSON.stringify(libLayout)); } catch (e) {}
         }
         function libPerPage() { return libLayout.rows * libLayout.cols; }
-        /* 쪽 나누기 : 씰 1개 = 1칸 · 씰 종이(여러 개) = 옆으로 2칸 · 빈 곳은 뒤의 1칸짜리가 채워요 (CSS grid-auto-flow: dense 와 같은 순서)
+        /* 쪽 나누기 : 씰 1개 = 1칸 · 씰 종이(여러 개) = 가로 2 × 세로 2칸 정사각형 (도련 · 2026-10-16 · 묶음이 더 잘 보이게) · 빈 곳은 뒤의 1칸짜리가 채워요 (CSS grid-auto-flow: dense 와 같은 순서)
            → [[item, …], …] 쪽마다 */
-        const libSpan = x => x.s ? Math.min(2, libLayout.cols) : 1;
+        const libSpan = x => x.s ? Math.min(2, libLayout.cols) : 1;              // 가로 칸 수
+        const libSpanH = x => x.s ? Math.min(2, libLayout.rows) : 1;             // 세로 칸 수
         function libPages() {
             const { rows, cols } = libLayout, out = [];
             let page = null, used = null;
-            const fit = w => { for (let r = 0; r < rows; r++) for (let c = 0; c + w <= cols; c++) { let ok = true; for (let k = 0; k < w; k++) if (used[r * cols + c + k]) ok = false; if (ok) { for (let k = 0; k < w; k++) used[r * cols + c + k] = 1; return true; } } return false; };
+            const fit = (w, h) => {
+                for (let r = 0; r + h <= rows; r++) for (let c = 0; c + w <= cols; c++) {
+                    let ok = true; for (let i = 0; i < h && ok; i++) for (let k = 0; k < w; k++) if (used[(r + i) * cols + c + k]) { ok = false; break; }
+                    if (ok) { for (let i = 0; i < h; i++) for (let k = 0; k < w; k++) used[(r + i) * cols + c + k] = 1; return true; }
+                }
+                return false;
+            };
             libView().forEach(x => {
-                const w = libSpan(x);
-                if (!page || !fit(w)) { page = []; used = new Array(rows * cols).fill(0); out.push(page); fit(w); }
+                const w = libSpan(x), h = libSpanH(x);
+                if (!page || !fit(w, h)) { page = []; used = new Array(rows * cols).fill(0); out.push(page); fit(w, h); }
                 page.push(x);
             });
             return out;
@@ -394,9 +401,9 @@
                 const { u: url, s: sheet } = x;
                 const item = document.createElement('div');
                 item.className = 'lib-item' + (sheet ? ' lib-sheet' : ''); item.dataset.u = url;   // 원본 주소 (📒 수첩이 붙일 때 써요)
-                usedSlots += libSpan(x);
-                if (sheet) {                                                       // 🏷️ 씰 종이 : 옆으로 2칸 · 안에 든 씰을 작게 최대한 많이 + 총 개수
-                    item.style.gridColumn = 'span ' + libSpan(x);
+                usedSlots += libSpan(x) * libSpanH(x);
+                if (sheet) {                                                       // 🏷️ 씰 종이 : 가로 2 × 세로 2칸 정사각형 · 안에 든 씰을 크게 + 총 개수
+                    item.style.gridColumn = 'span ' + libSpan(x); item.style.gridRow = 'span ' + libSpanH(x);
                     item.title = '스티커 ' + sheet.length + '개';
                     item.innerHTML = sbThumbs(sheet.map(u => kitSize(u, 96))) + `<small class="lib-cnt">스티커 ${sheet.length}개</small>`;
                 } else {
