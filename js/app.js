@@ -10,7 +10,7 @@
 
         /* 페이지 크기 설정 */
         const PAGE_SIZE_KEY = 'diary_page_size';
-        const DEFAULT_PAGE_W = 480, DEFAULT_PAGE_H = 620;
+        const DEFAULT_PAGE_W = 500, DEFAULT_PAGE_H = 700;   // 📐 다이어리 페이지 기본 크기 (도련 · 2026-10-16)
         const PAGE_W_MIN = 320, PAGE_W_MAX = 1200, PAGE_H_MIN = 400, PAGE_H_MAX = 1600;
         const PAGE_BORDER = 4, PAGE_HEADER_H = 48;
         let pageSetting = { w: DEFAULT_PAGE_W, h: DEFAULT_PAGE_H };
