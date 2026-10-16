@@ -68,7 +68,7 @@
    - 놓으면 : 다 뗐으면 onDrop(cx, cy, rot) · 덜 뗐으면 제자리로 착 다시 붙고 onCancel()
    - 돌려준 { move(x, y), up(), kill() } 로 손가락 움직임을 넘겨 줘요 (화면 맨 위 투명 캔버스에 그려요)
    ===================================================================== */
-        const PFX_DETACH = .78;
+        const PFX_DETACH = .78, PFX_GRAB = 26;                               // PFX_GRAB : 가장자리에서 이만큼(화면 px) 안을 잡으면 잡은 자리부터 떼어져요
         function pfxMk(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; }
         /* 앞면 · 뒷면(누런 흰 종이) · 가장자리 점들 */
         function pfxAsset(src, w, h) {
@@ -112,13 +112,16 @@
             const asset = pfxAsset(o.src, o.w, o.h), st = { cx: o.cx, cy: o.cy, rot: o.rot || 0, s: 1, state: 'on' };
             const toStage = (lx, ly) => { const c = Math.cos(st.rot), s = Math.sin(st.rot); return [st.cx + (lx * c - ly * s) * st.s, st.cy + (lx * s + ly * c) * st.s]; };
             const toLocal = (x, y) => { const dx = (x - st.cx) / st.s, dy = (y - st.cy) / st.s, c = Math.cos(-st.rot), s = Math.sin(-st.rot); return [dx * c - dy * s, dx * s + dy * c]; };
-            /* 들리는 가장자리 : 끄는 방향의 반대쪽 끝(손가락 줄 위)에서부터 접혀 넘어와요 · 스티커가 커도 손가락 한 뼘이면 떨어지게 */
+            /* 들리는 가장자리 : 가장자리 가까이(PFX_GRAB)를 잡고 안쪽으로 끌면 🏷️ 하얀 스티커 창처럼 잡은 자리부터 바로 말려 올라와요
+               가운데를 잡았으면 끄는 방향의 반대쪽 끝(손가락 줄 위)에서부터 접혀 넘어와요 · 스티커가 커도 손가락 한 뼘이면 떨어지게 */
             const pickEdge = (vx, vy) => {
-                const v = Math.hypot(vx, vy) || 1, ux = vx / v, uy = vy / v; let best = 1e12, bp = null, lo = 1e9, hi = -1e9;
+                const v = Math.hypot(vx, vy) || 1, ux = vx / v, uy = vy / v; let best = 1e12, bp = null, lo = 1e9, hi = -1e9, near = null, nd = 1e12;
                 const pts = asset.edge.map(q => toStage(q[0], q[1]));
-                for (const [x, y] of pts) { const pr = x * ux + y * uy; lo = Math.min(lo, pr); hi = Math.max(hi, pr); }
+                for (const [x, y] of pts) { const pr = x * ux + y * uy; lo = Math.min(lo, pr); hi = Math.max(hi, pr); const d = (x - o.x) ** 2 + (y - o.y) ** 2; if (d < nd) { nd = d; near = [x, y]; } }
+                const gain = Math.max(1.25, (hi - lo) / 75);
+                if (near && Math.sqrt(nd) < PFX_GRAB && (st.cx - near[0]) * ux + (st.cy - near[1]) * uy > 0) return { C: near, gain: Math.max(1, (hi - lo) / 95) };   // 가장자리를 잡고 안쪽으로
                 for (const [x, y] of pts) { const pr = (x - o.x) * ux + (y - o.y) * uy, pp = Math.abs((x - o.x) * -uy + (y - o.y) * ux), sc = pr + pp * .6; if (sc < best) { best = sc; bp = [x, y]; } }
-                return { C: bp, gain: Math.max(1, (hi - lo) / 95) };
+                return { C: bp, gain };
             };
             let drag = { mode: 'peel', C: null, F: null, start: [o.x, o.y], last: [o.x, o.y], lt: performance.now() }, snap = null, raf = 0, dead = false;
 
@@ -188,8 +191,8 @@
                 const sp = Math.hypot(P[0] - drag.last[0], P[1] - drag.last[1]) / Math.max(1, now - drag.lt); drag.last = P; drag.lt = now;
                 if (drag.mode === 'peel') {
                     pfxNoise(Math.min(.35, sp * .25));
-                    // 끈적임 : 처음엔 손가락보다 덜 따라오다가 점점 같이 움직여요
-                    const dx = P[0] - drag.start[0], dy = P[1] - drag.start[1], L = Math.hypot(dx, dy), k = Math.min(1, .45 + L / 220);
+                    // 끈적임 : 처음엔 손가락보다 조금 덜 따라오다가 곧 같이 움직여요 (너무 끈적이면 끌어도 안 떼어지는 것 같아요)
+                    const dx = P[0] - drag.start[0], dy = P[1] - drag.start[1], L = Math.hypot(dx, dy), k = Math.min(1, .75 + L / 160);
                     if (!drag.C) { if (L < 2) return; const e = pickEdge(dx, dy); drag.C = e.C; drag.gain = e.gain; }
                     drag.F = [drag.C[0] + dx * k * drag.gain, drag.C[1] + dy * k * drag.gain];
                     if (peeledInfo(drag.C, drag.F) >= PFX_DETACH) detach(P);

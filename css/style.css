@@ -1947,7 +1947,9 @@
         .smk-sticks .smk-go { padding: 10px 2px; font-size: 12.5px; line-height: 1.3; word-break: keep-all; }   /* 🧩 · 🏷️ · 📄 ~로 다이어리에 붙이기 */
         #pmPens { position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 3px 10px rgba(120,80,95,.14); }
         #pmPens[hidden] { display: none; }
-        .pel-room.pm-room { z-index: 95; }   /* 페이지 위 · 붙인 스티커의 꾸미기 도구(.toolbar) · 팝업메뉴 · 창은 그 위에 */
+        .pel-room.pm-room { z-index: 95; }
+        .pel-room.pm-room.pm-note { z-index: 1650; }   /* 📒 수첩 시트의 종이 위에서 칼집 (js/papermaker.js S.note) · 종이 자리만 손가락을 받아요 */
+        .pm-room.pm-note .pm-x { display: none; }   /* 페이지 위 · 붙인 스티커의 꾸미기 도구(.toolbar) · 팝업메뉴 · 창은 그 위에 */
         .pm-room, .pm-room canvas { pointer-events: none; }   /* 📄 모조지스티커 (js/papermaker.js) : 모조지스티커 · 오린 스티커 자리(.pm-z)만 손가락을 받고 나머지는 페이지로 */
         #pmHit { position: absolute; inset: 0; pointer-events: none; }
         .pm-z { position: absolute; pointer-events: auto; touch-action: none; }
@@ -2774,6 +2776,10 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .tk-room .tk-rpad { position: absolute; left: 0; top: 0; width: 150px; height: 172px; transform-origin: 0 0; filter: drop-shadow(0 6px 14px rgba(90,60,50,.18)); }
 .tk-room .tk-x { position: absolute; right: -4px; top: -28px; width: 30px; height: 30px; padding: 0; border: 0; background: none; font: inherit; font-size: 20px; font-weight: 800; line-height: 30px; color: color-mix(in srgb, var(--primary-accent) 80%, #4a2030); text-shadow: 0 0 3px #fff, 0 0 6px #fff; cursor: pointer; touch-action: none; }
 .tk-room .tk-fly { position: absolute; height: auto; pointer-events: none; -webkit-user-drag: none; user-select: none; filter: drop-shadow(0 6px 10px rgba(90,60,50,.2)); }
+.tk-room.tk-note { pointer-events: none; }                          /* 📒 수첩 안의 떡메 : 묶음 자리만 손가락을 받아요 (js/leafpad.js tkS.note) */
+.tk-room.tk-note .tk-rpad { pointer-events: auto; filter: none; cursor: grab; }
+.tk-room.tk-note .tk-x { display: none; }
+.tk-it.tk-busy .tk-pad { visibility: hidden; }
 /* 🧻 페이지에 붙은 떡메 메모 (js/leafpad.js tkNoteDress) : 뒤에 떡메 그림 · 그 위 글상자는 머리글 아래부터 */
 .element-box.tk-note > .tk-bg { position: absolute; left: 6px; top: 6px; width: calc(100% - 12px); height: calc(100% - 12px); }
 .element-box.tk-note textarea { position: relative; box-sizing: border-box; padding: 53px 14px 8px; line-height: 22px; }   /* 메모 줄 위에 글씨가 앉게 */
@@ -2936,7 +2942,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .modal.snb-on .snb-body :focus, .modal.snb-on .snb-body :focus-visible { outline: none; }
 .snb-ghost > :not(img) { background: transparent !important; box-shadow: none !important; border-color: transparent !important; }
 .modal.snb-on .snb-body .lib-cats, .modal.snb-on .lib-pager, .modal.snb-on .lib-toolbar, .modal.snb-on .lib-layout,
-.modal.snb-on .svc-tip, .modal.snb-on .tp-note, .modal.snb-on #tkEdgePick, .modal.snb-on .shx-bar, .modal.snb-on .sub-modal-btns { display: none !important; }
+.modal.snb-on .svc-tip, .modal.snb-on .tp-note, .modal.snb-on .shx-bar, .modal.snb-on .sub-modal-btns { display: none !important; }
 .snb-body { flex: 1; min-height: 0; overflow: hidden; position: relative; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: 2px 2px 0; }
 .snb-body::after { content: ''; display: block; height: var(--snb-h, 0); }    /* 마지막 장도 맨 위부터 보이게 */
 .snb-body img { -webkit-user-drag: none; -webkit-touch-callout: none; }
@@ -3024,6 +3030,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .snb-pc img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;
     filter: drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff); }
 .snb-pc img.snb-tape { width: 100%; height: 50%; object-fit: cover; border-radius: 3px; }
+.snb-paper { display: block; max-width: 100%; max-height: 100%; margin: 0 auto; border-radius: 6px; box-shadow: 0 1px 3px rgba(90,60,50,.18); cursor: crosshair; touch-action: none; user-select: none; -webkit-user-drag: none; }
 .snb-pc b { font-size: calc(var(--pc, 64px) * .66); line-height: 1; font-weight: normal; pointer-events: none; }
 @media (hover: hover) { .snb-pc:hover { transform: scale(1.08); transition: transform .1s; } }
 .snb-pc { touch-action: none; }

@@ -58,12 +58,14 @@
             lfTabs('leaf', 'free');
             closeModal('stickerMakeModal'); openModal('leafModal');
         }
-        /* 고르면 새 속지가 오른쪽에서 스르륵 끼워져요 (붙인 것들은 그 위에 그대로) */
+        /* 고르면 새 속지가 오른쪽에서 스르륵 끼워져요 (붙인 것들은 그 위에 그대로)
+           📒 수첩이면 창이 그대로 있어서 마음에 드는 속지를 계속 골라 볼 수 있어요 (도련 · 2026-10-16) */
         function pickLeaf(id, img) {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
-            if (id === pageLeaf && (id !== 'my' || img === pageLeafImg)) { closeModal('leafModal'); return; }
+            const m = lfq('leafModal'), keep = m && m.classList.contains('snb-on');
+            if (id === pageLeaf && (id !== 'my' || img === pageLeafImg)) { if (!keep) closeModal('leafModal'); return; }
             const c = lfq('canvasArea');
-            closeModal('leafModal');
+            if (!keep) closeModal('leafModal');
             const sl = document.createElement('div'); sl.className = 'lf-slide'; lfApply(sl, id, img);
             c.appendChild(sl); lfSlideSnd();
             const done = () => { sl.remove(); setPageLeaf(id, img); if (typeof saveData === 'function') saveData(false); };
@@ -210,9 +212,11 @@
              (반대쪽 윗모서리에 매달린 채 따라오다가 끝까지 찢기면 손에 들려요) → 원하는 곳에 놓으면 테이프로 붙어요
            - 덜 당기고 놓으면 제자리로 · 분홍 풀칠 띠를 끌면 묶음째 옮겨져요 · 날짜바를 끌면 페이지가 옮겨져요
            - 묶음은 ✕ 를 누를 때까지 남아 있어서 여러 장 뜯을 수 있어요 · 소리 : 찢는 동안 '찌이익'만
+           - 📒 수첩이면 수첩 안의 묶음에서 바로 뜯어요 (tkNoteGrab · 도련 · 2026-10-16) : 같은 묶음을 수첩 그림 위에 꼭 맞게 겹쳐 띄우고(tkS.note)
+             수첩을 옮기면 따라가요 · 장을 넘기거나 수첩을 닫으면 사라져요 · 다 뜯으면 📱 수첩이 비켜 주고 페이지에 놓으면 붙어요 (수첩 위에 놓으면 안 붙어요)
            ===================================================================== */
         const TK_PULL = 120;                                                  // 이만큼(화면 px) 옆으로 당기면 다 찢겨요
-        const tkS = { on: false, k: 1, mv: [0, 0], drag: null, fly: null, hint: '' };
+        const tkS = { on: false, k: 1, mv: [0, 0], drag: null, fly: null, hint: '', note: null, pend: null };
         function tkBuild() {
             if (lfq('tkRoom')) return;
             const el = document.createElement('div');
@@ -228,6 +232,10 @@
         /* 묶음 자리 : 배경(화면) 한가운데 + 옮긴 만큼 · 크기는 페이지에 붙을 크기 그대로 (페이지 확대 · 축소 비율 k) */
         function tkLayout() {
             const pg = lfq('canvasArea'), pad = lfq('tkRPad');
+            if (tkS.note) {                                                       // 📒 수첩 안의 묶음 그림 위에 꼭 맞게
+                const r = tkS.note.getBoundingClientRect(); tkS.k = r.width / 150 || 1; tkS.x = r.left; tkS.y = r.top;
+                pad.style.transform = `translate(${tkS.x}px, ${tkS.y}px) scale(${tkS.k})`; return;
+            }
             tkS.k = pg && pg.offsetWidth ? pg.getBoundingClientRect().width / pg.offsetWidth : 1;
             const k = tkS.k, W = 150 * k, H = 172 * k, VW = window.innerWidth, VH = window.innerHeight;
             tkS.mv[0] = Math.max(W / 2 - VW / 2, Math.min(VW / 2 - W / 2, tkS.mv[0])); tkS.mv[1] = Math.max(H / 2 - VH / 2, Math.min(VH / 2 - H / 2, tkS.mv[1]));
@@ -236,20 +244,62 @@
         }
         function spawnTteok() {
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) { showMsg('먼저 다이어리를 열어 주세요!'); return; }
-            closeModal('tteokModal'); tkBuild();
+            const note = tkS.pend && tkS.pend.pad.isConnected && performance.now() - tkS.pend.t < 6000 ? tkS.pend.pad : null; if (!note) tkS.pend = null;
+            if (tkS.note) tkNoteEnd();
+            if (!note) closeModal('tteokModal');
+            tkBuild();
             lfq('tkRTop').innerHTML = tkSheetHtml(tk.pad); lfq('tkRStubs').innerHTML = '';
             const g = tk.pad === 'my' && tk.my && /^#[0-9a-f]{6}$/i.test(tk.my.glue || '') ? tk.my.glue : '';
             lfq('tkRPad').style.setProperty('--tk-glue', g || 'initial');
-            Object.assign(tkS, { on: true, mv: [0, 0], drag: null, hint: '' });
+            Object.assign(tkS, { on: true, mv: [0, 0], drag: null, hint: '', note });
+            const room = lfq('tkRoom'); room.classList.toggle('tk-note', !!note);
             tkLayout();
-            lfq('tkRoom').classList.add('show'); document.body.classList.add('fc-lock');
+            room.classList.add('show');
+            if (note) {
+                const it = note.closest('.tk-it'); if (it) it.classList.add('tk-busy');
+                const p = tkS.pend; tkS.pend = null;
+                if (p.down) { tkS.drag = { mode: 'tear', start: [p.x, p.y], last: [p.x, p.y], lt: performance.now(), p: 0 }; try { room.setPointerCapture(p.id); } catch (er) {} }   // 누른 채 그대로 당기면 바로 찢겨요
+                cancelAnimationFrame(tkS.raf); tkS.raf = requestAnimationFrame(tkNoteFollow);
+                tkSay('맨 윗장을 잡고 <b>옆으로 쭉</b> 당겨서 뜯어요');
+                return;
+            }
+            document.body.classList.add('fc-lock');
             try { lfq('tkRPad').animate([{ opacity: 0, translate: '0 30px' }, { opacity: 1, translate: '0 0' }], { duration: 320, easing: 'cubic-bezier(.25,.7,.3,1)' }); } catch (e) {}
             tkSay('맨 윗장을 잡고 <b>옆으로 쭉</b> 당겨서 뜯어 보세요');
         }
         function closeTteokRoom() {
             tkS.on = false; tkS.drag = null; clearTimeout(tkS.hush); tkNoise(0); if (tkS.fly) { tkS.fly.remove(); tkS.fly = null; }
-            const r = lfq('tkRoom'); if (r) r.classList.remove('show');
+            const r = lfq('tkRoom'); if (r) r.classList.remove('show', 'tk-note');
             document.body.classList.remove('fc-lock');
+            tkNoteEnd();
+        }
+        /* 📒 수첩 안에서 뜯기 : 수첩의 떡메 칸을 누르면 (stknote.js) 그 묶음을 수첩 그림 위에 겹쳐 띄워요 · 그 칸이 원래 하던 대로 고르면 spawnTteok 이 받아요 */
+        function tkNoteGrab(it, e) {
+            const pad = it.querySelector('.tk-pad'); if (!pad) return false;
+            tkS.pend = { pad, id: e.pointerId, x: e.clientX, y: e.clientY, down: true, t: performance.now() };
+            if (it.dataset.k) { tk.pad = it.dataset.k; tk.my = null; spawnTteok(); }
+            else it.click();                                                       // 🧻 내가만든 · 공유받은 · 기본 그림 떡메 (그림을 받으면 spawnTteok)
+            return true;
+        }
+        window.addEventListener('pointerup', e => { if (tkS.pend && tkS.pend.id === e.pointerId) tkS.pend.down = false; }, true);
+        function tkNoteEnd() {
+            cancelAnimationFrame(tkS.raf);
+            if (!tkS.note) return;
+            const it = tkS.note.closest('.tk-it'); if (it) it.classList.remove('tk-busy');
+            tkS.note = null;
+            if (tkS.on) { tkS.on = false; tkS.drag = null; if (tkS.fly) { tkS.fly.remove(); tkS.fly = null; } const r = lfq('tkRoom'); if (r) r.classList.remove('show', 'tk-note'); }
+        }
+        /* 수첩을 따라가요 · 장을 넘기거나 · 수첩이 뒤로 가거나 · 닫히면 사라져요 (뜯는 중에는 그대로) */
+        function tkNoteFollow() {
+            const n = tkS.note; if (!n || !tkS.on) return;
+            if (!tkS.drag) {
+                const m = n.closest('.modal'), body = n.closest('.snb-body'), r = n.getBoundingClientRect(), b = body && body.getBoundingClientRect();
+                const st = window.snbState ? snbState() : {};
+                const cy = r.top + r.height / 2;
+                if (!n.isConnected || !m || m.style.display !== 'flex' || m.classList.contains('snb-back') || st.curl || !b || !r.width || cy < b.top || cy > b.bottom) { tkNoteEnd(); return; }
+                tkLayout();
+            }
+            tkS.raf = requestAnimationFrame(tkNoteFollow);
         }
         function tkSay(h) { const e = lfq('tkHint'); if (!e || tkS.hint === h) return; tkS.hint = h; e.innerHTML = h; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); }
         /* 화면 → 묶음 안 좌표 (150 × 172 기준) */
@@ -259,8 +309,8 @@
             if (!tkS.on || tkS.drag || e.target.closest('.tk-x')) return;
             const P = [e.clientX, e.clientY], [lx, ly] = tkLocal(P);
             const cap = () => { try { lfq('tkRoom').setPointerCapture(e.pointerId); } catch (er) {} };
-            if (lx >= -4 && lx <= 154 && ly >= -6 && ly <= 16) { tkS.drag = { mode: 'pad', last: P }; cap(); return; }          // 분홍 풀칠 띠 → 묶음 옮기기
-            if (lx >= 0 && lx <= 150 && ly > 16 && ly <= 168) { tkS.drag = { mode: 'tear', start: P, last: P, lt: performance.now(), p: 0 }; cap(); tkSay('살살… 옆으로 쭉 당겨요'); return; }
+            if (!tkS.note && lx >= -4 && lx <= 154 && ly >= -6 && ly <= 16) { tkS.drag = { mode: 'pad', last: P }; cap(); return; }          // 분홍 풀칠 띠 → 묶음 옮기기 (📒 수첩 안에서는 수첩 제목 줄로 옮겨요)
+            if (lx >= 0 && lx <= 150 && ly > (tkS.note ? -6 : 16) && ly <= 168) { tkS.drag = { mode: 'tear', start: P, last: P, lt: performance.now(), p: 0 }; cap(); tkSay('살살… 옆으로 쭉 당겨요'); return; }
             if (window.pgmOnBar && pgmOnBar(P[0], P[1])) pgmBegin(e);                // 날짜바 → 페이지 옮기기 (js/page.js)
         }
         /* 당기기 시작한 쪽이 정해지면 : 떼어질 한 장(테이프 없는 그림)을 묶음 위에 똑같이 겹쳐 띄워요 · 아래엔 다음 장이 그대로 */
@@ -308,6 +358,7 @@
             f.style.transformOrigin = '50% 50%'; f.style.left = cx - w / 2 + 'px'; f.style.top = cy - h / 2 + 'px'; f.style.transform = `rotate(${rot}deg)`;
             tkS.drag = { mode: 'free', off: [P[0] - (cx - w / 2), P[1] - (cy - h / 2)], rot, base: -tkS.drag.dir * 6, px: P[0], last: P, lt: performance.now() };
             tkNoise(0); if (navigator.vibrate) navigator.vibrate(15);
+            if (tkS.note && window.snbAway) snbAway(true);                       // 📱 수첩이 비켜 줘요
             tkSay('북! 뜯겼어요 ✨ 원하는 곳에 놓아 보세요');
         }
         function tkUp() {
@@ -324,11 +375,16 @@
                 return;
             }
             if (navigator.vibrate) navigator.vibrate(8);
+            if (tkS.note) {                                                       // 📒 수첩 위나 페이지 밖에 놓으면 안 붙어요
+                const b = f.getBoundingClientRect(), ok = window.snbOver ? snbOver(b.left + b.width / 2, b.top + b.height / 2) : true;
+                if (window.snbAway) snbAway(false);
+                if (!ok) { tkS.fly = null; try { f.animate([{ opacity: 1 }, { opacity: 0, transform: f.style.transform + ' scale(.9)' }], { duration: 220 }).onfinish = () => f.remove(); } catch (e) { f.remove(); } tkSay('<b>페이지 위</b>에 놓아야 붙어요 · 한 장 더 뜯어 보세요'); return; }
+            }
             tkStick(f, Math.max(-25, Math.min(25, d.rot)));
         }
         /* 놓은 자리에 붙이기 : 화면에 보이던 크기 · 기울기 그대로 · 테이프가 붙은 그림으로 */
         function tkStick(f, rot) {
-            const pg = lfq('canvasArea'), r = pg.getBoundingClientRect(), k = tkS.k || 1, b = f.getBoundingClientRect();
+            const pg = lfq('canvasArea'), r = pg.getBoundingClientRect(), k = r.width / (pg.offsetWidth || r.width) || 1, b = f.getBoundingClientRect();   // 페이지 확대 · 축소 비율
             const cx = Math.min(r.right, Math.max(r.left, b.left + b.width / 2)), cy = Math.min(r.bottom, Math.max(r.top, b.top + b.height / 2));
             tkS.fly = null; f.remove();
             const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tkPieceSvg(tk.pad, tkS.sh));
@@ -373,5 +429,5 @@
             }
             tkGain.gain.setTargetAtTime(v, ac.currentTime, .03);
         }
-        window.openTteok = openTteok; window.spawnTteok = spawnTteok; window.closeTteokRoom = closeTteokRoom; window.tkNoteDress = tkNoteDress; window.lfTabs = lfTabs;
+        window.openTteok = openTteok; window.tkNoteGrab = tkNoteGrab; window.spawnTteok = spawnTteok; window.closeTteokRoom = closeTteokRoom; window.tkNoteDress = tkNoteDress; window.lfTabs = lfTabs;
         window.tkMiniHtml = tkMiniHtml; window.tkUseMy = tkUseMy;
