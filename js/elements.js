@@ -78,17 +78,15 @@
             const at = window.tmPlace && tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
             if (!at) elCenter(el);
-            if (elReal()) elRealSize(el, img);
             return true;
         }
-        /* 그림 크기 그대로 : 그림이 다 오면 (붙이는 쪽이 크기 · 자리를 정한 뒤) 그림 1px = 페이지 1px · 가운데는 그대로
-           - 🧪 스티커 실제 크기(테스트) : 새로 붙이는 모든 그림 (cap 없음)
-           - 🧾 묶음(씰 종이 · 포인트스티커 판 · 조각 봉투 · 📒 수첩 시트)에서 뗀 그림 : 묶음에서는 작게 보여도 붙는 순간 원래 해상도로 (elNatural · 페이지 폭의 90% 까지 · 도련 · 2026-10-16) */
-        function elNatural(el) { const img = el && el.querySelector(':scope > img'); if (img && !elReal()) elRealSize(el, img, .9); }
-        function elRealSize(el, img, cap) {
+        /* 🖼️ 스티커는 늘 원본 크기 그대로 (그림 1px = 페이지 1px · 도련 · 2026-10-16) : 그림이 다 오면 (붙이는 쪽이 자리를 정한 뒤) 크기만 원본으로 · 가운데는 그대로
+           씰(하얀 종이) · 포인트스티커 판 · 조각 봉투 · 📒 수첩 시트에서 작게 보이던 것도 붙는 순간 원본 크기 · 페이지보다 크면 페이지 밖으로 넘쳐요
+           (🎀 테이프 · 카드 · 그림 그리기 · 📄 모조지스티커처럼 크기를 정해 두고 붙는 것은 그대로) */
+        function elOrig(el) { const img = el && el.querySelector(':scope > img'); if (img) elRealSize(el, img); }
+        function elRealSize(el, img) {
             const go = () => requestAnimationFrame(() => requestAnimationFrame(() => {
-                let w = img.naturalWidth, h = img.naturalHeight; if (!el.isConnected || !w || !h) return;
-                if (cap) { const pw = document.getElementById('canvasArea').offsetWidth * cap, q = Math.min(1, pw / w, pw * 1.6 / h); w = Math.round(w * q); h = Math.round(h * q); }
+                const w = img.naturalWidth, h = img.naturalHeight; if (!el.isConnected || !w || !h) return;
                 const b0 = el.getBoundingClientRect(), c0 = [b0.left + b0.width / 2, b0.top + b0.height / 2];
                 el.style.width = w + 'px'; el.style.height = el.style.height ? h + 'px' : ''; el.dataset.scale = 1;
                 const pg = document.getElementById('canvasArea'), r = pg.getBoundingClientRect(), k = r.width / (pg.offsetWidth || r.width) || 1;
@@ -132,15 +130,13 @@
         const kitOk = f => typeof f === 'string' && /^[0-9a-f]{16}\.(png|jpg|gif|webp|svg)$/.test(f);
         const kitUrl = f => KIT_BASE + '/k/' + f;
         /* 보여 줄 크기에 맞는 주소 : 작게(400 이하)는 미리보기 · 크게는 원본 */
-        const elReal = () => typeof showOn === 'function' && showOn('real');   // 🧪 스티커 실제 크기 (⚙ 설정 · js/show.js)
         function kitSize(u, w) {
             u = String(u || '');
-            if (elReal()) return u;                                          // 🧪 늘 원본
             if (u.startsWith(KIT_BASE + '/k/')) { const f = u.slice(KIT_BASE.length + 3), h = f.split('.')[0]; return w <= 400 && KIT_THUMB.has(h) ? KIT_BASE + '/t/' + h + '.webp' : u; }
             return u;
         }
         const libCatName = c => c.replace(/^\d+\s*[.)_\-]?\s*/, '') || c;
-        window.elNatural = elNatural;
+        window.elOrig = elOrig;
         function libView() { return !libItems ? [] : libCat ? libItems.filter(x => x.c === libCat) : libItems; }
 
         async function fetchLibraryList() {
@@ -378,7 +374,7 @@
         async function libPick(url) {
             if (window.stkLeave) stkLeave();
             try { if (window.pelBake && window.openStickerPeel && await openStickerPeel(await pelBake(url))) return; } catch (e) {}
-            addImage(url); if (window.stkReturn) stkReturn(700);
+            if (addImage(url)) elOrig(document.querySelector('#canvasArea > .element-box:last-child')); if (window.stkReturn) stkReturn(700);
         }
         function renderLibrary() {
             const st = document.getElementById('libStatus'), grid = document.getElementById('libGrid');

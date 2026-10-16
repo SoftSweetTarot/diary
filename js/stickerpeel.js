@@ -4,12 +4,12 @@
              종이는 배경(화면) 한가운데에 나와요 · 사진고르기로 여러 장을 고르면 한 장의 종이에 씰이 여러 개 붙어 나와요 → 마지막 씰을 떼면 하얀 종이가 사라져요
              하얀 종이의 빈 곳을 누른 채 끌면 종이째 화면 안에서 옮겨져요 · 종이 바깥 날짜바를 끌면 페이지가 옮겨져요
              소리 : 떼어 낼 때 '찌익' 소리만
-   - pelBake(src) : 📸 포토부스 사진처럼 네모난 그림 둘레에 하얀 칼선 테두리를 둘러요 (긴 변 PEL_MAX 이하 PNG)
+   - pelBake(src) : 📸 포토부스 사진처럼 네모난 그림 둘레에 하얀 칼선 테두리를 둘러요 (원본 크기 그대로 PNG)
                     ⚙ 설정 '🏷️ 씰 하얀 테두리'가 꺼져 있으면(기본) 테두리 없이 크기만 맞춰요 (js/show.js showOn('die'))
    - 소리는 ⚙ 설정의 '✨ 연출 소리'를 따라요 (js/sound.js)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (스티커가 바로 붙어요) */
 
-        const PEL_GRAB = 28, PEL_GRAB_OUT = 10, PEL_PAD = 22, PEL_M = 7, PEL_EDGE = 6, PEL_MAX = 360;
+        const PEL_GRAB = 28, PEL_GRAB_OUT = 10, PEL_PAD = 22, PEL_M = 7, PEL_EDGE = 6;
         /* items : 종이 위 스티커들 [{ a, src, st }] · a · st · src 는 지금 손에 잡은 스티커 */
         const pelS = { on: false, cv: null, ctx: null, fl: null, items: [], a: null, st: null, drag: null, board: null, mv: { x: 0, y: 0 }, gone: 0, src: '', W: 0, H: 0, DPR: 1, raf: 0, hint: '' };
         const pelq = id => document.getElementById(id);
@@ -21,11 +21,11 @@
         /* ---------- 하얀 칼선 테두리 두르기 ---------- */
         async function pelBake(src) {
             const im = await pelLoad(src);
-            const k = typeof showOn === 'function' && showOn('real') ? 1 : Math.min(1, PEL_MAX / Math.max(im.width, im.height)), iw = Math.round(im.width * k), ih = Math.round(im.height * k);
+            const iw = im.width, ih = im.height;                               // 🖼️ 원본 크기 그대로 (줄이지 않아요)
             const die = typeof showOn !== 'function' || showOn('die');
-            const b = die ? PEL_EDGE : 0, c = pelMk(iw + b * 2 + 4, ih + b * 2 + 4), x = c.getContext('2d');
-            const one = pelMk(c.width, c.height); one.getContext('2d').drawImage(im, b + 2, b + 2, iw, ih);
-            if (die) x.drawImage(pelTint(pelGrow(pelTint(one, '#fff'), b, 10), '#fff'), 0, 0);
+            const b = die ? PEL_EDGE + 2 : 0, c = pelMk(iw + b * 2, ih + b * 2), x = c.getContext('2d');   // 테두리를 끄면 그림 크기 그대로
+            const one = pelMk(c.width, c.height); one.getContext('2d').drawImage(im, b, b, iw, ih);
+            if (die) x.drawImage(pelTint(pelGrow(pelTint(one, '#fff'), PEL_EDGE, 10), '#fff'), 0, 0);
             x.drawImage(one, 0, 0);
             return c.toDataURL('image/png');
         }
@@ -110,7 +110,7 @@
             const S = pelS;
             S.cv = pelq('pelCv'); S.ctx = S.cv.getContext('2d');
             S.items = imgs.map((im, i) => ({ a: pelAsset(im), src: list[i], st: { state: 'on' } })); pelPick(S.items[0]);
-            S.ts = !!(opt && opt.ts); S.many = imgs.length > 1; S.drag = null; S.gone = 0; S.back = 0; S.mv = { x: 0, y: 0 }; S.on = true;
+            S.ts = !!(opt && opt.ts); S.drag = null; S.gone = 0; S.back = 0; S.mv = { x: 0, y: 0 }; S.on = true;
             pelLayout();
             pelq('pelRoom').classList.add('show'); document.body.classList.add('fc-lock');
             S.hint = '';
@@ -312,7 +312,7 @@
                 const deg = Math.round(st.rot * 180 / Math.PI * 10) / 10;
                 const put = (px, py) => { el.dataset.posX = px; el.dataset.posY = py; el.style.transform = `translate(${px}px, ${py}px) scale(1) rotate(${deg}deg)`; };
                 el.style.width = w + 'px'; el.style.height = h + 'px'; el.dataset.rotation = deg;
-                if (S.many && window.elNatural) elNatural(el);                    // 🧾 씰 종이(묶음)에서 뗀 것은 원래 해상도로 (js/elements.js)
+                if (window.elOrig) elOrig(el);                                    // 🖼️ 원본 크기로 (js/elements.js)
                 const x = Math.round((cx - r.left) / k - (w + PADB) / 2), y = Math.round((cy - r.top) / k - (h + PADB) / 2);
                 put(x, y);
                 const b = el.getBoundingClientRect();                                  // 페이지 안 다른 것들 때문에 생기는 차이까지 맞춰요

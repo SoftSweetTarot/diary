@@ -2,7 +2,6 @@
    👀 페이지에 보이는 것 : 다이어리 페이지에 붙는 기능을 켜고 끄는 스위치 (⚙ 설정 → 설정 → 👀 페이지에 보이는 것)
    - 😊 기분 · 날씨 도장 · ⏳ D-day · 🌸 계절 장식 · 🏷️ 씰 하얀 테두리 (📷 사진 꾸미기 창은 꾹 누르기 메뉴로 열어서 스위치가 없어요)
    - 기본값과 다른 것만 설정(설정.json)에 저장 ('diary_show' = { stamp: 0, die: 1, … }) · 게스트는 이 기기에만
-   - 🧪 스티커 실제 크기(real · 테스트)는 기본 꺼짐 · 켜면 기본스티커는 원본 그림을 받고(js/elements.js kitSize) 줄이지 않고(pelBake) 붙인 뒤 그림 크기 그대로 (elRealSize)
    - 🏷️ 씰 하얀 테두리(die)는 기본 꺼짐 · 켜면 새로 떼어 붙이는 씰 · 조각 · 포토부스 씰에 하얀 칼선을 둘러요 (js/stickerpeel.js pelBake)
    - 꺼도 이미 찍은 도장 · 만든 D-day · 이미 씌운 사진 틀은 지워지지 않아요 (다시 켜면 그대로 보여요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (모두 보임) */
@@ -12,8 +11,7 @@
             ['stamp', '😊 기분 · 날씨 도장', '페이지 오른쪽 위 동그라미'],
             ['dday', '⏳ D-day', '📌 한 D-day 를 페이지 왼쪽 위에'],
             ['corner', '🌸 계절 장식', '계절 테마를 켰을 때 페이지 모서리 그림', 'season'],
-            ['die', '🏷️ 씰 하얀 테두리', '씰 · 조각스티커 둘레에 하얀 칼선 (새로 붙이는 것부터)'],
-            ['real', '🧪 스티커 실제 크기 (테스트)', '그림 파일의 원래 크기 그대로 붙어요 (그림 1px = 페이지 1px · 새로 붙이는 것부터)']
+            ['die', '🏷️ 씰 하얀 테두리', '씰 · 조각스티커 둘레에 하얀 칼선 (새로 붙이는 것부터)']
         ].filter(x => x[3] !== 'season' || (typeof SEASON_OPEN !== 'undefined' && SEASON_OPEN))   // 계절 기능이 닫혀 있으면 스위치도 숨겨요 (js/season.js)
           .filter(x => typeof ftOn !== 'function' || ftOn(x[0]));   // 🔓 숨긴 기능(⏳ D-day 등)은 스위치도 숨겨요 (js/features.js)
         const showSync = () => typeof drive !== 'undefined' && drive.ready && !drive.guest;
@@ -21,7 +19,7 @@
             let o = null; try { o = JSON.parse(showSync() ? store.getItem(SHOW_KEY) : localStorage.getItem(SHOW_LOCAL)); } catch (e) {}
             return o && typeof o === 'object' ? o : {};
         }
-        const SHOW_OFF = { die: 1, real: 1 };                                          // 기본이 꺼짐인 것
+        const SHOW_OFF = { die: 1 };                                          // 기본이 꺼짐인 것
         function showOn(k) { const o = showRead(); return k in o ? !!o[k] : !SHOW_OFF[k]; }
         function showApply() {
             const root = document.documentElement;

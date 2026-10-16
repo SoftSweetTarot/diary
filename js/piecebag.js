@@ -453,7 +453,7 @@
                 put(x, y);
                 const b = el.getBoundingClientRect();
                 put(Math.round(x + (cx - (b.left + b.width / 2)) / k), Math.round(y + (cy - (b.top + b.height / 2)) / k));
-                if (window.elNatural) elNatural(el);                              // 🧾 봉투(묶음)에서 뗀 조각은 원래 해상도로 (js/elements.js)
+                if (window.elOrig) elOrig(el);                                    // 🖼️ 원본 크기로 (js/elements.js)
             }
             if (typeof saveData === 'function') saveData(false);
             if (S.pieces.length) pcbSay(`꾹! 붙였어요 ✨ 조각이 <b>${S.pieces.length}개</b> 남았어요`);

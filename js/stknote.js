@@ -500,7 +500,7 @@
             if (it.classList.contains('lib-item')) {
                 const im = it.querySelector('img'); if (!im) return;
                 const url = it.dataset.u || im.src;
-                (async () => { let s = url; try { if (window.pelBake) s = await pelBake(url); } catch (e) {} addImage(s); })();
+                (async () => { let s = url; try { if (window.pelBake) s = await pelBake(url); } catch (e) {} if (addImage(s) && window.elOrig) elOrig(snbq('canvasArea').querySelector(':scope > .element-box:last-child')); })();
                 return;
             }
             if (m.id === 'leafModal') setTimeout(() => { if (!found) { found = 1; mo.disconnect(); snbBack(m, true); } }, 650);   // 📃 속지는 바탕만 바뀌어요
@@ -620,10 +620,10 @@
         async function snbSheetFill(sh) {
             sh._ld = 1;
             const mu = sh._mu, g = sh.querySelector('.snb-sh-in');
-            let urls = [], k = 'pack';
+            let urls = [], k = 'pack', orig = null;                              // urls : 시트에 보이는 그림 (작은 미리보기) · orig : 붙일 때 쓰는 원본
             try {
-                if (mu.lib) { urls = mu.lib.map(u => window.kitSize ? kitSize(u, 400) : u); k = 'seal'; }   // 🏷️ 씰 종이
-                else if (mu.sb) { const o = window.sbSheet && sbSheet(mu.sb[0], mu.sb[1]); if (o) { urls = o.urls; k = o.k; } }   // 🧩 조각 봉투 · 📄 모조지스티커 (js/stk-basic.js)
+                if (mu.lib) { urls = mu.lib.map(u => window.kitSize ? kitSize(u, 400) : u); orig = mu.lib; k = 'seal'; }   // 🏷️ 씰 종이
+                else if (mu.sb) { const o = window.sbSheet && sbSheet(mu.sb[0], mu.sb[1]); if (o) { urls = o.urls; orig = o.orig || null; k = o.k; } }   // 🧩 조각 봉투 · 📄 모조지스티커 (js/stk-basic.js)
                 else if (mu.pack) {
                     const P = (typeof SPK_PACKS !== 'undefined' && SPK_PACKS.find(q => q.id === mu.pack)) || (window.sbPack && sbPack(mu.pack));   // 🖼️ 개발자 그림 묶음(srv:N)도
                     urls = P ? await keepTrying(() => spkSrcs(P), { alive: () => sh.isConnected }) : [];
@@ -648,8 +648,8 @@
             while (pc > 28 && Math.floor((W + GAP) / (pc + GAP)) * Math.floor((H + GAP) / (pc + GAP)) < urls.length) pc -= 2;
             g.style.setProperty('--pc', Math.max(28, Math.min(120, pc)) + 'px');
             g.textContent = '';
-            urls.forEach(u => {
-                const p = document.createElement('span'); p.className = 'snb-pc'; p._url = u; p._k = k;
+            urls.forEach((u, i) => {
+                const p = document.createElement('span'); p.className = 'snb-pc'; p._url = orig && orig[i] || u; p._k = k;
                 const im = document.createElement('img'); im.src = u; im.alt = ''; im.draggable = false; p.appendChild(im);
                 g.appendChild(p);
             });
@@ -694,7 +694,7 @@
             el.style.width = Math.round(r.width / k * (pc._k === 'seal' ? 1.12 : 1)) + 'px'; el.dataset.rotation = deg;
             if (pc._k === 'paper') el.dataset.float = 1;                             // 📄 모조지스티커 : 옮길 때 살짝 떠요
             snbPlace(el, cx, cy);
-            if (window.elNatural) elNatural(el);                                 // 🧾 시트(묶음)에서는 작게 보여도 붙는 순간 원래 해상도로 (js/elements.js)
+            if (window.elOrig) elOrig(el);                                       // 🖼️ 시트에서는 작게 보여도 붙는 순간 원본 크기로 (js/elements.js)
             if (typeof selectElement === 'function') selectElement(el);
             if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) {}
         }

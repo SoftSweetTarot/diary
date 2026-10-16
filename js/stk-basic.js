@@ -260,7 +260,7 @@
         function sbSheet(kind, id) {
             if (/^srv:\d+$/.test(id)) {
                 const x = SRV[kind] && SRV[kind][+id.slice(4)]; if (!x || !x.urls) return null;
-                return { urls: x.urls.map(u => kitAt(u, 400)), k: kind === 'piece' ? 'seal' : 'paper' };
+                return { urls: x.urls.map(u => kitAt(u, 400)), orig: x.urls, k: kind === 'piece' ? 'seal' : 'paper' };   // orig : 붙일 때 쓰는 원본
             }
             const b = sbOn(kind === 'piece' ? SB_BAGS : SB_SHEETS).find(x => x.id === id); if (!b) return null;
             return { urls: b.k.map(k => sbSvg(k, kind === 'piece')), k: kind === 'piece' ? 'pack' : 'paper' };
