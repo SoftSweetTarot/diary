@@ -35,7 +35,6 @@
             if (v && typeof v.id === 'string' && v.id.startsWith('my:')) await patEnsure(v.id.slice(3), v.g ? true : null);
         }
         if (typeof COLL !== 'undefined') COLL.loginHooks.push(() => { myPatterns = []; patView.mine = patView.share = null; return patPrepare(); });
-        function loadMyPatterns() {}                                   // 예전 이름 (js/skins.js loadBgPattern) : 원본은 patPrepare 가 읽어요
 
         function getMyPatternItems() {
             return myPatterns.map(m => ({ id: 'my:' + m.uid, uid: m.uid, tier: 'my', name: m.got ? '공유받은 배경지' : '내 배경지', got: !!m.got, css: recipeToCss(m.r), recipe: m.r }))
@@ -200,13 +199,13 @@
             if (m) downloadPatternFile(m.r); else showMsg('⚠ 이 배경지를 불러오지 못했어요.');
         }
 
-        /* 📥 배경지 → 공유받은 → 파일 불러오기 : 카페에서 받은 배경지 파일 (.json · 예전 .malang.txt 도 속은 같아요) */
+        /* 📥 배경지 → 공유받은 → 파일 불러오기 : 카페에서 받은 배경지 파일 (.json) */
         function pickPatternFile() {
             let inp = document.getElementById('patFileIn');
             if (!inp) {
                 inp = document.createElement('input');
                 inp.type = 'file'; inp.id = 'patFileIn'; inp.hidden = true;
-                inp.accept = '.json,.txt,application/json,text/plain';
+                inp.accept = '.json,application/json';
                 inp.onchange = () => { const f = inp.files && inp.files[0]; inp.value = ''; if (f) importPatternFile(f); };
                 document.body.appendChild(inp);
             }

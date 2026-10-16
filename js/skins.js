@@ -65,7 +65,6 @@
         /* ---------- 불러오기 : 드라이브 설정을 읽은 뒤 / PC 백업 불러온 뒤 호출 ----------
            값이 없거나, 깨졌거나, 목록에 없는 배경지가면 배경지 없이 표시 (저장된 값은 건드리지 않음) */
         function loadBgPattern() {
-            if (typeof loadMyPatterns === 'function') loadMyPatterns();      // 내 배경지 목록 먼저 (js/pattern-maker.js)
             let v = null;
             try { v = JSON.parse(store.getItem(BG_PATTERN_KEY)); } catch (e) { v = null; }
             const r = v && v.r ? sanitizeRecipe(v.r) : null;

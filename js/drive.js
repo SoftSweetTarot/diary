@@ -1057,7 +1057,7 @@
         function pendWho() { return drive.local ? 'device' : 'g:' + ((typeof COLL !== 'undefined' && COLL.who) || ''); }
         async function readAllPending() {
             const recs = [], lsKeys = [], tabs = [], who = pendWho();
-            const mine = r => r && r.items && (r.who ? r.who === who : !drive.local);   // 예전 보관본(who 없음)은 구글 쪽에서만
+            const mine = r => r && r.items && r.who === who;
             try {
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
