@@ -71,9 +71,8 @@
             else { clearTimeout(lfPeekTm); m.classList.add('snb-peek'); lfPeekTm = setTimeout(() => m.classList.remove('snb-peek'), 980); }
             const sl = document.createElement('div'); sl.className = 'lf-slide'; lfApply(sl, id, img);
             c.appendChild(sl); lfSlideSnd();
-            const peek = keep && innerWidth < 700;                                // 📱 폰 수첩 : 창이 잠깐 비켜서 씌운 속지를 보여 줘요 (0.5초 뒤 다시 나타나요 · 도련 · 2026-10-16)
-            if (peek) { clearTimeout(m._peek); m.classList.add('lf-peek'); }
-            const done = () => { sl.remove(); setPageLeaf(id, img); if (typeof saveData === 'function') saveData(false); if (peek) m._peek = setTimeout(() => m.classList.remove('lf-peek'), 500); };
+            if (keep) { clearTimeout(m._peek); m.classList.add('lf-peek'); m._peek = setTimeout(() => m.classList.remove('lf-peek'), 700); }   // 📒 수첩 : 창이 잠깐 비켜서 씌운 속지를 보여 줘요 (🎀 마스킹테이프 창과 같은 0.7초 · js/stickermaker.js STK_BLINK · PC · 아이패드 · 폰 모두)
+            const done = () => { sl.remove(); setPageLeaf(id, img); if (typeof saveData === 'function') saveData(false); };
             try { sl.animate([{ transform: 'translateX(104%) rotate(2deg)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.3,.8,.3,1)' }).onfinish = done; }
             catch (e) { done(); }
         }
