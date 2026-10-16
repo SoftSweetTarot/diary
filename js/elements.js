@@ -419,6 +419,9 @@
             updateLibPager();
         }
 
+        /* 🔒 페이지 스티커 크기 바꾸기 막기 (도련 · 2026-10-16) : 빨간 점선 네모의 꼭짓점 · 두 손가락 · 마우스 휠로 크기가 안 바뀌어요 (돌리기 · 옮기기는 그대로)
+           다시 켜려면 false 로 바꾸면 돼요 (크기 코드는 그대로 있어요) */
+        const EL_SCALE_LOCK = true;
         function makeTransformable(el) {
             el.style.zIndex = zIndexCounter++;
             let posX = 100, posY = 100, scale = 1, rotation = 0;
@@ -523,7 +526,7 @@
                         pinch = { d0: d || 1, a0: ang, s0: parseFloat(el.dataset.scale) || 1, r0: parseFloat(el.dataset.rotation) || 0 };
                         return;
                     }
-                    scale = Math.max(0.2, Math.min(5, pinch.s0 * (d / pinch.d0)));
+                    if (!EL_SCALE_LOCK) scale = Math.max(0.2, Math.min(5, pinch.s0 * (d / pinch.d0)));   // 🔒 크기 막기면 돌리기만
                     rotation = pinch.r0 + (ang - pinch.a0);
                     el.dataset.scale = scale; el.dataset.rotation = rotation;
                     updateTransform();
@@ -558,7 +561,7 @@
                     rotation = currentAngle - startAngle;
                     el.dataset.rotation = rotation;
                     const d = Math.hypot(pos.x - (rect.left + rect.width / 2), pos.y - (rect.top + rect.height / 2));
-                    if (rotD0 > 8) { scale = Math.max(0.2, Math.min(5, rotS0 * d / rotD0)); el.dataset.scale = scale; }   // 가까이 → 작게 · 멀리 → 크게
+                    if (!EL_SCALE_LOCK && rotD0 > 8) { scale = Math.max(0.2, Math.min(5, rotS0 * d / rotD0)); el.dataset.scale = scale; }   // 가까이 → 작게 · 멀리 → 크게 (🔒 크기 막기면 돌리기만)
                 } else if (actionType === 'stretch') {
                     const a = rotation * Math.PI / 180;
                     const d = ((pos.x - startX) * Math.cos(a) + (pos.y - startY) * Math.sin(a)) / (scale || 1);
@@ -618,6 +621,7 @@
             }
 
             el.addEventListener('wheel', (e) => {
+                if (EL_SCALE_LOCK) return;                                      // 🔒 크기 막기 : 휠로 크기가 안 바뀌어요
                 e.preventDefault();
                 scale = parseFloat(el.dataset.scale) || 1;
                 posX = parseFloat(el.dataset.posX) || 0;
