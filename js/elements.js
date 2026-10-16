@@ -78,7 +78,22 @@
             const at = window.tmPlace && tmPlace(el);
             document.getElementById('canvasArea').appendChild(el);
             if (!at) elCenter(el);
+            if (elReal()) elRealSize(el, img);
             return true;
+        }
+        /* 🧪 스티커 실제 크기 : 그림이 다 오면 (붙이는 쪽이 크기 · 자리를 정한 뒤) 그림 크기 그대로 · 가운데는 그대로 */
+        function elRealSize(el, img) {
+            const go = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+                const w = img.naturalWidth, h = img.naturalHeight; if (!el.isConnected || !w || !h) return;
+                const b0 = el.getBoundingClientRect(), c0 = [b0.left + b0.width / 2, b0.top + b0.height / 2];
+                el.style.width = w + 'px'; el.style.height = el.style.height ? h + 'px' : ''; el.dataset.scale = 1;
+                const pg = document.getElementById('canvasArea'), r = pg.getBoundingClientRect(), k = r.width / (pg.offsetWidth || r.width) || 1;
+                const put = (x, y) => { el.dataset.posX = x; el.dataset.posY = y; el.style.transform = `translate(${x}px, ${y}px) scale(1) rotate(${el.dataset.rotation || 0}deg)`; };
+                const b1 = el.getBoundingClientRect();
+                put(Math.round(+el.dataset.posX + (c0[0] - (b1.left + b1.width / 2)) / k), Math.round(+el.dataset.posY + (c0[1] - (b1.top + b1.height / 2)) / k));
+                if (typeof saveData === 'function') saveData(false);
+            }));
+            if (img.complete && img.naturalWidth) setTimeout(go, 60); else img.addEventListener('load', () => setTimeout(go, 60), { once: true });
         }
         /* 📍 꺼낸 스티커는 배경(화면) 한가운데에 놓여요 (화면 가운데가 페이지 밖이면 페이지 안에서 가장 가까운 곳)
            - 처음 자리(100, 100) 그대로일 때만 : 떼어 붙이기 · 필기구처럼 부른 곳에서 자리를 정했으면 그대로 둬요
@@ -113,8 +128,10 @@
         const kitOk = f => typeof f === 'string' && /^[0-9a-f]{16}\.(png|jpg|gif|webp|svg)$/.test(f);
         const kitUrl = f => KIT_BASE + '/k/' + f;
         /* 보여 줄 크기에 맞는 주소 : 작게(400 이하)는 미리보기 · 크게는 원본 */
+        const elReal = () => typeof showOn === 'function' && showOn('real');   // 🧪 스티커 실제 크기 (⚙ 설정 · js/show.js)
         function kitSize(u, w) {
             u = String(u || '');
+            if (elReal()) return u;                                          // 🧪 늘 원본
             if (u.startsWith(KIT_BASE + '/k/')) { const f = u.slice(KIT_BASE.length + 3), h = f.split('.')[0]; return w <= 400 && KIT_THUMB.has(h) ? KIT_BASE + '/t/' + h + '.webp' : u; }
             return u;
         }

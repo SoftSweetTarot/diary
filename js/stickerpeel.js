@@ -21,7 +21,7 @@
         /* ---------- 하얀 칼선 테두리 두르기 ---------- */
         async function pelBake(src) {
             const im = await pelLoad(src);
-            const k = Math.min(1, PEL_MAX / Math.max(im.width, im.height)), iw = Math.round(im.width * k), ih = Math.round(im.height * k);
+            const k = typeof showOn === 'function' && showOn('real') ? 1 : Math.min(1, PEL_MAX / Math.max(im.width, im.height)), iw = Math.round(im.width * k), ih = Math.round(im.height * k);
             const die = typeof showOn !== 'function' || showOn('die');
             const b = die ? PEL_EDGE : 0, c = pelMk(iw + b * 2 + 4, ih + b * 2 + 4), x = c.getContext('2d');
             const one = pelMk(c.width, c.height); one.getContext('2d').drawImage(im, b + 2, b + 2, iw, ih);
