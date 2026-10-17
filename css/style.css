@@ -78,6 +78,10 @@
             cursor: pointer; z-index: 10;
         }
         .cover-page { border-width: 2px; }   /* 다른 창과 같은 얇은 테두리 (속지는 캔버스 크기를 지키려고 4px 칸 안에 얇게 그림) */
+        .cover-page, .flap.cover-back { top: 48px; height: auto; bottom: 0; }   /* 📏 표지 = 실제 한 쪽 종이 크기 (위 날짜바 자리 48px 는 빼요) */
+        @keyframes phIn { from { opacity: 0; } }
+        .inner-page.ph-in .page-header { animation: phIn .5s ease both; }   /* 표지를 다 넘긴 뒤 날짜바가 스르륵 (js/page.js endCurl) */
+        .inner-page.ph-wait .page-header { opacity: 0; }                    /* 표지를 넘기는 동안 밑 장의 날짜바는 숨겨요 */
         .cover-title { font-size: 2.6rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); margin-bottom: 8px; }
         .cover-subtitle { font-size: 1.2rem; opacity: 0.9; }
         .drag-hint { margin-top: 25px; font-size: 0.95rem; animation: bounce 1.5s infinite; }

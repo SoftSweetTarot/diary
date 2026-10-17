@@ -310,7 +310,8 @@
             }
 
             const under = buildStaticPage(targetDate);
-            if (dyUnderR(dir, isCover)) under.classList.add('dy-at-r');                         // 📱 전날은 오른쪽 쪽부터 · 📄 한쪽 보기는 늘 오른쪽 쪽
+            if (dyUnderR(dir, isCover)) under.classList.add('dy-at-r');
+            if (isCover) under.classList.add('ph-wait');                                       // 날짜바는 다 펼쳐진 뒤에 나와요                         // 📱 전날은 오른쪽 쪽부터 · 📄 한쪽 보기는 늘 오른쪽 쪽
             const ip = document.getElementById('innerPage');                                  // 📒 아래 장도 같은 다이어리 모양 (링 · 밴드 · 구멍 없음)
             if (ip.dataset.dy) { under.dataset.dy = ip.dataset.dy; under.style.setProperty('--dy-c', ip.style.getPropertyValue('--dy-c')); under.classList.toggle('dy-noholes', ip.classList.contains('dy-noholes'));
                 ip.querySelectorAll(':scope > .dy-deco').forEach(n => { const c = n.cloneNode(true); c.removeAttribute('id'); c.classList.add(n.id === 'dyBack' ? 'dy-bk' : 'dy-fr'); n.id === 'dyBack' ? under.prepend(c) : under.appendChild(c); }); }
@@ -402,6 +403,8 @@
                     isCoverOpen = true; pgmPos = { x: 0, y: 0 };
                     turn = null; refreshLayout(); turn = t;                       // 📖 펼침면이면 두 쪽으로 펼쳐져요 (js/skins.js dyDeco)
                     pgmApply();   // 다이어리를 열면 늘 가운데에서 시작
+                    const ip = document.getElementById('innerPage'); ip.classList.remove('ph-in'); void ip.offsetWidth; ip.classList.add('ph-in');   // 날짜바가 스르륵 나타나요
+                    setTimeout(() => ip.classList.remove('ph-in'), 600);
                 } else {
                     currentDate.setDate(currentDate.getDate() + t.dir);
                 }
