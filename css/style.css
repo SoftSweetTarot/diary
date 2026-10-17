@@ -3614,6 +3614,8 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .twz-x { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; border: none; background: #ffe3ec; color: #c2385c; font-weight: 900; font-size: 15px; cursor: pointer; pointer-events: auto; }
 .twz { position: absolute; left: 0; top: 0; width: 55.8px; height: 201.5px; transform-origin: 27.9px 4.65px; pointer-events: none; opacity: 0; filter: drop-shadow(2px 4px 4px rgba(120, 60, 90, .28)); transition: opacity .25s ease; will-change: transform; }
 .twz.in { opacity: 1; }
+.twz.pin-cur { position: fixed; z-index: 2147483000; transition: none; }   /* 🪡 스티커 뜯는 핀셋 (js/elements.js pinMove) */
+body.pin-on #pelRoom, body.pin-on #pelRoom *, body.pin-on #spkBoard, body.pin-on #spkBoard *, body.pin-on #pcbRoom, body.pin-on #pcbRoom *, body.pin-on .snb-sheets, body.pin-on .snb-sheets * { cursor: none !important; }
 .twz.bye { opacity: 0; transition: opacity .38s ease; }
 .twz svg { display: block; overflow: visible; width: 100%; height: 100%; }
 .twz .twz-l, .twz .twz-r { transition: transform .12s ease; transform-box: view-box; }

@@ -806,13 +806,39 @@
             + '<g class="twz-r"><path d="M19.8 3 L21.4 3 L31 96 Q31.4 118 20 126 L19 126 Z" fill="url(#twzA)" stroke="#d95a84" stroke-width="1"/><path d="M19.8 3 L21.4 3 L22.6 16 L20.6 16 Z" fill="url(#twzT)"/><circle cx="26" cy="70" r="2.2" fill="#fff" opacity=".8"/></g>'
             + '<path d="M18 104c-2.6-3.4-7-1.6-6 1.8.8 2.6 6 5.8 6 5.8s5.2-3.2 6-5.8c1-3.4-3.4-5.2-6-1.8z" fill="#fff"/><rect x="12" y="118" width="12" height="7" rx="3.5" fill="#ffe27a" stroke="#e7b93d" stroke-width=".8"/></svg>';
         const TWZ_Z = 1.55, TWZ_TIP = [18 * TWZ_Z, 3 * TWZ_Z], TWZ_ANG = 215;   // 크기 · 집게 끝(화면 px) · 기울기 = 필기구(draw.js PC_ANG)와 같아요
+        /* 🪡 핀셋 모양은 하나 (도련 · 10-17) : 📌 삭제핀 · 스티커 삭제핀 · 스티커 뜯는 핀셋이 모두 pinSvg() 를 써요
+           - 나중에 문구점에서 핀셋을 사서 바꾸면 PIN_SKINS 에 모양을 더하고 설정.json 'diary_pin' 에 그 이름을 적어요 → 세 곳이 모두 바뀌어요 */
+        const PIN_SKINS = { basic: TWZ_SVG }, PIN_KEY = 'diary_pin', PIN_LOCAL = 'malang_pin';
+        function pinSvg() { const k = prefGet(PIN_KEY, PIN_LOCAL); return PIN_SKINS[k] || PIN_SKINS.basic; }
+        /* 🪡 뜯는 핀셋 : 스티커를 뜯는 곳에서는 핀셋이 손끝(포인터)을 따라와요 · 모양만 (뜯기는 원래대로)
+           - 🏷️ 씰 종이 (js/stickerpeel.js) · 🍭 포인트 하얀 판 (js/stickerpack.js) · 🧩 조각 봉투 (js/piecebag.js) · 📒 수첩 시트 (js/stknote.js)
+           - 그곳을 만지면 나와서 · 누르면 집게가 오므라들고 떼면 벌어져요 · 그 창이 닫히면 같이 사라져요 */
+        const PIN_SURF = '#pelRoom, #spkBoard, #pcbRoom, .modal.snb-on .snb-sheets';      // 핀셋이 나오는 곳
+        const PIN_ROOMS = '#pelRoom.show, #spkRoom.show, #pcbRoom.show, .modal.snb-on';  // 이 창이 하나라도 열려 있는 동안 핀셋이 남아요
+        let pinEl = null, pinWatch = 0;
+        const pinLive = () => [...document.querySelectorAll(PIN_ROOMS)].some(r => r.getClientRects().length && getComputedStyle(r).display !== 'none');
+        function pinStart() {
+            pinEl = document.createElement('div'); pinEl.className = 'twz pin-cur in'; pinEl.setAttribute('aria-hidden', 'true'); pinEl.innerHTML = pinSvg();
+            document.body.appendChild(pinEl); document.body.classList.add('pin-on');
+            pinWatch = setInterval(() => { if (!pinLive() || twz) pinStop(); }, 250);
+        }
+        function pinStop() {
+            clearInterval(pinWatch); if (pinEl) pinEl.remove(); pinEl = null; document.body.classList.remove('pin-on');
+        }
+        function pinMove(e) {
+            if (!pinEl) { if (twz || !e.target.closest || !e.target.closest(PIN_SURF)) return; pinStart(); }
+            pinEl.style.transform = `translate(${e.clientX - TWZ_TIP[0]}px, ${e.clientY - TWZ_TIP[1]}px) rotate(${TWZ_ANG}deg)`;
+        }
+        document.addEventListener('pointermove', pinMove, true);
+        document.addEventListener('pointerdown', e => { pinMove(e); if (pinEl) pinEl.classList.add('shut'); }, true);
+        ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => { if (pinEl) pinEl.classList.remove('shut'); }, true));
         let twz = null;
         const twzReduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
         function twzRoom(pin) {
             let room = document.getElementById('twzRoom');
             if (!room) {
                 room = document.createElement('div'); room.id = 'twzRoom'; room.className = 'twz-room';
-                room.innerHTML = '<div class="twz-tip"><b id="twzTitle"></b><span id="twzSay"></span><button type="button" class="twz-x" aria-label="그만두기">✕</button></div><div class="twz" id="twzTool">' + TWZ_SVG + '</div>';
+                room.innerHTML = '<div class="twz-tip"><b id="twzTitle"></b><span id="twzSay"></span><button type="button" class="twz-x" aria-label="그만두기">✕</button></div><div class="twz" id="twzTool"></div>';
                 document.body.appendChild(room);
                 const x = room.querySelector('.twz-x');
                 x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('click', e => { e.stopPropagation(); twzQuit(); });
@@ -820,6 +846,7 @@
                 room.addEventListener('pointerup', twzUp); room.addEventListener('pointercancel', twzUp);
                 addEventListener('keydown', e => { if (e.key === 'Escape' && twz) twzQuit(); });
             }
+            room.querySelector('#twzTool').innerHTML = pinSvg();                // 🪡 지금 쓰는 핀셋 모양
             room.querySelector('#twzTitle').textContent = '📌 삭제핀';
             room.querySelector('#twzSay').textContent = pin ? '무엇이든 핀셋으로 집어 쭉 뜯어요' : '핀셋으로 이 스티커를 집어 쭉 뜯어요';
             room.hidden = false; room.classList.remove('bye');
