@@ -814,7 +814,8 @@
             const k = prefGet(PIN_KEY, PIN_LOCAL), n = ++pinSeq;
             return (PIN_SKINS[k] || PIN_SKINS.basic).replace(/id="(\w+)"/g, `id="$1-${n}"`).replace(/url\(#(\w+)\)/g, `url(#$1-${n})`); }
         /* 🪡 핀셋 (도련 · 10-17) : 다이어리를 펼친 순간부터 핀셋이 손끝(포인터)을 따라와요 · 모양만 (뜯기 · 붙이기는 원래대로)
-           - 페이지 · 스티커 칸 밖에서도 보여요 · 누르면 집게가 오므라들고 떼면 벌어져요
+           - 스티커 꾸미기와 관련된 곳에서만 보여요 (도련 · 10-17 · pinOver) : 페이지 칸 · 🏷️ 씰 종이 · 🍭 포인트 하얀 판 · 🧩 조각 봉투 · 📒 수첩 속지(표지를 넘긴 뒤)
+             그 밖(하단메뉴 · 달력 · 돋보기 · 🪟 고르는 창 · 설정 등 모든 창 · 페이지 메뉴)에 가거나 누르면 사라져요 · 누르면 집게가 오므라들고 떼면 벌어져요
            - 📱 폰 · 📲 패드 : 손을 떼고 정한 초가 지나면 사라져요 / 💻 컴퓨터 : 마우스를 늘 따라와요
            - 설정 '🪡 핀셋' : 사라지는 시간(기본 1초) · 기기마다 늘 보이기 켜기/끄기 (기본 폰 끔 · 패드 끔 · 컴퓨터 켬 · 끄면 멈추고 정한 초 뒤에 사라져요)
            - 표지로 돌아가거나 🗑 삭제 · ✏️ 그리기 · ✂️ 스티커 칼을 쓰는 동안엔 비켜요 (pinOff) */
@@ -833,6 +834,14 @@
         let pinEl = null, pinWatch = 0, pinTimer = 0, pinKind = 'pc';
         const pinOpen = () => { const p = document.getElementById('innerPage'); return !!p && p.offsetParent !== null; };
         const pinOff = () => !!twz || !pinOpen() || document.body.classList.contains('draw-on') || !!document.querySelector('.sk-room:not([hidden])');
+        const PIN_AREA = '#canvasArea, #pelRoom, #pcbRoom, #spkBoard, .modal.snb-on .snb-sheets';   // 🪡 핀셋이 보이는 곳
+        function pinOver(x, y) {
+            const top = document.elementsFromPoint(x, y).find(n => !n.closest('.snb-ghost, .pin-cur, .spk-fly, .el-peel-back'));
+            if (!top || top.closest('button, .pel-hint, .snb-cover')) return false;   // 닫기 · 안내 버튼 · 수첩 표지
+            if (top.closest(PIN_AREA)) return true;
+            if (top.matches('.modal.snb-on')) { const c = document.getElementById('canvasArea'), r = c && c.getBoundingClientRect(); return !!r && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; }   // 📒 수첩 옆에 보이는 페이지
+            return false;
+        }
         const pinDev = e => e.pointerType === 'mouse' ? 'pc' : Math.min(screen.width, screen.height) < 600 ? 'phone' : 'pad';
         function pinStart() {
             pinEl = document.createElement('div'); pinEl.className = 'twz pin-cur in'; pinEl.setAttribute('aria-hidden', 'true'); pinEl.innerHTML = pinSvg();
@@ -849,7 +858,8 @@
         }
         function pinMove(e) {
             if (!pinEl) { if (pinOff()) return; pinStart(); }
-            pinKind = pinDev(e); clearTimeout(pinTimer); pinShow(true);
+            pinKind = pinDev(e); clearTimeout(pinTimer);
+            const on = pinOver(e.clientX, e.clientY); pinShow(on); if (!on) return;
             pinEl.style.transform = `translate(${e.clientX - TWZ_TIP[0]}px, ${e.clientY - TWZ_TIP[1]}px)${handFlip()} rotate(${TWZ_ANG}deg)`;
             if (pinKind === 'pc' && !(e.buttons & 1)) pinLater();                 // 💻 마우스가 멈추면 (늘 보이기를 껐을 때만)
         }
