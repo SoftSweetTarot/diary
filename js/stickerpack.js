@@ -246,7 +246,7 @@
             if (tab === 'emoji') { const b = document.querySelector('#stickerCategories .em-cat'); if (b) b.click(); return; }
             g.innerHTML = '<div class="smk-empty">불러오는 중…</div>';
             const cards = [];
-            for (const p of SPK_PACKS) { const s = await spkSrcs(p); cards.push(`<button type="button" class="spk-card" data-sbc="${p.g}" onclick="openStickerPack('${p.id}')">${window.sbThumbs ? sbThumbs(s) : ''}<small>스티커 ${s.length}개</small></button>`); }   // 이름 없이 · 카테고리 칸 (js/stk-basic.js)
+            for (const p of SPK_PACKS) { const s = await spkSrcs(p); cards.push(`<button type="button" class="spk-card" data-sbc="${p.g}"${window.sbFit ? sbFit(s.length) : ''} onclick="openStickerPack('${p.id}')">${window.sbThumbs ? sbThumbs(s) : ''}<small>스티커 ${s.length}개</small></button>`); }   // 이름 없이 · 카테고리 칸 (js/stk-basic.js)
             if (document.querySelector('#stickerKindTabs .stk-tab.on[data-tab="pack"]')) g.innerHTML = `<div class="spk-cards">${window.stkBasicSrv ? stkBasicSrv('mini') : ''}${cards.join('')}</div>`;   // 🖼️ 개발자 그림 시트가 맨 앞 (js/stk-basic.js)
         }
 

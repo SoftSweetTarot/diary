@@ -3306,6 +3306,12 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lib-item.lib-sheet, .sticker-grid .sb-card, .spk-card { aspect-ratio: 1 / 1; container-type: inline-size; justify-content: center; }
 .lib-item.lib-sheet .sb-thumbs, .sticker-grid .sb-card .sb-thumbs, .spk-card .sb-thumbs { --tw: calc((100cqw - 26px) / 3.4); grid-template-columns: repeat(3, var(--tw)); height: auto; max-height: calc(var(--tw) * 3 + 4px); padding: 0; }
 .sticker-grid .sb-bag .sb-thumbs { --tw: calc((100cqw - 26px) / 3.3); max-height: calc(var(--tw) * 2 + 2px); }   /* 🧩 봉투는 위 색 띠가 있어서 2줄까지 */
+/* 🧾 고르는 창 : 스티커 수만큼 커지는 묶음 칸 · 안의 스티커는 모두 보여요 (도련 · 2026-10-17 · js/stk-basic.js sbFit · sbLibSpan) · 📒 수첩 창(.snb-on)은 위 모양 그대로 */
+.modal:not(.snb-on) .lib-item.lib-sheet.fit .sb-thumbs { --tw: min(var(--tcap), calc((100cqw - (var(--sc) - 1) * 2px) / var(--sc))); grid-template-columns: repeat(var(--sc), var(--tw)); max-height: none; }
+.modal:not(.snb-on) .spk-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; --sbg: 6px; }
+.modal:not(.snb-on) .sticker-grid .sb-card[data-fit], .modal:not(.snb-on) .spk-card[data-fit] { grid-column: span var(--sw); aspect-ratio: auto; justify-content: flex-start; padding-bottom: 8px; }
+.modal:not(.snb-on) .spk-card[data-fit] { padding: 10px 4px 8px; }
+.modal:not(.snb-on) .sticker-grid .sb-card[data-fit] .sb-thumbs, .modal:not(.snb-on) .spk-card[data-fit] .sb-thumbs { --tw: min(64px, calc((100cqw - 12px - (var(--sc) - 1) * 2px) / var(--sc))); grid-template-columns: repeat(var(--sc), var(--tw)); max-height: none; padding: 0 6px; }
 
 /* 📱 스티커 수첩 : 스티커를 떼는 동안 수첩이 비켜요 (js/stknote.js snbAway) */
 .modal.snb-on { transition: opacity .2s; }

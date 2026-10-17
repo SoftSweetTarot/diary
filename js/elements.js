@@ -215,8 +215,10 @@
         function libPerPage() { return libLayout.rows * libLayout.cols; }
         /* 쪽 나누기 : 씰 1개 = 1칸 · 씰 종이(여러 개) = 가로 2 × 세로 2칸 정사각형 (도련 · 2026-10-16 · 묶음이 더 잘 보이게) · 빈 곳은 뒤의 1칸짜리가 채워요 (CSS grid-auto-flow: dense 와 같은 순서)
            → [[item, …], …] 쪽마다 */
-        const libSpan = x => x.s ? Math.min(2, libLayout.cols) : 1;              // 가로 칸 수
-        const libSpanH = x => x.s ? Math.min(2, libLayout.rows) : 1;             // 세로 칸 수
+        /* 🧾 고르는 창에서는 스티커 수만큼 칸이 커져요 (도련 · 10-17 · js/stk-basic.js sbLibSpan) · 📒 수첩 창은 예전처럼 2 × 2 */
+        const libFit = () => !!window.sbLibSpan && !(document.getElementById('libGrid') || document.body).closest('.snb-on');
+        const libSpan = x => x.s ? Math.min(libFit() ? sbLibSpan(x.s.length)[0] : 2, libLayout.cols) : 1;   // 가로 칸 수
+        const libSpanH = x => x.s ? Math.min(libFit() ? sbLibSpan(x.s.length)[1] : 2, libLayout.rows) : 1;  // 세로 칸 수
         function libPages() {
             const { rows, cols } = libLayout, out = [];
             let page = null, used = null;
@@ -406,6 +408,7 @@
                     item.style.gridColumn = 'span ' + libSpan(x); item.style.gridRow = 'span ' + libSpanH(x);
                     item.title = '스티커 ' + sheet.length + '개';
                     item.innerHTML = sbThumbs(sheet.map(u => kitSize(u, 96))) + `<small class="lib-cnt">스티커 ${sheet.length}개</small>`;
+                    if (libFit()) libFitThumbs(item, sheet.length, libSpan(x), libSpanH(x));
                 } else {
                     const img = document.createElement('img');
                     img.loading = 'lazy';
@@ -424,6 +427,19 @@
             }
             grid.appendChild(frag);
             updateLibPager();
+        }
+
+        /* 🧾 묶음 칸 안 : 모두 들어가는 가장 큰 크기로 줄 · 칸 수를 골라요 (낱장 그림보다는 작게 = 칸의 62%까지) */
+        function libFitThumbs(item, n, w, h) {
+            const g = document.getElementById('libGrid'), cw = g && g.clientWidth ? (g.clientWidth - 8 - (libLayout.cols - 1) * LIB_GAP) / libLayout.cols : libLayout.size;
+            const u = Math.max(30, Math.min(libLayout.size, cw)), W = w * u + (w - 1) * LIB_GAP - 14, H = h * u + (h - 1) * LIB_GAP - 24;
+            let best = [1, 0];
+            for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), t = Math.min((W - (c - 1) * 2) / c, (H - (r - 1) * 2) / r); if (t > best[1]) best = [c, t]; }
+            const c = best[0];
+            item.classList.add('fit');
+            item.style.setProperty('--sc', c);
+            item.style.aspectRatio = ((w * u + (w - 1) * LIB_GAP) / (h * u + (h - 1) * LIB_GAP)).toFixed(3);   // 낱장 칸과 줄 높이가 맞게
+            item.style.setProperty('--tcap', Math.max(14, Math.min(best[1], u * .62)).toFixed(1) + 'px');
         }
 
         /* 🔒 페이지 스티커 크기 바꾸기 막기 (도련 · 2026-10-16) : 빨간 점선 네모의 꼭짓점 · 두 손가락 · 마우스 휠로 크기가 안 바뀌어요 (돌리기 · 옮기기는 그대로)

@@ -96,15 +96,24 @@
         ];
         const sbOn = a => a.filter(x => !x.hold);
         /* 🖼️ 여러 개 묶음 미리보기 (씰 종이 · 포인트 · 조각 · 모조지스티커 같은 모양) : 작은 칸에 최대한 많이 · 2줄 · 넘치는 건 안 보여요 (개수는 카드 글씨가 총개수) */
-        const sbThumbs = urls => `<span class="sb-thumbs">${urls.slice(0, 30).map(u => `<img alt="" loading="lazy" src="${u}">`).join('')}</span>`;
+        const sbThumbs = urls => `<span class="sb-thumbs">${urls.map(u => `<img alt="" loading="lazy" src="${u}">`).join('')}</span>`;   // 모두 넣어요 (📒 수첩 창은 CSS가 2 ~ 3줄만 보여요)
+        /* 🧾 고르는 창 묶음 칸 크기 (도련 · 2026-10-17) : 스티커가 많을수록 칸이 커지고 · 안의 스티커는 모두 보이고 · 하나하나는 낱장보다 작아요 (📒 수첩 창은 예전 그대로 · CSS .modal:not(.snb-on))
+           - 🏷️ 씰 그림 모음(js/elements.js libPages) : [이만큼까지, 가로 칸, 세로 칸] · 넘으면 5 × 5 (배치 칸 수보다 크면 줄이고 그림이 작아져요)
+           - 🧩 조각 · 📄 모조지 · 🍭 포인트 카드(6칸 격자) : 한 줄에 √개수 개씩 · 카드는 그만큼 칸을 차지 (2 ~ 6칸) */
+        const SB_LIB_TIER = [[1, 1, 1], [3, 2, 1], [9, 2, 2], [12, 3, 2], [16, 3, 3], [20, 4, 3], [25, 4, 4], [30, 5, 4]];
+        function sbLibSpan(n) { const t = SB_LIB_TIER.find(t => n <= t[0]); return t ? [t[1], t[2]] : [5, 5]; }
+        function sbFit(n) {                                                    // 카드에 붙이는 크기 표시 (CSS가 고르는 창에서만 써요)
+            const c = Math.min(6, Math.max(1, Math.ceil(Math.sqrt(n))));
+            return ` data-fit style="--sw:${Math.min(6, Math.max(2, c))};--sc:${c}"`;
+        }
         const sbMini = (ks, die) => sbThumbs(ks.map(k => sbSvg(k, die)));
         const sbc = c => ` data-sbc="${esc(c || '')}"`;
         /* 기본 칸 그리기 (js/stickermaker.js stkTab) : kind = 'piece' · 'paper' */
         function stkBasicHtml(kind) {
             if (kind === 'piece') return stkBasicSrv('piece') + sbOn(SB_BAGS).map(b =>
-                `<button type="button" class="sb-card sb-bag"${sbc(b.g)} onclick="stkBasicOpen('piece','${b.id}')"><span class="sb-top" style="--c:${b.c}"></span>${sbMini(b.k, true)}<small>조각 ${b.k.length}개</small></button>`).join('');
+                `<button type="button" class="sb-card sb-bag"${sbc(b.g)}${sbFit(b.k.length)} onclick="stkBasicOpen('piece','${b.id}')"><span class="sb-top" style="--c:${b.c}"></span>${sbMini(b.k, true)}<small>조각 ${b.k.length}개</small></button>`).join('');
             if (kind === 'paper') return stkBasicSrv('paper') + sbOn(SB_SHEETS).map(s =>
-                `<button type="button" class="sb-card sb-sheet"${sbc(s.g)} onclick="stkBasicOpen('paper','${s.id}')"><i class="sb-tape"></i>${sbMini(s.k, false)}<small>그림 ${s.k.length}개</small></button>`).join('');
+                `<button type="button" class="sb-card sb-sheet"${sbc(s.g)}${sbFit(s.k.length)} onclick="stkBasicOpen('paper','${s.id}')"><i class="sb-tape"></i>${sbMini(s.k, false)}<small>그림 ${s.k.length}개</small></button>`).join('');
             return '';
         }
         async function stkBasicOpen(kind, id) {
@@ -189,9 +198,9 @@
             try { list = await sbList(kind); } catch (e) { return; }
             const html = list.map((x, i) => {
                 const t = x.urls ? x.urls : [x.url], g = sbc(x.c);
-                if (kind === 'piece') return `<button type="button" class="sb-card sb-bag"${g} onclick="stkBasicOpen('piece','srv:${i}')"><span class="sb-top" style="--c:${BAG_COLS[i % BAG_COLS.length]}"></span>${sbThumbs(t.map(u => thumb(u, 96)))}<small>조각 ${t.length}개</small></button>`;
-                if (kind === 'paper') return `<button type="button" class="sb-card sb-sheet"${g} onclick="stkBasicOpen('paper','srv:${i}')"><i class="sb-tape"></i>${sbThumbs(t.map(u => thumb(u, 96)))}<small>그림 ${t.length}개</small></button>`;
-                if (kind === 'mini') return `<button type="button" class="spk-card"${g} onclick="openStickerPack('srv:${i}')">${sbThumbs(t.map(u => thumb(u, 96)))}<small>스티커 ${t.length}개</small></button>`;
+                if (kind === 'piece') return `<button type="button" class="sb-card sb-bag"${g}${sbFit(t.length)} onclick="stkBasicOpen('piece','srv:${i}')"><span class="sb-top" style="--c:${BAG_COLS[i % BAG_COLS.length]}"></span>${sbThumbs(t.map(u => thumb(u, 96)))}<small>조각 ${t.length}개</small></button>`;
+                if (kind === 'paper') return `<button type="button" class="sb-card sb-sheet"${g}${sbFit(t.length)} onclick="stkBasicOpen('paper','srv:${i}')"><i class="sb-tape"></i>${sbThumbs(t.map(u => thumb(u, 96)))}<small>그림 ${t.length}개</small></button>`;
+                if (kind === 'mini') return `<button type="button" class="spk-card"${g}${sbFit(t.length)} onclick="openStickerPack('srv:${i}')">${sbThumbs(t.map(u => thumb(u, 96)))}<small>스티커 ${t.length}개</small></button>`;
                 if (kind === 'tape') return `<button type="button" class="tp-item"${g} onclick="sbUse('tape',${i})"><span style="background:url(&quot;${thumb(x.url, 240)}&quot;) left center / auto 100% repeat-x"></span></button>`;
                 if (kind === 'tk') return `<button type="button" class="tk-it"${g} onclick="sbUse('tk',${i})">${window.tkMiniHtml ? tkMiniHtml('my', { src: thumb(x.url, 200) }) : ''}</button>`;
                 if (kind === 'leaf') return `<button type="button" class="lf-pick"${g} onclick="sbUse('leaf',${i})"><i class="lf-sw lf-my" style="--lf-img:url('${thumb(x.url, 240)}')"></i></button>`;
@@ -288,7 +297,7 @@
             }
         }
         window.stkBasicSrv = stkBasicSrv; window.sbPack = sbPack; window.sbUse = sbUse;
-        window.sbThumbs = sbThumbs; window.stkBasicHtml = stkBasicHtml; window.stkBasicOpen = stkBasicOpen; window.sbSheet = sbSheet;
+        window.sbThumbs = sbThumbs; window.sbFit = sbFit; window.sbLibSpan = sbLibSpan; window.stkBasicHtml = stkBasicHtml; window.stkBasicOpen = stkBasicOpen; window.sbSheet = sbSheet;
     })();
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */
