@@ -3308,7 +3308,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .sticker-grid .sb-bag .sb-thumbs { --tw: calc((100cqw - 26px) / 3.3); max-height: calc(var(--tw) * 2 + 2px); }   /* 🧩 봉투는 위 색 띠가 있어서 2줄까지 */
 /* 🗂 고르는 창 칸 (도련 · 2026-10-17 · js/stk-basic.js) : 낱장 줄(칸 하나 = 스티커 하나) + 묶음 줄(한 줄 = 묶음 하나 · 옆으로 밀어요) · 📒 수첩 창(.snb-on)은 위 모양 그대로
    --pg-c 가로 칸 수 · --pg-cw 칸 크기 (JS가 정해요) */
-.modal:not(.snb-on) .pg-on { display: grid; grid-template-columns: repeat(var(--pg-c), var(--pg-cw)); grid-auto-flow: row; gap: 6px; justify-content: center; align-content: start; min-height: calc(var(--pg-r) * (var(--pg-cw) + 34px)); }   /* 줄이 적은 쪽도 창 크기는 그대로 */
+.modal:not(.snb-on) .pg-on:not([hidden]) { display: grid; grid-template-columns: repeat(var(--pg-c), var(--pg-cw)); grid-auto-flow: row; gap: 6px; justify-content: center; align-content: start; min-height: calc(var(--pg-r) * (var(--pg-cw) + 34px)); }   /* 줄이 적은 쪽도 창 크기는 그대로 */
 .modal:not(.snb-on) .sticker-grid.pg-on, .modal:not(.snb-on) .sticker-grid:has(> .pg-on) { height: auto; flex: 0 1 auto; }   /* 정한 줄 수만큼 (넘치면 창 안에서 내려요) */
 .modal:not(.snb-on) .lib-grid.pg-on { max-height: none; flex: 0 1 auto; }
 .modal:not(.snb-on) .pg-on > *, .modal:not(.snb-on) .pg-on > .sb-srv > * { grid-column: 1 / -1; }
