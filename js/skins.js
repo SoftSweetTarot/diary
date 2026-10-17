@@ -504,23 +504,44 @@
 
         /* 📒 다이어리 고르기 (도련 · 10-17 · 하단메뉴 📒 다이어리 → 📒 다이어리 고르기) : 실제 다이어리처럼 모양 · 크기를 골라요
            - 크기는 실제 다이어리 비율 그대로 (가로 : 세로) · 화면에 맞게 줄여도 비율은 지켜요 (js/page.js refreshLayout 이 dySize() 를 써요)
-           - 모양 : 6공 링 · 트래블러스(가죽 + 고무줄) · 호보니치(책갈피 끈) · 하드커버(고무밴드) · 한 달 노트(얇은 실제본) · 모두 펼침면 (아래 📖)
+           - 모양 : 기본 · 6공 링 · 트래블러스(가죽 + 고무줄) · 호보니치(책갈피 끈) · 하드커버(고무밴드) · 한 달 노트(얇은 실제본) · 모두 펼침면 (아래 📖)
            - 꾸밈은 페이지 둘레 그림만 (#dyBack 뒤 커버 · #dyFront 링 · 밴드) · 손으로 누르는 건 막지 않아요 (pointer-events: none)
            - 저장 : 설정.json 'diary_type' · 게스트는 이 기기 'malang_diary_type' */
         const DY_KEY = 'diary_type', DY_LOCAL = 'malang_diary_type';
-        /* 다꾸러가 실제로 많이 쓰는 것만 (도련 · 10-17 검색 : 6공 A5 · A6 · 트래블러스 레귤러 · 호보니치 오리지널 · 몰스킨 라지 · 소소문구 데일리로그 같은 한 달 노트) */
+        /* 📔 기본 다이어리 (도련 · 10-17) : 한 달 노트 크기 · 날짜 기준 · 끝없는 다이어리 · 고르기 창 맨 앞 '기본' 칸
+           나머지는 페이지 수가 정해진 다이어리라 지금은 숨겨요 (hid) · 문구점 디자인이 생기면 그 규격으로 써요
+           다꾸러가 실제로 많이 쓰는 것만 (도련 · 10-17 검색 : 6공 A5 · A6 · 트래블러스 레귤러 · 호보니치 오리지널 · 몰스킨 라지 · 소소문구 데일리로그 같은 한 달 노트) */
         const DY_TYPES = [
-            { id: 'ring-a5', g: '6공 바인더', n: 'A5', mm: '148×210', b: 'ring', r: 210 / 148, c: '#ff9dbb' },
-            { id: 'ring-a6', g: '6공 바인더', n: 'A6', mm: '105×148', b: 'ring', r: 148 / 105, c: '#c4b2f2' },
-            { id: 'tn-reg', g: '트래블러스 노트', n: '레귤러', mm: '110×210', b: 'tn', r: 210 / 110, c: '#a3714f' },
-            { id: 'hobo-a6', g: '호보니치', n: '오리지널 A6', mm: '105×148', b: 'spread', r: 148 / 105, c: '#ffb3c7' },
-            { id: 'hard-a5', g: '하드커버 노트', n: '라지', mm: '130×210', b: 'hard', r: 210 / 130, c: '#5a4652' },
-            { id: 'month', g: '한 달 노트', n: '데일리 한 달', mm: '85×165', b: 'thin', r: 165 / 85, c: '#8fd0b7' }
+            { id: 'basic', g: '기본', n: '기본', mm: '85×165', b: 'thin', r: 165 / 85, c: '#f7a8c0' },
+            { id: 'ring-a5', g: '6공 바인더', n: 'A5', mm: '148×210', b: 'ring', r: 210 / 148, c: '#ff9dbb', hid: 1 },
+            { id: 'ring-a6', g: '6공 바인더', n: 'A6', mm: '105×148', b: 'ring', r: 148 / 105, c: '#c4b2f2', hid: 1 },
+            { id: 'tn-reg', g: '트래블러스 노트', n: '레귤러', mm: '110×210', b: 'tn', r: 210 / 110, c: '#a3714f', hid: 1 },
+            { id: 'hobo-a6', g: '호보니치', n: '오리지널 A6', mm: '105×148', b: 'spread', r: 148 / 105, c: '#ffb3c7', hid: 1 },
+            { id: 'hard-a5', g: '하드커버 노트', n: '라지', mm: '130×210', b: 'hard', r: 210 / 130, c: '#5a4652', hid: 1 },
+            { id: 'month', g: '한 달 노트', n: '데일리 한 달', mm: '85×165', b: 'thin', r: 165 / 85, c: '#8fd0b7', hid: 1 }
         ];
-        const DY_DEF = 'month';                                                // 처음 설치하면 제일 작은 한 달 노트 (도련 · 10-17)
-        const DY_TAB = { '6공 바인더': '6공', '트래블러스 노트': '트래블러스', '호보니치': '호보니치', '하드커버 노트': '하드커버', '한 달 노트': '한 달' };   // 고르기 창 위 카테고리
+        const DY_DEF = 'basic';                                                // 처음 설치하면 기본 다이어리
+        const DY_TAB = { '기본': '기본', '6공 바인더': '6공', '트래블러스 노트': '트래블러스', '호보니치': '호보니치', '하드커버 노트': '하드커버', '한 달 노트': '한 달' };   // 고르기 창 위 카테고리 (숨긴 다이어리만 있는 칸은 안 보여요)
+        const dyShown = () => DY_TYPES.filter(t => !t.hid);
+        /* 📕 유한 다이어리 저장 규칙 (도련 · 10-17) : 말랑달콤 / 다꾸 / 디자인 (규격) [n권] / …
+           - 한 권에 폴더 하나 · 그 안 '다이어리.json' 에 id · 디자인 · 규격 · 날짜/페이지 · 페이지 수 · 시작한 날
+           - 앱은 폴더 이름이 아니라 다이어리.json 의 id 로 찾아요 → 폴더 이름은 사람이 드라이브에서 알아보는 용도
+           - 이름 : 드라이브 · 폴더에 못 쓰는 글자는 빼고 · 디자인 이름은 20자까지 · 같은 이름이 있으면 2권, 3권 …
+           - 늘 '(규격)' 이 붙어서 앱 폴더 (다꾸 / 기본 · 검색) 와 겹치지 않아요
+           - 날짜 기준 : … / 2026년 / 10월 / 18일.json (펼친 면 하나가 하루) · 페이지 기준 : … / 1페이지.json (안에 꾸민 날짜도) */
+        const DK_INFO = '다이어리.json';
+        function dkFolderName(design, spec, taken) {
+            const clean = v => String(v || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim();
+            const base = `${clean(design).slice(0, 20) || '다이어리'} (${clean(spec) || '규격'})`, has = new Set(taken || []);
+            if (!has.has(base)) return base;
+            for (let n = 2; ; n++) if (!has.has(`${base} ${n}권`)) return `${base} ${n}권`;
+        }
+        function dkInfo(o) {                                                    // 다이어리.json 내용 (mode 는 첫 장을 꾸밀 때 정해지고 안 바뀌어요)
+            return { id: o.id || 'dk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), design: o.design || '', spec: o.spec || '', mode: o.mode === 'page' ? 'page' : 'date', pages: o.pages || 0, start: o.start || '' };
+        }
+        const dkFilePath = (folder, mode, x) => DAKKU_PATH.concat(folder, ...(mode === 'page' ? [x + '페이지.json'] : [yearFolderName(x.getFullYear()), monthFolderName(x.getMonth() + 1), dayFileName(x.getDate())]));
         const DY_H = 700;                                                      // 페이지 높이 기준
-        const dyNow = () => { const id = prefGet(DY_KEY, DY_LOCAL); return DY_TYPES.find(t => t.id === id) || DY_TYPES.find(t => t.id === DY_DEF); };
+        const dyNow = () => { const id = prefGet(DY_KEY, DY_LOCAL); return dyShown().find(t => t.id === id) || DY_TYPES.find(t => t.id === DY_DEF); };
         /* 📖 펼침면 (도련 · 10-17) : 모든 다이어리는 펼친 두 쪽이 하루예요
            - 저장은 늘 두 쪽짜리 종이 하나 (getPageSize = 두 쪽 크기) · 보는 방법만 기기마다 설정에서 골라요 (📖 양쪽 · 📄 한쪽)
            - spread : 💻 컴퓨터 · 📲 패드 양쪽 = 두 쪽이 다 보여요 (다이어리를 열면 #diaryWrapper 왼쪽에 한 쪽만큼 자리를 비워 가운데로)
@@ -569,7 +590,7 @@
             const p = document.getElementById('innerPage'); return p ? p.getBoundingClientRect() : null;
         }
         function dySet(id) {
-            const t = DY_TYPES.find(x => x.id === id) || dyNow();
+            const t = dyShown().find(x => x.id === id) || dyNow();
             prefSet(DY_KEY, DY_LOCAL, t.id);
             if (typeof refreshLayout === 'function') refreshLayout(); else dyDeco();
             dyRender();                                                        // 고른 칸에 색 · 페이지가 바로 바뀌어서 따로 알림은 없어요
@@ -611,20 +632,20 @@
         let dyTab = '';
         function dyOpen() {                                                    // 위 카테고리 하나씩 (처음엔 지금 쓰는 다이어리가 있는 칸)
             dyTab = dyNow().g;
-            document.getElementById('dyTabs').innerHTML = Object.keys(DY_TAB).map(g => `<button type="button" class="stk-tab" data-g="${g}" onclick="dyTabSet('${g}')">${DY_TAB[g]}</button>`).join('');
+            document.getElementById('dyTabs').innerHTML = Object.keys(DY_TAB).filter(g => dyShown().some(t => t.g === g)).map(g => `<button type="button" class="stk-tab" data-g="${g}" onclick="dyTabSet('${g}')">${DY_TAB[g]}</button>`).join('');
             dyTabSet(dyTab);
             openModal('dyModal');
         }
         function dyTabSet(g) {
             dyTab = g;
             document.querySelectorAll('#dyTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.g === g));
-            document.getElementById('dyPickList').innerHTML = `<div class="dy-row">${DY_TYPES.filter(t => t.g === g).map(t =>
+            document.getElementById('dyPickList').innerHTML = `<div class="dy-row">${dyShown().filter(t => t.g === g).map(t =>
                 `<button type="button" class="dy-it" data-id="${t.id}" onclick="dySet('${t.id}')"><span class="dy-stage">${dyThumb(t)}</span><span class="dy-n">${t.n}</span><small>${t.mm}</small></button>`).join('')}</div>`;
             dyRender();
         }
         function dyClose() { closeModal('dyModal'); }
         function dyRender() { const id = dyNow().id; document.querySelectorAll('#dyModal .dy-it').forEach(b => b.classList.toggle('on', b.dataset.id === id)); }
-        window.dySize = dySize; window.dyDeco = dyDeco; window.dyHalf = dyHalf; window.dyEdgeRect = dyEdgeRect; window.dyViewSet = dyViewSet; window.dyUnderR = dyUnderR; window.dyTabSet = dyTabSet; window.dvSet = dvSet; window.dvRender = dvRender; window.dyLoad = dyLoad; window.dyOpen = dyOpen; window.dyClose = dyClose; window.dySet = dySet;
+        window.dySize = dySize; window.dyDeco = dyDeco; window.dyHalf = dyHalf; window.dyEdgeRect = dyEdgeRect; window.dyViewSet = dyViewSet; window.dyUnderR = dyUnderR; window.dyTabSet = dyTabSet; window.dvSet = dvSet; window.dvRender = dvRender; window.dyLoad = dyLoad; window.dyOpen = dyOpen; window.dyClose = dyClose; window.dySet = dySet; window.dkFolderName = dkFolderName; window.dkInfo = dkInfo; window.dkFilePath = dkFilePath;
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['skins'] = true;

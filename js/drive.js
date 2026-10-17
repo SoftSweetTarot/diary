@@ -6,24 +6,25 @@
              말랑달콤 / 설정 / 설정.json                       ⚙ 설정 탭 값 (글꼴 · 소리 · 고른 페이지 등)
                       / 카페 / 카페.json                       ☕ 출석 · 화분 · 달력 · D-day …
                       / 카페 / 인형 / 로라.json                👧 인형 하나에 파일 하나 (js/doll-store.js)
-                      / 페이지 / 페이지 / 내페이지 · 받은페이지 / 목록 · 원본   🎨 (js/coll.js)
-                      / 페이지 / 배경지 / 내배경지 · 받은배경지 / 목록 · 원본   📂
+                      / 다이어리 / 페이지 / 내페이지 · 받은페이지 / 목록 · 원본   🎨 하단 메뉴 '다이어리' (js/coll.js)
+                      / 다이어리 / 배경지 / 내배경지 · 받은배경지 / 목록 · 원본   📂
                       / 스티커 / 씰 · 조각 · 모조지스티커 · 마테 · 떡메 · 속지 / 내X · 받은X / 목록 · 원본
-                      / 다이어리 / 페이지 / 2026년 / 10월 / 9일.json   📔 하루에 파일 1개
-                      / 다이어리 / 검색 / 검색-2026.json              🔍 (js/search.js)
+                      / 다꾸 / 기본 / 2026년 / 10월 / 9일.json        📔 기본 다이어리 · 하루에 파일 1개
+                      / 다꾸 / 검색 / 검색-2026.json                  🔍 (js/search.js)
+                      / 다꾸 / 딸기우유 (6공 A5) / 다이어리.json …     📕 유한 다이어리 한 권에 폴더 하나 (js/skins.js dkFolderName)
            - 폴더가 없으면 저장할 때 자동으로 만들어요 · 같은 이름 폴더가 둘이면 먼저 만든 쪽으로 합쳐요
            - 두 기기에서 같이 써도 : 덮어쓰기 전에 드라이브 파일의 '마지막 수정 시각'을 보고
              바뀌었으면 다른 기기 내용 위에 내가 고친 것만 얹어요 (같은 날 일기는 물어봐요)
            ===================================================================== */
         const GOOGLE_CLIENT_ID = '1020129080030-42dun4pqvve1pjg9r21m62dd71h6hui5.apps.googleusercontent.com'; // ← 본인 OAuth 클라이언트 ID로 교체
         const TOP_FOLDER_NAME = '말랑달콤';                         // 최상위 폴더
-        const DIARY_PATH = [TOP_FOLDER_NAME, '다이어리'];
-        const DAY_PATH = DIARY_PATH.concat('페이지');              // 📔 일기 : 말랑달콤 / 다이어리 / 페이지 / 2026년 / 10월 / 9일.json
-        const SEARCH_PATH = DIARY_PATH.concat('검색');             // 🔍 검색 목록
+        const DAKKU_PATH = [TOP_FOLDER_NAME, '다꾸'];               // ✏ 일기 쓰고 스티커 꾸미는 곳 (도련 · 10-17)
+        const DAY_PATH = DAKKU_PATH.concat('기본');                // 📔 기본 다이어리 : 말랑달콤 / 다꾸 / 기본 / 2026년 / 10월 / 9일.json
+        const SEARCH_PATH = DAKKU_PATH.concat('검색');             // 🔍 검색 목록
         const SETTINGS_PATH = [TOP_FOLDER_NAME, '설정'], SETTINGS_FILE_NAME = '설정.json';
         const CAFE_PATH = [TOP_FOLDER_NAME, '카페'], CAFE_FILE_NAME = '카페.json';
         const STICKER_PATH = [TOP_FOLDER_NAME, '스티커'];          // 스티커 / 씰 / 내씰 …
-        const PAGE_PATH = [TOP_FOLDER_NAME, '페이지'];             // 페이지 / 페이지 · 배경지
+        const PAGE_PATH = [TOP_FOLDER_NAME, '다이어리'];           // 하단 메뉴 '다이어리' : 다이어리 / 페이지 · 배경지
         const ROOT_PATH_TEXT = DAY_PATH.join(' / ');
         const USE_APP_DATA_FOLDER = false; // false: 내 드라이브에 '말랑달콤' 폴더가 보임 / true: 사용자에게 안 보이는 앱 전용 공간
         const DRIVE_SCOPE = USE_APP_DATA_FOLDER
@@ -38,7 +39,7 @@
         const DAY_KEY_RE = /^diary_(\d{4})_(\d{2})_(\d{2})$/;
 
         /* 메모리 저장소: 화면이 쓰는 값은 여기(문자열)에 두고, 변경된 것만 드라이브에 올립니다.
-           - 날짜 데이터  : diary_2026_09_10  → 말랑달콤/다이어리/페이지/2026년/9월/10일.json
+           - 날짜 데이터  : diary_2026_09_10  → 말랑달콤/다꾸/기본/2026년/9월/10일.json
            - 설정 데이터  : diary_ui_font 등  → 말랑달콤/설정/설정.json  (카페 기록은 말랑달콤/카페/카페.json) */
         const store = {
             _m: new Map(),
@@ -157,7 +158,7 @@
         const qName = n => String(n).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
         /* ---------- 폴더 / 파일 이름 규칙 ----------
-           말랑달콤 / 다이어리 / 페이지 / 2026년 / 9월 / 10일.json   (하루에 파일 1개, 같은 날은 항상 덮어쓰기) */
+           말랑달콤 / 다꾸 / 기본 / 2026년 / 9월 / 10일.json   (하루에 파일 1개, 같은 날은 항상 덮어쓰기) */
         const yearFolderName = y => `${y}년`;
         const monthFolderName = m => `${m}월`;
         const dayFileName = d => `${d}일.json`;
@@ -322,7 +323,7 @@
             return (await res.json()).id;
         }
 
-        /* names = ['말랑달콤','설정'] / ['말랑달콤','다이어리','페이지','2026년','9월'] …
+        /* names = ['말랑달콤','설정'] / ['말랑달콤','다꾸','기본','2026년','9월'] …
            create=false : 있으면 찾기만 (읽을 때) / create=true : 없으면 만들기 (저장할 때) */
         async function getFolder(names, create) {
             const key = names.join('/');
