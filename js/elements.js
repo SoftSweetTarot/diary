@@ -838,7 +838,7 @@
         const PIN_AREA = '#innerPage, #pelRoom, #pcbRoom, #spkBoard, .modal.snb-on .snb-sheets';   // 🪡 핀셋이 보이는 곳
         function pinOver(x, y) {
             const top = document.elementsFromPoint(x, y).find(n => !n.closest('.snb-ghost, .pin-cur, .spk-fly, .el-peel-back'));
-            if (!top || top.closest('button, .pel-hint, .snb-cover, #pageHeader')) return false;   // 닫기 · 안내 버튼 · 수첩 표지 · 날짜 바
+            if (!top || top.closest('.pel-hint, .snb-cover, #pageHeader') || (top.closest('button') && !top.closest('#innerPage'))) return false;   // 안내 · 수첩 표지 · 날짜 바 · 창의 버튼 (페이지 안 😊 기분 · ☀️ 날씨 도장은 페이지라 보여요)
             if (top.closest(PIN_AREA)) return true;
             return top === document.body || top === document.documentElement || top.matches('.modal.snb-on') || !!top.closest('#diaryWrapper, #bgPatternLayer');   // 🖼 배경지 (다이어리 둘레 · 무늬 배경 · 📒 수첩 뒤 배경지 포함)
         }
