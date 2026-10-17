@@ -813,41 +813,51 @@
         function pinSvg() {   // 그라데이션 id 는 핀셋마다 따로 · 같은 id 가 숨은 핀셋에 있으면 색이 안 칠해지고 테두리만 보여요
             const k = prefGet(PIN_KEY, PIN_LOCAL), n = ++pinSeq;
             return (PIN_SKINS[k] || PIN_SKINS.basic).replace(/id="(\w+)"/g, `id="$1-${n}"`).replace(/url\(#(\w+)\)/g, `url(#$1-${n})`); }
-        /* 🪡 뜯는 핀셋 : 스티커를 뜯는 곳에서는 핀셋이 손끝(포인터)을 따라와요 · 모양만 (뜯기는 원래대로)
-           - 🏷️ 씰 종이 (js/stickerpeel.js) · 🍭 포인트 하얀 판 (js/stickerpack.js) · 🧩 조각 봉투 (js/piecebag.js) · 📒 수첩 시트 (js/stknote.js)
-           - 그곳을 만지면 나와서 · 누르면 집게가 오므라들고 떼면 벌어져요 · 그 창이 닫히면 같이 사라져요
-           - 핀셋 끝이 스티커 칸 · 페이지 안에 있을 때만 보여요 · 벗어나면 숨어요 (도련 · 10-17 · pinOver) */
-        const PIN_SURF = '#pelRoom, #spkBoard, #pcbRoom, .modal.snb-on .snb-sheets';      // 핀셋이 나오는 곳
-        const PIN_ROOMS = '#pelRoom.show, #spkRoom.show, #pcbRoom.show, .modal.snb-on';  // 이 창이 하나라도 열려 있는 동안 핀셋이 남아요
-        let pinEl = null, pinWatch = 0;
-        const pinIn = (r, x, y) => !!r && r.width > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-        const pinPage = (x, y) => { const p = document.getElementById('innerPage'); return !!p && p.offsetParent !== null && pinIn(p.getBoundingClientRect(), x, y); };
-        function pinOver(x, y) {                                               // 핀셋 끝이 스티커 칸이나 페이지 위인가요
-            const top = document.elementsFromPoint(x, y).find(n => !n.closest('.snb-ghost, .pin-cur, .spk-fly'));
-            if (!top) return false;
-            const room = top.closest('#pelRoom, #pcbRoom');                   // 화면 전체 캔버스 : 하얀 종이 · 봉투 자리 또는 페이지
-            if (room) { const a = room.id === 'pelRoom' ? window.pelArea : window.pcbArea; return pinIn(a && a(), x, y) || pinPage(x, y); }
-            if (top.closest('#spkBoard, .modal.snb-on .snb-sheets')) return true;
-            if (top.closest('#spkRoom, .modal')) return false;                // 창의 머리 · 탭 · 빈 곳
-            return !!top.closest('#innerPage');
+        /* 🪡 핀셋 (도련 · 10-17) : 다이어리를 펼친 순간부터 핀셋이 손끝(포인터)을 따라와요 · 모양만 (뜯기 · 붙이기는 원래대로)
+           - 페이지 · 스티커 칸 밖에서도 보여요 · 누르면 집게가 오므라들고 떼면 벌어져요
+           - 📱 폰 · 📲 패드 : 손을 떼고 정한 초가 지나면 사라져요 / 💻 컴퓨터 : 마우스를 늘 따라와요
+           - 설정 '🪡 핀셋' : 사라지는 시간(기본 1초) · 기기마다 늘 보이기 켜기/끄기 (기본 폰 끔 · 패드 끔 · 컴퓨터 켬 · 끄면 멈추고 정한 초 뒤에 사라져요)
+           - 표지로 돌아가거나 🗑 삭제 · ✏️ 그리기 · ✂️ 스티커 칼을 쓰는 동안엔 비켜요 (pinOff) */
+        const PIN_CFG_KEY = 'diary_pin_cfg', PIN_CFG_LOCAL = 'malang_pin_cfg', PIN_CFG_DEF = { sec: 1, phone: 0, pad: 0, pc: 1 }, PIN_SEC_MIN = 1, PIN_SEC_MAX = 10;
+        function pinCfg() { const v = prefGet(PIN_CFG_KEY, PIN_CFG_LOCAL); return Object.assign({}, PIN_CFG_DEF, v && typeof v === 'object' ? v : {}); }
+        function pinCfgSet(k, v) {
+            const c = pinCfg();
+            if (k === 'sec') c.sec = Math.max(PIN_SEC_MIN, Math.min(PIN_SEC_MAX, Math.round(Number(v)) || PIN_CFG_DEF.sec)); else c[k] = c[k] ? 0 : 1;
+            prefSet(PIN_CFG_KEY, PIN_CFG_LOCAL, c); pinCfgRender();
         }
-        const pinLive = () => [...document.querySelectorAll(PIN_ROOMS)].some(r => r.getClientRects().length && getComputedStyle(r).display !== 'none');
+        function pinCfgRender() {
+            const c = pinCfg(), r = document.getElementById('pinSecRange'), t = document.getElementById('pinSecVal');
+            if (r) r.value = c.sec; if (t) t.textContent = c.sec + '초';
+            document.querySelectorAll('#pinStay [data-k]').forEach(btn => { const on = !!c[btn.dataset.k]; btn.classList.toggle('on', on); btn.querySelector('small').textContent = on ? '늘 보여요' : c.sec + '초 뒤 사라져요'; });
+        }
+        let pinEl = null, pinWatch = 0, pinTimer = 0, pinKind = 'pc';
+        const pinOpen = () => { const p = document.getElementById('innerPage'); return !!p && p.offsetParent !== null; };
+        const pinOff = () => !!twz || !pinOpen() || document.body.classList.contains('draw-on') || !!document.querySelector('.sk-room:not([hidden])');
+        const pinDev = e => e.pointerType === 'mouse' ? 'pc' : Math.min(screen.width, screen.height) < 600 ? 'phone' : 'pad';
         function pinStart() {
             pinEl = document.createElement('div'); pinEl.className = 'twz pin-cur in'; pinEl.setAttribute('aria-hidden', 'true'); pinEl.innerHTML = pinSvg();
-            document.body.appendChild(pinEl); document.body.classList.add('pin-on');
-            pinWatch = setInterval(() => { if (!pinLive() || twz) pinStop(); }, 250);
+            document.body.appendChild(pinEl);
+            pinWatch = setInterval(() => { if (pinOff()) pinStop(); }, 250);
         }
         function pinStop() {
-            clearInterval(pinWatch); if (pinEl) pinEl.remove(); pinEl = null; document.body.classList.remove('pin-on');
+            clearInterval(pinWatch); clearTimeout(pinTimer); if (pinEl) pinEl.remove(); pinEl = null; document.body.classList.remove('pin-on');
+        }
+        function pinShow(on) { if (pinEl) pinEl.classList.toggle('out', !on); document.body.classList.toggle('pin-on', on && pinKind === 'pc'); }   // 💻 핀셋이 보일 때만 화살표를 숨겨요
+        function pinLater() {                                                  // 늘 보이기를 끈 기기 : 정한 초 뒤에 사라져요
+            clearTimeout(pinTimer); const c = pinCfg(); if (c[pinKind]) return;
+            pinTimer = setTimeout(() => pinShow(false), c.sec * 1000);
         }
         function pinMove(e) {
-            if (!pinEl) { if (twz || !e.target.closest || !e.target.closest(PIN_SURF)) return; pinStart(); }
-            pinEl.classList.toggle('out', !pinOver(e.clientX, e.clientY));
+            if (!pinEl) { if (pinOff()) return; pinStart(); }
+            pinKind = pinDev(e); clearTimeout(pinTimer); pinShow(true);
             pinEl.style.transform = `translate(${e.clientX - TWZ_TIP[0]}px, ${e.clientY - TWZ_TIP[1]}px) rotate(${TWZ_ANG}deg)`;
+            if (pinKind === 'pc' && !(e.buttons & 1)) pinLater();                 // 💻 마우스가 멈추면 (늘 보이기를 껐을 때만)
         }
         document.addEventListener('pointermove', pinMove, true);
         document.addEventListener('pointerdown', e => { pinMove(e); if (pinEl) pinEl.classList.add('shut'); }, true);
-        ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => { if (pinEl) pinEl.classList.remove('shut'); }, true));
+        ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => { if (pinEl) { pinEl.classList.remove('shut'); pinKind = pinDev(e); pinLater(); } }, true));
+        document.addEventListener('mouseout', e => { if (!e.relatedTarget && pinEl) pinShow(false); });   // 💻 마우스가 창 밖으로 나가면
+        window.pinCfgSet = pinCfgSet; window.pinCfgRender = pinCfgRender;
         let twz = null;
         const twzReduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
         function twzRoom(pin) {
@@ -917,8 +927,7 @@
         }
         function twzToolAt(x, y) {
             const t = twz; if (!t) return; t.tip = [x, y]; t.tool.style.transform = `translate(${x - TWZ_TIP[0]}px, ${y - TWZ_TIP[1]}px) rotate(${TWZ_ANG}deg)`;
-            const out = !t.drag && !pinPage(x, y); t.tool.classList.toggle('out', out);   // 🗑 페이지를 벗어나면 숨어요 (뜯는 중엔 그대로)
-            const d = t.room.querySelector('#twzDel'); d.classList.toggle('out', out); d.style.transform = `translate(${x + 10}px, ${y + 8}px)`;   // 🗑 삭제 표시는 핀셋 끝 옆에
+            t.room.querySelector('#twzDel').style.transform = `translate(${x + 10}px, ${y + 8}px)`;   // 🗑 삭제 표시는 핀셋 끝 옆에
         }
         /* 사각형을 반평면 (X - M)·n ≥ 0 (side = 1) / < 0 (side = -1) 으로 자른 다각형 */
         function twzClip(W, H, M, n, side) {

@@ -343,5 +343,4 @@
             pelGain.gain.setTargetAtTime(v, ac.currentTime, .03);
         }
 
-        window.pelArea = () => { const b = pelS.on && pelS.board; return b ? { left: b.cx - b.w / 2, top: b.cy - b.h / 2, right: b.cx + b.w / 2, bottom: b.cy + b.h / 2, width: b.w } : null; };   // 🪡 하얀 종이 자리 (js/elements.js pinOver)
         window.openStickerPeel = openStickerPeel; window.pelBake = pelBake; window.closeStickerPeel = closeStickerPeel;

@@ -476,5 +476,4 @@
             pcbGain.gain.setTargetAtTime(v, ac.currentTime, .03);
         }
 
-        window.pcbArea = () => { const r = pcbS.on && pcbS.PR; return r ? { left: r.x, top: r.y, right: r.x + r.w, bottom: r.y + r.h, width: r.w } : null; };   // 🪡 봉투 자리 (js/elements.js pinOver)
         window.openPieceBag = openPieceBag; window.closePieceBag = closePieceBag;
