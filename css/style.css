@@ -587,7 +587,7 @@
         .skin-compact .color-picker-row { margin-bottom: 3px; }
         .skin-compact .color-picker-row input[type="color"] { width: 26px; height: 24px; }
         .skin-compact .skin-pattern-note { font-size: 11px; padding: 5px 7px; }
-        .skin-compact.peeking, .skl-content.peeking { opacity: 0.06; }   /* 👀 꾹 눌러 보기 : 🎨 색상설정 · 📐 크기 · 📔 페이지 */
+        .skin-compact.peeking, .skl-content.peeking, .dy-win.peeking { opacity: 0.06; }   /* 👀 꾹 눌러 보기 : 🎨 색상설정 · 📐 크기 · 📔 페이지 · 📒 다이어리 고르기 */
         .modal:has(> .peeking) > .dk-tape { opacity: 0.06; }   /* 꾹 눌러 보는 동안 창 모서리 테이프도 같이 */
         .skin-float-hint { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 11px; color: #999; margin-bottom: 6px; }
         .skin-peek-btn { flex-shrink: 0; padding: 2px 7px !important; font-size: 11px !important; touch-action: none; user-select: none; -webkit-user-select: none; }
