@@ -75,7 +75,7 @@
             if (penNote()) pcHeldAt(e.clientX, e.clientY);                     // 연필심이 닿은 바로 그 자리
             try { dw.svg.setPointerCapture(e.pointerId); } catch (err) {}
             const pt = penPoint(e);
-            if (dw.tool === 'erase') { dw.erasing = true; dw.hist.push(dw.strokes); dw.erased = false; penRing(pt); penEraseAt(pt); return; }
+            if (dw.tool === 'erase') { dw.erasing = true; dw.hist.push(dw.strokes); dw.erased = false; dw.inks = penInks(); penRing(pt); penEraseAt(pt); return; }
             dw.cur = { tool: dw.tool, color: dw.color[dw.tool], w: DRAW_SIZES[dw.tool][dw.size[dw.tool]], pts: [pt] };
             penRender();
         }
@@ -95,7 +95,7 @@
         }
         function penUp(e) {
             if (e) e.stopPropagation();
-            if (dw.erasing) { dw.erasing = false; if (!dw.erased) dw.hist.pop(); if (e && e.pointerType !== 'mouse') penRing(null); penRender(); }
+            if (dw.erasing) { dw.erasing = false; if (!dw.erased) dw.hist.pop(); if (e && e.pointerType !== 'mouse') penRing(null); penRender(); if ((dw.inks || []).some(d => d.dirty) && typeof saveData === 'function') saveData(false); dw.inks = null; }
             if (dw.cur) { dw.hist.push(dw.strokes); dw.strokes = dw.strokes.concat([dw.cur]); dw.cur = null; penRender(); }
         }
         /* 🧽 지우개 : 동그라미에 닿은 부분만 지우고, 선이 끊기면 두 개로 나눠요 */
@@ -127,6 +127,61 @@
                 keep();
             });
             if (hit) { dw.strokes = out; dw.erased = true; penRender(); }
+            penEraseInk(pt, r);                                                   // 🧽 예전에 쓰고 완료한 글씨 · 그림도 언제든 지워요
+        }
+        /* ---------- 🧽 완료한 글씨 · 그림(페이지에 붙은 SVG)도 지우기 (도련 · 2026-10-17 · 지우개는 언제든지 글씨를 지울 수 있어야 해요)
+           - 그림 속 선(path)을 다시 점으로 읽어서 (penPathD 모양 : M 시작 · Q 조절점 = 원래 점 · L 끝) 그 자리에서 지우고 다시 그려요
+           - 옮기고 돌린 그림도 그 자리 그대로 · 다 지우면 그림이 없어져요 · 이건 ↶ 되돌리기에 안 들어가요 */
+        const penIsInk = el => { const i = el.querySelector(':scope > img'), sr = i && (i.dataset.src || i.getAttribute('src')) || ''; return /^data:image\/svg/.test(sr) && (sr.indexOf('malang-draw') >= 0 || sr.indexOf('malang-draw'.replace(/-/g, '%2D')) >= 0 || decodeURIComponent(sr).indexOf('malang-draw') >= 0); };
+        function penInkParse(el) {
+            const img = el.querySelector(':scope > img'), sr = img.dataset.src || img.getAttribute('src');
+            let txt = ''; try { txt = decodeURIComponent(sr.slice(sr.indexOf(',') + 1)); } catch (e) { return null; }
+            const doc = new DOMParser().parseFromString(txt, 'image/svg+xml'), sv = doc.documentElement; if (!sv || sv.nodeName !== 'svg') return null;
+            const vb = (sv.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number), bw = vb[2] || +sv.getAttribute('width'), bh = vb[3] || +sv.getAttribute('height');
+            const strokes = [...sv.querySelectorAll('path')].map(p => {
+                const n = (p.getAttribute('d') || '').match(/-?\d*\.?\d+(?:e-?\d+)?/gi), c = (p.getAttribute('d') || '').match(/[MQLl]/g); if (!n || !c) return null;
+                const v = n.map(Number), pts = []; let k = 0;
+                for (const cmd of c) {
+                    if (cmd === 'M' || cmd === 'L') { pts.push([v[k], v[k + 1]]); k += 2; }
+                    else if (cmd === 'Q') { pts.push([v[k], v[k + 1]]); k += 4; }     // 조절점 = 원래 찍은 점
+                    else if (cmd === 'l') { k += 2; }
+                }
+                const tool = p.getAttribute('stroke-opacity') ? 'hi' : 'pen';
+                return pts.length ? { tool, color: p.getAttribute('stroke'), w: +p.getAttribute('stroke-width') || 2, pts } : null;
+            }).filter(Boolean);
+            return { bw, bh, strokes };
+        }
+        function penInks() {                                                       // 지우기 시작할 때 페이지의 글씨 그림들
+            const c = drq('canvasArea'); if (!c) return [];
+            return [...c.querySelectorAll(':scope > .element-box')].filter(penIsInk).map(el => { const d = penInkParse(el); return d && d.strokes.length ? Object.assign(d, { el }) : null; }).filter(Boolean);
+        }
+        function penEraseInk(pt, r) {
+            (dw.inks || []).forEach(d => {
+                const el = d.el; if (!el.isConnected) return;
+                const img = el.querySelector(':scope > img'), W = el.offsetWidth, H = el.offsetHeight, iw = img.offsetWidth || 1, ih = img.offsetHeight || 1;
+                const s = parseFloat(el.dataset.scale) || 1, a = -(parseFloat(el.dataset.rotation) || 0) * Math.PI / 180;
+                const cx = (parseFloat(el.dataset.posX) || 0) + W / 2, cy = (parseFloat(el.dataset.posY) || 0) + H / 2;
+                const ux = pt[0] - cx, uy = pt[1] - cy, lx = (ux * Math.cos(a) - uy * Math.sin(a)) / s + W / 2, ly = (ux * Math.sin(a) + uy * Math.cos(a)) / s + H / 2;
+                const fx = d.bw / iw, fy = d.bh / ih, P = [(lx - 1 - img.offsetLeft) * fx, (ly - 1 - img.offsetTop) * fy], rr = r * fx / s;
+                if (P[0] < -rr - 40 || P[1] < -rr - 40 || P[0] > d.bw + rr + 40 || P[1] > d.bh + rr + 40) return;
+                const near = (p, st) => Math.hypot(p[0] - P[0], p[1] - P[1]) < rr + st.w * .35;
+                let hit = false; const out = [];
+                d.strokes.forEach(st => {
+                    const pts = penDense(st.pts);
+                    if (!pts.some(p => near(p, st))) { out.push(st); return; }
+                    hit = true; let run = [];
+                    const keep = () => { if (run.length > (st.tool === 'hi' ? 1 : 0)) out.push({ tool: st.tool, color: st.color, w: st.w, pts: run }); run = []; };
+                    pts.forEach(p => { if (near(p, st)) keep(); else run.push(p); });
+                    keep();
+                });
+                if (!hit) return;
+                d.strokes = out; dw.erased = true;
+                if (!out.length) { el.remove(); if (selectedElement === el) selectedElement = null; return; }
+                const paths = out.map(st => { const at = penAttrs(st); return `<path d="${penPathD(st.pts)}" ${Object.keys(at).map(k => `${k}="${at[k]}"`).join(' ')}/>`; }).join('');
+                const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${d.bw} ${d.bh}" width="${d.bw}" height="${d.bh}"><!--malang-draw-->${paths}</svg>`);
+                if (img.dataset.src) img.dataset.src = url;
+                img.src = url; d.dirty = true;
+            });
         }
         function penUndo() { if (dw.hist.length) { dw.strokes = dw.hist.pop(); penRender(); } }
         /* ---------- ✏️ 필기구 그림 (📒 수첩 모드 연필통에서 써요 · 30 × 150 · 위가 연필심) ---------- */
