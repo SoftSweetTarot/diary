@@ -2,7 +2,7 @@
    📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 연필꽂이 · 👝 필통 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
-   📌 페이지에 놓은 그림을 짧게 톡 · 왼쪽 클릭해도 (도련 · 10-17 · 빈 곳 메뉴처럼 · 글상자는 톡 = 글쓰기라 꾹 누르기만) / 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필꽂이의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
+   📌 페이지에 놓은 그림은 짧게 톡 · 왼쪽 클릭하면 (도련 · 10-17 · 빈 곳 메뉴처럼 · 그림은 꾹 누르기 · 오른쪽 클릭으로는 안 나와요) / 글상자는 톡 = 글쓰기라 폰 · 아이패드에서 꾹 누르면(0.5초) · 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필꽂이의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
         /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
@@ -131,7 +131,7 @@
         window.addEventListener('resize', tmClose);
         window.addEventListener('scroll', tmClose, true);
 
-        /* 🖱️ 마우스 : 놓아 둔 것 위에서 오른쪽 클릭 → 순서 · 삭제
+        /* 🖱️ 마우스 : 글상자 위에서 오른쪽 클릭 → 글씨체 · 순서 · 삭제 (그림은 톡으로만 · 도련 10-17 · 브라우저 기본 메뉴만 막아요)
            (글상자 안에서 글자를 골라 둔 채면 원래의 복사 · 붙여넣기 메뉴를 그대로 둬요) */
         let tmTouchAt = 0, tmHold = 0, tmHoldPos = null;
         document.addEventListener('contextmenu', (e) => {
@@ -139,12 +139,13 @@
             if (!box) return;
             e.preventDefault();                                        // 꾹 누르기로 나온 기본 메뉴도 여기서 막아요
             if (Date.now() - tmTouchAt < 1500) return;                 // 손가락이면 아래 꾹 누르기가 맡아요
+            if (!box.querySelector('textarea')) return;                // 그림은 톡으로만 메뉴
             const ta = e.target.tagName === 'TEXTAREA' ? e.target : null;
             if (ta && ta.selectionStart !== ta.selectionEnd) return;
             tmOpenElem(box, e.clientX, e.clientY, false);
         }, true);
 
-        /* 👆 폰 · 아이패드 : 놓아 둔 것을 0.5초 꾹 누르기 */
+        /* 👆 폰 · 아이패드 : 글상자를 0.5초 꾹 누르기 (그림은 톡으로만) */
         function tmHoldCancel() { clearTimeout(tmHold); tmHold = 0; tmHoldPos = null; }
         document.addEventListener('touchstart', (e) => {
             tmTouchAt = Date.now();
@@ -155,7 +156,7 @@
             if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) return;
             if (typeof dw !== 'undefined' && dw.on) return;
             const ta = box.querySelector('textarea');
-            if (ta && document.activeElement === ta) return;           // 글을 쓰는 중이면 기본 동작 (커서 · 글자 고르기)
+            if (!ta || document.activeElement === ta) return;           // 글을 쓰는 중이면 기본 동작 (커서 · 글자 고르기)
             tmHoldPos = { x: t.clientX, y: t.clientY };
             tmHold = setTimeout(() => {
                 const p = tmHoldPos; tmHold = 0; tmHoldPos = null;
@@ -173,7 +174,7 @@
         ['touchend', 'touchcancel'].forEach(t => document.addEventListener(t, () => { tmTouchAt = Date.now(); tmHoldCancel(); }, { capture: true, passive: true }));
 
         /* 👆🖱️ 놓아 둔 그림을 짧게 톡 · 왼쪽 클릭 → 같은 메뉴 (도련 · 2026-10-17 · 빈 곳을 톡 하면 메뉴가 나오는 것처럼)
-           - 끌어서 옮기거나(10px 넘게) · 꾹 누르거나(0.5초) · 두 손가락이면 메뉴 없이 원래대로
+           - 끌어서 옮기거나(10px 넘게) · 꾹 누르거나(0.5초) · 두 손가락이면 메뉴 없이 원래대로 (꾹 누르기 · 오른쪽 클릭 메뉴는 그림에선 뺐어요)
            - 글상자(메모 · 떡메)는 톡 = 글쓰기 그대로 · 메뉴는 꾹 누르기 · 오른쪽 클릭으로 */
         let tmTap = null;
         document.addEventListener('pointerdown', (e) => {
@@ -189,7 +190,7 @@
         document.addEventListener('pointerup', (e) => {
             const t = tmTap; if (!t || t.id !== e.pointerId) return;
             tmTap = null;
-            if (Date.now() - t.t >= TM_HOLD_MS || !t.box.isConnected) return;   // 꾹 누르기는 위에서 맡아요
+            if (Date.now() - t.t >= TM_HOLD_MS || !t.box.isConnected) return;   // 오래 누르고 있었으면 메뉴 없이
             tmOpenElem(t.box, e.clientX, e.clientY, e.pointerType !== 'mouse');
         }, true);
         document.addEventListener('pointercancel', () => { tmTap = null; }, true);
