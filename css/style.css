@@ -3614,7 +3614,11 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .twz-x { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; border: none; background: #ffe3ec; color: #c2385c; font-weight: 900; font-size: 15px; cursor: pointer; pointer-events: auto; }
 .twz { position: absolute; left: 0; top: 0; width: 55.8px; height: 201.5px; transform-origin: 27.9px 4.65px; pointer-events: none; opacity: 0; filter: drop-shadow(2px 4px 4px rgba(120, 60, 90, .28)); transition: opacity .25s ease; will-change: transform; }
 .twz.in { opacity: 1; }
-.twz.pin-cur { position: fixed; z-index: 2147483000; transition: none; }   /* 🪡 스티커 뜯는 핀셋 (js/elements.js pinMove) */
+.twz.pin-cur { position: fixed; z-index: 2147483000; transition: none; }
+.twz.pin-cur.out, .twz.out { opacity: 0; transition: opacity .12s; }   /* 🪡 핀셋 끝이 스티커 칸 · 페이지 밖이면 숨어요 */
+.twz-del { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 2px; padding: 2px 7px 2px 4px; border-radius: 999px; background: #e5484d; color: #fff; font-size: 11px; font-weight: 800; line-height: 1.4; box-shadow: 0 2px 6px rgba(160, 30, 40, .3); pointer-events: none; will-change: transform; transition: opacity .12s; }   /* 🗑 삭제 핀셋 표시 (js/elements.js twzToolAt) */
+.twz-del svg { width: 14px; height: 14px; }
+.twz-del.out, .twz-room.bye .twz-del { opacity: 0; }   /* 🪡 스티커 뜯는 핀셋 (js/elements.js pinMove) */
 body.pin-on #pelRoom, body.pin-on #pelRoom *, body.pin-on #spkBoard, body.pin-on #spkBoard *, body.pin-on #pcbRoom, body.pin-on #pcbRoom *, body.pin-on .snb-sheets, body.pin-on .snb-sheets * { cursor: none !important; }
 .twz.bye { opacity: 0; transition: opacity .38s ease; }
 .twz svg { display: block; overflow: visible; width: 100%; height: 100%; }

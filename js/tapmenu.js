@@ -1,8 +1,8 @@
 /* 말랑달콤 다이어리 - js/tapmenu.js
-   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 연필꽂이 · 👝 필통 · 💾 저장 · 📌 삭제핀 · 속지 빼기)가 나와요. (📃 속지 다듬기는 10-17 숨김) (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
+   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 연필꽂이 · 👝 필통 · 💾 저장 · 🗑 삭제 · 속지 빼기)가 나와요. (📃 속지 다듬기는 10-17 숨김) (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
-   📌 페이지에 놓은 그림은 짧게 톡 · 왼쪽 클릭하면 (도련 · 10-17 · 빈 곳 메뉴처럼 · 그림은 꾹 누르기 · 오른쪽 클릭으로는 안 나와요) / 글상자는 톡 = 글쓰기라 폰 · 아이패드에서 꾹 누르면(0.5초) · 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필꽂이의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 📌 삭제핀(이 스티커만) 메뉴가 나와요 (tmOpenElem) */
+   📌 페이지에 놓은 그림은 짧게 톡 · 왼쪽 클릭하면 (도련 · 10-17 · 빈 곳 메뉴처럼 · 그림은 꾹 누르기 · 오른쪽 클릭으로는 안 나와요) / 글상자는 톡 = 글쓰기라 폰 · 아이패드에서 꾹 누르면(0.5초) · 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필꽂이의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑 삭제(이 스티커만) 메뉴가 나와요 (tmOpenElem) */
         /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
@@ -21,9 +21,9 @@
             { key: 'p_pen', icon: TM_ICONS.pen, label: '연필꽂이', run: () => { tmAnchor = null; window.openDraw ? openDraw() : comingSoon('🖍️ 연필꽂이'); } },
             { key: 'p_case', icon: TM_ICONS.case, label: '필통', run: () => { tmAnchor = null; window.openPencase ? openPencase() : comingSoon('👝 필통'); } },
             { key: 'p_save', icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } },
-            { key: 'p_pin', icon: TM_ICONS.pin, label: '삭제핀', run: () => { const a = tmPinAt; tmAnchor = null; if (window.twzPin) twzPin(a && a.x, a && a.y); } }   // 📌 무엇이든 핀셋으로 뜯어 버려요 (도련 · 10-17 · js/elements.js twzPin)
+            { key: 'p_pin', icon: TM_ICONS.pin, label: '삭제', run: () => { const a = tmPinAt; tmAnchor = null; if (window.twzPin) twzPin(a && a.x, a && a.y); } }   // 📌 무엇이든 핀셋으로 뜯어 버려요 (도련 · 10-17 · js/elements.js twzPin)
         ];
-        let tmPinAt = null;                                                    // 빈 곳 메뉴를 연 화면 자리 (📌 삭제핀이 거기서 나와요)
+        let tmPinAt = null;                                                    // 빈 곳 메뉴를 연 화면 자리 (🗑 삭제이 거기서 나와요)
         const TM_ANCHOR_MS = 120000;
         /* ⏲ 자동으로 사라지는 시간 (설정에서 정해요) : 팝업메뉴가 닫히는 시간 = 그림 선택이 풀리는 시간 (한 값으로 통일)
            저장: 'diary_clear_sec'(설정.json) · 게스트는 이 기기 'malang_clear_sec' */
@@ -114,7 +114,7 @@
                 ...(window.panelKindOf && panelKindOf(el) === 'photo' ? [{ key: 'p_frame', icon: TM_ICONS.frame, label: '사진 꾸미기', run: () => openTextPanel(el) }] : []),
                 // ...(window.elEditable && elEditable(el) ? [{ key: 'p_edit', icon: TM_ICONS.palette, label: '다듬기', run: () => elEdit(el) }] : []),   // 🎨 다듬기 숨김 (도련 · 2026-10-17 · 코드는 그대로)
                 { key: 'p_order', icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } },
-                { key: 'p_trash', icon: TM_ICONS.pin, label: '삭제핀', run: () => { selectElement(el); deleteSelected(); } }   // 📌 이 스티커만 핀셋으로 (빈 곳 메뉴의 삭제핀은 무엇이든 · 도련 10-17)
+                { key: 'p_trash', icon: TM_ICONS.pin, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }   // 📌 이 스티커만 핀셋으로 (빈 곳 메뉴의 삭제핀은 무엇이든 · 도련 10-17)
             ], { x, y, above: !!byTouch }, 0, 'elem');
         }
 
