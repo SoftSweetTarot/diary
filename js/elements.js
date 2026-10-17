@@ -809,7 +809,10 @@
         /* 🪡 핀셋 모양은 하나 (도련 · 10-17) : 📌 삭제핀 · 스티커 삭제핀 · 스티커 뜯는 핀셋이 모두 pinSvg() 를 써요
            - 나중에 문구점에서 핀셋을 사서 바꾸면 PIN_SKINS 에 모양을 더하고 설정.json 'diary_pin' 에 그 이름을 적어요 → 세 곳이 모두 바뀌어요 */
         const PIN_SKINS = { basic: TWZ_SVG }, PIN_KEY = 'diary_pin', PIN_LOCAL = 'malang_pin';
-        function pinSvg() { const k = prefGet(PIN_KEY, PIN_LOCAL); return PIN_SKINS[k] || PIN_SKINS.basic; }
+        let pinSeq = 0;
+        function pinSvg() {   // 그라데이션 id 는 핀셋마다 따로 · 같은 id 가 숨은 핀셋에 있으면 색이 안 칠해지고 테두리만 보여요
+            const k = prefGet(PIN_KEY, PIN_LOCAL), n = ++pinSeq;
+            return (PIN_SKINS[k] || PIN_SKINS.basic).replace(/id="(\w+)"/g, `id="$1-${n}"`).replace(/url\(#(\w+)\)/g, `url(#$1-${n})`); }
         /* 🪡 뜯는 핀셋 : 스티커를 뜯는 곳에서는 핀셋이 손끝(포인터)을 따라와요 · 모양만 (뜯기는 원래대로)
            - 🏷️ 씰 종이 (js/stickerpeel.js) · 🍭 포인트 하얀 판 (js/stickerpack.js) · 🧩 조각 봉투 (js/piecebag.js) · 📒 수첩 시트 (js/stknote.js)
            - 그곳을 만지면 나와서 · 누르면 집게가 오므라들고 떼면 벌어져요 · 그 창이 닫히면 같이 사라져요 */
