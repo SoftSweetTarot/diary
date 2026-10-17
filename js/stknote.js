@@ -105,7 +105,7 @@
             }).observe(m, { attributes: true, attributeFilter: ['style'] });
         });
         function snbOnShow(m) {
-            if (snbMode() !== 'note') { snbUnwrap(m); if (snb.m === m) snb.m = null; if (window.sbRefreshAll) sbRefreshAll(); return; }   // 고르는 창으로 열면 다시 카테고리 · 쪽 (⚙️ 설정에서 수첩 ↔ 고르는 창을 바꿨을 때)
+            if (snbMode() !== 'note') { snbUnwrap(m); if (snb.m === m) snb.m = null; if (window.sbRefreshAll) sbRefreshAll(); if (window.libRedo) libRedo(); return; }   // 고르는 창으로 열면 다시 카테고리 · 쪽 (⚙️ 설정에서 수첩 ↔ 고르는 창을 바꿨을 때)
             snbWrap(m);
             m.classList.add('snb-on');
             snbSize(m); snbPlaceBox(m.querySelector('.modal-content'));

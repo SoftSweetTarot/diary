@@ -86,11 +86,10 @@
         }
 
         /* 파일 이름 · 만든 사람 묻기 (배경지 💾 파일로 저장도 같이 써요 js/pattern-maker.js) → { name, by } 또는 null */
-        const SHX_NICK = 'malang_pattern_nick';                        // 배경지 만든 사람 닉네임과 같은 칸 (이 기기에 기억)
         function shxAsk(title, defName, defBy, noBy, hint) {            // noBy : 만든 사람 칸 없이 (🎭 인형극 제목 묻기) · hint : 만든 사람 칸 아래 안내 (없으면 공유받은 칸 안내)
             return new Promise(resolve => {
                 let nick = defBy || '';
-                if (!nick) try { nick = localStorage.getItem(SHX_NICK) || ''; } catch (e) {}
+                if (!nick) nick = nickGet();                                // ✏️ 지난번 닉네임 (js/drive.js)
                 const el = document.createElement('div');
                 el.className = 'shx-pop';
                 el.innerHTML = `<div class="alert-card shx-card"><b class="shx-t">${shxEsc(title)}</b>
@@ -103,7 +102,7 @@
                     const name = shxTxt(shxq('shxName').value, 40).replace(/[\\/:*?"|.]/g, '').trim(), by = noBy ? '' : shxTxt(shxq('shxBy').value, 12);
                     if (ok && !name) { shxq('shxName').focus(); return; }
                     el.remove();
-                    if (ok) { try { if (by) localStorage.setItem(SHX_NICK, by); } catch (e) {} }
+                    if (ok) nickSet(by);
                     resolve(ok ? { name, by } : null);
                 };
                 el.querySelector('[data-ok]').onclick = () => done(true);

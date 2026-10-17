@@ -307,29 +307,31 @@
     })();
 
 /*    🗂 고르는 창 칸 (도련 · 2026-10-17) : 🏷️ 씰 · 🧩 조각 · 📄 모조지 · 🍭 포인트 기본 칸 (📒 수첩 창은 그대로)
-   - 가로 = 한 줄에 보이는 스티커 수 · 세로 = 한 쪽의 줄 수 (⚙️ 설정 → 🗂 고르는 창 칸 정하기 · 이 기기에만 기억)
+   - 가로 = 한 줄에 보이는 스티커 수 · 세로 = 한 쪽의 줄 수 (⚙️ 설정 → 🗂 고르는 창 칸 정하기 · 설정.json 에 폰 · 컴퓨터 따로)
    - 낱장 줄 : 낱장을 가로 칸 수만큼 한 줄로 · 나머지는 다음 쪽 · 누르면 그 낱장 하나만
    - 묶음 줄 : 묶음 하나 = 한 줄 · 가로 칸보다 많으면 줄을 옆으로 밀어서 봐요 (필통 밴드처럼 · 끝에서 멈춰요) · 어디를 눌러도 묶음 전체
    - 한 쪽 = 낱장 1줄 + 묶음 (세로 - 1)줄 · 낱장이 다 끝나면 묶음이 모든 줄 · 묶음이 없으면 낱장이 모든 줄
    - 낱장 줄은 위(기본) · 아래 중에서 골라요
    그리는 곳 : js/stk-basic.js sbPage · js/elements.js renderLibrary */
 (function () {
-    const KEY = 'malang_pick_grid', LIM = { c: [3, 10], r: [2, 8] }, GAP = 6;
-    const pgDef = () => innerWidth < 600 ? { c: 4, r: 4, top: 1 } : { c: 6, r: 4, top: 1 };   // 폰 4 × 4 · 컴퓨터 6 × 4
+    /* 저장 : 설정.json 'diary_pick_grid' = { m: 폰, d: 컴퓨터 } (각 { c, r, top }) · 이 기기에도 같이 (js/drive.js prefGet)
+       화면 폭 600px 보다 좁으면 폰 칸 · 넓으면 컴퓨터 칸을 써요 → 다른 폰 · 컴퓨터에서 열어도 그대로 */
+    const KEY = 'diary_pick_grid', LOCAL = 'malang_pick_grid', LIM = { c: [3, 10], r: [2, 8] }, GAP = 6;
+    const pgPhone = () => innerWidth < 600;
+    const pgDef = () => pgPhone() ? { c: 4, r: 4, top: 1 } : { c: 6, r: 4, top: 1 };   // 폰 4 × 4 · 컴퓨터 6 × 4
     const clamp = (k, v) => Math.max(LIM[k][0], Math.min(LIM[k][1], v));
+    function pgAll() { const a = prefGet(KEY, LOCAL); return a && typeof a === 'object' ? a : {}; }
     function pgGrid() {
-        const g = pgDef();
-        try {
-            const s = JSON.parse(localStorage.getItem(KEY));
-            if (s && typeof s === 'object') {
-                ['c', 'r'].forEach(k => { const n = parseInt(s[k], 10); if (!isNaN(n)) g[k] = clamp(k, n); });
-                if ('top' in s) g.top = s.top ? 1 : 0;
-            }
-        } catch (e) {}
+        const g = pgDef(), s = pgAll()[pgPhone() ? 'm' : 'd'];
+        if (s && typeof s === 'object') {
+            ['c', 'r'].forEach(k => { const n = parseInt(s[k], 10); if (!isNaN(n)) g[k] = clamp(k, n); });
+            if ('top' in s) g.top = s.top ? 1 : 0;
+        }
         return g;
     }
     function pgSave(g) {
-        try { if (g) localStorage.setItem(KEY, JSON.stringify(g)); else localStorage.removeItem(KEY); } catch (e) {}
+        const a = pgAll(); a[pgPhone() ? 'm' : 'd'] = { c: g.c, r: g.r, top: g.top };
+        prefSet(KEY, LOCAL, a);
         document.dispatchEvent(new CustomEvent('pickgrid'));
     }
 
@@ -445,7 +447,7 @@
                 + '<div class="pg-set-row"><span>↕ 세로</span><button type="button" class="btn" data-k="r" data-d="-1">－</button><b id="pgSetR"></b><button type="button" class="btn" data-k="r" data-d="1">＋</button></div>'
                 + '<div class="pg-set-row"><span>낱장 줄</span><div class="pg-set-seg"><button type="button" class="btn" data-top="1">맨 위</button><button type="button" class="btn" data-top="0">맨 아래</button></div></div>'
                 + '<div class="pg-set-dm" id="pgSetDm" aria-hidden="true"></div>'
-                + '<small class="pg-set-s">이 기기에만 저장돼요 (폰과 컴퓨터를 따로 정해요)</small>'
+                + '<small class="pg-set-s" id="pgSetS"></small>'
                 + '<div class="pg-set-btns"><button type="button" class="btn" id="pgSetReset">처음대로</button><button type="button" class="btn" id="pgSetNo">닫기</button><button type="button" class="btn pg-set-ok" id="pgSetOk">저장</button></div></div>';
             document.body.appendChild(c);
             c.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => { pgTry[b.dataset.k] = clamp(b.dataset.k, pgTry[b.dataset.k] + +b.dataset.d); pgDummy(); }));
@@ -456,6 +458,7 @@
             c.addEventListener('click', e => { if (e.target === c) c.hidden = true; });
         }
         pgTry = pgGrid(); c.hidden = false; pgDummy();
+        document.getElementById('pgSetS').textContent = (pgPhone() ? '📱 폰' : '💻 컴퓨터') + ' 화면 설정이에요 · 폰과 컴퓨터는 따로 저장돼요';
     }
     /* 더미 : 낱장 12개 + 묶음 여러 개로 첫 쪽 모양 */
     function pgDummy() {

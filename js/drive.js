@@ -207,6 +207,24 @@
             const t = JSON.stringify(vaultSeal(obj));
             try { if (sync) store.setItem(key, t); else localStorage.setItem(key, t); } catch (e) {}
         }
+        /* ☁ 설정 값 하나 (JSON) : 로그인 → 설정.json 의 key · 이 기기 local 에도 같이 (드라이브를 읽기 전 · 게스트는 이 기기 값)
+           쓰는 곳 : 🗂 고르는 창 칸 · 🎵 배경음악 · 🔮 토정비결 생일 · ✏️ 닉네임 */
+        function prefGet(key, local) {
+            let v = null;
+            try { if (drive.ready && !drive.guest) v = store.getItem(key); } catch (e) {}
+            if (v === null) { try { v = localStorage.getItem(local); } catch (e) {} }
+            if (v === null) return null;
+            try { return JSON.parse(v); } catch (e) { return v; }
+        }
+        function prefSet(key, local, val) {
+            const t = JSON.stringify(val);
+            try { if (drive.ready && !drive.guest) store.setItem(key, t); } catch (e) {}
+            try { localStorage.setItem(local, t); } catch (e) {}
+        }
+        /* ✏️ 내 닉네임 (배경지 · 공유 · 인형 · 인형극 '만든 사람' 칸에 미리 채워요) */
+        const NICK_KEY = 'diary_nick', NICK_LOCAL = 'malang_pattern_nick';
+        function nickGet() { const v = prefGet(NICK_KEY, NICK_LOCAL); return typeof v === 'string' ? v : ''; }
+        function nickSet(v) { if (v) prefSet(NICK_KEY, NICK_LOCAL, String(v)); }
         function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
         function dayPathText(date) {                                       // 안내문용 : 맨 위 폴더 이름은 빼요 (도련 · 2026-10-13)
             return `${DAY_PATH.slice(1).join('/')}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;
@@ -821,6 +839,7 @@
             if (typeof lockAfterLoad === 'function') lockAfterLoad();       // 🔒 다이어리 잠금 (js/lock.js)
             if (typeof showApply === 'function') showApply();               // 👀 페이지에 보이는 것 (js/show.js)
             if (typeof ddRefresh === 'function') ddRefresh();               // ⏳ D-day (js/dday.js)
+            if (typeof bgmLoadPref === 'function') bgmLoadPref();           // 🎵 배경음악 음량 · 반복 · 섞기 (js/bgm.js)
         }
 
         /* ---------- 화면(UI) ---------- */

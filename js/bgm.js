@@ -191,14 +191,20 @@
         const bgmClock = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
         /* ---------- 상태 ---------- */
-        const BGM_PREF_KEY = 'malang_bgm_pref';
+        const BGM_PREF_KEY = 'diary_bgm_pref', BGM_PREF_LOCAL = 'malang_bgm_pref';   // 설정.json · 이 기기 (js/drive.js prefGet)
         const bgm = {
             ac: null, out: null, song: null, playing: false, loading: false, cat: 'game',
             ev: [], idx: 0, t0: 0, total: 0, timer: null, cache: {}, loadSeq: 0,
             pref: { vol: 0.5, voice: 'auto', mode: 'all', shuffle: false }      // mode : all(목록 반복) · one(한 곡 반복)
         };
-        try { Object.assign(bgm.pref, JSON.parse(localStorage.getItem(BGM_PREF_KEY)) || {}); } catch (e) {}
-        function bgmSavePref() { try { localStorage.setItem(BGM_PREF_KEY, JSON.stringify(bgm.pref)); } catch (e) {} }
+        const BGM_PREF_DEF = Object.assign({}, bgm.pref);
+        function bgmLoadPref() {                                         // 드라이브 설정을 읽은 뒤에도 다시 불러요 (js/drive.js applyLoadedData)
+            const p = prefGet(BGM_PREF_KEY, BGM_PREF_LOCAL);
+            bgm.pref = Object.assign({}, BGM_PREF_DEF, p && typeof p === 'object' ? p : {});
+            if (bgm.out) bgm.out.gain.value = bgm.pref.vol * 0.6;
+            if (document.getElementById('bgmVol')) bgmRender();
+        }
+        function bgmSavePref() { prefSet(BGM_PREF_KEY, BGM_PREF_LOCAL, bgm.pref); }
 
         /* ---------- 소리 장치 (아이폰·아이패드 무음 모드에서도 들리게) ---------- */
         function bgmAudio() {
@@ -465,4 +471,6 @@
         function bgmSetMode() { bgm.pref.mode = bgm.pref.mode === 'one' ? 'all' : 'one'; bgmSavePref(); bgmRender(); }
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */
+bgmLoadPref();
+
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['bgm'] = true;

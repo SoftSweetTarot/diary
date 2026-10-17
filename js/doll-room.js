@@ -868,7 +868,7 @@
         function donePanel() {
             const d = DR.doll, c = dollCounts(d);
             let nick = d.by;
-            if (!nick) { try { nick = localStorage.getItem('malang_pattern_nick') || ''; } catch (e) {} }
+            if (!nick) nick = nickGet();                                       // ✏️ 지난번 닉네임 (js/drive.js)
             return `<p class="dr-intro">🎉 인형이 완성됐어요! 이름을 지어 주고 저장하거나 일기에 붙여 보세요.</p>
                 <div class="dr-group"><h4>인형 이름 <small class="dr-note" id="drFileName"></small></h4><input type="text" id="drName" class="btn dr-text" maxlength="12" value="${dollText(d.name, 12)}" placeholder="예) 로라"></div>
                 <div class="dr-group"><h4>만든 사람 (닉네임)</h4><input type="text" id="drBy" class="btn dr-text" maxlength="12" value="${dollText(nick, 12)}" placeholder="카페 닉네임"></div>

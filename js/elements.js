@@ -185,33 +185,15 @@
         });
         window.basicKit = basicKit; window.kitSize = kitSize; window.kitName = libCatName;
 
-        /* ---------- 📚 라이브러리 페이지 넘기기 · 배치 설정 ----------
+        /* ---------- 📚 라이브러리 페이지 넘기기 ----------
            - 한 페이지에 (몇 줄 × 한 줄에 몇 개)개씩 보여 주고, ◀ 이전 / 다음 ▶ 버튼(또는 옆으로 밀기)으로 넘김
-           - 배치 설정(한 줄에 몇 개·몇 줄·크기)은 기기마다 화면 크기가 달라서 이 기기(localStorage)에만 기억
-             → 구글 드라이브 저장(일기·설정.json)에는 전혀 영향 없음 */
-        const LIB_LAYOUT_KEY = 'malang_lib_layout';
+           - 🗂 고르는 창은 설정의 '고르는 창 칸 정하기' (js/stk-basic.js) · libLayout 은 📒 수첩이 장에 맞춰 바꿔요 (js/stknote.js) */
         const LIB_DEFAULT_LAYOUT = { rows: 3, cols: 5, size: 88 };
-        const LIB_LAYOUT_LIMITS = { rows: [1, 10], cols: [1, 10], size: [50, 180] };
         const LIB_GAP = 8;
-        let libLayout = loadLibLayout();
+        let libLayout = Object.assign({}, LIB_DEFAULT_LAYOUT);
         let libPage = 0;
         let libSwiped = false;
 
-        function loadLibLayout() {
-            const out = Object.assign({}, LIB_DEFAULT_LAYOUT);
-            let saved = null;
-            try { saved = JSON.parse(localStorage.getItem(LIB_LAYOUT_KEY)); } catch (e) {}
-            if (saved && typeof saved === 'object') {
-                Object.keys(LIB_LAYOUT_LIMITS).forEach(k => {
-                    const n = parseInt(saved[k], 10), lim = LIB_LAYOUT_LIMITS[k];
-                    if (!isNaN(n)) out[k] = Math.max(lim[0], Math.min(lim[1], n));
-                });
-            }
-            return out;
-        }
-        function saveLibLayout() {
-            try { localStorage.setItem(LIB_LAYOUT_KEY, JSON.stringify(libLayout)); } catch (e) {}
-        }
         function libPerPage() { return libLayout.rows * libLayout.cols; }
         /* 쪽 나누기 : 씰 1개 = 1칸 · 씰 종이(여러 개) = 가로 2 × 세로 2칸 정사각형 (도련 · 2026-10-16 · 묶음이 더 잘 보이게) · 빈 곳은 뒤의 1칸짜리가 채워요 (CSS grid-auto-flow: dense 와 같은 순서)
            → [[item, …], …] 쪽마다 */
@@ -240,31 +222,11 @@
         }
         function libPageCount() { return libPages().length; }
 
-        /* 줄 수·한 줄 개수·크기 → 그리드 모양과 창 너비에 반영, 설정 칸 값도 맞춤 */
+        /* 줄 수·한 줄 개수·크기 → 그리드 모양과 창 너비에 반영 */
         function applyLibLayoutStyle() {
-            const { rows, cols, size } = libLayout;
+            const { cols, size } = libLayout;
             document.getElementById('libGrid').style.gridTemplateColumns = `repeat(${cols}, minmax(0, ${size}px))`;
             document.getElementById('libContent').style.setProperty('--lib-w', (cols * size + (cols - 1) * LIB_GAP + 48) + 'px');
-            const fill = (sel, max, val) => {
-                if (sel.options.length !== max) {
-                    sel.innerHTML = '';
-                    for (let i = 1; i <= max; i++) sel.add(new Option(i, i));
-                }
-                sel.value = val;
-            };
-            fill(document.getElementById('libRowsInput'), LIB_LAYOUT_LIMITS.rows[1], rows);
-            fill(document.getElementById('libColsInput'), LIB_LAYOUT_LIMITS.cols[1], cols);
-            document.getElementById('libSizeInput').value = size;
-            document.getElementById('libSizeVal').textContent = size + 'px';
-
-            /* 한눈에 보이게 : 작은 칸 그림 + '= 한 페이지 N개' */
-            const mini = document.getElementById('libLayoutMini');
-            if (mini) {
-                mini.style.gridTemplateColumns = `repeat(${cols}, 5px)`;
-                if (mini.childElementCount !== rows * cols) { mini.innerHTML = '<i></i>'.repeat(rows * cols); }
-            }
-            const sum = document.getElementById('libLayoutSum');
-            if (sum) sum.textContent = `= 한 페이지 ${rows * cols}개`;
         }
 
         function updateLibPager() {
@@ -282,30 +244,6 @@
             libPage = next;
             renderLibrary();
         }
-
-        function toggleLibLayout() {
-            const panel = document.getElementById('libLayoutPanel');
-            const open = panel.style.display === 'none';
-            panel.style.display = open ? 'flex' : 'none';
-            document.getElementById('libLayoutBtn').classList.toggle('on', open);
-        }
-
-        /* 설정을 바꿔도 지금 보고 있던 첫 번째 이미지가 들어 있는 페이지로 이동 */
-        function setLibLayout(next) {
-            const first = (libPages()[libPage] || [])[0];
-            libLayout = next;
-            libPage = Math.max(0, libPages().findIndex(p => p.includes(first)));
-            saveLibLayout();
-            if (libItems) renderLibrary(); else { applyLibLayoutStyle(); updateLibPager(); }
-        }
-        function onLibLayoutChange() {
-            const num = (id, k) => {
-                const n = parseInt(document.getElementById(id).value, 10), lim = LIB_LAYOUT_LIMITS[k];
-                return isNaN(n) ? libLayout[k] : Math.max(lim[0], Math.min(lim[1], n));
-            };
-            setLibLayout({ rows: num('libRowsInput', 'rows'), cols: num('libColsInput', 'cols'), size: num('libSizeInput', 'size') });
-        }
-        function resetLibLayout() { setLibLayout(Object.assign({}, LIB_DEFAULT_LAYOUT)); }
 
         /* 스마트폰 : 이미지 목록을 옆으로 밀어서 페이지 넘기기 */
         (function setupLibSwipe() {
@@ -434,7 +372,7 @@
         }
         /* 🗂 칸 설정 · 창 너비가 바뀌면 다시 그려요 (보고 있을 때만) */
         const libRedo = () => { const b = document.getElementById('libBox'); if (libItems && b && !b.hidden && b.offsetParent) renderLibrary(); };
-        document.addEventListener('pickgrid', libRedo);
+        document.addEventListener('pickgrid', libRedo); window.libRedo = libRedo;
         let libRz = 0; window.addEventListener('resize', () => { clearTimeout(libRz); libRz = setTimeout(libRedo, 200); });
 
         /* 🔒 페이지 스티커 크기 바꾸기 막기 (도련 · 2026-10-16) : 빨간 점선 네모의 꼭짓점 · 두 손가락 · 마우스 휠로 크기가 안 바뀌어요 (돌리기 · 옮기기는 그대로)

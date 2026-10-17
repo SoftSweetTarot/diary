@@ -10,7 +10,7 @@
    - 생년월일은 이 기기에만 기억해요. (드라이브 · 서버로 보내지 않아요)
    ※ 이 파일이 없어도 다이어리는 정상 동작 (토정비결만 '준비 중') */
 
-        const TJ_BIRTH_KEY = 'malang_tojeong_birth';
+        const TJ_BIRTH_KEY = 'diary_tojeong_birth', TJ_BIRTH_LOCAL = 'malang_tojeong_birth';   // 설정.json · 이 기기 (js/drive.js prefGet)
         const TJ_CG = [9, 8, 7, 6, 5, 9, 8, 7, 6, 5];               // 천간수 : 갑을병정무기경신임계
         const TJ_JJ = [9, 8, 7, 6, 5, 4, 9, 8, 7, 6, 5, 4];         // 지지수 : 자축인묘진사오미신유술해
         const TJ_ANIMAL = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
@@ -224,8 +224,8 @@
             });
             tj.year = now.getMonth() >= 10 ? thisYear + 1 : thisYear;          // 11월부터는 다음 해 운세를 먼저
             yb.querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.y === tj.year));
-            try {                                                               // 지난번에 넣은 생년월일 (이 기기에만)
-                const b = JSON.parse(localStorage.getItem(TJ_BIRTH_KEY));
+            try {                                                               // 지난번에 넣은 생년월일
+                const b = prefGet(TJ_BIRTH_KEY, TJ_BIRTH_LOCAL);
                 if (b && b.y) { tq('tjY').value = b.y; tq('tjM').value = b.m; tq('tjD').value = b.d; tjSetCal(b.solar ? 'solar' : 'lunar'); tq('tjLeap').checked = !!b.leap; }
             } catch (e) {}
         }
@@ -261,7 +261,7 @@
                     : e.message === 'future' ? '운세를 볼 해보다 늦게 태어난 날짜예요.' : '이 날짜는 운세를 계산할 수 없어요.');
                 return;
             }
-            try { localStorage.setItem(TJ_BIRTH_KEY, JSON.stringify(b)); } catch (e) {}
+            prefSet(TJ_BIRTH_KEY, TJ_BIRTH_LOCAL, b);
             tj.last = { g, r: tjRead(g) };
             const box = tq('tjResult'), L = tj.last;      // ✨ 괘를 짓는 연출 (js/ritual.js)
             box.innerHTML = '';

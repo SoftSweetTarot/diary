@@ -50,7 +50,7 @@
 
         /* ---------- 인형극 데이터 : 알려진 값만 통과 (파일 · 다른 사람 인형극도 안전하게) ---------- */
         function psNew() { return { v: 1, title: '', by: psNick(), cast: [], pics: [], scenes: [{ bg: 'room', actors: [], lines: [] }] }; }
-        function psNick() { try { return localStorage.getItem('malang_pattern_nick') || ''; } catch (e) { return ''; } }
+        function psNick() { return nickGet(); }                                   // ✏️ 지난번 닉네임 (js/drive.js)
         function psClean(o) {
             if (!o || typeof o !== 'object') return null;
             const cast = (Array.isArray(o.cast) ? o.cast : []).slice(0, PS_MAX_CAST).map(c => { const d = c && sanitizeDoll(c.doll); return d ? (typeof c.src === 'string' && /^[\w-]{1,80}$/.test(c.src) ? { doll: d, src: c.src } : { doll: d }) : null; });
@@ -446,7 +446,7 @@
             try {
                 if (!(await psSaveStore())) return false;
                 PS.dirty = false;
-                try { if (PS.show.by) localStorage.setItem('malang_pattern_nick', PS.show.by); } catch (e) {}
+                nickSet(PS.show.by);
                 if (msg) showMsg(`💾 '${psEsc(PS.show.title)}' 인형극을 저장했어요!${psDrive() ? `<br><span style="font-size:12px;color:#777;">${PS_FOLDER().join(' / ')} / ${psEsc(psName(PS.show))}.json</span>` : '<br><span style="font-size:12px;color:#777;">로그인하지 않아서 이 기기에만 저장했어요.</span>'}`);
                 return true;
             } catch (e) { console.error('인형극 저장 오류:', e); showMsg('⚠ 저장하지 못했어요.<br>인터넷 연결을 확인한 뒤 다시 저장해 주세요.'); return false; }
