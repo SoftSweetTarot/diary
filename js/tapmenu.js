@@ -2,7 +2,7 @@
    📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 필기구 · 👝 필통 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
-   📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필통의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
+   📌 페이지에 놓은 그림을 짧게 톡 · 왼쪽 클릭해도 (도련 · 10-17 · 빈 곳 메뉴처럼 · 글상자는 톡 = 글쓰기라 꾹 누르기만) / 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필통의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
         /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
@@ -171,3 +171,25 @@
             if (e.touches.length > 1 || !t || Math.hypot(t.clientX - tmHoldPos.x, t.clientY - tmHoldPos.y) > TM_HOLD_MOVE) tmHoldCancel();
         }, { capture: true, passive: true });
         ['touchend', 'touchcancel'].forEach(t => document.addEventListener(t, () => { tmTouchAt = Date.now(); tmHoldCancel(); }, { capture: true, passive: true }));
+
+        /* 👆🖱️ 놓아 둔 그림을 짧게 톡 · 왼쪽 클릭 → 같은 메뉴 (도련 · 2026-10-17 · 빈 곳을 톡 하면 메뉴가 나오는 것처럼)
+           - 끌어서 옮기거나(10px 넘게) · 꾹 누르거나(0.5초) · 두 손가락이면 메뉴 없이 원래대로
+           - 글상자(메모 · 떡메)는 톡 = 글쓰기 그대로 · 메뉴는 꾹 누르기 · 오른쪽 클릭으로 */
+        let tmTap = null;
+        document.addEventListener('pointerdown', (e) => {
+            if (tmTap) { tmTap = null; return; }                            // 두 번째 손가락 = 크기 · 돌리기
+            if (!e.isPrimary || e.button !== 0) return;
+            const box = e.target.closest && e.target.closest('#canvasArea > .element-box');
+            if (!box || e.target.closest('.rot-zone, .handle') || box.querySelector('textarea')) return;
+            tmTap = { id: e.pointerId, box, x: e.clientX, y: e.clientY, t: Date.now() };
+        }, true);
+        document.addEventListener('pointermove', (e) => {
+            if (tmTap && tmTap.id === e.pointerId && Math.hypot(e.clientX - tmTap.x, e.clientY - tmTap.y) > TM_HOLD_MOVE) tmTap = null;
+        }, true);
+        document.addEventListener('pointerup', (e) => {
+            const t = tmTap; if (!t || t.id !== e.pointerId) return;
+            tmTap = null;
+            if (Date.now() - t.t >= TM_HOLD_MS || !t.box.isConnected) return;   // 꾹 누르기는 위에서 맡아요
+            tmOpenElem(t.box, e.clientX, e.clientY, e.pointerType !== 'mouse');
+        }, true);
+        document.addEventListener('pointercancel', () => { tmTap = null; }, true);
