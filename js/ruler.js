@@ -1,11 +1,11 @@
-/* 📏 자 (도련 · 2026-10-17) : 📒 연필통(js/draw.js)에 칼과 같이 꽂혀 있어요 → 위로 쏙 뽑으면 페이지 위에 내려놓아요
+/* 📏 자 (도련 · 2026-10-17) : 📒 연필꽂이(js/draw.js)에 칼과 같이 꽂혀 있어요 → 위로 쏙 뽑으면 페이지 위에 내려놓아요
    - 자는 '깔아 두는 도구' · 손에는 지금처럼 필기구(또는 칼) 하나만 들어요 → 자 + 칼 · 자 + 색연필 · 자만 모두 돼요
    - 몸통을 끌면 옮기기 · 양 끝 동그란 손잡이로 돌리기(0 · 45 · 90° 근처에서 살짝 붙어요) · 두 손가락으로도 옮기고 돌려요
    - 가장자리에 대고 칼 · 색연필 · 형광펜을 그으면 자에 착 붙어 반듯하게 · 그은 길이가 cm 로 보여요
    - 아무것도 안 들고 자 가장자리를 따라 쓸면 길이만 재요
    - 눈금은 화면에 보이는 진짜 cm · 기기마다 화면이 달라서 ⚙ 설정 → 📏 자 맞추기(카드 대고 한 번)로 맞춰요 (이 기기에만 저장 · malang_ruler_ppc)
-   - 자는 일기에 저장되지 않아요 (PNG 저장에도 안 찍혀요) · 다 쓰면 구석 연필통을 톡 (칼 · 필기구와 같이 들어가요)
-   ※ 이 파일이 없어도 다이어리는 정상 동작 (연필통에 자만 안 꽂혀요) */
+   - 자는 일기에 저장되지 않아요 (PNG 저장에도 안 찍혀요) · 다 쓰면 구석 연필꽂이를 톡 (칼 · 필기구와 같이 들어가요)
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (연필꽂이에 자만 안 꽂혀요) */
 (() => {
     'use strict';
     const q = id => document.getElementById(id);
@@ -21,8 +21,19 @@
     function rlSaved() { try { const v = parseFloat(localStorage.getItem(PPC_KEY)); return v > 15 && v < 200 ? v : 0; } catch (e) { return 0; } }
     const rlPpc = () => rlSaved() || rlGuess();
 
+    /* ---------- 📏 자 종류 (👝 필통에서 골라 연필꽂이에 꽂아요 · js/pencase.js) : 몸통 · 테두리 · 눈금 색 · 새 자 = 한 줄 추가 (id 는 바꾸지 않기) ---------- */
+    const RL_KINDS = [
+        { id: 'pink', name: '딸기 자', bd: ['rgba(255,214,228,.78)', 'rgba(255,182,206,.62)'], ln: '#ee8fb0', ink: '#8a4a63', ht: '#ff7fa8', cup: 'rgba(255,196,216,.85)' },
+        { id: 'mint', name: '민트 자', bd: ['rgba(214,247,233,.8)', 'rgba(166,228,203,.64)'], ln: '#6cc7a3', ink: '#2f6e58', ht: '#ff8fb1', cup: 'rgba(186,238,215,.9)' },
+        { id: 'lav', name: '라벤더 자', bd: ['rgba(236,226,255,.8)', 'rgba(208,190,250,.64)'], ln: '#a78be8', ink: '#5a3f8f', ht: '#ff8fb1', cup: 'rgba(222,206,255,.9)' },
+        { id: 'clear', name: '투명 자', bd: ['rgba(255,255,255,.5)', 'rgba(236,244,255,.42)'], ln: '#aebbd0', ink: '#55607a', ht: '#ffb3c8', cup: 'rgba(240,246,255,.85)' }
+    ];
+    const rlKind = id => RL_KINDS.find(k => k.id === id) || RL_KINDS[0];
+    R.kind = RL_KINDS[0].id;
+
     /* ---------- 자 그림 ---------- */
     function rlDraw() {
+        const K = rlKind(R.kind);
         const p = R.ppc, L = R.L, pad = .6 * p, W = Math.round(L * p + pad * 2), H = Math.round(Math.max(52, Math.min(92, 1.45 * p)));
         R.W = W; R.H = H;
         let tk = '', nm = '';
@@ -33,24 +44,25 @@
         }
         let gl = '';                                       // 반짝이 (늘 같은 자리)
         for (let i = 0; i < 26; i++) { const x = (i * 97 % 1000) / 1000 * (W - 20) + 10, y = H * .55 + ((i * 53) % 100) / 100 * (H * .3); gl += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(i % 3) * .5 + .7}"/>`; }
-        const heart = `<path transform="translate(${(pad - 1).toFixed(1)} ${(H * .7).toFixed(1)}) scale(.9)" d="M0 3c-2-3-6-1-5 2 1 2 5 5 5 5s4-3 5-5c1-3-3-5-5-2z" fill="#ff7fa8"/>`;
+        const heart = `<path transform="translate(${(pad - 1).toFixed(1)} ${(H * .7).toFixed(1)}) scale(.9)" d="M0 3c-2-3-6-1-5 2 1 2 5 5 5 5s4-3 5-5c1-3-3-5-5-2z" fill="${K.ht}"/>`;
         return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">`
             + `<defs><linearGradient id="rlMet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f8fb"/><stop offset=".5" stop-color="#c9d1dd"/><stop offset="1" stop-color="#a9b3c2"/></linearGradient>`
-            + `<linearGradient id="rlBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,214,228,.78)"/><stop offset="1" stop-color="rgba(255,182,206,.62)"/></linearGradient></defs>`
-            + `<rect x=".75" y=".75" width="${W - 1.5}" height="${H - 1.5}" rx="9" fill="url(#rlBody)" stroke="#ee8fb0" stroke-width="1.5"/>`
+            + `<linearGradient id="rlBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${K.bd[0]}"/><stop offset="1" stop-color="${K.bd[1]}"/></linearGradient></defs>`
+            + `<rect x=".75" y=".75" width="${W - 1.5}" height="${H - 1.5}" rx="9" fill="url(#rlBody)" stroke="${K.ln}" stroke-width="1.5"/>`
             + `<rect x="6" y="${(H * .5).toFixed(1)}" width="${W - 12}" height="${(H * .14).toFixed(1)}" rx="3" fill="#fff" opacity=".35"/>`
             + `<g fill="#fff" opacity=".85">${gl}</g>`
             + `<rect x="1.5" y="${H - 9}" width="${W - 3}" height="7.5" rx="3" fill="url(#rlMet)" stroke="#9aa4b4" stroke-width=".6"/>`   // 칼이 미끄러지는 쇠 띠
-            + `<g stroke="#8a4a63">${tk}</g><g fill="#8a4a63" font-size="10.5" font-family="sans-serif" font-weight="bold" text-anchor="middle">${nm}</g>`
-            + heart + `<text x="${(W * .25).toFixed(1)}" y="${(H - 14).toFixed(1)}" font-size="9.5" font-family="sans-serif" font-style="italic" fill="rgba(196,80,125,.7)" text-anchor="middle">mallang ♡ ruler · cm</text></svg>`;
+            + `<g stroke="${K.ink}">${tk}</g><g fill="${K.ink}" font-size="10.5" font-family="sans-serif" font-weight="bold" text-anchor="middle">${nm}</g>`
+            + heart + `<text x="${(W * .25).toFixed(1)}" y="${(H - 14).toFixed(1)}" font-size="9.5" font-family="sans-serif" font-style="italic" fill="${K.ink}" opacity=".6" text-anchor="middle">mallang ♡ ruler · cm</text></svg>`;
     }
-    /* 연필통에 꽂힌 작은 자 (30 × 300 · 위가 0) */
-    function rlCupSvg() {
+    /* 연필꽂이 · 필통에 꽂힌 작은 자 (30 × h · 위가 0 · 연필꽂이 300 · 필통 150) */
+    function rlCupSvg(id, h) {
+        const K = rlKind(id); h = h || 300;
         let tk = '';
-        for (let i = 0; i <= 54; i++) { const y = 14 + i * 5, l = i % 10 === 0 ? 11 : i % 5 === 0 ? 8 : 5; tk += `<line x1="1.5" y1="${y}" x2="${1.5 + l}" y2="${y}"/>`; }
-        return `<svg viewBox="0 0 30 300" aria-hidden="true"><rect x=".75" y=".75" width="28.5" height="298.5" rx="6" fill="rgba(255,196,216,.85)" stroke="#ee8fb0" stroke-width="1.5"/>`
-            + `<rect x="23" y="2" width="5.5" height="296" rx="2" fill="#cdd5e0"/><g stroke="#8a4a63" stroke-width=".9">${tk}</g>`
-            + `<path transform="translate(15 286)" d="M0 3c-2-3-6-1-5 2 1 2 5 5 5 5s4-3 5-5c1-3-3-5-5-2z" fill="#ff7fa8"/></svg>`;
+        for (let i = 0, y = 14; y < h - 22; i++, y += 5) { const l = i % 10 === 0 ? 11 : i % 5 === 0 ? 8 : 5; tk += `<line x1="1.5" y1="${y}" x2="${1.5 + l}" y2="${y}"/>`; }
+        return `<svg viewBox="0 0 30 ${h}" aria-hidden="true"><rect x=".75" y=".75" width="28.5" height="${h - 1.5}" rx="6" fill="${K.cup}" stroke="${K.ln}" stroke-width="1.5"/>`
+            + `<rect x="23" y="2" width="5.5" height="${h - 4}" rx="2" fill="#cdd5e0"/><g stroke="${K.ink}" stroke-width=".9">${tk}</g>`
+            + `<path transform="translate(15 ${h - 14})" d="M0 3c-2-3-6-1-5 2 1 2 5 5 5 5s4-3 5-5c1-3-3-5-5-2z" fill="${K.ht}"/></svg>`;
     }
 
     /* ---------- 자 놓기 ---------- */
@@ -78,13 +90,14 @@
     function rlKeep() {                                   // 가운데는 늘 화면 안
         R.cx = Math.max(10, Math.min(innerWidth - 10, R.cx)); R.cy = Math.max(10, Math.min(innerHeight - 10, R.cy));
     }
-    function rlShow(x, y) {
+    function rlShow(x, y, kind) {
+        R.kind = rlKind(kind || rlFirst() || R.kind).id;
         rlBuild(); R.on = true; R.el.hidden = false; R.el.classList.remove('rl-in', 'rl-off');
         rlSize(); R.cx = x; R.cy = y; rlKeep(); rlPlace();
         document.body.classList.add('rl-out');
         document.dispatchEvent(new CustomEvent('rl-change'));
     }
-    /* 끝 : put = 구석 연필통에 쏙 넣으며 */
+    /* 끝 : put = 구석 연필꽂이에 쏙 넣으며 */
     function rlEnd(put) {
         if (!R.on) return;
         R.on = false; R.drag = null; R.meas = null; R.touch.clear(); rlSay(null); rlMeasDraw(null);
@@ -143,7 +156,7 @@
             ? { id: e.pointerId, rot: true, a0: Math.atan2(e.clientY - R.cy, e.clientX - R.cx) * 180 / Math.PI - R.ang }
             : { id: e.pointerId, off: [R.cx - e.clientX, R.cy - e.clientY] };
         R.el.classList.add('grab');
-        document.dispatchEvent(new CustomEvent('rl-use'));          // 자를 쓰기 시작 → 큰 연필통은 구석으로 (js/draw.js)
+        document.dispatchEvent(new CustomEvent('rl-use'));          // 자를 쓰기 시작 → 큰 연필꽂이는 구석으로 (js/draw.js)
         return true;
     }
     function rlTwoStart() {
@@ -177,9 +190,9 @@
         if (d.id !== e.pointerId) return;
         R.drag = null; R.el.classList.remove('grab'); rlSay(null);
         document.querySelectorAll('.pc-mini.over').forEach(m => m.classList.remove('over'));
-        if (!d.rot && e.type !== 'pointercancel' && rlOverMini(e.clientX, e.clientY)) rlEnd(true);   // 자를 구석 연필통에 넣으면 자만 정리
+        if (!d.rot && e.type !== 'pointercancel' && rlOverMini(e.clientX, e.clientY)) rlEnd(true);   // 자를 구석 연필꽂이에 넣으면 자만 정리
     }
-    /* 보이는 구석 연필통 (📒 연필통 · ✂️ 칼 방) */
+    /* 보이는 구석 연필꽂이 (📒 연필꽂이 · ✂️ 칼 방) */
     function rlMiniRect() { const m = [...document.querySelectorAll('.pc-mini')].find(v => !v.hidden && v.offsetParent && !v.closest('[hidden]')); return m ? m.getBoundingClientRect() : null; }
     function rlOverMini(x, y) {
         return [...document.querySelectorAll('.pc-mini')].find(m => { if (m.hidden || !m.offsetParent || m.closest('[hidden]')) return false; const r = m.getBoundingClientRect(); return x > r.left - 16 && x < r.right + 16 && y > r.top - 24 && y < r.bottom + 16; }) || null;
@@ -209,21 +222,27 @@
         l.setAttribute('x1', m.a[0]); l.setAttribute('y1', m.a[1]); l.setAttribute('x2', m.b[0]); l.setAttribute('y2', m.b[1]);
     }
 
-    /* ---------- 연필통에서 뽑기 : 손가락에 자를 들고 → 놓은 자리에 내려놓아요 ---------- */
-    function rlCarry(e) {
-        rlShow(e.clientX, e.clientY);
+    /* ---------- 연필꽂이에서 뽑기 : 손가락에 자를 들고 → 놓은 자리에 내려놓아요 ---------- */
+    function rlCarry(e, kind) {
+        rlShow(e.clientX, e.clientY, kind);
         try { R.el.setPointerCapture(e.pointerId); } catch (er) {}
         R.touch.set(e.pointerId, [e.clientX, e.clientY]);
         R.drag = { id: e.pointerId, off: [0, 0] }; R.el.classList.add('grab');
         if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
     }
-    /* 구석 연필통에 꽂힌 작은 자 머리 : 위로 끌면 뽑아요 · 톡은 원래대로(끝) */
+    /* 구석 연필꽂이에서 뽑을 자 : 👝 필통에서 고른 자 중 첫 번째 (하나도 안 골랐으면 없음 → 작은 자 머리도 숨겨요) */
+    function rlFirst() { return window.pkFirst ? pkFirst('ruler') : RL_KINDS[0].id; }
+    function rlTopSync() {
+        const id = rlFirst(); document.body.classList.toggle('rl-none', !id);
+        if (id) document.querySelectorAll('.rl-top').forEach(t => { const K = rlKind(id); t.style.setProperty('--rl-c', K.cup); t.style.setProperty('--rl-l', K.ln); t.style.setProperty('--rl-i', K.ink); });
+    }
+    /* 구석 연필꽂이에 꽂힌 작은 자 머리 : 위로 끌면 뽑아요 · 톡은 원래대로(끝) */
     function rlMiniAttach(mini) {
         if (!mini || mini.querySelector('.rl-top')) return;
         const t = document.createElement('span'); t.className = 'rl-top'; t.setAttribute('aria-hidden', 'true');
-        mini.insertBefore(t, mini.querySelector('.pc-mini-cup'));
+        mini.insertBefore(t, mini.querySelector('.pc-mini-cup')); rlTopSync();
         let st = null;
-        t.addEventListener('pointerdown', e => { if (R.on || e.button > 0) return; e.stopPropagation(); st = { id: e.pointerId, y: e.clientY, done: false }; try { t.setPointerCapture(e.pointerId); } catch (er) {} });
+        t.addEventListener('pointerdown', e => { if (R.on || e.button > 0 || !rlFirst()) return; e.stopPropagation(); st = { id: e.pointerId, y: e.clientY, done: false }; try { t.setPointerCapture(e.pointerId); } catch (er) {} });
         t.addEventListener('pointermove', e => {
             if (!st || st.id !== e.pointerId || st.done) return;
             if (st.y - e.clientY > 28) { st.done = true; e.preventDefault(); rlCarry(e); }
@@ -269,4 +288,5 @@
     window.rlShow = rlShow; window.rlEnd = rlEnd; window.rlOn = rlOn; window.rlGrab = rlGrab; window.rlHit = rlHit;
     window.rlSnap = rlSnap; window.rlProj = rlProj; window.rlTell = rlTell; window.rlMeasure = rlMeasure;
     window.rlCarry = rlCarry; window.rlMiniAttach = rlMiniAttach; window.rlCupSvg = rlCupSvg; window.rlCalOpen = rlCalOpen;
+    window.rlKinds = () => RL_KINDS.map(k => ({ id: k.id, name: k.name })); window.rlKindNow = () => R.on ? R.kind : null; window.rlTopSync = rlTopSync;
 })();

@@ -3324,7 +3324,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .modal:not(.snb-on) .snb-pgno, .modal:not(.snb-on) .snb-net { display: none !important; }
 
 
-/* ✏️ 📒 수첩 모드 연필통 (js/draw.js pcOpen) : 페이지 가운데 길쭉한 연필통에 섞여 꽂힌 필기구 · 위로 뽑기 · 페이지 오른쪽 아래 작은 연필통에 꽂으면 완료 */
+/* ✏️ 📒 수첩 모드 연필꽂이 (js/draw.js pcOpen) : 페이지 가운데 길쭉한 연필꽂이에 섞여 꽂힌 필기구 · 위로 뽑기 · 페이지 오른쪽 아래 작은 연필꽂이에 꽂으면 완료 */
 .pc-room { position: fixed; inset: 0; z-index: 1500; pointer-events: none; }
 .pc-room[hidden] { display: none; }
 .pc-cup { position: absolute; left: 50%; top: 20%; width: 300px; height: 470px; transition: transform .45s cubic-bezier(.5,0,.3,1), opacity .4s; transform-origin: 50% 100%; }
@@ -3449,7 +3449,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .fp-ringv b { font-size: 14px; color: #c2385c; }
 @media (prefers-reduced-motion: reduce) { .fp-phone.ringing, .fp-phone.buzz, .fp-charm, .fp-wave { animation: none; } }
 
-/* 👝 필통 (js/pencase.js) : 빈 곳 메뉴의 '필통' → 페이지 한가운데에 진짜 필통이 나와요 · 걸쇠를 누르면 뚜껑이 오른쪽에서 왼쪽으로 열리고 · 안의 필기구를 톡 골라 필기구에 보이게 해요 */
+/* 👝 필통 (js/pencase.js) : 빈 곳 메뉴의 '필통' → 페이지 한가운데에 진짜 필통이 나와요 · 걸쇠를 누르면 뚜껑이 오른쪽에서 왼쪽으로 열리고 · 종류 칸을 골라 서 있는 도구를 톡 → 연필꽂이에 꽂아요 */
 
 .pk-room { position: fixed; inset: 0; z-index: 1600; background: rgba(90,60,72,.32); opacity: 0; transition: opacity .22s; }
 .pk-room.show { opacity: 1; }
@@ -3469,22 +3469,29 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .pk-tip b { color: #d0517a; }
 .pk-tip.shake { animation: pkShake .4s; }
 @keyframes pkShake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
-.pk-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.pk-col { display: flex; flex-direction: column; gap: 3px; padding: 6px 5px; border-radius: 9px; background: rgba(60,8,30,.16); box-shadow: inset 0 2px 5px rgba(60,8,30,.3); }
-.pk-lb { margin: 2px 0 1px 4px; color: #ffe3ec; font-size: 11px; font-weight: 700; letter-spacing: .5px; opacity: .85; }
-.pk-lb:not(:first-child) { margin-top: 8px; }
-.pk-ers { display: flex; flex-direction: column; gap: 3px; }
+/* 🗂 종류 칸 (색연필 · 형광펜 · 지우개 · 칼 · 자) : 숫자 = 꽂은 개수 */
+.pk-tabs { display: flex; gap: 4px; margin: 0 0 8px; }
+.pk-tab { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 3px; padding: 6px 2px; border: 0; border-radius: 10px 10px 4px 4px; background: rgba(60,8,30,.22); color: #ffe3ec; font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; box-shadow: inset 0 2px 4px rgba(60,8,30,.3); -webkit-tap-highlight-color: transparent; }
+.pk-tab b { min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 8px; background: rgba(255,255,255,.9); color: #d0517a; font-size: 10px; line-height: 15px; }
+.pk-tab b:empty { display: none; }
+.pk-tab.on { background: #fffaf6; color: #c24f78; box-shadow: 0 2px 5px rgba(60,10,30,.3); }
+.pk-tab:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+/* 서 있는 도구들 : 연필꽂이처럼 세로로 · 많으면 여러 줄 (줄마다 펠트 받침) · 넘치면 안에서 위아래로 */
+.pk-tray { height: 296px; overflow-y: auto; overscroll-behavior: contain; padding: 4px 2px 0; border-radius: 9px; background: rgba(60,8,30,.16); box-shadow: inset 0 2px 5px rgba(60,8,30,.3); scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.5) transparent; }
+.pk-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 0 2px; padding: 0 4px; background: repeating-linear-gradient(transparent 0 128px, rgba(40,0,18,.32) 128px 136px, transparent 136px 144px); }
+.pk-row[hidden] { display: none; }
 
-/* 누워 있는 필기구 한 자루 (그림은 연필통 것을 옆으로 눕혀요 · 심이 오른쪽) */
-.pk-t { position: relative; display: block; width: 100%; height: 21px; padding: 0; border: 0; border-radius: 11px; background: rgba(40,0,18,.18); box-shadow: inset 0 2px 3px rgba(40,0,18,.35); cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.pk-ti { position: absolute; left: 6px; top: 50%; width: 100px; height: 20px; margin-top: -10px; opacity: .42; filter: saturate(.45) brightness(.92); transform: translateX(-4px); transition: opacity .2s, filter .2s, transform .25s cubic-bezier(.3,1.5,.5,1); }
-.pk-ti svg { position: absolute; left: 50%; top: 50%; width: 20px; height: 100px; margin: -50px 0 0 -10px; transform: rotate(90deg); filter: drop-shadow(-2px 1px 1px rgba(40,0,18,.35)); }
-.pk-erase .pk-ti svg { height: 92px; margin-top: -46px; }
-.pk-t.on .pk-ti { opacity: 1; filter: none; transform: none; }
-.pk-tag { position: absolute; right: 5px; top: 50%; width: 17px; height: 17px; margin-top: -8.5px; border-radius: 50%; background: #fff; color: #e2556f; font-size: 10px; font-style: normal; line-height: 17px; text-align: center; box-shadow: 0 1px 3px rgba(40,0,18,.35); opacity: 0; transform: scale(.3); transition: opacity .18s, transform .25s cubic-bezier(.3,1.6,.5,1); }
+/* 서 있는 도구 한 개 (그림은 연필꽂이 것 그대로) · 꽂은 것은 쏙 올라오고 하트 꼬리표 */
+.pk-t { position: relative; width: 30px; height: 144px; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pk-ti { position: absolute; left: 3px; right: 3px; bottom: 8px; height: 120px; opacity: .45; filter: saturate(.45) brightness(.92) drop-shadow(1px 2px 1.5px rgba(40,0,18,.35)); transform: translateY(6px); transition: opacity .2s, filter .2s, transform .25s cubic-bezier(.3,1.5,.5,1); }
+.pk-ti svg { display: block; width: 100%; height: 100%; }
+.pk-knife { width: 36px; } .pk-knife .pk-ti { height: 102px; }
+.pk-ruler .pk-ti { height: 126px; }
+.pk-t.on .pk-ti { opacity: 1; filter: drop-shadow(1px 3px 2px rgba(40,0,18,.35)); transform: translateY(-6px); }
+.pk-tag { position: absolute; left: 50%; bottom: 1px; width: 15px; height: 15px; margin-left: -7.5px; border-radius: 50%; background: #fff; color: #e2556f; font-size: 9px; font-style: normal; line-height: 15px; text-align: center; box-shadow: 0 1px 3px rgba(40,0,18,.35); opacity: 0; transform: scale(.3); transition: opacity .18s, transform .25s cubic-bezier(.3,1.6,.5,1); }
 .pk-t.on .pk-tag { opacity: 1; transform: none; }
 .pk-t.pop .pk-ti { animation: pkPop .32s; }
-@keyframes pkPop { 40% { transform: translate(2px, -4px) rotate(-3deg); } }
+@keyframes pkPop { 40% { transform: translateY(-14px) rotate(-3deg); } }
 .pk-t:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
 .pk-done { display: block; margin: 10px auto 0; padding: 9px 22px; border: 0; border-radius: 20px; background: #fffaf6; color: #c24f78; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 8px rgba(110,30,60,.3); }
 .pk-x { position: fixed; right: 14px; top: 14px; width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border-color, #ffb6c1); background: #fff; color: #7a5a66; font-size: 16px; cursor: pointer; }
@@ -3571,10 +3578,10 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .rl-meas { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 1491; pointer-events: none; overflow: visible; display: none; }
 .rl-meas.on { display: block; }
 .rl-meas line { stroke: #ff6f9f; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 6; }
-.pc-tool.rl { height: 390px; bottom: 0; width: 36px; left: calc(50% - 18px); }   /* 📒 연필통에 꽂힌 자 */
-.rl-top { position: absolute; right: 2px; top: -14px; width: 26px; height: 52px; pointer-events: auto; touch-action: none; cursor: grab; }   /* 구석 연필통의 작은 자 머리 : 위로 끌면 뽑혀요 */
-.rl-top::before { content: ''; position: absolute; right: 7px; top: 0; width: 11px; height: 50px; border-radius: 3px 3px 0 0; transform: rotate(9deg); background: repeating-linear-gradient(#8a4a63 0 1px, transparent 1px 5px) 0 4px / 4px 100% no-repeat, rgba(255, 196, 216, .95); border: 1px solid #ee8fb0; }
-body.rl-out .rl-top { display: none; }
+.pc-tool.rl { height: 390px; bottom: 0; width: 36px; left: calc(50% - 18px); }   /* 📒 연필꽂이에 꽂힌 자 */
+.rl-top { position: absolute; right: 2px; top: -14px; width: 26px; height: 52px; pointer-events: auto; touch-action: none; cursor: grab; }   /* 구석 연필꽂이의 작은 자 머리 : 위로 끌면 뽑혀요 */
+.rl-top::before { content: ''; position: absolute; right: 7px; top: 0; width: 11px; height: 50px; border-radius: 3px 3px 0 0; transform: rotate(9deg); background: repeating-linear-gradient(var(--rl-i, #8a4a63) 0 1px, transparent 1px 5px) 0 4px / 4px 100% no-repeat, var(--rl-c, rgba(255, 196, 216, .95)); border: 1px solid var(--rl-l, #ee8fb0); }
+body.rl-out .rl-top, body.rl-none .rl-top { display: none; }
 .rl-cal { position: fixed; inset: 0; z-index: 3500; display: grid; place-items: center; padding: 12px; background: rgba(90, 50, 65, .35); }
 .rl-cal[hidden] { display: none; }
 .rl-cal-box { width: min(560px, 100%); max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box; padding: 16px; border-radius: 18px; background: #fff; border: 2px solid var(--border-color, #ffb6c1); color: #6b4256; text-align: center; }
