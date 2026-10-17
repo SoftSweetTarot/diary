@@ -29,7 +29,7 @@
 
         /* ---------- 이름 : 경로 → 사람이 알아보는 말 ---------- */
         function trLabel(path) {
-            let m = /\/다꾸\/[^/]+\/(\d{4})년[/_](\d{1,2})월[/_](\d{1,2})일\.json$/.exec(path);
+            let m = /\/다꾸\/[^/]+\/(\d{4})년\/?(\d{1,2})월\/?(\d{1,2})일\.json$/.exec(path);
             if (m) return `📔 ${m[1]}년 ${+m[2]}월 ${+m[3]}일 일기`;
             if (/\/설정\/설정\.json$/.test(path)) return '⚙ 설정';
             if (/\/카페\/카페\.json$/.test(path)) return '☕ 카페 기록';

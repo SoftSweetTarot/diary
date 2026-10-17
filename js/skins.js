@@ -528,8 +528,8 @@
            - 앱은 폴더 이름이 아니라 다이어리.json 의 id 로 찾아요 → 폴더 이름은 사람이 드라이브에서 알아보는 용도
            - 이름 : 드라이브 · 폴더에 못 쓰는 글자는 빼고 · 디자인 이름은 20자까지 · 같은 이름이 있으면 2권, 3권 …
            - 늘 '(규격)' 이 붙어서 앱 폴더 (다꾸 / 기본 · 검색) 와 겹치지 않아요
-           - 날짜 기준 : … / 2026년_10월_18일.json (펼친 면 하나가 하루) · 페이지 기준 : … / 1페이지.json (안에 꾸민 날짜도)
-             유한이라 년 · 월 폴더 없이 권 폴더에 바로 (도련 · 10-17 : 폴더를 덜 찾아요) · 월 · 일은 두 자리 (09월_08일) → 드라이브에서도 날짜 순서로 보여요 */
+           - 날짜 기준 : … / 2026년10월18일.json (펼친 면 하나가 하루) · 페이지 기준 : … / 1페이지.json (안에 꾸민 날짜도)
+             유한이라 년 · 월 폴더 없이 권 폴더에 바로 (도련 · 10-17 : 폴더를 덜 찾아요) · 월 · 일은 두 자리 (09월08일) → 드라이브에서도 날짜 순서로 보여요 */
         const DK_INFO = '다이어리.json';
         function dkFolderName(design, spec, taken) {
             const clean = v => String(v || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim();
@@ -540,7 +540,7 @@
         function dkInfo(o) {                                                    // 다이어리.json 내용 (mode 는 첫 장을 꾸밀 때 정해지고 안 바뀌어요)
             return { id: o.id || 'dk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), design: o.design || '', spec: o.spec || '', mode: o.mode === 'page' ? 'page' : 'date', pages: o.pages || 0, start: o.start || '' };
         }
-        const dkFilePath = (folder, mode, x) => DAKKU_PATH.concat(folder, ...(mode === 'page' ? [x + '페이지.json'] : [`${x.getFullYear()}년_${String(x.getMonth() + 1).padStart(2, '0')}월_${String(x.getDate()).padStart(2, '0')}일.json`]));
+        const dkFilePath = (folder, mode, x) => DAKKU_PATH.concat(folder, ...(mode === 'page' ? [x + '페이지.json'] : [`${x.getFullYear()}년${String(x.getMonth() + 1).padStart(2, '0')}월${String(x.getDate()).padStart(2, '0')}일.json`]));
         const DY_H = 700;                                                      // 페이지 높이 기준
         const dyNow = () => { const id = prefGet(DY_KEY, DY_LOCAL); return dyShown().find(t => t.id === id) || DY_TYPES.find(t => t.id === DY_DEF); };
         /* 📖 펼침면 (도련 · 10-17) : 모든 다이어리는 펼친 두 쪽이 하루예요

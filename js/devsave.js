@@ -276,7 +276,7 @@
         /* ---------- 시작 : 이 기기 폴더로 '로그인'한 것처럼 ---------- */
         function dvSetMode(m) { try { if (m) localStorage.setItem(DV_MODE, m); else localStorage.removeItem(DV_MODE); } catch (e) {} }
         function dvGetMode() { try { return localStorage.getItem(DV_MODE) || ''; } catch (e) { return ''; } }
-        const dvDays = () => Array.from(V.idx.keys()).filter(p => /\/다꾸\/[^/]+\/\d{4}년[/_]\d{1,2}월[/_]\d{1,2}일\.json$/.test(p)).length;
+        const dvDays = () => Array.from(V.idx.keys()).filter(p => /\/다꾸\/[^/]+\/\d{4}년\/?\d{1,2}월\/?\d{1,2}일\.json$/.test(p)).length;
         async function dvStart(mode) {
             V.mode = mode; await vLoad();
             V.on = true; drive.local = true; drive.token = null;
@@ -409,7 +409,7 @@
                 if (mine.length && !dvDays()) carry = await showMsg(`📁 ${dvFolder(t.label)}가 비어 있어요.<br>지금 쓰던 일기 (파일 ${mine.length}개)를 새 폴더로 옮길까요?<br><span style="font-size:12px;color:#777;">옮기지 않으면 빈 다이어리로 시작해요. 원래 폴더는 그대로 남아요.</span>`, true);
                 try { await dvTx(['meta'], 'readwrite', x => { x.objectStore('meta').put(t.top, 'top'); }); } catch (e) {}
                 try { localStorage.setItem(DV_MODE + '_label', t.label); } catch (e) {}
-                if (carry) await bkApply({ items: mine.map(([path, text]) => ({ path, text: async () => text })), days: mine.filter(f => /\/다꾸\/[^/]+\/\d{4}년[/_]\d{1,2}월[/_]\d{1,2}일\.json$/.test(f[0])).length }, '새 폴더');
+                if (carry) await bkApply({ items: mine.map(([path, text]) => ({ path, text: async () => text })), days: mine.filter(f => /\/다꾸\/[^/]+\/\d{4}년\/?\d{1,2}월\/?\d{1,2}일\.json$/.test(f[0])).length }, '새 폴더');
                 else { await loadFromDrive(); const n = dvDays(); showMsg(n ? `📁 ${dvFolder(t.label)}의 일기 <b>${n}일치</b>로 이어서 쓸게요!` : `📁 이제 ${dvFolder(t.label)}에 저장해요.`); }
                 if (typeof updateStorageInfo === 'function') updateStorageInfo();
             } catch (e) { console.warn(e); bkBusy(null); showMsg('⚠ 그 폴더로 바꾸지 못했어요.'); }
@@ -449,7 +449,7 @@
         function dvAfterLogin() { dvSetMode(''); }
         /* 로그인한 뒤 : 이 기기 폴더 통째로 드라이브로 */
         async function dvCarry(files) {
-            const days = files.filter(f => /\/다꾸\/[^/]+\/\d{4}년[/_]\d{1,2}월[/_]\d{1,2}일\.json$/.test(f[0])).length;
+            const days = files.filter(f => /\/다꾸\/[^/]+\/\d{4}년\/?\d{1,2}월\/?\d{1,2}일\.json$/.test(f[0])).length;
             if (!(await showMsg(`📁 이 기기 폴더에 일기 <b>${days}일치</b> · 파일 ${files.length}개가 있어요.<br><b>구글 드라이브 폴더</b>에 넣을까요?<br><span style="font-size:12px;color:#777;">같은 날짜 일기는 이 기기 것으로 덮어써요.<br>설정 · 카페 기록은 합쳐요. 넣지 않아도 이 기기 폴더에는 그대로 남아 있어요.</span>`, true))) return;
             await bkApply({ items: files.map(([path, text]) => ({ path, text: async () => text })), days }, '구글 드라이브');
         }
