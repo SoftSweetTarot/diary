@@ -504,25 +504,21 @@
 
         /* 📒 다이어리 고르기 (도련 · 10-17 · 하단메뉴 📒 다이어리 → 📒 다이어리 고르기) : 실제 다이어리처럼 모양 · 크기를 골라요
            - 크기는 실제 다이어리 비율 그대로 (가로 : 세로) · 화면에 맞게 줄여도 비율은 지켜요 (js/page.js refreshLayout 이 dySize() 를 써요)
-           - 모양 : 6공 링 · 트래블러스(가죽 + 고무줄) · 호보니치(책갈피 끈) · 하드커버(고무밴드) · 양장(책등 · 책갈피 끈) · 모두 펼침면 (아래 📖)
+           - 모양 : 6공 링 · 트래블러스(가죽 + 고무줄) · 호보니치(책갈피 끈) · 하드커버(고무밴드) · 한 달 노트(얇은 실제본) · 모두 펼침면 (아래 📖)
            - 꾸밈은 페이지 둘레 그림만 (#dyBack 뒤 커버 · #dyFront 링 · 밴드) · 손으로 누르는 건 막지 않아요 (pointer-events: none)
-           - 저장 : 설정.json 'diary_type' · 게스트는 이 기기 'malang_diary_type' · '기본'은 지금처럼 📐 페이지 크기 설정을 따라요 */
+           - 저장 : 설정.json 'diary_type' · 게스트는 이 기기 'malang_diary_type' */
         const DY_KEY = 'diary_type', DY_LOCAL = 'malang_diary_type';
+        /* 다꾸러가 실제로 많이 쓰는 것만 (도련 · 10-17 검색 : 6공 A5 · A6 · 트래블러스 레귤러 · 호보니치 오리지널 · 몰스킨 라지 · 소소문구 데일리로그 같은 한 달 노트) */
         const DY_TYPES = [
             { id: 'ring-a5', g: '6공 바인더', n: 'A5', mm: '148×210', b: 'ring', r: 210 / 148, c: '#ff9dbb' },
-            { id: 'ring-bible', g: '6공 바인더', n: '바이블', mm: '95×171', b: 'ring', r: 171 / 95, c: '#9fd8c3' },
-            { id: 'ring-mini', g: '6공 바인더', n: '미니6공 M5', mm: '62×105', b: 'ring', r: 105 / 62, c: '#c4b2f2' },
+            { id: 'ring-a6', g: '6공 바인더', n: 'A6', mm: '105×148', b: 'ring', r: 148 / 105, c: '#c4b2f2' },
             { id: 'tn-reg', g: '트래블러스 노트', n: '레귤러', mm: '110×210', b: 'tn', r: 210 / 110, c: '#a3714f' },
-            { id: 'tn-pass', g: '트래블러스 노트', n: '패스포트', mm: '89×124', b: 'tn', r: 124 / 89, c: '#f3779c' },
             { id: 'hobo-a6', g: '호보니치', n: '오리지널 A6', mm: '105×148', b: 'spread', r: 148 / 105, c: '#ffb3c7' },
-            { id: 'hobo-weeks', g: '호보니치', n: '위크스', mm: '94×188', b: 'spread', r: 188 / 94, c: '#f2c14e' },
-            { id: 'hard-a5', g: '하드커버 노트', n: '라지 A5', mm: '130×210', b: 'hard', r: 210 / 130, c: '#5a4652' },
-            { id: 'hard-pocket', g: '하드커버 노트', n: '포켓', mm: '90×140', b: 'hard', r: 140 / 90, c: '#e86f96' },
-            { id: 'yang-b6', g: '만년 다이어리 (양장)', n: 'B6', mm: '128×182', b: 'yang', r: 182 / 128, c: '#8fd0b7' },
-            { id: 'yang-a6', g: '만년 다이어리 (양장)', n: 'A6 문고', mm: '105×148', b: 'yang', r: 148 / 105, c: '#f2c14e' }
+            { id: 'hard-a5', g: '하드커버 노트', n: '라지', mm: '130×210', b: 'hard', r: 210 / 130, c: '#5a4652' },
+            { id: 'month', g: '한 달 노트', n: '데일리 한 달', mm: '85×165', b: 'thin', r: 165 / 85, c: '#8fd0b7' }
         ];
-        const DY_DEF = 'hobo-weeks';                                           // 처음 설치하면 호보니치 위크스 (도련 · 10-17)
-        const DY_TAB = { '6공 바인더': '6공', '트래블러스 노트': '트래블러스', '호보니치': '호보니치', '하드커버 노트': '하드커버', '만년 다이어리 (양장)': '양장' };   // 고르기 창 위 카테고리
+        const DY_DEF = 'month';                                                // 처음 설치하면 제일 작은 한 달 노트 (도련 · 10-17)
+        const DY_TAB = { '6공 바인더': '6공', '트래블러스 노트': '트래블러스', '호보니치': '호보니치', '하드커버 노트': '하드커버', '한 달 노트': '한 달' };   // 고르기 창 위 카테고리
         const DY_H = 700;                                                      // 페이지 높이 기준
         const dyNow = () => { const id = prefGet(DY_KEY, DY_LOCAL); return DY_TYPES.find(t => t.id === id) || DY_TYPES.find(t => t.id === DY_DEF); };
         /* 📖 펼침면 (도련 · 10-17) : 모든 다이어리는 펼친 두 쪽이 하루예요
@@ -583,13 +579,12 @@
         function dyParts(t) {
             const back = [], front = [];
             const rings = n => { let h = ''; for (let i = 0; i < n; i++) h += '<i></i>'; return h; };
-            back.push(t.b === 'yang' ? '<b class="dy-cov"><u></u></b>' : '<b class="dy-cov"></b>');
+            back.push('<b class="dy-cov"></b>');
             front.push('<span class="dy-fold"></span>');
             if (t.b === 'ring') front.push(`<span class="dy-rings">${rings(6)}</span>`);
             if (t.b === 'tn') front.push('<span class="dy-band"></span>');
             if (t.b === 'spread') front.push('<span class="dy-rib"></span>');
             if (t.b === 'hard') front.push('<span class="dy-band hard"></span>');
-            if (t.b === 'yang') front.push('<span class="dy-rib yang"></span>');
             return [back.join(''), front.join('')];
         }
         function dyDeco() {                                                    // js/page.js refreshLayout 끝에서 불러요
