@@ -3462,7 +3462,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 
 /* 몸통 : 파스텔 틴 (금속 테두리 + 안쪽 펠트) */
 .pk-body { position: relative; padding: 11px; border-radius: 20px; background: linear-gradient(160deg, #ffd9e4, #f4a7bf 45%, #eb93ae 70%, #f7bccd); box-shadow: 0 18px 34px rgba(110,50,75,.35), inset 0 2px 0 rgba(255,255,255,.7), inset 0 -3px 0 rgba(130,40,70,.2); }
-.pk-in { position: relative; padding: 10px 10px 8px; border-radius: 12px; min-height: 380px;
+.pk-in { position: relative; padding: 10px 10px 8px; border-radius: 12px;
   background: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.3px) 0 0 / 4px 4px, radial-gradient(rgba(120,30,60,.08) 1px, transparent 1.3px) 2px 2px / 4px 4px, linear-gradient(#c8577d, #b84c71);
   box-shadow: inset 0 4px 10px rgba(70,10,35,.45), inset 0 0 0 2px rgba(255,255,255,.12); }
 .pk-tip { margin: 0 0 8px; padding: 6px 10px; border-radius: 10px; background: rgba(255,250,246,.95); color: #7a5a66; font-size: 12.5px; text-align: center; word-break: keep-all; box-shadow: 0 2px 5px rgba(60,10,30,.25); }
@@ -3477,18 +3477,29 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .pk-tab.on { background: #fffaf6; color: #c24f78; box-shadow: 0 2px 5px rgba(60,10,30,.3); }
 .pk-tab:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
 /* 서 있는 도구들 : 연필꽂이처럼 세로로 · 많으면 여러 줄 (줄마다 펠트 받침) · 넘치면 안에서 위아래로 */
-.pk-tray { height: 296px; overflow-y: auto; overscroll-behavior: contain; padding: 4px 2px 0; border-radius: 9px; background: rgba(60,8,30,.16); box-shadow: inset 0 2px 5px rgba(60,8,30,.3); scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.5) transparent; }
-.pk-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 0 2px; padding: 0 4px; background: repeating-linear-gradient(transparent 0 128px, rgba(40,0,18,.32) 128px 136px, transparent 136px 144px); }
-.pk-row[hidden] { display: none; }
+.pk-tray { position: relative; height: 222px; overflow: hidden; border-radius: 9px; background: rgba(60,8,30,.16); box-shadow: inset 0 2px 5px rgba(60,8,30,.3); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }   /* 필통 안쪽에서만 보여요 */
+.pk-tray.drag { cursor: grabbing; }
+.pk-tray::before, .pk-tray::after { content: ''; position: absolute; top: 0; bottom: 0; z-index: 3; width: 14px; pointer-events: none; }   /* 양 끝이 필통 벽 아래로 쏙 들어가 보여요 */
+.pk-tray::before { left: 0; background: linear-gradient(90deg, rgba(60,8,30,.38), transparent); }
+.pk-tray::after { right: 0; background: linear-gradient(-90deg, rgba(60,8,30,.38), transparent); }
+.pk-strip { position: absolute; left: 0; top: 0; bottom: 0; display: flex; align-items: stretch; white-space: nowrap; will-change: transform; }
+.pk-grp { position: relative; display: flex; align-items: stretch; padding: 0 12px 0 4px; }
+.pk-grp::after { content: ''; position: absolute; right: 4px; top: 18px; bottom: 18px; border-right: 1.5px dashed rgba(255,225,236,.35); }   /* 종류 사이 바느질 */
+/* 🎀 가운데 고무밴드 : 도구가 끼워져 있어요 (밀면 결이 살짝 따라와요) */
+.pk-elastic { position: absolute; left: 0; right: 0; top: 92px; z-index: 2; height: 26px; pointer-events: none;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 2px, transparent 2px 5px), linear-gradient(#efe3dc, #d9c9c0 45%, #c8b6ac 55%, #e3d6ce);
+  box-shadow: 0 3px 4px rgba(50,10,25,.35), 0 -1px 0 rgba(255,255,255,.5) inset, 0 -1px 0 rgba(90,50,40,.25) inset; }
+.pk-elastic::before, .pk-elastic::after { content: ''; position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed rgba(140,100,90,.5); }   /* 위아래 박음질 */
+.pk-elastic::before { top: 3px; } .pk-elastic::after { bottom: 3px; }
 
-/* 서 있는 도구 한 개 (그림은 연필꽂이 것 그대로) · 꽂은 것은 쏙 올라오고 하트 꼬리표 */
-.pk-t { position: relative; width: 30px; height: 144px; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.pk-ti { position: absolute; left: 3px; right: 3px; bottom: 8px; height: 120px; opacity: .45; filter: saturate(.45) brightness(.92) drop-shadow(1px 2px 1.5px rgba(40,0,18,.35)); transform: translateY(6px); transition: opacity .2s, filter .2s, transform .25s cubic-bezier(.3,1.5,.5,1); }
+/* 세로로 선 도구 */
+.pk-t { position: relative; flex: none; width: 34px; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pk-ti { position: absolute; left: 3px; right: 3px; bottom: 24px; height: 150px; opacity: .5; filter: saturate(.5) brightness(.93) drop-shadow(1px 2px 1.5px rgba(40,0,18,.35)); transform: translateY(8px); transition: opacity .2s, filter .2s, transform .25s cubic-bezier(.3,1.5,.5,1); pointer-events: none; }
 .pk-ti svg { display: block; width: 100%; height: 100%; }
-.pk-knife { width: 36px; } .pk-knife .pk-ti { height: 102px; }
-.pk-ruler .pk-ti { height: 126px; }
-.pk-t.on .pk-ti { opacity: 1; filter: drop-shadow(1px 3px 2px rgba(40,0,18,.35)); transform: translateY(-6px); }
-.pk-tag { position: absolute; left: 50%; bottom: 1px; width: 15px; height: 15px; margin-left: -7.5px; border-radius: 50%; background: #fff; color: #e2556f; font-size: 9px; font-style: normal; line-height: 15px; text-align: center; box-shadow: 0 1px 3px rgba(40,0,18,.35); opacity: 0; transform: scale(.3); transition: opacity .18s, transform .25s cubic-bezier(.3,1.6,.5,1); }
+.pk-knife { width: 40px; } .pk-knife .pk-ti { height: 140px; }
+.pk-ruler { width: 40px; } .pk-ruler .pk-ti { height: 172px; }
+.pk-t.on .pk-ti { opacity: 1; filter: drop-shadow(1px 3px 2px rgba(40,0,18,.35)); transform: translateY(-10px); }
+.pk-tag { position: absolute; left: 50%; bottom: 4px; width: 15px; height: 15px; margin-left: -7.5px; border-radius: 50%; background: #fff; color: #e2556f; font-size: 9px; font-style: normal; line-height: 15px; text-align: center; box-shadow: 0 1px 3px rgba(40,0,18,.35); opacity: 0; transform: scale(.3); transition: opacity .18s, transform .25s cubic-bezier(.3,1.6,.5,1); pointer-events: none; }
 .pk-t.on .pk-tag { opacity: 1; transform: none; }
 .pk-t.pop .pk-ti { animation: pkPop .32s; }
 @keyframes pkPop { 40% { transform: translateY(-14px) rotate(-3deg); } }
