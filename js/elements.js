@@ -827,39 +827,117 @@
         }
         window.elEditable = elEditable; window.elEdit = elEdit;
         function deleteSelected() {
-            if (selectedElement) { elPeelAway(selectedElement); selectedElement = null; }
+            if (selectedElement) { elTweezers(selectedElement); selectedElement = null; }   // 🩷 핀셋으로 뜯어서 버려요
             updateTextPanel();
         }
-        /* 🗑️ 삭제 연출 (도련 · 2026-10-17) : 스티커가 아래에서부터 위로 뜯어지듯 말려 올라가며 사라져요
-           - 앞면은 아래부터 잘려 나가고(clip-path) · 뜯긴 부분은 칼선 위로 뒤집혀 접힌 하얀 뒷면(복제본 · scaleY 음수)이 돼요 · 끝나면 휙 떠오르며 사라져요
-           - 연출 중인 것은 저장에서 빼요(.el-dying) · 손가락도 안 받아요 */
-        function elPeelAway(el) {
+        /* 🗑️ 삭제 = 🩷 핀셋으로 뜯어서 버리기 (도련 · 2026-10-17 · 현실에서 스티커를 뜯어 버리는 느낌)
+           - 삭제를 누르면 예쁜 핀셋이 스티커 아래 가장자리에 나와요 → 핀셋으로 집어(누르기) 위로 끌면 아래부터 뜯겨 위로 접혀 올라가요
+           - 다 뜯겨 완전히 뒤집히는 순간 스티커가 사라지고, 조금 늦게 핀셋도 사라져요
+           - 덜 뜯고 놓으면 다시 착 붙어요(핀셋은 그대로 · 다시 집어요) · ✕ / Esc / 스티커 밖을 톡 = 지우지 않고 그만두기
+           - 앞면은 아래부터 잘려 나가고(clip-path) · 뜯긴 부분은 칼선 위로 뒤집힌 하얀 뒷면(복제본 · scaleY(-1))
+           - 연출 중인 것은 저장에서 빼요(.el-dying · .el-peel-back) · 움직임 줄이기 설정이면 바로 지워요 */
+        const TWZ_SVG = '<svg viewBox="0 0 36 130" width="36" height="130" aria-hidden="true">'
+            + '<defs><linearGradient id="twzA" x1="0" x2="1"><stop offset="0" stop-color="#ffd1df"/><stop offset=".5" stop-color="#ff9dbb"/><stop offset="1" stop-color="#f3779c"/></linearGradient>'
+            + '<linearGradient id="twzT" x1="0" x2="1"><stop offset="0" stop-color="#fff6d8"/><stop offset="1" stop-color="#e9c46a"/></linearGradient></defs>'
+            + '<g class="twz-l"><path d="M16.2 3 L14.6 3 L5 96 Q4.6 118 16 126 L17 126 Z" fill="url(#twzA)" stroke="#d95a84" stroke-width="1"/><path d="M14.6 3 L16.2 3 L15.4 16 L13.4 16 Z" fill="url(#twzT)"/><circle cx="10" cy="70" r="2.2" fill="#fff" opacity=".8"/></g>'
+            + '<g class="twz-r"><path d="M19.8 3 L21.4 3 L31 96 Q31.4 118 20 126 L19 126 Z" fill="url(#twzA)" stroke="#d95a84" stroke-width="1"/><path d="M19.8 3 L21.4 3 L22.6 16 L20.6 16 Z" fill="url(#twzT)"/><circle cx="26" cy="70" r="2.2" fill="#fff" opacity=".8"/></g>'
+            + '<path d="M18 104c-2.6-3.4-7-1.6-6 1.8.8 2.6 6 5.8 6 5.8s5.2-3.2 6-5.8c1-3.4-3.4-5.2-6-1.8z" fill="#fff"/><rect x="12" y="118" width="12" height="7" rx="3.5" fill="#ffe27a" stroke="#e7b93d" stroke-width=".8"/></svg>';
+        const TWZ_TIP = [18, 3], TWZ_ANG = 200;                                 // 집게 끝 · 기울기 (글쓰기 필기구처럼 손잡이가 오른쪽 위)
+        let twz = null;
+        function elTweezers(el) {
             if (!el || !el.isConnected || el.classList.contains('el-dying')) return;
-            el.classList.remove('selected'); el.classList.add('el-dying');
-            el.querySelectorAll('.handle, .rot-zone, .stretch-handle').forEach(h => h.style.display = 'none');
+            if (twz) twzQuit();
+            el.classList.remove('selected');
             const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reduce) { el.remove(); return; }
-            const H = el.offsetHeight, base = el.style.transform || '';
-            const back = el.cloneNode(true); back.classList.add('el-peel-back'); back.removeAttribute('id');
+            if (reduce) { el.remove(); if (typeof saveData === 'function') saveData(false); return; }
+            let room = document.getElementById('twzRoom');
+            if (!room) {
+                room = document.createElement('div'); room.id = 'twzRoom'; room.className = 'twz-room';
+                room.innerHTML = '<div class="twz-tip"><b>🗑️ 스티커 버리기</b> 핀셋으로 집어 <b>위로 쭉</b> 뜯어요<button type="button" class="twz-x" aria-label="그만두기">✕</button></div><div class="twz" id="twzTool">' + TWZ_SVG + '</div>';
+                document.body.appendChild(room);
+                const x = room.querySelector('.twz-x');
+                x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('click', e => { e.stopPropagation(); twzQuit(); });
+                room.addEventListener('pointerdown', twzDown); room.addEventListener('pointermove', twzMove);
+                room.addEventListener('pointerup', twzUp); room.addEventListener('pointercancel', twzUp);
+                addEventListener('keydown', e => { if (e.key === 'Escape' && twz) twzQuit(); });
+            }
+            room.hidden = false; room.classList.remove('bye');
+            el.classList.add('el-dying');
+            el.querySelectorAll('.handle, .rot-zone, .stretch-handle').forEach(h => h.style.display = 'none');
+            const back = el.cloneNode(true); back.classList.add('el-peel-back'); back.removeAttribute('id'); back.style.clipPath = 'inset(100% 0 0 0)'; back.style.zIndex = 99999;   // 뜯긴 부분은 다른 스티커보다 위로
             back.querySelectorAll('textarea').forEach(t => { t.readOnly = true; t.tabIndex = -1; });
             el.after(back);
-            const DUR = window.EL_PEEL_MS || 820, t0 = performance.now(), ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-            const step = now => {
-                const p = Math.min(1, (now - t0) / DUR), e = ease(p);
-                const cut = H * (1 - e), yc = cut - H / 2, k = Math.min(.55, Math.max(12, H * .09) / Math.max(1, H - cut));   // 칼선(뜯긴 곳) · 뜯긴 부분은 칼선 위에 돌돌 말린 띠(두께 일정)로 올라가요
-                el.style.clipPath = `inset(0 0 ${Math.max(0, H - cut)}px 0)`;
-                back.style.clipPath = `inset(${Math.max(0, cut)}px 0 0 0)`;
-                back.style.transform = `${base} translateY(${yc}px) scaleY(${-k}) translateY(${-yc}px)`;
-                if (p < 1) { requestAnimationFrame(step); return; }
-                const fly = [{ transform: `${base} translateY(0px)`, opacity: 1 }, { transform: `${base} translateY(-26px) rotate(-6deg)`, opacity: 0 }];
-                back.animate(fly.map(f => Object.assign({}, f, { transform: f.transform + ` translateY(${-H / 2}px) scaleY(${-k}) translateY(${H / 2}px)` })), { duration: 220, easing: 'ease-in', fill: 'forwards' });
-                const a = el.animate(fly, { duration: 220, easing: 'ease-in', fill: 'forwards' });
-                a.onfinish = () => { el.remove(); back.remove(); };
-                setTimeout(() => { el.remove(); back.remove(); }, 400);                // 혹시 animate 가 끝을 못 알려도
-            };
-            requestAnimationFrame(step);
+            twz = { el, back, room, tool: room.querySelector('#twzTool'), H: el.offsetHeight, W: el.offsetWidth, base: el.style.transform || '', e: 0, gx: .5, drag: null, done: false };
+            twz.tool.classList.remove('shut', 'bye');
+            twzPaint(0); twzToolAt();
+            requestAnimationFrame(() => twz && twz.tool.classList.add('in'));
         }
-        window.elPeelAway = elPeelAway;
+        /* 스티커 안 좌표 ↔ 화면 좌표 (돌리기 · 크기 · 페이지 배율까지) */
+        function twzGeo() {
+            const t = twz, ca = document.getElementById('canvasArea'), r = ca.getBoundingClientRect(), k = r.width / (ca.offsetWidth || r.width) || 1;
+            const s = parseFloat(t.el.dataset.scale) || 1, a = (parseFloat(t.el.dataset.rotation) || 0) * Math.PI / 180;
+            const cx = (parseFloat(t.el.dataset.posX) || 0) + t.W / 2, cy = (parseFloat(t.el.dataset.posY) || 0) + t.H / 2;
+            return {
+                toScr: (lx, ly) => { const ux = (lx - t.W / 2) * s, uy = (ly - t.H / 2) * s; return [r.left + (cx + ux * Math.cos(a) - uy * Math.sin(a)) * k, r.top + (cy + ux * Math.sin(a) + uy * Math.cos(a)) * k]; },
+                toLoc: (X, Y) => { const ux = (X - r.left) / k - cx, uy = (Y - r.top) / k - cy; return [(ux * Math.cos(-a) - uy * Math.sin(-a)) / s + t.W / 2, (ux * Math.sin(-a) + uy * Math.cos(-a)) / s + t.H / 2]; },
+                ang: a * 180 / Math.PI
+            };
+        }
+        function twzPaint(e) {                                                // e = 뜯긴 정도 0 ~ 1 (1 = 완전히 뒤집힘)
+            const t = twz, H = t.H, cut = H * (1 - e), yc = cut - H / 2;
+            t.el.style.clipPath = e <= 0 ? '' : `inset(0 0 ${Math.max(0, H - cut)}px 0)`;
+            t.back.style.clipPath = e <= 0 ? 'inset(100% 0 0 0)' : `inset(${Math.max(0, cut)}px 0 0 0)`;
+            t.back.style.transform = `${t.base} translateY(${yc}px) scaleY(-1) translateY(${-yc}px)`;
+            t.e = e;
+        }
+        function twzToolAt(shake) {                                            // 핀셋 끝 = 뜯긴 부분의 끝(원래 아래 가장자리)
+            const t = twz; if (!t) return;
+            const g = twzGeo(), ly = t.H * (1 - 2 * t.e) + (t.e > 0 ? 0 : -4), p = g.toScr(t.W * t.gx, Math.max(-t.H, ly));
+            t.tool.style.transform = `translate(${p[0] - TWZ_TIP[0]}px, ${p[1] - TWZ_TIP[1]}px) rotate(${TWZ_ANG + g.ang + (shake || 0)}deg)`;
+        }
+        function twzDown(e) {
+            const t = twz; if (!t || t.done || e.button > 0) return;
+            e.preventDefault();
+            const g = twzGeo(), L = g.toLoc(e.clientX, e.clientY);
+            if (L[0] < -24 || L[0] > t.W + 24 || L[1] < -24 || L[1] > t.H + 40) { twzQuit(); return; }   // 스티커 밖을 톡 = 그만두기
+            t.gx = Math.max(.12, Math.min(.88, L[0] / t.W));
+            t.drag = { id: e.pointerId, off: L[1] - t.H * (1 - 2 * t.e) };     // 누른 곳과 핀셋 끝 차이만큼은 빼요 (바로 확 뜯기지 않게)
+            try { t.room.setPointerCapture(e.pointerId); } catch (er) {}
+            t.tool.classList.add('shut');                                     // 집게를 꽉
+            twzToolAt();
+            if (navigator.vibrate) try { navigator.vibrate(8); } catch (er) {}
+        }
+        function twzMove(e) {
+            const t = twz; if (!t || !t.drag || t.drag.id !== e.pointerId || t.done) return;
+            const L = twzGeo().toLoc(e.clientX, e.clientY), ly = L[1] - t.drag.off;
+            const ne = Math.max(0, Math.min(1, (t.H - ly) / (2 * t.H)));
+            twzPaint(ne); twzToolAt();
+            if (ne >= .985) twzFinish();
+        }
+        function twzUp(e) {
+            const t = twz; if (!t || !t.drag || t.drag.id !== e.pointerId || t.done) return;
+            t.drag = null; t.tool.classList.remove('shut');
+            if (t.e >= .9) { twzFinish(); return; }
+            const e0 = t.e, t0 = performance.now();                           // 덜 뜯었으면 다시 착 붙어요
+            const back = now => { if (!twz || twz !== t || t.drag || t.done) return; const p = Math.min(1, (now - t0) / 260), v = e0 * (1 - p) * (1 - p); twzPaint(v); twzToolAt(); if (p < 1) requestAnimationFrame(back); };
+            requestAnimationFrame(back);
+        }
+        function twzFinish() {                                                 // 완전히 뒤집힌 순간 : 스티커 사라짐 → 조금 늦게 핀셋도
+            const t = twz; if (!t || t.done) return;
+            t.done = true; twzPaint(1); twzToolAt();
+            t.back.classList.add('twz-vanish'); t.el.remove();
+            setTimeout(() => t.back.remove(), 260);
+            setTimeout(() => { t.tool.classList.add('bye'); t.room.classList.add('bye'); }, 360);
+            setTimeout(() => { if (twz === t) twz = null; t.room.hidden = true; }, 760);
+            if (navigator.vibrate) try { navigator.vibrate([6, 30, 10]); } catch (er) {}
+            if (typeof saveData === 'function') saveData(false);
+        }
+        function twzQuit() {                                                   // 지우지 않고 그만두기 : 원래대로
+            const t = twz; if (!t) return; twz = null;
+            if (!t.done) { t.el.style.clipPath = ''; t.el.classList.remove('el-dying'); t.el.querySelectorAll('.handle, .rot-zone, .stretch-handle').forEach(h => h.style.display = ''); t.back.remove(); }
+            t.room.hidden = true;
+        }
+        window.elTweezers = elTweezers;
 
         async function saveData(showAlert = false) {
             if (!isCoverOpen) return;
