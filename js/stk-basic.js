@@ -97,15 +97,55 @@
         const sbOn = a => a.filter(x => !x.hold);
         /* 🖼️ 여러 개 묶음 미리보기 (씰 종이 · 포인트 · 조각 · 모조지스티커 같은 모양) : 작은 칸에 최대한 많이 · 2줄 · 넘치는 건 안 보여요 (개수는 카드 글씨가 총개수) */
         const sbThumbs = urls => `<span class="sb-thumbs">${urls.map(u => `<img alt="" loading="lazy" src="${u}">`).join('')}</span>`;   // 모두 넣어요 (📒 수첩 창은 CSS가 2 ~ 3줄만 보여요)
-        /* 🧾 고르는 창 묶음 칸 크기 (도련 · 2026-10-17) : 스티커가 많을수록 칸이 커지고 · 안의 스티커는 모두 보이고 · 하나하나는 낱장보다 작아요 (📒 수첩 창은 예전 그대로 · CSS .modal:not(.snb-on))
-           - 🏷️ 씰 그림 모음(js/elements.js libPages) : [이만큼까지, 가로 칸, 세로 칸] · 넘으면 5 × 5 (배치 칸 수보다 크면 줄이고 그림이 작아져요)
-           - 🧩 조각 · 📄 모조지 · 🍭 포인트 카드(6칸 격자) : 한 줄에 √개수 개씩 · 카드는 그만큼 칸을 차지 (2 ~ 6칸) */
-        const SB_LIB_TIER = [[1, 1, 1], [3, 2, 1], [9, 2, 2], [12, 3, 2], [16, 3, 3], [20, 4, 3], [25, 4, 4], [30, 5, 4]];
-        function sbLibSpan(n) { const t = SB_LIB_TIER.find(t => n <= t[0]); return t ? [t[1], t[2]] : [5, 5]; }
-        function sbFit(n) {                                                    // 카드에 붙이는 크기 표시 (CSS가 고르는 창에서만 써요)
-            const c = Math.min(6, Math.max(1, Math.ceil(Math.sqrt(n))));
-            return ` data-fit style="--sw:${Math.min(6, Math.max(2, c))};--sc:${c}"`;
+        /* 📷 고르는 창 묶음 배치 = 사진첩처럼 줄을 꽉 채워요 (도련 · 2026-10-17 · 📒 수첩 창은 예전 그대로)
+           - 묶음은 스티커 수에 맞는 모양(가로 √(개수×1.6)개 줄)을 그대로 · 안의 스티커는 모두 보여요 · 낱장은 크게, 묶음 속 하나하나는 그보다 작게
+           - 한 줄에 몇 개를 나란히 놓고 줄 너비에 딱 맞게 살짝 키우거나 줄여요 → 줄 끝 빈칸이 없어요 · 줄을 쪽 높이만큼 채우고 넘치면 다음 쪽 (◀ ▶)
+           - 🏷️ 씰 그림 모음 : js/elements.js libPages · 🧩 조각 · 📄 모조지 · 🍭 포인트 카드 : 아래 sbPage */
+        function sbShape(n) {                                                  // 묶음 안 줄 · 칸 수
+            let c = Math.max(1, Math.ceil(Math.sqrt(n * 1.6))); const r = Math.ceil(n / c); c = Math.ceil(n / r);
+            return [c, r];
         }
+        /* 줄 맞추기 : list = [{ a: 가로/세로, pref: 알맞은 높이(px) }, …] → 쪽 [[{ H, items: [{ …, w }] }, …], …] */
+        function sbJust(list, W, gap, PH) {
+            const rows = [];
+            const close = (r, A, last) => {
+                const P = Math.max(...r.map(x => x.pref));
+                let H = (W - gap * (r.length - 1)) / A;
+                H = Math.min(H, PH, last ? P : P * 1.2);                      // 너무 커지지 않게 (마지막 줄은 알맞은 높이 그대로 · 왼쪽부터)
+                rows.push({ H, items: r.map(x => Object.assign({}, x, { w: Math.floor(x.a * H) })) });
+            };
+            let row = [], A = 0, P = 0;
+            list.forEach(x => {
+                const A2 = A + x.a, P2 = Math.max(P, x.pref), H2 = (W - gap * row.length) / A2;
+                if (!row.length || H2 >= P2) { row.push(x); A = A2; P = P2; return; }
+                if (H2 >= P2 * .85) { row.push(x); close(row, A2); row = []; A = 0; P = 0; }   // 조금 작아져도 되면 넣고 줄 끝 · 너무 작아지면 빼고 줄 끝 (안 스티커가 너무 작아지지 않게)
+                else { close(row, A); row = [x]; A = x.a; P = x.pref; }
+            });
+            if (row.length) close(row, A, true);
+            const pages = []; let pg = [], h = 0;
+            rows.forEach(r => {
+                const left = PH - h - (pg.length ? gap : 0);
+                if (pg.length && r.H > left) {
+                    if (left >= r.H * .6) { const k = left / r.H; r.H = left; r.items.forEach(i => { i.w = Math.floor(i.w * k); }); }   // 조금만 넘치면 살짝 줄여서 이 쪽에 (빈 공간 줄이기)
+                    else { pages.push(pg); pg = []; h = 0; }
+                }
+                h += (pg.length ? gap : 0) + r.H; pg.push(r);
+            });
+            if (pg.length) pages.push(pg);
+            return pages;
+        }
+        /* 묶음 칸 하나의 모양 : t = 스티커 하나 알맞은 크기 · padX · padY = 칸 안 여백(글씨 줄 포함) */
+        function sbBox(n, t, padX, padY) {
+            const [c, r] = sbShape(n), w = c * t + (c - 1) * 2 + padX, h = r * t + (r - 1) * 2 + padY;
+            return { a: w / h, pref: h, c, r, padX, padY };
+        }
+        /* 그린 칸에 안 스티커 크기 맞추기 */
+        function sbSize(el, b, w, H, cap) {                                    // cap = 묶음 속 스티커 하나의 최대 크기 (낱장보다 작게)
+            const tw = Math.max(10, Math.min((w - b.padX - (b.c - 1) * 2) / b.c, (H - b.padY - (b.r - 1) * 2) / b.r, cap || 1e9));
+            el.style.width = w + 'px'; el.style.height = Math.floor(H) + 'px';
+            el.style.setProperty('--sc', b.c); el.style.setProperty('--jtw', tw.toFixed(1) + 'px');
+        }
+        const sbFit = n => ` data-fit="${n}"`;                                // 카드에 스티커 수 표시 (고르는 창 배치가 읽어요)
         const sbMini = (ks, die) => sbThumbs(ks.map(k => sbSvg(k, die)));
         const sbc = c => ` data-sbc="${esc(c || '')}"`;
         /* 기본 칸 그리기 (js/stickermaker.js stkTab) : kind = 'piece' · 'paper' */
@@ -235,8 +275,26 @@
         const sbNote = box => !!(box.closest && box.closest('.modal.snb-on'));
         function sbRefreshAll() { document.querySelectorAll('.sb-srv[data-sbk]').forEach(el => sbCats(el.parentElement, el.dataset.sbk)); }
         window.sbRefreshAll = sbRefreshAll;
+        /* 📷 고르는 창 묶음 카드 (data-fit) : 줄을 꽉 채우고 쪽 높이만큼씩 */
+        const SB_PAD = { piece: [12, 62], paper: [12, 46], mini: [12, 38] };   // 카드 안 여백 [가로, 세로] (봉투 색 띠 · 종이 테이프 · 글씨 줄 포함)
+        function sbJustPage(box, kind, shown, pg) {
+            const cs = getComputedStyle(box), W = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 1;
+            const host = box.closest('.sticker-grid') || box, PH = Math.max(160, (host.clientHeight || 360) - 96);
+            const pad = SB_PAD[kind] || [12, 40];
+            const t = Math.max(22, Math.min(40, W / 10, (PH / 2 - pad[1] - 4) / 3));   // 스티커 하나 알맞은 크기 (폰은 작게 · 한 쪽에 두 줄은 들어가게)
+            const list = shown.map(el => Object.assign(sbBox(+el.dataset.fit || 1, t, pad[0], pad[1]), { el }));
+            const pages = W > 40 ? sbJust(list, W, 6, PH) : [[{ H: 0, items: list.map(x => Object.assign(x, { w: 0 })) }]];
+            const cur = Math.max(0, Math.min(sbPgOn[kind] || 0, pages.length - 1)); sbPgOn[kind] = cur;
+            const on = new Set();
+            pages[cur].forEach(r => r.items.forEach(x => { on.add(x.el); if (r.H) sbSize(x.el, x, x.w, r.H, t * 1.4); }));
+            shown.forEach(el => { if (!on.has(el)) el.hidden = true; });
+            box.classList.add('sb-just');
+            return pages.length;
+        }
         function sbPage(box, kind, shown, all) {
             (all || shown).forEach(el => { el.hidden = !shown.includes(el); });
+            const just = !sbNote(box) && shown.some(el => el.dataset.fit);
+            if (!just) { box.classList.remove('sb-just'); shown.forEach(el => { el.style.width = el.style.height = ''; }); }   // 📒 수첩은 예전 모양
             let pg = box.querySelector(':scope > .sb-pager');
             if (!pg) {
                 pg = document.createElement('div'); pg.className = 'lib-pager sb-pager';
@@ -250,9 +308,13 @@
             /* 한 줄 칸 수 : 첫 줄에 놓인 칸을 세요 (창이 안 보이면 3) */
             const t0 = shown[0];                                            // offsetTop : 창이 뜨며 기울어도 그대로
             const cols = t0 && t0.offsetWidth ? Math.max(1, shown.filter(el => Math.abs(el.offsetTop - t0.offsetTop) < 2).length) : 3;
-            const per = sbNote(box) ? Math.max(1, shown.length) : cols * (SB_ROWS[kind] || 3), pages = Math.ceil(shown.length / per);
-            const cur = Math.max(0, Math.min(sbPgOn[kind] || 0, pages - 1)); sbPgOn[kind] = cur;
-            shown.forEach((el, i) => { if (i < cur * per || i >= (cur + 1) * per) el.hidden = true; });
+            let pages, cur;
+            if (just) { pg.hidden = true; pages = sbJustPage(box, kind, shown, pg); cur = sbPgOn[kind]; }
+            else {
+                const per = sbNote(box) ? Math.max(1, shown.length) : cols * (SB_ROWS[kind] || 3); pages = Math.ceil(shown.length / per);
+                cur = Math.max(0, Math.min(sbPgOn[kind] || 0, pages - 1)); sbPgOn[kind] = cur;
+                shown.forEach((el, i) => { if (i < cur * per || i >= (cur + 1) * per) el.hidden = true; });
+            }
             pg.hidden = pages <= 1;
             const [p, n] = pg.querySelectorAll('.btn');
             p.disabled = cur <= 0; n.disabled = cur >= pages - 1;
@@ -297,7 +359,7 @@
             }
         }
         window.stkBasicSrv = stkBasicSrv; window.sbPack = sbPack; window.sbUse = sbUse;
-        window.sbThumbs = sbThumbs; window.sbFit = sbFit; window.sbLibSpan = sbLibSpan; window.stkBasicHtml = stkBasicHtml; window.stkBasicOpen = stkBasicOpen; window.sbSheet = sbSheet;
+        window.sbThumbs = sbThumbs; window.sbFit = sbFit; window.sbJust = sbJust; window.sbBox = sbBox; window.sbSize = sbSize; window.stkBasicHtml = stkBasicHtml; window.stkBasicOpen = stkBasicOpen; window.sbSheet = sbSheet;
     })();
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 */

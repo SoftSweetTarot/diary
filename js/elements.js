@@ -215,11 +215,23 @@
         function libPerPage() { return libLayout.rows * libLayout.cols; }
         /* 쪽 나누기 : 씰 1개 = 1칸 · 씰 종이(여러 개) = 가로 2 × 세로 2칸 정사각형 (도련 · 2026-10-16 · 묶음이 더 잘 보이게) · 빈 곳은 뒤의 1칸짜리가 채워요 (CSS grid-auto-flow: dense 와 같은 순서)
            → [[item, …], …] 쪽마다 */
-        /* 🧾 고르는 창에서는 스티커 수만큼 칸이 커져요 (도련 · 10-17 · js/stk-basic.js sbLibSpan) · 📒 수첩 창은 예전처럼 2 × 2 */
-        const libFit = () => !!window.sbLibSpan && !(document.getElementById('libGrid') || document.body).closest('.snb-on');
-        const libSpan = x => x.s ? Math.min(libFit() ? sbLibSpan(x.s.length)[0] : 2, libLayout.cols) : 1;   // 가로 칸 수
-        const libSpanH = x => x.s ? Math.min(libFit() ? sbLibSpan(x.s.length)[1] : 2, libLayout.rows) : 1;  // 세로 칸 수
+        const libSpan = x => x.s ? Math.min(2, libLayout.cols) : 1;              // 가로 칸 수
+        const libSpanH = x => x.s ? Math.min(2, libLayout.rows) : 1;             // 세로 칸 수
+        /* 📷 고르는 창은 사진첩처럼 줄을 꽉 채워요 (도련 · 10-17 · js/stk-basic.js sbJust) · 📒 수첩 창은 위 칸 나누기 그대로
+           낱장 = 칸 하나 크기 · 묶음 = 안의 스티커가 낱장의 절반쯤 · 쪽 높이 = 배치(줄 수 × 크기)와 같아요 */
+        const libFit = () => !!window.sbJust && !(document.getElementById('libGrid') || document.body).closest('.snb-on');
+        function libGeo() {
+            const g = document.getElementById('libGrid'), { rows, cols, size } = libLayout;
+            const W = g && g.clientWidth > 40 ? g.clientWidth - 8 : cols * size + (cols - 1) * LIB_GAP;
+            const u = Math.max(30, Math.min(size, (W - (cols - 1) * LIB_GAP) / cols));
+            return { W, u, PH: Math.max(rows * u + (rows - 1) * LIB_GAP, Math.min(innerHeight * .5, 440)) };   // 📷 묶음이 여럿 보이게 쪽을 조금 넉넉히
+        }
+        function libJust() {
+            const { W, u, PH } = libGeo();
+            return sbJust(libView().map(x => x.s ? Object.assign(sbBox(x.s.length, Math.max(32, u * .5), 14, 30), { x }) : { a: 1, pref: u, x }), W, LIB_GAP, PH);
+        }
         function libPages() {
+            if (libFit()) return libJust().map(p => p.flatMap(r => r.items.map(i => i.x)));
             const { rows, cols } = libLayout, out = [];
             let page = null, used = null;
             const fit = (w, h) => {
@@ -397,18 +409,20 @@
             libPage = Math.max(0, Math.min(pages - 1, libPage));
             st.textContent = '';                                                // 안내 글은 없이 (공간 아끼기 · 도련 2026-10-15) · 불러오는 중 · 오류만 보여요
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
-            const frag = document.createDocumentFragment(), cur = all[libPage] || [];
+            const frag = document.createDocumentFragment(), cur = all[libPage] || [], fit = libFit();
+            const jrows = fit ? libJust()[libPage] || [] : null, jat = new Map();   // 📷 줄마다 높이 · 칸마다 너비
+            grid.classList.toggle('lib-just', fit);
             let usedSlots = 0;
+            if (fit) jrows.forEach(r => { const row = document.createElement('div'); row.className = 'lib-row'; row.style.height = Math.floor(r.H) + 'px'; frag.appendChild(row); r.items.forEach(i => jat.set(i.x, [row, i, r.H])); });
             cur.forEach(x => {
                 const { u: url, s: sheet } = x;
                 const item = document.createElement('div');
                 item.className = 'lib-item' + (sheet ? ' lib-sheet' : ''); item.dataset.u = url;   // 원본 주소 (📒 수첩이 붙일 때 써요)
                 usedSlots += libSpan(x) * libSpanH(x);
-                if (sheet) {                                                       // 🏷️ 씰 종이 : 가로 2 × 세로 2칸 정사각형 · 안에 든 씰을 크게 + 총 개수
-                    item.style.gridColumn = 'span ' + libSpan(x); item.style.gridRow = 'span ' + libSpanH(x);
+                if (sheet) {                                                       // 🏷️ 씰 종이 : 가로 2 × 세로 2칸 정사각형 · 안에 든 씰을 크게 + 총 개수 (📷 고르는 창은 줄 맞추기)
+                    if (!fit) { item.style.gridColumn = 'span ' + libSpan(x); item.style.gridRow = 'span ' + libSpanH(x); }
                     item.title = '스티커 ' + sheet.length + '개';
                     item.innerHTML = sbThumbs(sheet.map(u => kitSize(u, 96))) + `<small class="lib-cnt">스티커 ${sheet.length}개</small>`;
-                    if (libFit()) libFitThumbs(item, sheet.length, libSpan(x), libSpanH(x));
                 } else {
                     const img = document.createElement('img');
                     img.loading = 'lazy';
@@ -417,29 +431,20 @@
                     item.appendChild(img);
                 }
                 item.onclick = () => { if (!libSwiped) (sheet ? libPickSheet(sheet) : libPick(url)); };
-                frag.appendChild(item);
+                const j = jat.get(x);
+                if (j) { if (sheet) sbSize(item, j[1], j[1].w, j[2], libGeo().u * .66); else { item.style.width = j[1].w + 'px'; item.style.height = Math.floor(j[2]) + 'px'; } j[0].appendChild(item); }
+                else frag.appendChild(item);
             });
+            if (fit) grid.style.minHeight = libGeo().PH + 'px';                 // 쪽마다 창 크기가 흔들리지 않게
+            else grid.style.minHeight = '';
             /* 마지막 페이지가 덜 차도 창 크기가 흔들리지 않도록 빈칸 채우기 */
-            for (let k = usedSlots; k < per && pages > 1; k++) {
+            for (let k = usedSlots; k < per && pages > 1 && !fit; k++) {
                 const empty = document.createElement('div');
                 empty.className = 'lib-item empty';
                 frag.appendChild(empty);
             }
             grid.appendChild(frag);
             updateLibPager();
-        }
-
-        /* 🧾 묶음 칸 안 : 모두 들어가는 가장 큰 크기로 줄 · 칸 수를 골라요 (낱장 그림보다는 작게 = 칸의 62%까지) */
-        function libFitThumbs(item, n, w, h) {
-            const g = document.getElementById('libGrid'), cw = g && g.clientWidth ? (g.clientWidth - 8 - (libLayout.cols - 1) * LIB_GAP) / libLayout.cols : libLayout.size;
-            const u = Math.max(30, Math.min(libLayout.size, cw)), W = w * u + (w - 1) * LIB_GAP - 14, H = h * u + (h - 1) * LIB_GAP - 24;
-            let best = [1, 0];
-            for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), t = Math.min((W - (c - 1) * 2) / c, (H - (r - 1) * 2) / r); if (t > best[1]) best = [c, t]; }
-            const c = best[0];
-            item.classList.add('fit');
-            item.style.setProperty('--sc', c);
-            item.style.aspectRatio = ((w * u + (w - 1) * LIB_GAP) / (h * u + (h - 1) * LIB_GAP)).toFixed(3);   // 낱장 칸과 줄 높이가 맞게
-            item.style.setProperty('--tcap', Math.max(14, Math.min(best[1], u * .62)).toFixed(1) + 'px');
         }
 
         /* 🔒 페이지 스티커 크기 바꾸기 막기 (도련 · 2026-10-16) : 빨간 점선 네모의 꼭짓점 · 두 손가락 · 마우스 휠로 크기가 안 바뀌어요 (돌리기 · 옮기기는 그대로)
