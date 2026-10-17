@@ -504,8 +504,8 @@
 
         /* 📒 다이어리 고르기 (도련 · 10-17 · 하단메뉴 📒 다이어리 → 📒 다이어리 고르기) : 실제 다이어리처럼 모양 · 크기를 골라요
            - 크기는 실제 다이어리 비율 그대로 (가로 : 세로) · 화면에 맞게 줄여도 비율은 지켜요 (js/page.js refreshLayout 이 dySize() 를 써요)
-           - 모양 : 6공 링 · 트래블러스(가죽 + 고무줄) · 호보니치(책갈피 끈) · 하드커버(고무밴드) · 양장(책등 · 책갈피 끈) · 스프링(위 · 옆) · 모두 펼침면 (아래 📖)
-           - 꾸밈은 페이지 둘레 그림만 (#dyBack 뒤 커버 · #dyFront 링 · 밴드 · 스프링) · 손으로 누르는 건 막지 않아요 (pointer-events: none)
+           - 모양 : 6공 링 · 트래블러스(가죽 + 고무줄) · 호보니치(책갈피 끈) · 하드커버(고무밴드) · 양장(책등 · 책갈피 끈) · 모두 펼침면 (아래 📖)
+           - 꾸밈은 페이지 둘레 그림만 (#dyBack 뒤 커버 · #dyFront 링 · 밴드) · 손으로 누르는 건 막지 않아요 (pointer-events: none)
            - 저장 : 설정.json 'diary_type' · 게스트는 이 기기 'malang_diary_type' · '기본'은 지금처럼 📐 페이지 크기 설정을 따라요 */
         const DY_KEY = 'diary_type', DY_LOCAL = 'malang_diary_type';
         const DY_TYPES = [
@@ -520,9 +520,7 @@
             { id: 'hard-a5', g: '하드커버 노트', n: '라지 A5', mm: '130×210', b: 'hard', r: 210 / 130, c: '#5a4652' },
             { id: 'hard-pocket', g: '하드커버 노트', n: '포켓', mm: '90×140', b: 'hard', r: 140 / 90, c: '#e86f96' },
             { id: 'yang-b6', g: '만년 다이어리 (양장)', n: 'B6', mm: '128×182', b: 'yang', r: 182 / 128, c: '#8fd0b7' },
-            { id: 'yang-a6', g: '만년 다이어리 (양장)', n: 'A6 문고', mm: '105×148', b: 'yang', r: 148 / 105, c: '#f2c14e' },
-            { id: 'spring-top', g: '스프링 노트', n: '위 스프링 A5', mm: '148×210', b: 'springT', r: 210 / 148, c: '#c4b2f2' },
-            { id: 'spring-side', g: '스프링 노트', n: '옆 스프링 B6', mm: '128×182', b: 'springS', r: 182 / 128, c: '#8bbcf0' }
+            { id: 'yang-a6', g: '만년 다이어리 (양장)', n: 'A6 문고', mm: '105×148', b: 'yang', r: 148 / 105, c: '#f2c14e' }
         ];
         const DY_H = 700;                                                      // 페이지 높이 기준 (📐 기본 크기와 같아요)
         const dyNow = () => { const id = prefGet(DY_KEY, DY_LOCAL); return DY_TYPES.find(t => t.id === id) || DY_TYPES[0]; };
@@ -566,20 +564,18 @@
             dyRender();                                                        // 고른 칸에 색 · 페이지가 바로 바뀌어서 따로 알림은 없어요
         }
         function dyLoad() { if (typeof refreshLayout === 'function') refreshLayout(); else dyDeco(); }
-        /* 페이지 둘레 꾸밈 : 커버(뒤) · 가운데 접힘 · 링 · 밴드 · 스프링 · 책갈피 끈(앞) */
+        /* 페이지 둘레 꾸밈 : 커버(뒤) · 가운데 접힘 · 링 · 밴드 · 책갈피 끈(앞) */
         function dyParts(t) {
             const back = [], front = [];
             const rings = n => { let h = ''; for (let i = 0; i < n; i++) h += '<i></i>'; return h; };
             if (t.b === 'basic') return ['', ''];
-            if (t.b !== 'springT' && t.b !== 'springS') back.push(t.b === 'yang' ? '<b class="dy-cov"><u></u></b>' : '<b class="dy-cov"></b>');
+            back.push(t.b === 'yang' ? '<b class="dy-cov"><u></u></b>' : '<b class="dy-cov"></b>');
             front.push('<span class="dy-fold"></span>');
             if (t.b === 'ring') front.push(`<span class="dy-rings">${rings(6)}</span>`);
             if (t.b === 'tn') front.push('<span class="dy-band"></span>');
             if (t.b === 'spread') front.push('<span class="dy-rib"></span>');
             if (t.b === 'hard') front.push('<span class="dy-band hard"></span>');
             if (t.b === 'yang') front.push('<span class="dy-rib yang"></span>');
-            if (t.b === 'springT') front.push(`<span class="dy-coil top">${rings(24)}</span>`);
-            if (t.b === 'springS') front.push(`<span class="dy-coil side">${rings(16)}</span>`);
             return [back.join(''), front.join('')];
         }
         function dyDeco() {                                                    // js/page.js refreshLayout 끝에서 불러요
@@ -596,30 +592,23 @@
             if (bk.dataset.k !== t.id) { const [b, f] = dyParts(t); bk.innerHTML = b; fr.innerHTML = f; bk.dataset.k = fr.dataset.k = t.id; }
             [bk, fr].forEach(el => Object.assign(el.style, { left: cv.offsetLeft + 'px', top: cv.offsetTop + 'px', width: cv.offsetWidth + 'px', height: cv.offsetHeight + 'px' }));
             page.dataset.dy = t.b; page.style.setProperty('--dy-c', t.c);
-            page.classList.toggle('dy-noholes', sp);                           // 펼침면은 링 구멍 대신 가운데 묶음 (링 · 스프링 · 실)
+            page.classList.toggle('dy-noholes', sp);                           // 펼침면은 링 구멍 대신 가운데 묶음 (링 · 밴드 · 실)
         }
         /* 📒 다이어리 고르기 창 */
         function dyThumb(t) {
-            const H = 60, W = t.r ? Math.round(H / t.r * 2) : 44;                // 펼침면 그대로 (기본은 한 쪽)
-            return `<span class="dy-th" data-b="${t.b}" style="--dy-c:${t.c};width:${W}px;height:${H}px"><i></i></span>`;
+            const H = 62, W = Math.round(H / (t.r || 1.4) * 2);                    // 모두 펼친 두 쪽 그대로 (실제 비율)
+            return `<span class="dy-th" data-b="${t.b}" style="--dy-c:${t.c};width:${W}px;height:${H}px"><i></i><i></i></span>`;
         }
         function dyOpen() {
-            let box = document.getElementById('dyPick');
-            if (!box) {
-                box = document.createElement('div'); box.id = 'dyPick'; box.className = 'dy-pick';
-                box.innerHTML = '<div class="dy-pick-in" role="dialog" aria-label="다이어리 고르기"><div class="dy-pick-t">📒 다이어리 고르기</div><div class="dy-pick-s">펼친 두 쪽이 하루예요 · 실제 다이어리 비율 그대로 · 누르면 바로 바뀌어요</div><div class="dy-pick-list" id="dyPickList"></div><button type="button" class="btn dy-pick-x" onclick="dyClose()">닫기</button></div>';
-                box.addEventListener('click', e => { if (e.target === box) dyClose(); });
-                document.body.appendChild(box);
-            }
             const groups = [];
             DY_TYPES.forEach(t => { let g = groups.find(x => x.g === t.g); if (!g) groups.push(g = { g: t.g, a: [] }); g.a.push(t); });
             document.getElementById('dyPickList').innerHTML = groups.map(g => `<div class="dy-grp"><b>${g.g}</b><div class="dy-row">${g.a.map(t =>
-                `<button type="button" class="dy-it" data-id="${t.id}" onclick="dySet('${t.id}')">${dyThumb(t)}<span class="dy-n">${t.n}</span><small>${t.mm}</small></button>`).join('')}</div></div>`).join('');
+                `<button type="button" class="dy-it" data-id="${t.id}" onclick="dySet('${t.id}')"><span class="dy-stage">${dyThumb(t)}</span><span class="dy-n">${t.n}</span><small>${t.mm}</small></button>`).join('')}</div></div>`).join('');
             dyRender();
-            box.hidden = false;
+            openModal('dyModal');
         }
-        function dyClose() { const b = document.getElementById('dyPick'); if (b) b.hidden = true; }
-        function dyRender() { const id = dyNow().id; document.querySelectorAll('#dyPick .dy-it').forEach(b => b.classList.toggle('on', b.dataset.id === id)); }
+        function dyClose() { closeModal('dyModal'); }
+        function dyRender() { const id = dyNow().id; document.querySelectorAll('#dyModal .dy-it').forEach(b => b.classList.toggle('on', b.dataset.id === id)); }
         window.dySize = dySize; window.dyDeco = dyDeco; window.dyHalf = dyHalf; window.dyEdgeRect = dyEdgeRect; window.dyViewSet = dyViewSet; window.dySp = dySp; window.dyLoad = dyLoad; window.dyOpen = dyOpen; window.dyClose = dyClose; window.dySet = dySet;
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */

@@ -3693,38 +3693,33 @@ body.rl-out .rl-top, body.rl-none .rl-top { display: none; }
 .dy-fold { position: absolute; top: 0; bottom: 0; left: 50%; width: 8cqw; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(150, 100, 120, .18) 45%, rgba(150, 100, 120, .28) 50%, rgba(150, 100, 120, .18) 55%, transparent); }
 .dy-rib { position: absolute; left: 50%; bottom: -5cqw; width: 1.6cqw; height: 9cqw; margin-left: -.8cqw; background: #e7768f; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); }
 .dy-rib.yang { left: auto; right: 22%; bottom: auto; top: -2.2cqw; height: 14cqw; }
-.dy-coil { position: absolute; display: flex; justify-content: space-evenly; }
-.dy-coil.top { left: 4cqw; right: 4cqw; top: -2.6cqw; height: 5cqw; }
-.dy-coil.top i { width: 1.4cqw; height: 5cqw; border-radius: .8cqw; border: .45cqw solid #b9a7ae; background: linear-gradient(90deg, #fff, #ddd0d5); box-sizing: border-box; }
-.dy-coil.side { flex-direction: column; top: 3cqw; bottom: 3cqw; left: calc(50% - 4cqw); width: 8cqw; }
-.dy-coil.side i { width: 8cqw; height: 1.4cqw; border-radius: .8cqw; border: .45cqw solid #b9a7ae; background: linear-gradient(#fff, #ddd0d5); box-sizing: border-box; }
 /* 고르기 창 */
-.dy-pick { position: fixed; inset: 0; z-index: 3500; display: grid; place-items: center; padding: 12px; background: rgba(90, 50, 65, .35); }
-.dy-pick[hidden] { display: none; }
-.dy-pick-in { width: min(560px, 100%); max-height: calc(100dvh - 24px); overflow-y: auto; background: #fff; border-radius: 20px; padding: 16px 14px 14px; box-shadow: 0 10px 30px rgba(120, 50, 80, .25); }
-.dy-pick-t { font-size: 17px; font-weight: 800; color: #6b4256; text-align: center; }
-.dy-pick-s { font-size: 12px; color: #a08a94; text-align: center; margin: 2px 0 10px; }
-.dy-grp { margin-bottom: 10px; }
-.dy-grp > b { display: block; font-size: 12.5px; color: #d6457a; margin: 0 0 6px 2px; }
-.dy-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.dy-it { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; min-width: 92px; padding: 10px 8px 8px; border-radius: 14px; border: 2px solid #ffe3ec; background: #fffafc; cursor: pointer; font-family: inherit; color: #6b4256; }
-.dy-it.on { border-color: var(--primary-accent, #ff7aa0); background: #fff0f5; box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-accent, #ff7aa0) 25%, transparent); }
-.dy-n { font-size: 12.5px; font-weight: 700; }
-.dy-it small { font-size: 10.5px; color: #a08a94; }
-.dy-pick-x { width: 100%; justify-content: center; margin-top: 6px; }
-.dy-th { position: relative; display: block; border-radius: 3px 7px 7px 3px; background: linear-gradient(140deg, color-mix(in srgb, var(--dy-c) 65%, #fff), var(--dy-c)); box-shadow: 0 3px 6px rgba(110, 60, 80, .2); }
-.dy-th i { position: absolute; inset: 4px 4px 4px 6px; border-radius: 2px 5px 5px 2px; background: repeating-linear-gradient(#fffaf2 0 6px, #f4dbe3 6px 7px); }
-.dy-th[data-b="ring"] i { left: 9px; }
-.dy-th[data-b="ring"]::before { content: ''; position: absolute; left: 3px; top: 8px; bottom: 8px; width: 9px; z-index: 1; background: radial-gradient(circle, transparent 1.6px, #cdbdc3 1.7px 2.6px, transparent 2.7px) 0 0 / 9px 10px repeat-y; }
-.dy-th[data-b="tn"]::after, .dy-th[data-b="hard"]::after { content: ''; position: absolute; top: -3px; bottom: -3px; right: 22%; width: 3px; border-radius: 2px; background: #e7768f; }
-.dy-th[data-b="hard"]::after { right: -2px; background: #4a3a44; }
-.dy-th[data-b="spread"]::after { content: ''; position: absolute; top: 4px; bottom: 4px; left: 50%; width: 6px; margin-left: -3px; background: linear-gradient(90deg, transparent, rgba(150, 100, 120, .3), transparent); }
-.dy-th[data-b="spread"] i { left: 4px; }
-.dy-th[data-b="yang"] i { left: 9px; }
-.dy-th[data-b="springT"], .dy-th[data-b="springS"] { background: #fffaf2; border: 2px solid var(--dy-c); }
-.dy-th[data-b="springT"] i, .dy-th[data-b="springS"] i { inset: 2px; }
-.dy-th[data-b="springT"]::before { content: ''; position: absolute; left: 4px; right: 4px; top: -5px; height: 9px; z-index: 1; background: linear-gradient(90deg, #b9a7ae 2px, transparent 2px) 0 0 / 6px 9px repeat-x; }
-.dy-th[data-b="springS"]::before { content: ''; position: absolute; top: 4px; bottom: 4px; left: -5px; width: 9px; z-index: 1; background: linear-gradient(#b9a7ae 2px, transparent 2px) 0 0 / 9px 6px repeat-y; }
+/* 📒 다이어리 고르기 창 (#dyModal) : 다른 고르는 창처럼 창 색 · 테두리 그대로 · 칸마다 다이어리가 무대 위에 펼쳐져 있어요 */
+.dy-win { max-width: 520px; }
+.dy-pick-s { font-size: 12px; color: var(--win-ink-soft, #a08a94); text-align: center; margin: 0 0 10px; }
+.dy-pick-list { overflow-y: auto; min-height: 0; padding: 2px 2px 4px; }
+.dy-grp { margin-bottom: 12px; }
+.dy-grp > b { display: inline-block; font-size: 12px; font-weight: 800; color: var(--primary-accent); background: color-mix(in srgb, var(--primary-accent) 12%, #fff); border-radius: 999px; padding: 3px 10px; margin: 0 0 7px 2px; }
+.dy-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.dy-it { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 8px; border-radius: 16px; border: 2px solid color-mix(in srgb, var(--border-color) 70%, #fff); background: rgba(255, 255, 255, .72); cursor: pointer; font-family: inherit; color: var(--win-ink, #6b4256); transition: transform .15s, box-shadow .15s, border-color .15s; }
+.dy-it:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(120, 60, 90, .14); }
+.dy-it.on { border-color: var(--primary-accent); background: color-mix(in srgb, var(--primary-accent) 9%, #fff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-accent) 22%, transparent); }
+.dy-it.on::after { content: '✓'; position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 900; color: #fff; background: var(--primary-accent); box-shadow: 0 2px 5px rgba(0, 0, 0, .18); }
+.dy-stage { display: grid; place-items: center; width: 100%; height: 80px; margin-bottom: 4px; border-radius: 11px; background: radial-gradient(ellipse at 50% 88%, rgba(120, 70, 90, .13), transparent 62%), color-mix(in srgb, var(--border-color) 18%, #fff); }
+.dy-n { font-size: 12.5px; font-weight: 800; }
+.dy-it small { font-size: 10.5px; opacity: .6; }
+/* 그림 : 커버 위에 왼쪽 · 오른쪽 쪽 (i 두 개) · 가운데 묶음은 종류마다 */
+.dy-th { position: relative; display: block; border-radius: 4px; background: linear-gradient(140deg, color-mix(in srgb, var(--dy-c) 62%, #fff), var(--dy-c)); box-shadow: 0 4px 8px rgba(110, 60, 80, .22); }
+.dy-th i { position: absolute; top: 4px; bottom: 4px; width: calc(50% - 4px); background: repeating-linear-gradient(#fffaf2 0 6px, #f4dbe3 6px 7px); }
+.dy-th i:first-child { left: 4px; border-radius: 3px 0 0 3px; box-shadow: inset -6px 0 6px -4px rgba(120, 70, 90, .3); }
+.dy-th i:last-child { right: 4px; border-radius: 0 3px 3px 0; box-shadow: inset 6px 0 6px -4px rgba(120, 70, 90, .3); }
+.dy-th::before, .dy-th::after { content: none; position: absolute; z-index: 1; }
+.dy-th[data-b="ring"]::before { content: ''; left: 50%; top: 9px; bottom: 9px; width: 10px; margin-left: -5px; background: radial-gradient(ellipse 4.6px 2.4px, #fff 40%, #c9b6bd 45% 80%, transparent 85%) 0 0 / 10px 8px repeat-y; }
+.dy-th[data-b="tn"]::after { content: ''; left: 50%; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: #e7768f; }
+.dy-th[data-b="hard"]::after { content: ''; right: 7px; top: -3px; bottom: -3px; width: 4px; border-radius: 2px; background: #4a3a44; }
+.dy-th[data-b="spread"]::after, .dy-th[data-b="yang"]::after { content: ''; left: 56%; top: 4px; bottom: -8px; width: 3px; border-radius: 0 0 2px 2px; background: #e7768f; }
+.dy-th[data-b="yang"]::after { background: #d6457a; }
+.dy-th[data-b="basic"] { background: color-mix(in srgb, var(--dy-c) 45%, #fff); }
 .dy-th[data-b="basic"] i { background: repeating-linear-gradient(#fff 0 6px, #ffe0ea 6px 7px); }
 /* 📖 펼침면 (js/skins.js dySize · dyViewSet) : 책(#diaryBook)은 한 쪽 크기 · 속지는 두 배로 넓어져 왼쪽으로 한 쪽만큼 · 📱 폰은 반쪽씩 */
 #diaryBook.dy-sp .inner-page { left: -100%; width: 200%; }
