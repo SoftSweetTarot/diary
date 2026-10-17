@@ -3553,3 +3553,40 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 /* 📄 스티커가 페이지 밖으로 반쯤 삐져나가도 보여요 (진짜 다꾸처럼 · js/elements.js elKeepCenter) · PNG 저장 모양에서는 페이지 안만 */
 #canvasArea, .inner-page .canvas-area { overflow: visible; }   /* 넘기는 중인 옆 페이지도 똑같이 */
 .inner-page.png-mode #canvasArea, .inner-page.png-mode .canvas-area { overflow: hidden; }
+
+/* 📏 자 (js/ruler.js · 도련 10-17) : 페이지 위에 깔아 두는 도구 · 들고 있는 필기구(1500) · 칼 방(4200)보다 아래 */
+.rl-ruler { position: fixed; left: 0; top: 0; z-index: 1490; transform-origin: 50% 50%; touch-action: none; cursor: grab; filter: drop-shadow(1px 3px 3px rgba(150, 70, 100, .22)); -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+.rl-ruler[hidden] { display: none; }
+.rl-ruler.grab { cursor: grabbing; filter: drop-shadow(3px 8px 7px rgba(150, 70, 100, .28)); }
+.rl-ruler.rl-in { transition: transform .28s ease-in, opacity .28s; opacity: .15; }
+.rl-ruler.rl-off { transition: opacity .25s; opacity: 0; }
+.rl-svg, .rl-svg svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.rl-h { position: absolute; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: #fff; border: 2px solid #ee8fb0; box-shadow: 0 2px 5px rgba(150, 70, 100, .25); cursor: alias; pointer-events: none; }   /* 돌리기 손잡이 (누르는 건 자가 받아요) */
+.rl-h::after { content: '⟳'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; font-style: normal; color: #d6457a; }
+.rl-h.l { left: -12px; } .rl-h.r { right: -12px; }
+.rl-fit { position: absolute; left: 50%; bottom: 11px; transform: translateX(-50%); padding: 2px 8px; border-radius: 10px; border: 1px solid #ee8fb0; background: rgba(255, 255, 255, .92); color: #c2385c; font-size: 11px; cursor: pointer; }
+.rl-fit[hidden] { display: none; }
+.rl-say { position: fixed; z-index: 4300; transform: translate(-50%, -100%); padding: 4px 10px; border-radius: 12px; background: #fff; border: 1.5px solid #ee8fb0; color: #c2385c; font-size: 13px; font-weight: bold; white-space: nowrap; pointer-events: none; box-shadow: 0 3px 8px rgba(150, 70, 100, .18); }
+.rl-say[hidden] { display: none; }
+.rl-meas { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 1491; pointer-events: none; overflow: visible; display: none; }
+.rl-meas.on { display: block; }
+.rl-meas line { stroke: #ff6f9f; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 6; }
+.pc-tool.rl { height: 390px; bottom: 0; width: 36px; left: calc(50% - 18px); }   /* 📒 연필통에 꽂힌 자 */
+.rl-top { position: absolute; right: 2px; top: -14px; width: 26px; height: 52px; pointer-events: auto; touch-action: none; cursor: grab; }   /* 구석 연필통의 작은 자 머리 : 위로 끌면 뽑혀요 */
+.rl-top::before { content: ''; position: absolute; right: 7px; top: 0; width: 11px; height: 50px; border-radius: 3px 3px 0 0; transform: rotate(9deg); background: repeating-linear-gradient(#8a4a63 0 1px, transparent 1px 5px) 0 4px / 4px 100% no-repeat, rgba(255, 196, 216, .95); border: 1px solid #ee8fb0; }
+body.rl-out .rl-top { display: none; }
+.rl-cal { position: fixed; inset: 0; z-index: 3500; display: grid; place-items: center; padding: 12px; background: rgba(90, 50, 65, .35); }
+.rl-cal[hidden] { display: none; }
+.rl-cal-box { width: min(560px, 100%); max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box; padding: 16px; border-radius: 18px; background: #fff; border: 2px solid var(--border-color, #ffb6c1); color: #6b4256; text-align: center; }
+.rl-cal-t { font-size: 1.15rem; font-weight: bold; color: #d6457a; }
+.rl-cal-p { margin: 8px 0; font-size: 13px; word-break: keep-all; }
+.rl-cal-area { position: relative; display: grid; place-items: center; overflow: hidden; margin: 6px 0; }
+.rl-cal-card { box-sizing: border-box; border-radius: 4mm; border: 2px dashed #ee8fb0; background: linear-gradient(135deg, rgba(255, 214, 228, .9), rgba(255, 240, 246, .9)); display: grid; place-items: center; font-size: 26px; }
+.rl-cal-row { display: flex; align-items: center; gap: 8px; }
+.rl-cal-row input { flex: 1; }
+.rl-cal-row .btn { flex: none; width: 40px; justify-content: center; }
+.rl-cal-s { display: block; margin-top: 6px; color: #999; font-size: 11.5px; }
+.rl-cal-btns { display: flex; gap: 6px; margin-top: 10px; }
+.rl-cal-btns .btn { flex: 1; justify-content: center; }
+.rl-cal-ok { background: #ffe3ec; }
+@media (prefers-reduced-motion: reduce) { .rl-ruler.rl-in, .rl-ruler.rl-off { transition: none; } }
