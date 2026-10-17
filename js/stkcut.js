@@ -72,7 +72,7 @@
     }
     function knifeAt(x, y) {
         const k = S.kn; if (!k) return;
-        k.style.transform = `translate(${x - KN_TIP[0]}px, ${y - KN_TIP[1]}px) rotate(${KN_ANG}deg)`;
+        k.style.transform = `translate(${x - KN_TIP[0]}px, ${y - KN_TIP[1]}px)${handFlip()} rotate(${KN_ANG}deg)`;
     }
     function paint() {                                 // 그은 칼선 : 하얀 테두리 + 회색 점선 (칼집 느낌)
         const c = S.cv; if (!c) return; const x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height);

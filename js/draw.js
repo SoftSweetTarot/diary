@@ -478,12 +478,12 @@
         function pcHeldAt(x, y, da) {
             const h = drq('pcHeld'); if (!h || !pcS.held) return;
             const t = pcTipOf(pcS.held); pcS.tip = [x, y];
-            h.style.transform = `translate(${x}px, ${y}px) rotate(${PC_ANG + (da || 0)}deg) translate(${-t[0]}px, ${-t[1]}px)`;
+            h.style.transform = `translate(${x}px, ${y}px)${handFlip()} rotate(${PC_ANG + (da || 0)}deg) translate(${-t[0]}px, ${-t[1]}px)`;
         }
         /* 필기구 몸통 위인지 (연필심 쪽 20px 은 빼요 → 쓰기) */
         function pcOnBody(x, y) {
             if (!pcS.held || !pcS.tip) return false;
-            const a = PC_ANG * Math.PI / 180, ux = -Math.sin(a), uy = Math.cos(a), t = pcTipOf(pcS.held);
+            const a = PC_ANG * Math.PI / 180, ux = -Math.sin(a) * (handLeft() ? -1 : 1), uy = Math.cos(a), t = pcTipOf(pcS.held);
             const px = x - pcS.tip[0], py = y - pcS.tip[1], along = px * ux + py * uy, across = Math.abs(px * uy - py * ux);
             return along > 22 + (t[1] - 2) && along < 150 - t[1] && across < 18;
         }

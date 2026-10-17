@@ -225,6 +225,15 @@
         const NICK_KEY = 'diary_nick', NICK_LOCAL = 'malang_pattern_nick';
         function nickGet() { const v = prefGet(NICK_KEY, NICK_LOCAL); return typeof v === 'string' ? v : ''; }
         function nickSet(v) { if (v) prefSet(NICK_KEY, NICK_LOCAL, String(v)); }
+        /* ✋ 쓰는 손 (도련 · 10-17) : 왼손 · 오른손 중 골라요 → 필기구 · 핀셋 · 🗑 삭제 · 스티커 칼이 그쪽 손에 든 모양으로 누워요 (끝 = 손끝은 그대로)
+           저장: 설정.json 'diary_hand' ('left' | 'right') · 게스트는 이 기기 'malang_hand' */
+        const HAND_KEY = 'diary_hand', HAND_LOCAL = 'malang_hand';
+        let handL = null;
+        function handLeft() { if (handL === null) handL = prefGet(HAND_KEY, HAND_LOCAL) === 'left'; return handL; }
+        const handFlip = () => handLeft() ? ' scaleX(-1)' : '';                // 도구 끝을 기준으로 좌우를 뒤집어요
+        function handSet(v) { prefSet(HAND_KEY, HAND_LOCAL, v === 'left' ? 'left' : 'right'); handL = v === 'left'; handRender(); }
+        function handLoad() { handL = null; handRender(); }
+        function handRender() { const l = handLeft(); document.querySelectorAll('#handPick [data-v]').forEach(b => b.classList.toggle('on', (b.dataset.v === 'left') === l)); }
         function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
         function dayPathText(date) {                                       // 안내문용 : 맨 위 폴더 이름은 빼요 (도련 · 2026-10-13)
             return `${DAY_PATH.slice(1).join('/')}/${yearFolderName(date.getFullYear())}/${monthFolderName(date.getMonth() + 1)}/${dayFileName(date.getDate())}`;
@@ -840,6 +849,7 @@
             if (typeof showApply === 'function') showApply();               // 👀 페이지에 보이는 것 (js/show.js)
             if (typeof ddRefresh === 'function') ddRefresh();               // ⏳ D-day (js/dday.js)
             if (typeof bgmLoadPref === 'function') bgmLoadPref();           // 🎵 배경음악 음량 · 반복 · 섞기 (js/bgm.js)
+            handLoad();                                                      // ✋ 쓰는 손
         }
 
         /* ---------- 화면(UI) ---------- */

@@ -850,7 +850,7 @@
         function pinMove(e) {
             if (!pinEl) { if (pinOff()) return; pinStart(); }
             pinKind = pinDev(e); clearTimeout(pinTimer); pinShow(true);
-            pinEl.style.transform = `translate(${e.clientX - TWZ_TIP[0]}px, ${e.clientY - TWZ_TIP[1]}px) rotate(${TWZ_ANG}deg)`;
+            pinEl.style.transform = `translate(${e.clientX - TWZ_TIP[0]}px, ${e.clientY - TWZ_TIP[1]}px)${handFlip()} rotate(${TWZ_ANG}deg)`;
             if (pinKind === 'pc' && !(e.buttons & 1)) pinLater();                 // 💻 마우스가 멈추면 (늘 보이기를 껐을 때만)
         }
         document.addEventListener('pointermove', pinMove, true);
@@ -926,7 +926,7 @@
             return { toLoc: (X, Y) => { const ux = (X - r.left) / k - cx, uy = (Y - r.top) / k - cy; return [(ux * Math.cos(-a) - uy * Math.sin(-a)) / s + t.W / 2, (ux * Math.sin(-a) + uy * Math.cos(-a)) / s + t.H / 2]; } };
         }
         function twzToolAt(x, y) {
-            const t = twz; if (!t) return; t.tip = [x, y]; t.tool.style.transform = `translate(${x - TWZ_TIP[0]}px, ${y - TWZ_TIP[1]}px) rotate(${TWZ_ANG}deg)`;
+            const t = twz; if (!t) return; t.tip = [x, y]; t.tool.style.transform = `translate(${x - TWZ_TIP[0]}px, ${y - TWZ_TIP[1]}px)${handFlip()} rotate(${TWZ_ANG}deg)`;
             t.room.querySelector('#twzDel').style.transform = `translate(${x + 10}px, ${y + 8}px)`;   // 🗑 삭제 표시는 핀셋 끝 옆에
         }
         /* 사각형을 반평면 (X - M)·n ≥ 0 (side = 1) / < 0 (side = -1) 으로 자른 다각형 */
