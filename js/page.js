@@ -605,8 +605,12 @@
             const toolbar = document.querySelector('.toolbar');
             const maxW = Math.floor(window.innerWidth * 0.92);
             const maxH = Math.floor(window.innerHeight - toolbar.offsetHeight - 8 - 24);
-            wrapper.style.width = Math.max(240, Math.min(pageSetting.w, maxW)) + 'px';
-            wrapper.style.height = Math.max(240, Math.min(pageSetting.h, maxH)) + 'px';
+            const dy = window.dySize && dySize();                               // 📒 고른 다이어리 크기 (비율 지키며 화면에 맞춰요 · js/skins.js)
+            if (dy) { const k = Math.min(1, maxW / dy.w, maxH / dy.h); wrapper.style.width = Math.round(dy.w * k) + 'px'; wrapper.style.height = Math.round(dy.h * k) + 'px'; }
+            else {
+                wrapper.style.width = Math.max(240, Math.min(pageSetting.w, maxW)) + 'px';
+                wrapper.style.height = Math.max(240, Math.min(pageSetting.h, maxH)) + 'px';
+            }
 
             const now = getPageSize();
             if (isCoverOpen && liveSize && (liveSize.w !== now.w || liveSize.h !== now.h)) {
@@ -615,6 +619,7 @@
             }
             liveSize = now;
             pgmApply();
+            if (window.dyDeco) dyDeco();
 
             const info = document.getElementById('pageSizeInfo');
             if (info) info.textContent = `현재 표시 크기: 가로 ${now.w} · 세로 ${now.h}px` +

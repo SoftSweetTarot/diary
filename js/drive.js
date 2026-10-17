@@ -850,6 +850,7 @@
             if (typeof ddRefresh === 'function') ddRefresh();               // ⏳ D-day (js/dday.js)
             if (typeof bgmLoadPref === 'function') bgmLoadPref();           // 🎵 배경음악 음량 · 반복 · 섞기 (js/bgm.js)
             handLoad();                                                      // ✋ 쓰는 손
+            if (typeof dyLoad === 'function') dyLoad();                     // 📒 고른 다이어리 (js/skins.js)
         }
 
         /* ---------- 화면(UI) ---------- */
