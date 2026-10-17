@@ -429,6 +429,14 @@
         /* 🔒 페이지 스티커 크기 바꾸기 막기 (도련 · 2026-10-16) : 빨간 점선 네모의 꼭짓점 · 두 손가락 · 마우스 휠로 크기가 안 바뀌어요 (돌리기 · 옮기기는 그대로)
            다시 켜려면 false 로 바꾸면 돼요 (크기 코드는 그대로 있어요) */
         const EL_SCALE_LOCK = true;
+        /* 📄 스티커는 진짜처럼 페이지 밖으로 삐져나갈 수 있어요 (도련 · 2026-10-17 · #canvasArea overflow: visible)
+           - 다만 가운데는 페이지 안에 있어야 붙어 있어요 = 최대 반쯤만 밖으로 (밖으로 나간 부분은 ✂️ 스티커 칼로 잘라 버리는 게 다꾸의 맛) */
+        function elKeepCenter(el, x, y) {
+            const ca = document.getElementById('canvasArea'); if (!ca) return [x, y];
+            const W = el.offsetWidth, H = el.offsetHeight, PW = ca.offsetWidth, PH = ca.offsetHeight;
+            return [Math.max(-W / 2, Math.min(PW - W / 2, x)), Math.max(-H / 2, Math.min(PH - H / 2, y))];
+        }
+        window.elKeepCenter = elKeepCenter;
         function makeTransformable(el) {
             el.style.zIndex = zIndexCounter++;
             let posX = 100, posY = 100, scale = 1, rotation = 0;
@@ -561,6 +569,7 @@
                     }
                     posX = initialX + ddx;
                     posY = initialY + ddy;
+                    [posX, posY] = elKeepCenter(el, posX, posY);                 // 📄 페이지 밖으로 반쯤은 나가도 돼요 (가운데만 페이지 안)
                     el.dataset.posX = posX; el.dataset.posY = posY;
                 } else if (actionType === 'rotate') {
                     const rect = el.getBoundingClientRect();
@@ -621,6 +630,7 @@
                     onDrop: (cx, cy) => {                                       // 놓은 자리에 작아지며 붙어요
                         seal = null;
                         posX = x0 + (cx - cx0) / k; posY = y0 + (cy - cy0) / k;
+                        [posX, posY] = elKeepCenter(el, posX, posY);
                         el.dataset.posX = posX; el.dataset.posY = posY;
                         lift = 1.07; updateTransform(); el.style.visibility = ''; liftTo(1);
                         if (el === selectedElement) positionTextPanel();

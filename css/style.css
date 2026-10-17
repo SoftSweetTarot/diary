@@ -3549,3 +3549,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .twz .twz-l { transform-origin: 16px 126px; transform: rotate(-4deg); }
 .twz .twz-r { transform-origin: 20px 126px; transform: rotate(4deg); }
 .twz.shut .twz-l, .twz.shut .twz-r { transform: rotate(0deg); }
+
+/* 📄 스티커가 페이지 밖으로 반쯤 삐져나가도 보여요 (진짜 다꾸처럼 · js/elements.js elKeepCenter) · PNG 저장 모양에서는 페이지 안만 */
+#canvasArea, .inner-page .canvas-area { overflow: visible; }   /* 넘기는 중인 옆 페이지도 똑같이 */
+.inner-page.png-mode #canvasArea, .inner-page.png-mode .canvas-area { overflow: hidden; }
