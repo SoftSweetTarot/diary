@@ -3550,7 +3550,7 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 #canvasArea .element-box.el-dying, #canvasArea .element-box.el-peel-back { pointer-events: none !important; border-color: transparent !important; transition: none !important; }
 #canvasArea .element-box.el-peel-back > * { filter: brightness(0) invert(.97) sepia(.12) drop-shadow(0 3px 3px rgba(110, 70, 85, .3)) !important; }
 #canvasArea .element-box.el-peel-back textarea { color: transparent !important; }
-#canvasArea .element-box.el-peel-back.twz-vanish { animation: twzVanish .24s ease-in forwards; }
+#canvasArea .element-box.twz-vanish { animation: twzVanish .42s ease-in forwards; }   /* 뜯기는 앞면 · 뒷면 같이 스르르 (js/elements.js TWZ_FADE) */
 @keyframes twzVanish { to { opacity: 0; filter: blur(1px); } }
 .twz-room { position: fixed; inset: 0; z-index: 4300; touch-action: none; cursor: none; }
 .twz-room[hidden] { display: none; }

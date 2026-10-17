@@ -843,7 +843,8 @@
         /* 🗑️ 삭제 = 🩷 핀셋으로 뜯어서 버리기 (도련 · 2026-10-17 · 현실에서 스티커를 뜯어 버리는 느낌)
            - 삭제를 누르면 큼직한 핀셋이 나와서 마우스를 따라다녀요 (터치는 손가락이 닿는 곳으로) · 핀셋 끝 = 포인터 · 기울기는 글쓰기 필기구와 같아요
            - 스티커를 집은(누른) 곳에서부터 뜯겨요 : 집은 곳(가장 가까운 가장자리)이 핀셋을 따라오고, 접히는 선(집은 곳과 핀셋의 가운데 선)에서 하얀 뒷면이 뒤집혀요
-           - 뜯긴 부분이 절반을 넘는 순간 스티커가 사라지고, 조금 늦게 핀셋도 사라져요
+           - 뜯긴 부분이 절반을 넘는 순간부터 스티커가 스르르 사라지기 시작해요 · 그동안에도 멈추지 않고 핀셋을 따라 계속 뜯겨요 (도련 10-17)
+             핀셋은 끝까지 포인터에 붙어 다니다가 스티커가 다 사라진 뒤에 사라져요
            - 덜 뜯고 놓으면 다시 착 붙어요(핀셋은 그대로) · ✕ / Esc / 스티커에서 먼 곳을 톡 = 지우지 않고 그만두기
            - 앞면 · 뒷면(복제본) 모두 clip-path 다각형 · 뒷면은 접는 선에 비친 모양(matrix) · 연출 중인 것은 저장에서 빼요
            📌 삭제핀 (도련 · 10-17 · 페이지 빈 곳 메뉴 js/tapmenu.js) : 같은 핀셋인데 고른 것 하나가 아니라 페이지 위 무엇이든 집어서 뜯어요 (twzPin)
@@ -969,32 +970,38 @@
             if (navigator.vibrate) try { navigator.vibrate(8); } catch (er) {}
         }
         function twzMove(e) {
-            const t = twz; if (!t || t.done) return;
-            twzToolAt(e.clientX, e.clientY);                                    // 🖱 핀셋 끝 = 포인터 (누르지 않아도 따라와요)
-            if (!t.drag || t.drag.id !== e.pointerId) return;
+            const t = twz; if (!t) return;
+            twzToolAt(e.clientX, e.clientY);                                    // 🖱 핀셋 끝 = 포인터 (누르지 않아도 · 사라지는 중에도 따라와요)
+            if (!t.drag || t.drag.id !== e.pointerId || !t.el) return;
             const L = twzGeo().toLoc(e.clientX, e.clientY);
             t.P = [L[0] - t.off[0], L[1] - t.off[1]];
             twzPaint();
             if (t.full) twzFinish();
         }
         function twzUp(e) {
-            const t = twz; if (!t || !t.drag || t.drag.id !== e.pointerId || t.done) return;
+            const t = twz; if (!t || !t.drag || t.drag.id !== e.pointerId) return;
             t.drag = null; t.tool.classList.remove('shut');
+            if (t.done) return;                                                // 사라지는 중이면 그대로 사라져요
             if (t.full) { twzFinish(); return; }
             const P0 = t.P.slice(), t0 = performance.now();                    // 덜 뜯었으면 다시 착 붙어요
             const el0 = t.el, back = now => { if (twz !== t || t.drag || t.done || t.el !== el0) return; const p = Math.min(1, (now - t0) / 260), v = (1 - p) * (1 - p); t.P = [t.G[0] + (P0[0] - t.G[0]) * v, t.G[1] + (P0[1] - t.G[1]) * v]; twzPaint(); if (p < 1) requestAnimationFrame(back); else if (t.pin) twzDetach(); };   // 📌 삭제핀은 다시 붙으면 놓아줘요
             requestAnimationFrame(back);
         }
-        function twzFinish() {                                                 // 절반 넘게 뜯긴 순간 : 스티커 사라짐 → 조금 늦게 핀셋도
+        const TWZ_FADE = 420;                                                  // 스티커가 사라지는 시간 (css twzVanish 와 같아요)
+        function twzFinish() {                                                 // 절반 넘게 뜯긴 순간 : 계속 뜯기면서 스르르 → 다 사라지면 핀셋도
             const t = twz; if (!t || t.done) return;
-            t.done = true; t.drag = null;
-            const bk = t.back; bk.classList.add('twz-vanish'); t.el.remove();
-            setTimeout(() => bk.remove(), 260);
+            t.done = true;
+            const el = t.el, bk = t.back;
+            el.classList.add('twz-vanish'); bk.classList.add('twz-vanish');
             if (navigator.vibrate) try { navigator.vibrate([6, 30, 10]); } catch (er) {}
-            if (typeof saveData === 'function') saveData(false);
-            if (t.pin) { t.el = null; t.back = null; t.done = false; t.tool.classList.remove('shut'); return; }   // 📌 삭제핀은 남아서 또 뜯어요
-            setTimeout(() => { t.tool.classList.remove('shut'); t.tool.classList.add('bye'); t.room.classList.add('bye'); }, 380);
-            setTimeout(() => { if (twz === t) twz = null; t.room.hidden = true; }, 800);
+            setTimeout(() => {
+                el.remove(); bk.remove();
+                if (typeof saveData === 'function') saveData(false);
+                if (twz !== t) return;
+                if (t.pin) { t.el = null; t.back = null; t.done = false; t.drag = null; t.tool.classList.remove('shut'); return; }   // 📌 삭제핀은 남아서 또 뜯어요
+                t.drag = null; t.tool.classList.remove('shut'); t.tool.classList.add('bye'); t.room.classList.add('bye');
+                setTimeout(() => { if (twz === t) twz = null; t.room.hidden = true; }, 400);
+            }, TWZ_FADE);
         }
         function twzQuit() {                                                   // 지우지 않고 그만두기 : 원래대로
             const t = twz; if (!t) return;
