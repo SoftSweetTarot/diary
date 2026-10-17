@@ -624,14 +624,6 @@
         /* ⚙ 설정 메뉴 (2×2) */
         .modal-content.settings-menu { max-width: 320px; }
         .settings-grid { grid-template-columns: repeat(2, 1fr); }
-        /* 📐 페이지 크기 창 */
-        .page-size-row { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
-        .page-size-label { width: 44px; flex-shrink: 0; font-weight: bold; }
-        .page-size-row input { flex: 1; min-width: 0; text-align: center; box-sizing: border-box; }
-        .page-step { flex-shrink: 0; width: 30px; justify-content: center; padding: 3px 0 !important; font-size: 15px !important; }
-        .page-size-range { font-size: 10.5px; color: #999; text-align: right; }
-        .page-size-info { font-size: 11.5px; color: #777; margin-top: 3px; line-height: 1.4; }
-
         /* ===== 🎁 랜덤박스 : 캡슐 뽑기 기계 (js/gacha.js · 전체 화면) ===== */
         .gc-room { position: fixed; inset: 0; z-index: 1600; display: none; overflow-y: auto; overscroll-behavior: contain;
             background: #eaf4fb radial-gradient(#d6e8f5 1.6px, transparent 1.7px) 0 0 / 18px 18px; color: #2b2f3a;
@@ -3695,17 +3687,23 @@ body.rl-out .rl-top, body.rl-none .rl-top { display: none; }
 .dy-rib.yang { left: auto; right: 22%; bottom: auto; top: -2.2cqw; height: 14cqw; }
 /* 고르기 창 */
 /* 📒 다이어리 고르기 창 (#dyModal) : 다른 고르는 창처럼 창 색 · 테두리 그대로 · 칸마다 다이어리가 무대 위에 펼쳐져 있어요 */
-.dy-win { max-width: 520px; }
-.dy-pick-s { font-size: 12px; color: var(--win-ink-soft, #a08a94); text-align: center; margin: 0 0 10px; }
-.dy-pick-list { overflow-y: auto; min-height: 0; padding: 2px 2px 4px; }
+.dy-win { max-width: 380px; }
+.dy-pick-s { font-size: 11.5px; color: var(--win-ink-soft, #a08a94); text-align: center; margin: 2px 0 0; }
+.dy-pick-list { overflow-y: auto; min-height: 0; padding: 10px 2px 8px; }
 .dy-grp { margin-bottom: 12px; }
 .dy-grp > b { display: inline-block; font-size: 12px; font-weight: 800; color: var(--primary-accent); background: color-mix(in srgb, var(--primary-accent) 12%, #fff); border-radius: 999px; padding: 3px 10px; margin: 0 0 7px 2px; }
-.dy-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.dy-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+#dyTabs { margin-top: 6px; }
+.dv-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.dv-row > span { flex: none; width: 64px; font-size: 13px; font-weight: 700; }
+.dv-row .snb-pick { flex: 1; margin-top: 0; }
+.dv-row .snb-pick .btn { padding: 7px 4px; }
+.dv-row.me > span::after { content: '이 기기'; display: block; font-size: 10px; font-weight: 700; color: var(--primary-accent); }
 .dy-it { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 8px; border-radius: 16px; border: 2px solid color-mix(in srgb, var(--border-color) 70%, #fff); background: rgba(255, 255, 255, .72); cursor: pointer; font-family: inherit; color: var(--win-ink, #6b4256); transition: transform .15s, box-shadow .15s, border-color .15s; }
 .dy-it:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(120, 60, 90, .14); }
 .dy-it.on { border-color: var(--primary-accent); background: color-mix(in srgb, var(--primary-accent) 9%, #fff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-accent) 22%, transparent); }
 .dy-it.on::after { content: '✓'; position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 900; color: #fff; background: var(--primary-accent); box-shadow: 0 2px 5px rgba(0, 0, 0, .18); }
-.dy-stage { display: grid; place-items: center; width: 100%; height: 80px; margin-bottom: 4px; border-radius: 11px; background: radial-gradient(ellipse at 50% 88%, rgba(120, 70, 90, .13), transparent 62%), color-mix(in srgb, var(--border-color) 18%, #fff); }
+.dy-stage { display: grid; place-items: center; width: 100%; height: 72px; margin-bottom: 4px; border-radius: 11px; background: radial-gradient(ellipse at 50% 88%, rgba(120, 70, 90, .13), transparent 62%), color-mix(in srgb, var(--border-color) 18%, #fff); }
 .dy-n { font-size: 12.5px; font-weight: 800; }
 .dy-it small { font-size: 10.5px; opacity: .6; }
 /* 그림 : 커버 위에 왼쪽 · 오른쪽 쪽 (i 두 개) · 가운데 묶음은 종류마다 */
@@ -3719,8 +3717,6 @@ body.rl-out .rl-top, body.rl-none .rl-top { display: none; }
 .dy-th[data-b="hard"]::after { content: ''; right: 7px; top: -3px; bottom: -3px; width: 4px; border-radius: 2px; background: #4a3a44; }
 .dy-th[data-b="spread"]::after, .dy-th[data-b="yang"]::after { content: ''; left: 56%; top: 4px; bottom: -8px; width: 3px; border-radius: 0 0 2px 2px; background: #e7768f; }
 .dy-th[data-b="yang"]::after { background: #d6457a; }
-.dy-th[data-b="basic"] { background: color-mix(in srgb, var(--dy-c) 45%, #fff); }
-.dy-th[data-b="basic"] i { background: repeating-linear-gradient(#fff 0 6px, #ffe0ea 6px 7px); }
 /* 📖 펼침면 (js/skins.js dySize · dyViewSet) : 책(#diaryBook)은 한 쪽 크기 · 속지는 두 배로 넓어져 왼쪽으로 한 쪽만큼 · 📱 폰은 반쪽씩 */
 #diaryBook.dy-sp .inner-page { left: -100%; width: 200%; }
 #diaryBook.dy-sp .inner-page .page-header { width: min(calc(var(--dy-w) - 16px), max(calc(var(--dy-w) * .74), 290px)); }

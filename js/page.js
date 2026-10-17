@@ -310,7 +310,7 @@
             }
 
             const under = buildStaticPage(targetDate);
-            if (!isCover && dir === -1 && window.dySp && dySp()) under.classList.add('dy-at-r');   // 📱 전날은 오른쪽 쪽부터
+            if (dyUnderR(dir, isCover)) under.classList.add('dy-at-r');                         // 📱 전날은 오른쪽 쪽부터 · 📄 한쪽 보기는 늘 오른쪽 쪽
             const ip = document.getElementById('innerPage');                                  // 📒 아래 장도 같은 다이어리 모양 (링 · 밴드 · 구멍 없음)
             if (ip.dataset.dy) { under.dataset.dy = ip.dataset.dy; under.style.setProperty('--dy-c', ip.style.getPropertyValue('--dy-c')); under.classList.toggle('dy-noholes', ip.classList.contains('dy-noholes'));
                 ip.querySelectorAll(':scope > .dy-deco').forEach(n => { const c = n.cloneNode(true); c.removeAttribute('id'); c.classList.add(n.id === 'dyBack' ? 'dy-bk' : 'dy-fr'); n.id === 'dyBack' ? under.prepend(c) : under.appendChild(c); }); }
@@ -587,7 +587,7 @@
         }
         function getPageSize() {
             const b = document.getElementById('diaryBook');
-            return { w: b.clientWidth * (window.dySp && dySp() ? 2 : 1), h: b.clientHeight };   // 📖 펼침면은 두 쪽이 한 장 (js/skins.js)
+            return { w: b.clientWidth * 2, h: b.clientHeight };                // 📖 펼친 두 쪽이 한 장 (js/skins.js)
         }
         function fitFactor(c) {
             const ref = canvasOfPage(DEFAULT_PAGE_W, DEFAULT_PAGE_H);
@@ -625,12 +625,9 @@
             const toolbar = document.querySelector('.toolbar');
             const maxW = Math.floor(window.innerWidth * 0.92);
             const maxH = Math.floor(window.innerHeight - toolbar.offsetHeight - 8 - 24);
-            const dy = window.dySize && dySize();                               // 📒 고른 다이어리 크기 (비율 지키며 화면에 맞춰요 · js/skins.js)
-            if (dy) { const k = Math.min(1, maxW / (dy.w * (dy.two ? 2 : 1)), maxH / dy.h); wrapper.style.width = Math.round(dy.w * k) + 'px'; wrapper.style.height = Math.round(dy.h * k) + 'px'; }   // 💻 펼침면은 두 쪽이 화면에 들어가게
-            else {
-                wrapper.style.width = Math.max(240, Math.min(pageSetting.w, maxW)) + 'px';
-                wrapper.style.height = Math.max(240, Math.min(pageSetting.h, maxH)) + 'px';
-            }
+            const dy = dySize();                                                // 📒 고른 다이어리 한 쪽 크기 (비율 지키며 화면에 맞춰요 · js/skins.js)
+            const k = Math.min(1, maxW / (dy.w * (dy.two ? 2 : 1)), maxH / dy.h);       // 💻 양쪽 보기는 두 쪽이 화면에 들어가게
+            wrapper.style.width = Math.round(dy.w * k) + 'px'; wrapper.style.height = Math.round(dy.h * k) + 'px';
 
             const now = getPageSize();
             if (isCoverOpen && liveSize && (liveSize.w !== now.w || liveSize.h !== now.h)) {
@@ -640,10 +637,6 @@
             liveSize = now;
             pgmApply();
             if (window.dyDeco) dyDeco();
-
-            const info = document.getElementById('pageSizeInfo');
-            if (info) info.textContent = `현재 표시 크기: 가로 ${now.w} · 세로 ${now.h}px` +
-                ((now.w < pageSetting.w || now.h < pageSetting.h) ? ' (화면보다 커서 자동으로 줄였어요)' : '');
         }
 
         function setupLayout() {
@@ -653,41 +646,6 @@
             refreshLayout();
         }
 
-        function syncPageSizeInputs() {
-            document.getElementById('pageWInput').value = pageSetting.w;
-            document.getElementById('pageHInput').value = pageSetting.h;
-        }
-        function loadPageSize() {
-            try {
-                const v = JSON.parse(localStorage.getItem(PAGE_SIZE_KEY));
-                if (v && v.w > 0 && v.h > 0) pageSetting = {
-                    w: clampNum(Math.round(v.w), PAGE_W_MIN, PAGE_W_MAX),
-                    h: clampNum(Math.round(v.h), PAGE_H_MIN, PAGE_H_MAX)
-                };
-            } catch (err) {}
-            syncPageSizeInputs();
-        }
-        function applyPageSizeSetting() {
-            let w = parseInt(document.getElementById('pageWInput').value);
-            let h = parseInt(document.getElementById('pageHInput').value);
-            if (isNaN(w)) w = pageSetting.w;
-            if (isNaN(h)) h = pageSetting.h;
-            pageSetting = { w: clampNum(w, PAGE_W_MIN, PAGE_W_MAX), h: clampNum(h, PAGE_H_MIN, PAGE_H_MAX) };
-            syncPageSizeInputs();
-            localStorage.setItem(PAGE_SIZE_KEY, JSON.stringify(pageSetting));
-            refreshLayout();
-        }
-        /* 📐 − / ＋ 버튼 : 10px씩 */
-        function stepPageSize(which, delta) {
-            const el = document.getElementById(which === 'w' ? 'pageWInput' : 'pageHInput');
-            el.value = (parseInt(el.value, 10) || pageSetting[which]) + delta;
-            applyPageSizeSetting();
-        }
-        function resetPageSize() {
-            document.getElementById('pageWInput').value = DEFAULT_PAGE_W;
-            document.getElementById('pageHInput').value = DEFAULT_PAGE_H;
-            applyPageSizeSetting();
-        }
 
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */

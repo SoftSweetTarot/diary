@@ -509,7 +509,6 @@
            - 저장 : 설정.json 'diary_type' · 게스트는 이 기기 'malang_diary_type' · '기본'은 지금처럼 📐 페이지 크기 설정을 따라요 */
         const DY_KEY = 'diary_type', DY_LOCAL = 'malang_diary_type';
         const DY_TYPES = [
-            { id: 'basic', g: '기본', n: '지금 모양', mm: '📐 페이지 크기대로', b: 'basic', c: '#ffc2d4' },
             { id: 'ring-a5', g: '6공 바인더', n: 'A5', mm: '148×210', b: 'ring', r: 210 / 148, c: '#ff9dbb' },
             { id: 'ring-bible', g: '6공 바인더', n: '바이블', mm: '95×171', b: 'ring', r: 171 / 95, c: '#9fd8c3' },
             { id: 'ring-mini', g: '6공 바인더', n: '미니6공 M5', mm: '62×105', b: 'ring', r: 105 / 62, c: '#c4b2f2' },
@@ -522,23 +521,39 @@
             { id: 'yang-b6', g: '만년 다이어리 (양장)', n: 'B6', mm: '128×182', b: 'yang', r: 182 / 128, c: '#8fd0b7' },
             { id: 'yang-a6', g: '만년 다이어리 (양장)', n: 'A6 문고', mm: '105×148', b: 'yang', r: 148 / 105, c: '#f2c14e' }
         ];
-        const DY_H = 700;                                                      // 페이지 높이 기준 (📐 기본 크기와 같아요)
-        const dyNow = () => { const id = prefGet(DY_KEY, DY_LOCAL); return DY_TYPES.find(t => t.id === id) || DY_TYPES[0]; };
-        /* 📖 펼침면 (도련 · 10-17 · 테스트판) : 기본 말고 모든 다이어리는 펼친 두 쪽이 하루예요
-           - 저장은 늘 두 쪽짜리 종이 하나 (getPageSize = 두 쪽 크기) · 💻 PC · 아이패드는 두 쪽이 다 보여요
-           - 📱 폰(가로 600 미만)은 반쪽씩 : 밀면 같은 날 왼쪽 ↔ 오른쪽 · 끝에서 한 번 더 밀면 장이 넘어가요 (다음 날은 왼쪽부터 · 전날은 오른쪽부터)
-           - #diaryBook 은 한 쪽 크기 그대로 · #innerPage 가 두 배로 넓어져 왼쪽으로 한 쪽만큼 나가요 (css #diaryBook.dy-sp) → 책은 오른쪽 쪽 자리
-           - 💻 다이어리를 열면 #diaryWrapper 왼쪽에 한 쪽만큼 자리를 비워 펼침면이 가운데로 와요 (표지는 한 쪽 크기 그대로 가운데) */
-        const dyOne = () => window.innerWidth < 600;                           // 📱 폰 : 반쪽씩
-        let dyView = 'l';                                                      // 📱 지금 보는 쪽 (l 왼쪽 · r 오른쪽)
-        const dySp = () => !!dyNow().r;                                        // 펼침면인지 (기본은 한 쪽)
-        function dySize() {                                                    // 📐 한 쪽 크기 (js/page.js refreshLayout) · 기본이면 null · sp = 펼침면
-            const t = dyNow(); if (!t.r) return null;
-            const ch = DY_H - PAGE_BORDER * 2 - PAGE_HEADER_H;
-            return { w: Math.round(ch / t.r) + PAGE_BORDER * 2, h: DY_H, keep: true, sp: true, two: !dyOne() };
+        const DY_DEF = 'hobo-weeks';                                           // 처음 설치하면 호보니치 위크스 (도련 · 10-17)
+        const DY_TAB = { '6공 바인더': '6공', '트래블러스 노트': '트래블러스', '호보니치': '호보니치', '하드커버 노트': '하드커버', '만년 다이어리 (양장)': '양장' };   // 고르기 창 위 카테고리
+        const DY_H = 700;                                                      // 페이지 높이 기준
+        const dyNow = () => { const id = prefGet(DY_KEY, DY_LOCAL); return DY_TYPES.find(t => t.id === id) || DY_TYPES.find(t => t.id === DY_DEF); };
+        /* 📖 펼침면 (도련 · 10-17) : 모든 다이어리는 펼친 두 쪽이 하루예요
+           - 저장은 늘 두 쪽짜리 종이 하나 (getPageSize = 두 쪽 크기) · 보는 방법만 기기마다 설정에서 골라요 (📖 양쪽 · 📄 한쪽)
+           - spread : 💻 컴퓨터 · 📲 패드 양쪽 = 두 쪽이 다 보여요 (다이어리를 열면 #diaryWrapper 왼쪽에 한 쪽만큼 자리를 비워 가운데로)
+           - swipe  : 📱 폰 양쪽 = 반쪽씩 · 밀면 같은 날 왼쪽 ↔ 오른쪽 · 끝에서 한 번 더 밀면 장이 넘어가요 (다음 날은 왼쪽부터 · 전날은 오른쪽부터)
+           - right  : 한쪽 = 오른쪽 쪽만 · 예전 한 쪽 다이어리처럼 바로 다음 날 · 전날로 넘어가요 (왼쪽 쪽은 안 보여요)
+           - #diaryBook 은 한 쪽 크기 그대로 · #innerPage 가 두 배로 넓어져 왼쪽으로 한 쪽만큼 나가요 (css #diaryBook.dy-sp) → 책은 오른쪽 쪽 자리 */
+        const DV_KEY = 'diary_view', DV_LOCAL = 'malang_view', DV_DEF = { phone: 'two', pad: 'two', pc: 'two' };
+        function dvDev() {                                                     // 이 기기 : 폰(화면 짧은 쪽 600 미만) · 패드(손가락 화면) · 컴퓨터
+            if (Math.min(screen.width, screen.height) < 600) return 'phone';
+            return navigator.maxTouchPoints > 0 && matchMedia('(any-pointer: coarse)').matches ? 'pad' : 'pc';
         }
-        function dyViewSet(v, anim) {                                          // 📱 왼쪽 · 오른쪽 쪽 보기
-            dyView = v === 'r' ? 'r' : 'l';
+        function dvCfg() { const v = prefGet(DV_KEY, DV_LOCAL); return Object.assign({}, DV_DEF, v && typeof v === 'object' ? v : {}); }
+        function dvSet(k, v) { const c = dvCfg(); c[k] = v === 'one' ? 'one' : 'two'; prefSet(DV_KEY, DV_LOCAL, c); dvRender(); if (k === dvDev()) dyLoad(); }
+        function dvRender() {
+            const c = dvCfg(), me = dvDev();
+            document.querySelectorAll('#dvPick [data-k]').forEach(row => {
+                row.classList.toggle('me', row.dataset.k === me);
+                row.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === c[row.dataset.k]));
+            });
+        }
+        const dyMode = () => dvCfg()[dvDev()] === 'one' ? 'right' : dvDev() === 'phone' ? 'swipe' : 'spread';
+        let dyView = 'l';                                                      // 📱 지금 보는 쪽 (l 왼쪽 · r 오른쪽)
+        function dySize() {                                                    // 📐 한 쪽 크기 (js/page.js refreshLayout) · two = 두 쪽이 다 보여요
+            const t = dyNow(), ch = DY_H - PAGE_BORDER * 2 - PAGE_HEADER_H;
+            return { w: Math.round(ch / t.r) + PAGE_BORDER * 2, h: DY_H, two: dyMode() === 'spread' };
+        }
+        const dyUnderR = (dir, cover) => dyMode() === 'right' || (dyMode() === 'swipe' && !cover && dir === -1);   // 넘길 때 밑에 보일 장이 오른쪽 쪽인지 (js/page.js beginCurl)
+        function dyViewSet(v, anim) {                                          // 📱 왼쪽 · 오른쪽 쪽 보기 (한쪽 보기는 늘 오른쪽)
+            const m = dyMode(); dyView = m === 'right' || (m === 'swipe' && v === 'r') ? 'r' : 'l';
             const book = document.getElementById('diaryBook'); if (!book) return;
             book.classList.toggle('dy-anim', !!anim);
             book.classList.toggle('dy-r', dyView === 'r');
@@ -546,7 +561,7 @@
             if (anim) setTimeout(() => book.classList.remove('dy-anim'), 380);
         }
         function dyHalf(dir) {                                                 // 📱 밀기 : 같은 날 안에서 쪽 옮기기면 true (js/page.js setupCurlDrag)
-            if (!dySp() || !dyOne() || !isCoverOpen) return false;
+            if (dyMode() !== 'swipe' || !isCoverOpen) return false;
             if (dir === 1 && dyView === 'l') { dyViewSet('r', true); dyHalfAt = performance.now(); return true; }
             if (dir === -1 && dyView === 'r') { dyViewSet('l', true); dyHalfAt = performance.now(); return true; }
             return false;
@@ -554,11 +569,11 @@
         let dyHalfAt = 0;
         document.addEventListener('click', e => { if (performance.now() - dyHalfAt < 500) { e.stopPropagation(); e.preventDefault(); } }, true);   // 밀어서 쪽을 옮긴 뒤의 클릭은 메뉴로 안 가요
         function dyEdgeRect() {                                                // 💻 펼침면 : 넘기는 끝은 두 쪽 전체의 양쪽 끝
-            if (!dySp() || dyOne() || !isCoverOpen) return null;
+            if (dyMode() !== 'spread' || !isCoverOpen) return null;
             const p = document.getElementById('innerPage'); return p ? p.getBoundingClientRect() : null;
         }
         function dySet(id) {
-            const t = DY_TYPES.find(x => x.id === id) || DY_TYPES[0];
+            const t = DY_TYPES.find(x => x.id === id) || dyNow();
             prefSet(DY_KEY, DY_LOCAL, t.id);
             if (typeof refreshLayout === 'function') refreshLayout(); else dyDeco();
             dyRender();                                                        // 고른 칸에 색 · 페이지가 바로 바뀌어서 따로 알림은 없어요
@@ -568,7 +583,6 @@
         function dyParts(t) {
             const back = [], front = [];
             const rings = n => { let h = ''; for (let i = 0; i < n; i++) h += '<i></i>'; return h; };
-            if (t.b === 'basic') return ['', ''];
             back.push(t.b === 'yang' ? '<b class="dy-cov"><u></u></b>' : '<b class="dy-cov"></b>');
             front.push('<span class="dy-fold"></span>');
             if (t.b === 'ring') front.push(`<span class="dy-rings">${rings(6)}</span>`);
@@ -581,35 +595,41 @@
         function dyDeco() {                                                    // js/page.js refreshLayout 끝에서 불러요
             const page = document.getElementById('innerPage'), cv = document.getElementById('canvasArea'), book = document.getElementById('diaryBook'), wr = document.getElementById('diaryWrapper');
             if (!page || !cv || !book) return;
-            const t = dyNow(), sp = dySp(), one = dyOne();
-            book.classList.toggle('dy-sp', sp); book.classList.toggle('dy-one', sp && one);
+            const t = dyNow(), mode = dyMode();
+            book.classList.add('dy-sp'); book.classList.toggle('dy-one', mode !== 'spread');
             book.style.setProperty('--dy-w', book.clientWidth + 'px');
-            if (!sp || !one) dyViewSet('l');
-            if (wr) wr.style.marginLeft = sp && !one && isCoverOpen ? book.clientWidth + 'px' : '';   // 💻 펼침면을 화면 가운데로
+            if (mode !== 'swipe') dyViewSet(mode === 'right' ? 'r' : 'l');
+            if (wr) wr.style.marginLeft = mode === 'spread' && isCoverOpen ? book.clientWidth + 'px' : '';   // 💻 펼침면을 화면 가운데로
             let bk = document.getElementById('dyBack'), fr = document.getElementById('dyFront');
             if (!bk) { bk = document.createElement('div'); bk.id = 'dyBack'; bk.className = 'dy-deco'; bk.setAttribute('aria-hidden', 'true'); page.prepend(bk); }
             if (!fr) { fr = document.createElement('div'); fr.id = 'dyFront'; fr.className = 'dy-deco'; fr.setAttribute('aria-hidden', 'true'); page.appendChild(fr); }
             if (bk.dataset.k !== t.id) { const [b, f] = dyParts(t); bk.innerHTML = b; fr.innerHTML = f; bk.dataset.k = fr.dataset.k = t.id; }
             [bk, fr].forEach(el => Object.assign(el.style, { left: cv.offsetLeft + 'px', top: cv.offsetTop + 'px', width: cv.offsetWidth + 'px', height: cv.offsetHeight + 'px' }));
             page.dataset.dy = t.b; page.style.setProperty('--dy-c', t.c);
-            page.classList.toggle('dy-noholes', sp);                           // 펼침면은 링 구멍 대신 가운데 묶음 (링 · 밴드 · 실)
+            page.classList.add('dy-noholes');                                  // 펼침면은 링 구멍 대신 가운데 묶음 (링 · 밴드 · 실)
         }
         /* 📒 다이어리 고르기 창 */
         function dyThumb(t) {
-            const H = 62, W = Math.round(H / (t.r || 1.4) * 2);                    // 모두 펼친 두 쪽 그대로 (실제 비율)
+            const H = 56, W = Math.round(H / t.r * 2);                             // 모두 펼친 두 쪽 그대로 (실제 비율)
             return `<span class="dy-th" data-b="${t.b}" style="--dy-c:${t.c};width:${W}px;height:${H}px"><i></i><i></i></span>`;
         }
-        function dyOpen() {
-            const groups = [];
-            DY_TYPES.forEach(t => { let g = groups.find(x => x.g === t.g); if (!g) groups.push(g = { g: t.g, a: [] }); g.a.push(t); });
-            document.getElementById('dyPickList').innerHTML = groups.map(g => `<div class="dy-grp"><b>${g.g}</b><div class="dy-row">${g.a.map(t =>
-                `<button type="button" class="dy-it" data-id="${t.id}" onclick="dySet('${t.id}')"><span class="dy-stage">${dyThumb(t)}</span><span class="dy-n">${t.n}</span><small>${t.mm}</small></button>`).join('')}</div></div>`).join('');
-            dyRender();
+        let dyTab = '';
+        function dyOpen() {                                                    // 위 카테고리 하나씩 (처음엔 지금 쓰는 다이어리가 있는 칸)
+            dyTab = dyNow().g;
+            document.getElementById('dyTabs').innerHTML = Object.keys(DY_TAB).map(g => `<button type="button" class="stk-tab" data-g="${g}" onclick="dyTabSet('${g}')">${DY_TAB[g]}</button>`).join('');
+            dyTabSet(dyTab);
             openModal('dyModal');
+        }
+        function dyTabSet(g) {
+            dyTab = g;
+            document.querySelectorAll('#dyTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.g === g));
+            document.getElementById('dyPickList').innerHTML = `<div class="dy-row">${DY_TYPES.filter(t => t.g === g).map(t =>
+                `<button type="button" class="dy-it" data-id="${t.id}" onclick="dySet('${t.id}')"><span class="dy-stage">${dyThumb(t)}</span><span class="dy-n">${t.n}</span><small>${t.mm}</small></button>`).join('')}</div>`;
+            dyRender();
         }
         function dyClose() { closeModal('dyModal'); }
         function dyRender() { const id = dyNow().id; document.querySelectorAll('#dyModal .dy-it').forEach(b => b.classList.toggle('on', b.dataset.id === id)); }
-        window.dySize = dySize; window.dyDeco = dyDeco; window.dyHalf = dyHalf; window.dyEdgeRect = dyEdgeRect; window.dyViewSet = dyViewSet; window.dySp = dySp; window.dyLoad = dyLoad; window.dyOpen = dyOpen; window.dyClose = dyClose; window.dySet = dySet;
+        window.dySize = dySize; window.dyDeco = dyDeco; window.dyHalf = dyHalf; window.dyEdgeRect = dyEdgeRect; window.dyViewSet = dyViewSet; window.dyUnderR = dyUnderR; window.dyTabSet = dyTabSet; window.dvSet = dvSet; window.dvRender = dvRender; window.dyLoad = dyLoad; window.dyOpen = dyOpen; window.dyClose = dyClose; window.dySet = dySet;
 
 /* 이 파일을 끝까지 문제없이 읽었다는 표시 (index.html에서 확인) */
 (window.MALLANG_LOADED = window.MALLANG_LOADED || {})['skins'] = true;

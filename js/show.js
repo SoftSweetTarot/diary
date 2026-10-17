@@ -37,6 +37,7 @@
             if (window.clearSecRender) clearSecRender();
             if (window.pinCfgRender) pinCfgRender();
             handRender();                                       // ✋ 쓰는 손 (js/drive.js)                 // 🪡 핀셋 (js/elements.js)
+            if (window.dvRender) dvRender();                    // 📖 페이지 보기 (js/skins.js)
             if (window.snbRender) snbRender();                  // 📒 스티커 고르는 창 (js/stknote.js)
             const box = document.getElementById('showSwitches'); if (!box) return;
             box.innerHTML = SHOW_ITEMS.map(([k, name, sub]) => `<label class="show-row"><span><b>${name}</b><small>${sub}</small></span>`

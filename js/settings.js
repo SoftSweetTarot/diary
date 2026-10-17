@@ -548,11 +548,10 @@
             const x = m.querySelector('.mt-x'); if (x) x.click(); else closeModal(m.id);
         });
 
-        /* ---------- ⚙ 설정 메뉴 : 📐 페이지 크기 · ⚙️ 설정 · 💌 건의함 · 🔒 잠금 · 📲 앱 설치 ---------- */
+        /* ---------- ⚙ 설정 메뉴 : ⚙️ 설정 · 💌 건의함 · 🔒 잠금 · 📲 앱 설치 ---------- */
         function openSettingsMenu() { openModal('settingsMenuModal'); }
         function openFromSettingsMenu(id) {
             closeModal('settingsMenuModal');
-            if (id === 'pageSizeModal') { syncPageSizeInputs(); refreshLayout(); }
             if (id === 'feedbackModal') { openFeedback(); return; }
             openModal(id);
         }
