@@ -843,7 +843,7 @@
         /* 🗑️ 삭제 = 🩷 핀셋으로 뜯어서 버리기 (도련 · 2026-10-17 · 현실에서 스티커를 뜯어 버리는 느낌)
            - 삭제를 누르면 큼직한 핀셋이 나와서 마우스를 따라다녀요 (터치는 손가락이 닿는 곳으로) · 핀셋 끝 = 포인터 · 기울기는 글쓰기 필기구와 같아요
            - 스티커를 집은(누른) 곳에서부터 뜯겨요 : 집은 곳(가장 가까운 가장자리)이 핀셋을 따라오고, 접히는 선(집은 곳과 핀셋의 가운데 선)에서 하얀 뒷면이 뒤집혀요
-           - 다 뜯겨 완전히 뒤집히는 순간 스티커가 사라지고, 조금 늦게 핀셋도 사라져요
+           - 뜯긴 부분이 절반을 넘는 순간 스티커가 사라지고, 조금 늦게 핀셋도 사라져요
            - 덜 뜯고 놓으면 다시 착 붙어요(핀셋은 그대로) · ✕ / Esc / 스티커에서 먼 곳을 톡 = 지우지 않고 그만두기
            - 앞면 · 뒷면(복제본) 모두 clip-path 다각형 · 뒷면은 접는 선에 비친 모양(matrix) · 연출 중인 것은 저장에서 빼요 */
         const TWZ_SVG = '<svg viewBox="0 0 36 130" aria-hidden="true">'
@@ -908,12 +908,12 @@
             if (L < .5) { t.el.style.clipPath = ''; t.back.style.clipPath = 'polygon(0 0, 0 0, 0 0)'; t.full = false; return; }
             const n = [dx / L, dy / L], M = [(G[0] + P[0]) / 2, (G[1] + P[1]) / 2];
             t.el.style.clipPath = twzPoly(twzClip(W, H, M, n, 1));
-            t.back.style.clipPath = twzPoly(twzClip(W, H, M, n, -1));
+            const bp = twzClip(W, H, M, n, -1); t.back.style.clipPath = twzPoly(bp);
             const a = 1 - 2 * n[0] * n[0], b = -2 * n[0] * n[1], d = 1 - 2 * n[1] * n[1], md = 2 * (M[0] * n[0] + M[1] * n[1]);   // 접는 선에 비추기 (가운데 기준)
             const C = [W / 2, H / 2], tx = a * C[0] + b * C[1] + md * n[0] - C[0], ty = b * C[0] + d * C[1] + md * n[1] - C[1];
             t.back.style.transform = `${t.base} matrix(${a}, ${b}, ${b}, ${d}, ${tx}, ${ty})`;
-            const P0 = 7, cs = [[P0, P0], [W - P0, P0], [W - P0, H - P0], [P0, H - P0]];   // 네 귀퉁이가 다 넘어갔으면 = 완전히 뒤집힘
-            t.full = cs.every(c => (c[0] - M[0]) * n[0] + (c[1] - M[1]) * n[1] < -1);
+            let ar = 0; for (let i = 0; i < bp.length; i++) { const p = bp[i], q = bp[(i + 1) % bp.length]; ar += p[0] * q[1] - q[0] * p[1]; }
+            t.full = Math.abs(ar) / 2 > W * H * .5;                            // 뜯긴 부분이 절반을 넘으면 사라져요 (도련 · 10-17)
         }
         function twzDown(e) {
             const t = twz; if (!t || t.done || e.button > 0) return;
@@ -948,7 +948,7 @@
             const back = now => { if (twz !== t || t.drag || t.done) return; const p = Math.min(1, (now - t0) / 260), v = (1 - p) * (1 - p); t.P = [t.G[0] + (P0[0] - t.G[0]) * v, t.G[1] + (P0[1] - t.G[1]) * v]; twzPaint(); if (p < 1) requestAnimationFrame(back); };
             requestAnimationFrame(back);
         }
-        function twzFinish() {                                                 // 완전히 뒤집힌 순간 : 스티커 사라짐 → 조금 늦게 핀셋도
+        function twzFinish() {                                                 // 절반 넘게 뜯긴 순간 : 스티커 사라짐 → 조금 늦게 핀셋도
             const t = twz; if (!t || t.done) return;
             t.done = true; t.drag = null;
             t.back.classList.add('twz-vanish'); t.el.remove();
