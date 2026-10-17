@@ -217,21 +217,11 @@
            → [[item, …], …] 쪽마다 */
         const libSpan = x => x.s ? Math.min(2, libLayout.cols) : 1;              // 가로 칸 수
         const libSpanH = x => x.s ? Math.min(2, libLayout.rows) : 1;             // 세로 칸 수
-        /* 📷 고르는 창은 사진첩처럼 줄을 꽉 채워요 (도련 · 10-17 · js/stk-basic.js sbJust) · 📒 수첩 창은 위 칸 나누기 그대로
-           낱장 = 칸 하나 크기 · 묶음 = 안의 스티커가 낱장의 절반쯤 · 쪽 높이 = 배치(줄 수 × 크기)와 같아요 */
-        const libFit = () => !!window.sbJust && !(document.getElementById('libGrid') || document.body).closest('.snb-on');
-        function libGeo() {
-            const g = document.getElementById('libGrid'), { rows, cols, size } = libLayout;
-            const W = g && g.clientWidth > 40 ? g.clientWidth - 8 : cols * size + (cols - 1) * LIB_GAP;
-            const u = Math.max(30, Math.min(size, (W - (cols - 1) * LIB_GAP) / cols));
-            return { W, u, PH: Math.max(rows * u + (rows - 1) * LIB_GAP, Math.min(innerHeight * .5, 440)) };   // 📷 묶음이 여럿 보이게 쪽을 조금 넉넉히
-        }
-        function libJust() {
-            const { W, u, PH } = libGeo();
-            return sbJust(libView().map(x => x.s ? Object.assign(sbBox(x.s.length, Math.max(32, u * .5), 14, 30), { x }) : { a: 1, pref: u, x }), W, LIB_GAP, PH);
-        }
+        /* 🗂 고르는 창은 낱장 줄 + 묶음 줄 (도련 · 10-17 · js/stk-basic.js) · 📒 수첩 창은 위 칸 나누기 그대로 */
+        const libPg = () => !!window.pgPages && !(document.getElementById('libGrid') || document.body).closest('.snb-on');
+        const libN = x => x.s ? x.s.length : 1;                                 // 칸마다 스티커 수
         function libPages() {
-            if (libFit()) return libJust().map(p => p.flatMap(r => r.items.map(i => i.x)));
+            if (libPg()) { const v = libView(); return pgPages(v.map(libN), pgGrid()).map(p => p.map(i => v[i])); }
             const { rows, cols } = libLayout, out = [];
             let page = null, used = null;
             const fit = (w, h) => {
@@ -322,7 +312,7 @@
             const grid = document.getElementById('libGrid');
             let sx = 0, sy = 0, tracking = false;
             grid.addEventListener('touchstart', (e) => {
-                if (e.touches.length !== 1) { tracking = false; return; }
+                if (e.touches.length !== 1 || e.target.closest('.pg-mv')) { tracking = false; return; }   // 🗂 옆으로 미는 묶음 줄 위에서는 쪽을 안 넘겨요
                 tracking = true; libSwiped = false;
                 sx = e.touches[0].clientX; sy = e.touches[0].clientY;
             }, { passive: true });
@@ -409,18 +399,17 @@
             libPage = Math.max(0, Math.min(pages - 1, libPage));
             st.textContent = '';                                                // 안내 글은 없이 (공간 아끼기 · 도련 2026-10-15) · 불러오는 중 · 오류만 보여요
             const thumbW = libLayout.size > 120 ? 400 : 240;                    // 크게 볼 때는 조금 더 선명한 썸네일
-            const frag = document.createDocumentFragment(), cur = all[libPage] || [], fit = libFit();
-            const jrows = fit ? libJust()[libPage] || [] : null, jat = new Map();   // 📷 줄마다 높이 · 칸마다 너비
-            grid.classList.toggle('lib-just', fit);
+            const frag = document.createDocumentFragment(), cur = all[libPage] || [], pick = libPg(), els = [];
+            if (pick) { grid.style.gridTemplateColumns = ''; document.getElementById('libContent').style.removeProperty('--lib-w'); }   // 🗂 칸 크기는 js/stk-basic.js
+            else if (window.pgOff) pgOff(grid, []);
             let usedSlots = 0;
-            if (fit) jrows.forEach(r => { const row = document.createElement('div'); row.className = 'lib-row'; row.style.height = Math.floor(r.H) + 'px'; frag.appendChild(row); r.items.forEach(i => jat.set(i.x, [row, i, r.H])); });
             cur.forEach(x => {
                 const { u: url, s: sheet } = x;
                 const item = document.createElement('div');
                 item.className = 'lib-item' + (sheet ? ' lib-sheet' : ''); item.dataset.u = url;   // 원본 주소 (📒 수첩이 붙일 때 써요)
                 usedSlots += libSpan(x) * libSpanH(x);
-                if (sheet) {                                                       // 🏷️ 씰 종이 : 가로 2 × 세로 2칸 정사각형 · 안에 든 씰을 크게 + 총 개수 (📷 고르는 창은 줄 맞추기)
-                    if (!fit) { item.style.gridColumn = 'span ' + libSpan(x); item.style.gridRow = 'span ' + libSpanH(x); }
+                if (sheet) {                                                       // 🏷️ 씰 종이 : 가로 2 × 세로 2칸 정사각형 · 안에 든 씰을 크게 + 총 개수 (🗂 고르는 창은 묶음 줄)
+                    if (!pick) { item.style.gridColumn = 'span ' + libSpan(x); item.style.gridRow = 'span ' + libSpanH(x); }
                     item.title = '스티커 ' + sheet.length + '개';
                     item.innerHTML = sbThumbs(sheet.map(u => kitSize(u, 96))) + `<small class="lib-cnt">스티커 ${sheet.length}개</small>`;
                 } else {
@@ -431,21 +420,22 @@
                     item.appendChild(img);
                 }
                 item.onclick = () => { if (!libSwiped) (sheet ? libPickSheet(sheet) : libPick(url)); };
-                const j = jat.get(x);
-                if (j) { if (sheet) sbSize(item, j[1], j[1].w, j[2], libGeo().u * .66); else { item.style.width = j[1].w + 'px'; item.style.height = Math.floor(j[2]) + 'px'; } j[0].appendChild(item); }
-                else frag.appendChild(item);
+                frag.appendChild(item); els.push(item);
             });
-            if (fit) grid.style.minHeight = libGeo().PH + 'px';                 // 쪽마다 창 크기가 흔들리지 않게
-            else grid.style.minHeight = '';
             /* 마지막 페이지가 덜 차도 창 크기가 흔들리지 않도록 빈칸 채우기 */
-            for (let k = usedSlots; k < per && pages > 1 && !fit; k++) {
+            for (let k = usedSlots; k < per && pages > 1 && !pick; k++) {
                 const empty = document.createElement('div');
                 empty.className = 'lib-item empty';
                 frag.appendChild(empty);
             }
             grid.appendChild(frag);
+            if (pick) { const v = libView(), ns = v.map(libN); pgLay(grid, els, cur.map(libN), pgGrid(), pgOneTxt(pgPages(ns, pgGrid()), ns, libPage)); }
             updateLibPager();
         }
+        /* 🗂 칸 설정 · 창 너비가 바뀌면 다시 그려요 (보고 있을 때만) */
+        const libRedo = () => { const b = document.getElementById('libBox'); if (libItems && b && !b.hidden && b.offsetParent) renderLibrary(); };
+        document.addEventListener('pickgrid', libRedo);
+        let libRz = 0; window.addEventListener('resize', () => { clearTimeout(libRz); libRz = setTimeout(libRedo, 200); });
 
         /* 🔒 페이지 스티커 크기 바꾸기 막기 (도련 · 2026-10-16) : 빨간 점선 네모의 꼭짓점 · 두 손가락 · 마우스 휠로 크기가 안 바뀌어요 (돌리기 · 옮기기는 그대로)
            다시 켜려면 false 로 바꾸면 돼요 (크기 코드는 그대로 있어요) */

@@ -3306,17 +3306,59 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .lib-item.lib-sheet, .sticker-grid .sb-card, .spk-card { aspect-ratio: 1 / 1; container-type: inline-size; justify-content: center; }
 .lib-item.lib-sheet .sb-thumbs, .sticker-grid .sb-card .sb-thumbs, .spk-card .sb-thumbs { --tw: calc((100cqw - 26px) / 3.4); grid-template-columns: repeat(3, var(--tw)); height: auto; max-height: calc(var(--tw) * 3 + 4px); padding: 0; }
 .sticker-grid .sb-bag .sb-thumbs { --tw: calc((100cqw - 26px) / 3.3); max-height: calc(var(--tw) * 2 + 2px); }   /* 🧩 봉투는 위 색 띠가 있어서 2줄까지 */
-/* 📷 고르는 창 묶음 배치 = 사진첩처럼 줄을 꽉 채워요 (도련 · 2026-10-17 · js/stk-basic.js sbJust · js/elements.js libJust) · 📒 수첩 창(.snb-on)은 위 모양 그대로
-   칸 크기 · 안 스티커 크기(--jtw) · 줄 수(--sc)는 JS가 정해요 */
-.modal:not(.snb-on) .lib-grid.lib-just { display: flex; flex-direction: column; gap: 8px; }
-.lib-grid.lib-just .lib-row { display: flex; gap: 8px; justify-content: center; flex: none; }
-.lib-grid.lib-just .lib-item { flex: none; aspect-ratio: auto; box-sizing: border-box; }
-.modal:not(.snb-on) .sticker-grid.sb-just, .modal:not(.snb-on) .spk-cards.sb-just { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; justify-content: center; }
-.modal:not(.snb-on) .sb-just > .sb-cats, .modal:not(.snb-on) .sb-just > .sb-pager { flex: 0 0 100%; }
-.modal:not(.snb-on) .sb-just .sb-card[data-fit], .modal:not(.snb-on) .sb-just .spk-card[data-fit] { flex: none; aspect-ratio: auto; box-sizing: border-box; justify-content: center; padding: 6px 0 6px; }
-.modal:not(.snb-on) .sb-just .sb-sheet[data-fit] { padding-top: 14px; }
-.modal:not(.snb-on) .sb-just .sb-bag[data-fit] { justify-content: flex-start; padding-top: 0; }
-.lib-grid.lib-just .lib-item.lib-sheet .sb-thumbs, .modal:not(.snb-on) .sb-just [data-fit] .sb-thumbs { --tw: var(--jtw, 30px); grid-template-columns: repeat(var(--sc), var(--tw)); grid-auto-rows: var(--tw); height: auto; max-height: none; padding: 0; margin: 0; }
+/* 🗂 고르는 창 칸 (도련 · 2026-10-17 · js/stk-basic.js) : 낱장 줄(칸 하나 = 스티커 하나) + 묶음 줄(한 줄 = 묶음 하나 · 옆으로 밀어요) · 📒 수첩 창(.snb-on)은 위 모양 그대로
+   --pg-c 가로 칸 수 · --pg-cw 칸 크기 (JS가 정해요) */
+.modal:not(.snb-on) .pg-on { display: grid; grid-template-columns: repeat(var(--pg-c), var(--pg-cw)); grid-auto-flow: row; gap: 6px; justify-content: center; align-content: start; min-height: calc(var(--pg-r) * (var(--pg-cw) + 34px)); }   /* 줄이 적은 쪽도 창 크기는 그대로 */
+.modal:not(.snb-on) .sticker-grid.pg-on, .modal:not(.snb-on) .sticker-grid:has(> .pg-on) { height: auto; flex: 0 1 auto; }   /* 정한 줄 수만큼 (넘치면 창 안에서 내려요) */
+.modal:not(.snb-on) .lib-grid.pg-on { max-height: none; flex: 0 1 auto; }
+.modal:not(.snb-on) .pg-on > *, .modal:not(.snb-on) .pg-on > .sb-srv > * { grid-column: 1 / -1; }
+.modal:not(.snb-on) .pg-on > .sb-cats { order: -3; } .modal:not(.snb-on) .pg-on > .sb-pager { order: -2; }
+.modal:not(.snb-on) .pg-on .pg-lab { font-size: 11.5px; font-weight: bold; color: #b0798f; padding: 2px 4px 0; margin-bottom: -3px; }
+.modal:not(.snb-on) .pg-on .pg-lab[hidden] { display: none; }
+/* 낱장 칸 */
+.modal:not(.snb-on) .pg-on .pg-one { grid-column: auto; width: var(--pg-cw); height: var(--pg-cw); aspect-ratio: auto; padding: 0; margin: 0; box-sizing: border-box; justify-content: center; overflow: hidden; }
+.modal:not(.snb-on) .pg-on .pg-one > small, .modal:not(.snb-on) .pg-on .pg-one > .sb-top, .modal:not(.snb-on) .pg-on .pg-one > .sb-tape, .modal:not(.snb-on) .pg-on .pg-one > .lib-cnt { display: none; }
+.modal:not(.snb-on) .pg-on .pg-one .sb-thumbs { display: block; width: 100%; height: 100%; max-height: none; margin: 0; padding: calc(var(--pg-cw) * .1); }
+/* 묶음 줄 : 위 글씨(종류 · 개수 | ↔ 몇 번째) + 아래 스티커 띠 (칸 크기 = 낱장 칸) */
+.modal:not(.snb-on) .pg-on .pg-bun { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; justify-items: start; gap: 2px 0; aspect-ratio: auto; height: auto; margin: 0 -2px; padding: 3px 0 4px; box-sizing: border-box; overflow: hidden; text-align: left; touch-action: pan-y; container-type: normal; }
+.modal:not(.snb-on) .pg-on .pg-bun:hover { transform: none; }
+.modal:not(.snb-on) .pg-on .pg-bun > small, .modal:not(.snb-on) .pg-on .pg-bun > .lib-cnt { grid-row: 1; grid-column: 1; padding-left: 10px; font-size: 11px; font-weight: bold; color: #a08890; }
+.modal:not(.snb-on) .pg-on .pg-bun > .pg-pos { grid-row: 1; grid-column: 2; justify-self: end; padding-right: 10px; font-size: 11px; color: #c2385c; font-variant-numeric: tabular-nums; }
+.modal:not(.snb-on) .pg-on .pg-bun > .sb-top { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; min-height: 0; padding: 0; }
+.modal:not(.snb-on) .pg-on .pg-bun > .sb-top::after, .modal:not(.snb-on) .pg-on .pg-bun > .sb-tape { display: none; }
+.modal:not(.snb-on) .pg-on .pg-bun .sb-thumbs { --tw: var(--pg-cw); grid-row: 2; grid-column: 1 / -1; display: flex; gap: 6px; width: max-content; height: var(--pg-cw); max-height: none; margin: 0; padding: 0; overflow: visible; transition: transform .28s cubic-bezier(.2, .8, .3, 1); will-change: transform; }
+.modal:not(.snb-on) .pg-on .pg-bun.pg-drag .sb-thumbs { transition: none; }
+.modal:not(.snb-on) .pg-on .pg-bun .sb-thumbs img { flex: none; width: var(--pg-cw); height: var(--pg-cw); padding: calc(var(--pg-cw) * .08); box-sizing: border-box; pointer-events: none; -webkit-user-drag: none; }
+.modal:not(.snb-on) .pg-on .pg-bun.pg-mv { cursor: grab; } .modal:not(.snb-on) .pg-on .pg-bun.pg-drag { cursor: grabbing; }
+/* 더 있는 쪽 끝을 살짝 흐리게 → 밀 수 있어요 */
+.modal:not(.snb-on) .pg-on .pg-bun::before, .modal:not(.snb-on) .pg-on .pg-bun::after { content: ''; position: absolute; top: 20px; bottom: 0; width: 26px; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.modal:not(.snb-on) .pg-on .pg-bun::before { left: 0; background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0)); }
+.modal:not(.snb-on) .pg-on .pg-bun::after { right: 0; background: linear-gradient(-90deg, #fff, rgba(255, 255, 255, 0)); }
+.modal:not(.snb-on) .pg-on .pg-bun.pg-l::before, .modal:not(.snb-on) .pg-on .pg-bun.pg-r::after { opacity: 1; }
+/* ⚙️ 설정 → 🗂 고르는 창 칸 정하기 (더미 미리보기) */
+.pg-set { position: fixed; inset: 0; z-index: 3500; display: grid; place-items: center; padding: 12px; background: rgba(90, 50, 65, .35); }
+.pg-set[hidden] { display: none; }
+.pg-set-box { width: min(440px, 100%); max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box; padding: 16px; border-radius: 18px; background: #fff; border: 2px solid var(--border-color, #ffb6c1); color: #6b4256; }
+.pg-set-t { font-size: 1.15rem; font-weight: bold; color: #d6457a; text-align: center; }
+.pg-set-p { margin: 8px 0 10px; font-size: 13px; word-break: keep-all; text-align: center; }
+.pg-set-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 14px; font-weight: bold; }
+.pg-set-row > span { width: 64px; flex: none; }
+.pg-set-row > b { min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; color: #c2385c; }
+.pg-set-row > .btn { width: 40px; justify-content: center; }
+.pg-set-row .btn:disabled { opacity: .35; }
+.pg-set-seg { display: flex; gap: 6px; } .pg-set-seg .btn.on { background: var(--primary-accent, #ff6b81); color: #fff; border-color: var(--primary-accent, #ff6b81); }
+.pg-set-dm { --c: 4; --cw: calc((100% - (var(--c) - 1) * 5px) / var(--c)); display: flex; flex-direction: column; gap: 5px; margin: 10px 0 6px; padding: 10px; border-radius: 14px; background: #fff7fa; border: 1.5px dashed #f3bfd0; }
+.pg-dm-lab { font-size: 11px; font-weight: bold; color: #b0798f; }
+.pg-dm-one, .pg-dm-bun p { display: grid; grid-template-columns: repeat(var(--c), 1fr); gap: 5px; margin: 0; }
+.pg-dm-one i, .pg-dm-bun i { aspect-ratio: 1; border-radius: 8px; background: #fff; border: 1.5px solid #f1cddb; display: grid; place-items: center; }
+.pg-dm-one i::after, .pg-dm-bun i::after { content: ''; width: 46%; aspect-ratio: 1; border-radius: 50%; background: #ffc2d6; }
+.pg-dm-bun { position: relative; padding: 3px 4px 4px; border-radius: 10px; background: #fff; border: 1.5px solid #f1cddb; overflow: hidden; }
+.pg-dm-bun > div { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: bold; color: #a08890; margin-bottom: 2px; } .pg-dm-bun > div span + span { color: #c2385c; }
+.pg-dm-bun i { border: 0; background: #fdf3f6; } .pg-dm-bun i::after { background: #c9b6ff; }
+.pg-dm-bun.more::after { content: ''; position: absolute; right: 0; top: 18px; bottom: 0; width: 22px; background: linear-gradient(-90deg, #fff, rgba(255, 255, 255, 0)); }
+.pg-set-s { display: block; text-align: center; font-size: 11.5px; color: #999; }
+.pg-set-btns { display: flex; gap: 8px; margin-top: 12px; } .pg-set-btns .btn { flex: 1; justify-content: center; }
+.pg-set-ok { background: var(--primary-accent, #ff6b81); color: #fff; border-color: var(--primary-accent, #ff6b81); }
 
 /* 📱 스티커 수첩 : 스티커를 떼는 동안 수첩이 비켜요 (js/stknote.js snbAway) */
 .modal.snb-on { transition: opacity .2s; }
