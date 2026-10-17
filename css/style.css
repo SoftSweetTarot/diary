@@ -3534,17 +3534,17 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 #canvasArea .element-box.el-peel-back textarea { color: transparent !important; }
 #canvasArea .element-box.el-peel-back.twz-vanish { animation: twzVanish .24s ease-in forwards; }
 @keyframes twzVanish { to { opacity: 0; filter: blur(1px); } }
-.twz-room { position: fixed; inset: 0; z-index: 4300; touch-action: none; cursor: grab; }
+.twz-room { position: fixed; inset: 0; z-index: 4300; touch-action: none; cursor: none; }
 .twz-room[hidden] { display: none; }
 .twz-room.bye { pointer-events: none; }
 .twz-tip { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 10px 44px 10px 14px; border-radius: 16px; background: #fff; border: 2px solid #ffc2d4; box-shadow: 0 6px 18px rgba(194, 56, 92, .16); color: #6b4256; font-size: 13.5px; line-height: 1.5; pointer-events: none; transition: opacity .3s; }
 .twz-tip > b:first-child { color: #d6457a; margin-right: 6px; }
 .twz-room.bye .twz-tip { opacity: 0; }
 .twz-x { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; border: none; background: #ffe3ec; color: #c2385c; font-weight: 900; font-size: 15px; cursor: pointer; pointer-events: auto; }
-.twz { position: absolute; left: 0; top: 0; width: 36px; height: 130px; transform-origin: 18px 3px; pointer-events: none; opacity: 0; filter: drop-shadow(2px 4px 4px rgba(120, 60, 90, .28)); transition: opacity .25s ease; will-change: transform; }
+.twz { position: absolute; left: 0; top: 0; width: 55.8px; height: 201.5px; transform-origin: 27.9px 4.65px; pointer-events: none; opacity: 0; filter: drop-shadow(2px 4px 4px rgba(120, 60, 90, .28)); transition: opacity .25s ease; will-change: transform; }
 .twz.in { opacity: 1; }
 .twz.bye { opacity: 0; transition: opacity .38s ease; }
-.twz svg { display: block; overflow: visible; }
+.twz svg { display: block; overflow: visible; width: 100%; height: 100%; }
 .twz .twz-l, .twz .twz-r { transition: transform .12s ease; transform-box: view-box; }
 .twz .twz-l { transform-origin: 16px 126px; transform: rotate(-4deg); }
 .twz .twz-r { transform-origin: 20px 126px; transform: rotate(4deg); }
