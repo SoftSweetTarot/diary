@@ -46,6 +46,8 @@
       tapemk: `<path d="M18 33H36L34 36L36 39H18Z" fill="#ffd8a8" ${K}/><circle cx="18" cy="21" r="12" fill="#ffd8a8" ${K}/><circle cx="18" cy="21" r="5" fill="#fff" ${K}/><g fill="#fff"><circle cx="10.5" cy="17" r="1.3"/><circle cx="25" cy="15" r="1.3"/><circle cx="26" cy="27" r="1.3"/><circle cx="11" cy="27.5" r="1.3"/></g><circle cx="37" cy="12" r="7" fill="#ff9fb8" ${T}/><path d="M37 8.5v7M33.5 12h7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`,
       tteokmk: `<path d="M7 18h26v20.5a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" fill="#fffaf0" ${K}/><path d="M7 35h26M7 38h26" stroke="#e8dccb" stroke-width="1.2"/><path d="M7 18h26v14H7z" fill="#dff3ff"/><path d="M11.5 24h13M11.5 28.5h9" stroke="#9dc9ea" stroke-width="1.5" stroke-linecap="round"/><rect x="5.5" y="12" width="29" height="7.5" rx="2" fill="#ff9fb8" ${K}/><path d="M9 15h22" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".7"/><circle cx="37" cy="12" r="7" fill="#ffd36b" ${T}/><path d="M37 8.5v7M33.5 12h7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`,
       leafmk: `<rect x="8" y="8" width="25" height="32" rx="4" fill="#dceaff" ${K}/><path d="M14 18h13M14 24h13M14 30h8" stroke="#9dbbe6" stroke-width="1.6" stroke-linecap="round"/><g transform="rotate(35 34 28)"><rect x="31" y="12" width="7" height="24" rx="1.5" fill="#ffd36b" ${T}/><rect x="31" y="12" width="7" height="4.5" rx="1.5" fill="#ff9fb8" ${T}/><path d="M31 36l3.5 6 3.5-6z" fill="#fde9cf" ${T}/></g>`,
+      /* 🎨 페이지 · 📒 다이어리 고르기 : 펼친 다이어리 (분홍 커버 · 두 쪽 · 가운데 링 · 책갈피 끈) */
+      diary: `<path d="M4.5 14v26.5c7-1.6 13.5-1 19.5 2.3 6-3.3 12.5-3.9 19.5-2.3V14z" fill="#ff9fb8" ${K}/><path d="M24 13.5c-5.5-3.2-11.5-3.6-17-2.5v26.5c5.5-1.1 11.5-.7 17 2.5z" fill="#fffaf0" ${K}/><path d="M24 13.5c5.5-3.2 11.5-3.6 17-2.5v26.5c-5.5-1.1-11.5-.7-17 2.5z" fill="#fffaf0" ${K}/><path d="M11 19.5q5-.8 9.5 1M11 25q5-.8 9.5 1M11 30.5q4-.6 7 .6M28 31q4-1 8.5-.4" stroke="#f2c6d2" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="${heart(32.5, 21.5, .5)}" fill="#ff8fab"/><g fill="#fff" ${T}><rect x="21.5" y="17" width="5" height="3" rx="1.5"/><rect x="21.5" y="24.5" width="5" height="3" rx="1.5"/><rect x="21.5" y="32" width="5" height="3" rx="1.5"/></g><path d="M27 39.5v6.5l1.9-1.7 1.9 1.7v-7.4" fill="#ffd36b" ${K}/>${spark(41, 7.5, 4, '#ffe08f')}`,
       /* 🎨 페이지 */
       palette: `<path d="M24 7C13 7 6 14.5 6 23.5S13.5 41 22 41c3 0 4-1.6 4-3.4 0-2.6-2.4-3-2.4-5.2 0-2 1.7-3.4 3.8-3.4h4.6C38 29 42 25.5 42 20.5 42 12.5 34 7 24 7z" fill="#fff3e3" ${K}/><g ${T}><circle cx="14.5" cy="23" r="3.3" fill="#ff9fb8"/><circle cx="19" cy="14.5" r="3.3" fill="#ffd36b"/><circle cx="28.5" cy="13" r="3.3" fill="#9ed7c0"/><circle cx="35.5" cy="19.5" r="3.3" fill="#a9c8f5"/></g>`,
       bow: `<path d="M22 24l-6 15 4-1 2 4 3-17zM26 24l6 15-4-1-2 4-3-17z" fill="#ff9fb8" ${K}/><path d="M24 22C18 13 7 11 7 18.5S18 26 24 22z" fill="#ffb4c8" ${K}/><path d="M24 22c6-9 17-11 17-3.5S30 26 24 22z" fill="#ffb4c8" ${K}/><rect x="20.5" y="18.5" width="7" height="7" rx="2.5" fill="#ff8fab" ${K}/><path d="M11 17.5q2-2.5 5-2" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>`,
@@ -79,7 +81,6 @@
       people: `<circle cx="17" cy="17" r="6.5" fill="#ffe7d9" ${K}/><circle cx="31" cy="17" r="6.5" fill="#ffe7d9" ${K}/><path d="M6 39a11 11 0 0 1 22 0z" fill="#ffb4c8" ${K}/><path d="M20 39a11 11 0 0 1 22 0z" fill="#b9e6d3" ${K}/>${face(17, 17.5, 4)}${face(31, 17.5, 4)}`,
       dollshow: `<path d="M6 10h36v4H6z" fill="#ff8fab" ${K}/><path d="M7 14c3 8 3 18 0 26h7c2-8 2-18 0-26zM41 14c-3 8-3 18 0 26h-7c-2-8-2-18 0-26z" fill="#ffb4c8" ${K}/><circle cx="24" cy="27" r="6" fill="#ffe7d9" ${K}/>${face(24, 27.5, 4.5)}`,
       /* ⚙ 설정 */
-      ruler: `<g transform="rotate(-35 24 24)"><rect x="5" y="17" width="38" height="14" rx="3" fill="#ffe08f" ${K}/><path d="M11 17v5M17 17v7M23 17v5M29 17v7M35 17v5" ${S}/></g>`,
       gear: `<path d="${gear(24, 24, 17, 13.2, 8)}" fill="#dccdf5" ${K}/><circle cx="24" cy="24" r="5.5" fill="#fff" ${K}/>`,
       lock: `<path d="M16 21v-5a8 8 0 0 1 16 0v5" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M16 21v-5a8 8 0 0 1 16 0v5" fill="none" stroke="#e6eaf0" stroke-width="2" stroke-linecap="round"/><rect x="10.5" y="20" width="27" height="21" rx="5" fill="#ffd0dc" ${K}/><path d="${heart(24, 26, .6)}" fill="#ff8fab"/>`,
       music: `<path d="M19 33V13l18-4.5v20" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/><path d="M19 13l18-4.5v5L19 18z" fill="#ff9fb8" ${K}/><ellipse cx="14.5" cy="33.5" rx="5.5" ry="4.5" fill="#a9c8f5" ${K}/><ellipse cx="32.5" cy="29" rx="5.5" ry="4.5" fill="#a9c8f5" ${K}/>`,
@@ -95,13 +96,13 @@
     const MAP = {
         '포인트스티커': 'emoji', '캡슐스티커': 'caps', '마스킹테이프': 'tape', '조각스티커': 'piece', '씰스티커': 'seal', '모조지스티커': 'paper', '속지': 'leaf', '메모지': 'memo', '떡메모지': 'tteok',
         '포토부스': 'booth', '사진찍기': 'cam', '사진고르기': 'pick', '사진찍어 만들기': 'cam', '앨범골라 만들기': 'pick', '글씨 스티커': 'text', '글씨스티커 만들기': 'text', '마스킹테이프 만들기': 'tapemk', '속지 만들기': 'leafmk', '떡메모지 만들기': 'tteokmk',
-        '페이지': 'leaf', '페이지 색상설정': 'palette', '페이지 꾸미기': 'bow', '배경지': 'cloud', '이미지로 배경지': 'pick', '그려서 배경지': 'brush',
+        '다이어리 고르기': 'diary', '페이지': 'leaf', '페이지 색상설정': 'palette', '페이지 꾸미기': 'bow', '배경지': 'cloud', '이미지로 배경지': 'pick', '그려서 배경지': 'brush',
         '매일': 'sprout', '운세·마음': 'ball', '인형 꾸미기': 'doll', '게임': 'game', '펫 키우기': 'paw', '함께하기': 'letter',
         '말랑달콤 저금통': 'piggy', '말랑달콤 배경화면': 'wall', '말랑달콤 문구점': 'shop',
         '출석 도장판': 'cal', '오늘의 질문': 'ask', '오늘의 행운': 'clover', '랜덤박스': 'gift', '생리 달력': 'calheart', 'D-day': 'dday',
         '포춘카드': 'card', '꿈해몽': 'moon', '토정비결': 'scroll', '이름 궁합': 'hearts', '심리테스트': 'mind',
         '인형방': 'doll', '인형극': 'dollshow', '오락실': 'joy', '명예의 전당': 'trophy', '익명 편지함': 'letter', '말랑달콤 모임방': 'people',
-        '페이지 크기': 'ruler', '설정': 'gear', '건의함': 'letter', '다이어리 잠금': 'lock', '배경음악': 'music', '앱으로 설치하기': 'install'
+        '설정': 'gear', '건의함': 'letter', '다이어리 잠금': 'lock', '배경음악': 'music', '앱으로 설치하기': 'install'
     };
     const own = el => [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
     function die(ic, k, i) {
