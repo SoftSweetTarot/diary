@@ -870,8 +870,8 @@
                 room.addEventListener('pointerup', twzUp); room.addEventListener('pointercancel', twzUp);
                 addEventListener('keydown', e => { if (e.key === 'Escape' && twz) twzQuit(); });
             }
-            room.querySelector('#twzTitle').textContent = pin ? '📌 삭제핀' : '🗑️ 스티커 버리기';
-            room.querySelector('#twzSay').textContent = pin ? '무엇이든 핀셋으로 집어 쭉 뜯어요' : '핀셋으로 스티커를 집어 쭉 뜯어요';
+            room.querySelector('#twzTitle').textContent = '📌 삭제핀';
+            room.querySelector('#twzSay').textContent = pin ? '무엇이든 핀셋으로 집어 쭉 뜯어요' : '핀셋으로 이 스티커를 집어 쭉 뜯어요';
             room.hidden = false; room.classList.remove('bye');
             return room;
         }
