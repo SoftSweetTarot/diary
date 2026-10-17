@@ -2,7 +2,7 @@
    📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 필기구 · 👝 필통 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
-   📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 ✂️ 자르기(스티커 · 테이프 · 떡메 · js/stkcut.js · 🎨 다듬기는 10-17 숨김) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
+   📌 페이지에 놓은 그림 · 글을 폰 · 아이패드에서 꾹 누르면(0.5초) / 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필통의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
         /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
@@ -109,7 +109,6 @@
                 ...(window.panelKindOf && panelKindOf(el) === 'text' ? [{ key: 'p_font', icon: TM_ICONS.font, label: '글씨체', run: () => openTextPanel(el) }] : []),
                 ...(window.panelKindOf && panelKindOf(el) === 'photo' ? [{ key: 'p_frame', icon: TM_ICONS.frame, label: '사진 꾸미기', run: () => openTextPanel(el) }] : []),
                 // ...(window.elEditable && elEditable(el) ? [{ key: 'p_edit', icon: TM_ICONS.palette, label: '다듬기', run: () => elEdit(el) }] : []),   // 🎨 다듬기 숨김 (도련 · 2026-10-17 · 코드는 그대로)
-                ...(window.elCuttable && elCuttable(el) ? [{ key: 'p_cut', icon: TM_ICONS.cut, label: '자르기', run: () => elCut(el) }] : []),   // ✂️ 스티커 칼로 두 조각 (js/stkcut.js)
                 { key: 'p_order', icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } },
                 { key: 'p_trash', icon: TM_ICONS.trash, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }
             ], { x, y, above: !!byTouch }, 0, 'elem');

@@ -1,11 +1,12 @@
-/* ✂️ 스티커 자르기 (도련 · 2026-10-17) : 페이지에 붙인 스티커를 꾹 누르기(오른쪽 클릭) 메뉴의 ✂️ 자르기 (js/tapmenu.js)
-   - 귀여운 스티커 칼이 글쓰기 필기구처럼 기울어진 채 나와서 마우스 · 손가락을 따라가요 (칼끝 = 닿은 자리)
-   - 스티커를 가로질러 한 번 그으면 그 선(분단선)으로 스티커가 두 조각이 돼요 · 동그랗게 오려 내는 게 아니라 '나누는 선'
-   - 두 조각으로 나뉘면 칼은 사라지고, 조각은 각각 옮기기 · 꾹 눌러 🗑️ 삭제 (원하지 않는 부분을 잘라서 버려요)
-   - 끝까지 가로지르지 않아 안 나뉘면 선만 지워지고 칼은 그대로 · ✕ 또는 Esc 로 그만두기
-   - 되는 것 : 포인트 · 씰 · 조각 · 모조지스티커 · 🎀 마스킹테이프 · 🧻 떡메모지 (글상자 · 움직이는 그림은 안 돼요)
+/* ✂️ 스티커 칼 (도련 · 2026-10-17) : 📒 연필통(js/draw.js)에 색연필과 같이 꽂혀 있어요 → 위로 쏙 뽑으면 스티커 칼
+   - 귀여운 스티커 칼이 글쓰기 필기구처럼 기울어진 채 마우스 · 손가락을 따라가요 (칼끝 = 닿은 자리)
+   - 페이지의 아무 스티커나 끝에서 끝까지 가로질러 그으면 그 선(분단선)으로 두 조각이 돼요 · 동그랗게 오려 내는 게 아니라 '나누는 선'
+   - 선이 여러 스티커와 겹치면 맨 위에 있는 스티커 하나만 잘라요 · 스티커를 먼저 고를 필요 없어요
+   - 칼은 ✕ · Esc · 구석 연필통을 톡 할 때까지 남아 있어서 여러 번 연달아 자를 수 있어요
+   - 조각은 각각 옮기기 · 꾹 눌러 🗑️ 삭제 (원하지 않는 부분을 잘라서 버려요)
+   - 되는 것 : 포인트 · 씰 · 조각 · 모조지스티커 · 🎀 마스킹테이프 · 🧻 떡메모지 (글상자 · 인형 · 액자 · 움직이는 그림은 안 돼요)
    - 자른 조각은 PNG 그림이 돼요 (떡메에 쓴 글씨도 그림 속에 같이 · 테이프는 늘이기 손잡이가 없어져요)
-   ※ 이 파일이 없어도 다이어리는 정상 동작 (✂️ 자르기 메뉴만 안 보여요) */
+   ※ 이 파일이 없어도 다이어리는 정상 동작 (연필통에 칼만 안 꽂혀요) */
 (() => {
     'use strict';
     const q = id => document.getElementById(id);
@@ -20,7 +21,7 @@
         + '<path d="M20 86c-3-4-8-2-7 2 1 3 7 7 7 7s6-4 7-7c1-4-4-6-7-2z" fill="#fff"/>'                                   // 하트
         + '<circle cx="20" cy="106" r="3" fill="#fff" opacity=".85"/></svg>';
     const KN_TIP = [13, 4], KN_ANG = 215;              // 칼끝(그림 안 좌표) · 기울기 (칼끝이 왼쪽 아래 · 손잡이는 오른쪽 위 = 글쓰기 필기구와 같은 방향)
-    const S = { el: null, room: null, cv: null, kn: null, pts: null, down: false, id: null };
+    const S = { on: false, room: null, cv: null, kn: null, pts: null, down: false, id: null, busy: false };
 
     /* 자를 수 있는 것 : 그림이 있는 스티커 · 테이프 · 떡메 */
     function cutKind(el) {
@@ -39,21 +40,23 @@
         let r = q('skRoom'); if (r) return r;
         r = document.createElement('div'); r.id = 'skRoom'; r.className = 'sk-room'; r.hidden = true;
         r.innerHTML = '<canvas class="sk-line" id="skLine"></canvas>'
-            + '<div class="sk-tip" id="skTip"><b>✂️ 스티커 자르기</b> 스티커를 <b>끝에서 끝까지</b> 가로질러 그어요 · 선을 따라 두 조각으로 나뉘어요<button type="button" class="sk-x" id="skX" aria-label="그만두기">✕</button></div>'
+            + '<div class="sk-tip" id="skTip"><b>✂️ 스티커 칼</b> 자를 스티커를 <b>끝에서 끝까지</b> 가로질러 그어요 · 다 자르면 <b>구석 연필통</b>을 톡<button type="button" class="sk-x" id="skX" aria-label="그만두기">✕</button></div>'
+            + '<button type="button" class="pc-mini sk-cup" id="skCup" aria-label="연필통 (칼 꽂기 = 끝)"><span class="pc-mini-tops"><i style="--c:#e2556f"></i><i style="--c:#3d9be0"></i><i style="--c:#ffe14d"></i></span><span class="pc-mini-cup"></span></button>'
             + '<div class="sk-knife" id="skKnife">' + KNIFE + '</div>';
         document.body.appendChild(r);
-        q('skX').addEventListener('click', e => { e.stopPropagation(); close(); });
-        q('skX').addEventListener('pointerdown', e => e.stopPropagation());
+        ['skX', 'skCup'].forEach(id => { q(id).addEventListener('click', e => { e.stopPropagation(); close(true); }); q(id).addEventListener('pointerdown', e => e.stopPropagation()); });
         r.addEventListener('pointerdown', down); r.addEventListener('pointermove', move);
-        r.addEventListener('pointerup', up); r.addEventListener('pointercancel', e => { S.down = false; S.pts = null; paint(); });
-        addEventListener('keydown', e => { if (e.key === 'Escape' && S.el) close(); });
-        addEventListener('resize', () => { if (S.el) size(); });
+        r.addEventListener('pointerup', up); r.addEventListener('pointercancel', () => { S.down = false; S.pts = null; paint(); });
+        addEventListener('keydown', e => { if (e.key === 'Escape' && S.on) close(); });
+        addEventListener('resize', () => { if (S.on) size(); });
         return r;
     }
     function size() {
         const c = S.cv, d = Math.min(2, window.devicePixelRatio || 1);
         c.width = Math.round(innerWidth * d); c.height = Math.round(innerHeight * d); c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
         c.getContext('2d').setTransform(d, 0, 0, d, 0, 0); paint();
+        const pg = q('canvasArea'), cup = q('skCup');                     // 구석 연필통 : 페이지 오른쪽 아래 (글쓰기 연필통과 같은 자리)
+        if (pg && cup) { const r = pg.getBoundingClientRect(), vv = window.visualViewport, bot = Math.min(r.bottom, vv ? vv.offsetTop + vv.height : innerHeight); cup.style.left = Math.round(r.right - 62 - 12) + 'px'; cup.style.top = Math.round(bot - 84 - 12) + 'px'; }
     }
     function knifeAt(x, y) {
         const k = S.kn; if (!k) return;
@@ -67,22 +70,30 @@
         path(); x.strokeStyle = 'rgba(255,255,255,.95)'; x.lineWidth = 4; x.setLineDash([]); x.stroke();
         path(); x.strokeStyle = '#7d6a78'; x.lineWidth = 1.6; x.setLineDash([5, 3]); x.stroke();
     }
-    function open(el) {
-        if (!cutKind(el)) return;
+    /* 🖐 연필통에서 칼을 뽑으면 (js/draw.js pcPick) : 뽑은 손 자리에서 칼을 들고 시작 */
+    function open(x, y) {
+        if (typeof isCoverOpen !== 'undefined' && !isCoverOpen) return;
         if (window.tmClose) tmClose();
         if (typeof selectedElement !== 'undefined' && selectedElement) { selectedElement.classList.remove('selected'); selectedElement = null; if (typeof updateTextPanel === 'function') updateTextPanel(); }
-        const r = build(); S.room = r; S.cv = q('skLine'); S.kn = q('skKnife'); S.el = el; S.pts = null; S.down = false;
-        r.hidden = false; S.kn.classList.remove('gone'); size();
-        const b = el.getBoundingClientRect(); knifeAt(b.left + b.width / 2, b.top + b.height / 2);   // 처음엔 스티커 가운데에서
-        el.classList.add('sk-target');
+        const r = build(); S.room = r; S.cv = q('skLine'); S.kn = q('skKnife'); S.on = true; S.pts = null; S.down = false;
+        r.hidden = false; S.kn.classList.remove('gone', 'in'); size();
+        if (x == null) { const b = q('canvasArea').getBoundingClientRect(); x = b.left + b.width / 2; y = b.top + b.height / 2; }
+        knifeAt(x, y);
+        const t = q('skTip'), say = t.querySelector('.sk-say'); if (say) say.remove();
+        if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
     }
-    function close() {
-        if (S.room) S.room.hidden = true;
-        if (S.el) S.el.classList.remove('sk-target');
-        S.el = null; S.pts = null; S.down = false;
+    function close(put) {                              // put = 구석 연필통에 쏙 꽂고 끝
+        if (!S.on) return;
+        S.on = false; S.pts = null; S.down = false; paint();
+        const fin = () => { if (S.room) S.room.hidden = true; if (S.kn) S.kn.classList.remove('in'); };
+        if (put && S.kn) {
+            const m = q('skCup').getBoundingClientRect();
+            S.kn.classList.add('in'); S.kn.style.transform = `translate(${m.left + m.width / 2 - KN_TIP[0]}px, ${m.top + 6 - KN_TIP[1]}px) rotate(180deg) scale(.35)`;
+            setTimeout(fin, 280);
+        } else fin();
     }
     function down(e) {
-        if (e.button > 0) return;
+        if (e.button > 0 || S.busy) return;
         e.preventDefault(); S.down = true; S.id = e.pointerId; S.pts = [[e.clientX, e.clientY]];
         try { S.room.setPointerCapture(e.pointerId); } catch (er) {}
         knifeAt(e.clientX, e.clientY); paint();
@@ -93,15 +104,26 @@
         const p = S.pts, l = p[p.length - 1];
         if (Math.hypot(e.clientX - l[0], e.clientY - l[1]) >= 3) { p.push([e.clientX, e.clientY]); paint(); }
     }
+    /* 그은 선이 지나간 스티커 중 맨 위부터 하나씩 잘라 봐요 → 처음 잘린 것 하나만 */
+    function crossed(pts) {
+        const ca = q('canvasArea'); if (!ca) return [];
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        pts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+        const all = [...ca.querySelectorAll(':scope > .element-box')];
+        return all.map((el, i) => ({ el, i, z: parseInt(el.style.zIndex) || 0 }))
+            .filter(o => { if (!cutKind(o.el)) return false; const r = o.el.getBoundingClientRect(); return r.right > x0 && r.left < x1 && r.bottom > y0 && r.top < y1; })
+            .sort((a, b) => b.z - a.z || b.i - a.i).map(o => o.el);
+    }
     async function up(e) {
         if (!S.down || e.pointerId !== S.id) return;
         S.down = false;
         const pts = S.pts; if (!pts || pts.length < 2) { S.pts = null; paint(); return; }
-        let ok = false;
-        try { ok = await split(S.el, pts); } catch (er) { console.warn('자르기', er); }
-        if (!ok) { S.pts = null; paint(); hint('스티커를 <b>끝에서 끝까지</b> 가로질러야 나뉘어요 ✂️'); return; }
-        S.kn.classList.add('gone'); S.pts = null; paint();                     // 나뉘면 칼은 사라져요
-        setTimeout(close, 360);
+        S.busy = true; let ok = false;
+        try { for (const el of crossed(pts)) { if (await split(el, pts)) { ok = true; break; } } } catch (er) { console.warn('자르기', er); }
+        S.busy = false; S.pts = null; paint();
+        if (!ok) { hint('스티커를 <b>끝에서 끝까지</b> 가로질러야 나뉘어요 ✂️'); return; }
+        const say = q('skTip').querySelector('.sk-say'); if (say) say.remove();
+        if (navigator.vibrate) try { navigator.vibrate(8); } catch (er) {}
     }
     function hint(h) { const t = q('skTip'); if (!t) return; const b = t.querySelector('.sk-say') || t.appendChild(Object.assign(document.createElement('span'), { className: 'sk-say' })); b.innerHTML = h; t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); }
 
@@ -212,5 +234,5 @@
         return true;
     }
 
-    window.elCuttable = elCuttable; window.elCut = open; window.skClose = close;
+    window.elCuttable = elCuttable; window.skKnife = open; window.skClose = close; window.skKnifeSvg = () => KNIFE;
 })();

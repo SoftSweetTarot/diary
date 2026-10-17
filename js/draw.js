@@ -254,7 +254,7 @@
            - 작은 연필통을 톡 눌러도 꽂혀요 ---------- */
         const PC_ANG = -145;                               // 들고 있는 필기구 기울기 (연필심이 왼쪽 아래 · 몸통은 오른쪽 위)
         const pcS = { tools: [], held: null, tip: null, carry: null, press: null, drag: null, z: 10 };
-        const pcSvg = o => o.tool === 'erase' ? penEraserSvg(o.size) : o.tool === 'hi' ? penMarkerSvg(o.color, 1) : penPencilSvg(o.color, 1);
+        const pcSvg = o => o.tool === 'knife' ? (window.skKnifeSvg ? skKnifeSvg() : '') : o.tool === 'erase' ? penEraserSvg(o.size) : o.tool === 'hi' ? penMarkerSvg(o.color, 1) : penPencilSvg(o.color, 1);
         const pcTipOf = o => o.tool === 'erase' ? [15, 37] : o.tool === 'hi' ? [15, 5] : [15, 2];   // 그림 안 닿는 점
         function pcList() {                                // 👝 필통에서 고른 것만 (js/pencase.js · 없으면 기본 16자루)
             if (window.pkCupList) return pkCupList();
@@ -290,10 +290,10 @@
             const lift = o.lift || 0, a = o.a * (1 - Math.min(1, lift / 90));
             o.el.style.transform = `translate(${o.x}px, ${o.y - lift}px) rotate(${a}deg)`;   // 연필통 바닥이 돌아가는 점
         }
-        function pcOpen() {
+        function pcOpen(memo) {
             const r = pcBuild(); r.hidden = false;
             requestAnimationFrame(pcLayout);
-            Object.assign(pcS, { held: null, tip: null, carry: null, press: null, drag: null, memo: null });
+            Object.assign(pcS, { held: null, tip: null, carry: null, press: null, drag: null, memo: memo || null });
             r.querySelector('.pc-hint').innerHTML = '필기구를 골라 <b>위로 쏙</b> 뽑아요 · 옆으로 밀면 비켜나요';
             const cup = drq('pcCup'); cup.classList.remove('gone'); cup.style.transform = '';
             drq('pcHeld').hidden = true; drq('pcMini').hidden = true; drq('pcTipNote').hidden = true;
@@ -301,12 +301,14 @@
         }
         function pcFill() {                                // 연필통에 필기구 꽂기 (👝 필통에서 바꾸면 다시 꽂아요)
             const box = drq('pcTools'); box.textContent = '';
-            const L = pcList(), n = L.length;
+            const L = pcList().slice();
+            if (!pcS.memo && window.skKnife) L.splice(Math.min(2, L.length), 0, { tool: 'knife' });   // ✂️ 스티커 칼도 같이 꽂혀 있어요 (메모 쓸 때는 없어요 · js/stkcut.js)
+            const n = L.length;
             pcS.tools = L.map((o, i) => {
-                const el = document.createElement('div'); el.className = 'pc-tool' + (o.tool === 'erase' ? ' er' : ''); el.innerHTML = pcSvg(o);
-                const sv = el.querySelector('svg'); if (sv && o.tool !== 'erase') sv.setAttribute('preserveAspectRatio', 'none');   // 실제처럼 길쭉하게
+                const el = document.createElement('div'); el.className = 'pc-tool' + (o.tool === 'erase' ? ' er' : o.tool === 'knife' ? ' kn' : ''); el.innerHTML = pcSvg(o);
+                const sv = el.querySelector('svg'); if (sv && o.tool !== 'erase' && o.tool !== 'knife') sv.setAttribute('preserveAspectRatio', 'none');   // 실제처럼 길쭉하게
                 o.el = el; o.x = Math.round(-76 + i * 152 / Math.max(1, n - 1)); o.a = o.x * .17 + (i % 3 - 1) * 1.5; o.y = -((i * 7) % 3 * 14) + (o.tool === 'hi' ? 12 : 0); o.lift = 0;   // 넓은 통에 부채꼴로 기대어요 (윗부분이 넉넉히 벌어져 고르기 쉬워요)
-                el.style.zIndex = o.tool === 'erase' ? 3 : i % 2 ? 2 : 1;   // 짧은 지우개는 앞쪽에
+                el.style.zIndex = o.tool === 'erase' || o.tool === 'knife' ? 3 : i % 2 ? 2 : 1;   // 짧은 지우개는 앞쪽에
                 pcPlace(o); box.appendChild(el); pcBindTool(o);
                 return o;
             });
@@ -339,6 +341,13 @@
         }
         /* 뽑기 : 연필통은 구석의 작은 연필통으로 · 뽑은 필기구만 손에 */
         function pcPick(o, e) {
+            if (o.tool === 'knife') {                                            // ✂️ 칼을 뽑으면 그리기는 접고 스티커 칼로 (js/stkcut.js)
+                pcS.drag = null; o.el.classList.remove('grab');
+                try { o.el.releasePointerCapture(e.pointerId); } catch (er) {}
+                if (dw.strokes.length) penDone(); else penClose();
+                if (window.skKnife) skKnife(e.clientX, e.clientY);
+                return;
+            }
             pcS.drag = null; o.el.classList.remove('grab'); o.el.style.visibility = 'hidden';
             pcS.held = o;
             if (pcS.memo) mhlApply(pcS.memo, o);                                 // 📝 메모 : 고른 필기구로 글씨 모양이 바로 바뀌어요
@@ -516,7 +525,7 @@
         }
         function pcOpenMemo(ta) {
             if (dw.on) return;
-            pcOpen(); pcS.memo = ta; mf.pos = null;
+            pcOpen(ta); mf.pos = null;
             drq('pcRoom').classList.add('memo');
             drq('pcRoom').querySelector('.pc-hint').innerHTML = '쓸 필기구를 <b>위로 쏙</b> 뽑아요 · ✕ 는 그냥 쓰기';
         }
