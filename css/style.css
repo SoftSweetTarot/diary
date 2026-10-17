@@ -3527,3 +3527,9 @@ body.stu-edit .stu-deco.sel .rot-zone { display: block; pointer-events: auto; to
 .sk-x { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; border: none; background: #ffe3ec; color: #c2385c; font-weight: 900; font-size: 15px; cursor: pointer; pointer-events: auto; }
 .element-box.sk-new > img { animation: skPop .6s ease; }
 @keyframes skPop { 0% { transform: scale(.97); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+/* 🗑️ 삭제 연출 (js/elements.js elPeelAway) : 뜯겨 접힌 하얀 뒷면 */
+#canvasArea .element-box.el-dying, #canvasArea .element-box.el-peel-back { pointer-events: none !important; border-color: transparent !important; transition: none !important; }
+#canvasArea .element-box.el-peel-back > * { filter: brightness(0) invert(.97) sepia(.12) drop-shadow(0 3px 3px rgba(110, 70, 85, .3)) !important; }
+#canvasArea .element-box.el-peel-back > img { opacity: .97; }
+#canvasArea .element-box.el-peel-back textarea { color: transparent !important; }

@@ -827,9 +827,39 @@
         }
         window.elEditable = elEditable; window.elEdit = elEdit;
         function deleteSelected() {
-            if (selectedElement) { selectedElement.remove(); selectedElement = null; }
+            if (selectedElement) { elPeelAway(selectedElement); selectedElement = null; }
             updateTextPanel();
         }
+        /* 🗑️ 삭제 연출 (도련 · 2026-10-17) : 스티커가 아래에서부터 위로 뜯어지듯 말려 올라가며 사라져요
+           - 앞면은 아래부터 잘려 나가고(clip-path) · 뜯긴 부분은 칼선 위로 뒤집혀 접힌 하얀 뒷면(복제본 · scaleY 음수)이 돼요 · 끝나면 휙 떠오르며 사라져요
+           - 연출 중인 것은 저장에서 빼요(.el-dying) · 손가락도 안 받아요 */
+        function elPeelAway(el) {
+            if (!el || !el.isConnected || el.classList.contains('el-dying')) return;
+            el.classList.remove('selected'); el.classList.add('el-dying');
+            el.querySelectorAll('.handle, .rot-zone, .stretch-handle').forEach(h => h.style.display = 'none');
+            const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce) { el.remove(); return; }
+            const H = el.offsetHeight, base = el.style.transform || '';
+            const back = el.cloneNode(true); back.classList.add('el-peel-back'); back.removeAttribute('id');
+            back.querySelectorAll('textarea').forEach(t => { t.readOnly = true; t.tabIndex = -1; });
+            el.after(back);
+            const DUR = window.EL_PEEL_MS || 820, t0 = performance.now(), ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+            const step = now => {
+                const p = Math.min(1, (now - t0) / DUR), e = ease(p);
+                const cut = H * (1 - e), yc = cut - H / 2, k = Math.min(.55, Math.max(12, H * .09) / Math.max(1, H - cut));   // 칼선(뜯긴 곳) · 뜯긴 부분은 칼선 위에 돌돌 말린 띠(두께 일정)로 올라가요
+                el.style.clipPath = `inset(0 0 ${Math.max(0, H - cut)}px 0)`;
+                back.style.clipPath = `inset(${Math.max(0, cut)}px 0 0 0)`;
+                back.style.transform = `${base} translateY(${yc}px) scaleY(${-k}) translateY(${-yc}px)`;
+                if (p < 1) { requestAnimationFrame(step); return; }
+                const fly = [{ transform: `${base} translateY(0px)`, opacity: 1 }, { transform: `${base} translateY(-26px) rotate(-6deg)`, opacity: 0 }];
+                back.animate(fly.map(f => Object.assign({}, f, { transform: f.transform + ` translateY(${-H / 2}px) scaleY(${-k}) translateY(${H / 2}px)` })), { duration: 220, easing: 'ease-in', fill: 'forwards' });
+                const a = el.animate(fly, { duration: 220, easing: 'ease-in', fill: 'forwards' });
+                a.onfinish = () => { el.remove(); back.remove(); };
+                setTimeout(() => { el.remove(); back.remove(); }, 400);                // 혹시 animate 가 끝을 못 알려도
+            };
+            requestAnimationFrame(step);
+        }
+        window.elPeelAway = elPeelAway;
 
         async function saveData(showAlert = false) {
             if (!isCoverOpen) return;
@@ -837,7 +867,7 @@
             const r1 = v => Math.round((parseFloat(v) || 0) * 10) / 10;
             const elementsData = [];
 
-            canvas.querySelectorAll('.element-box').forEach(el => {
+            canvas.querySelectorAll('.element-box:not(.el-dying):not(.el-peel-back)').forEach(el => {   // 🗑️ 삭제 연출 중인 것은 빼요
                 const textarea = el.querySelector('textarea');
                 const img = el.querySelector('img');
                 const span = el.querySelector('span');
