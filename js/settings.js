@@ -538,6 +538,12 @@
             if (t && !t.dataset.fit) { t.dataset.fit = 1; new MutationObserver(() => mtFit(m)).observe(t, { childList: true, characterData: true, subtree: true }); }
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        /* ⚙️ 설정 창 칸 : 📖 다이어리 · ✋ 도구 · 🔊 소리·글꼴 · 💾 저장 (다시 열면 마지막에 본 칸) */
+        function stSet(k) {
+            document.querySelectorAll('#stTabs .stk-tab').forEach(b => b.classList.toggle('on', b.dataset.st === k));
+            document.querySelectorAll('#settingsModal .st-pane').forEach(p => p.classList.toggle('on', p.dataset.st === k));
+            const box = document.querySelector('#settingsModal .modal-content'); if (box) box.scrollTop = 0;
+        }
         /* 창 밖(배경 · 페이지)을 누르면 닫혀요 : 그 창의 ✕ 를 눌러 준 것과 같아요 (창마다 닫을 때 하는 일을 그대로)
            - 알림 · 확인 창은 대답해야 해서 안 닫혀요 · 🎀 페이지꾸미기 창은 창 밖에서 다이어리를 꾸며야 해서 그대로 (창 밖이 눌려요) */
         let mdDown = null;

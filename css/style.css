@@ -312,7 +312,7 @@
 
         /* ☁ 구글 드라이브 연결 화면 / 상태 배지 */
         .drive-gate { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color);
-            display: none; justify-content: center; align-items: center; z-index: 2500; }
+            display: flex; justify-content: center; align-items: center; z-index: 2500; }   /* 처음부터 덮어 둬요 : 로그인 화면이 뜨기 전에 다이어리가 비치지 않게 (js/drive.js hideGate)
         .gate-card { display: flex; flex-direction: column; align-items: center; gap: 14px; }
         .gate-title { font-size: 1.4rem; font-weight: bold; color: var(--primary-accent); }
         .gate-msg { font-size: 14px; color: #555; line-height: 1.7; }
@@ -2574,6 +2574,9 @@
 #settingsModal .modal-content { overflow-x: hidden; touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 #settingsModal .modal-content > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
 #settingsModal input[type="range"] { touch-action: none; }
+#settingsModal .st-tabs { flex-shrink: 0; margin: 0 0 10px; }
+#settingsModal .st-pane:not(.on) { display: none; }
+#settingsModal .st-pane > .form-group:last-child { margin-bottom: 0; }
 #themeBoxBtn[hidden] { display: none; }
 .svc-cat[hidden] { display: none; }
 /* ===== 🎀 마스킹테이프 만들기 (js/tapemaker.js · 화면 모양은 .smk-* 를 같이 써요) ===== */
