@@ -842,11 +842,12 @@
             if (top.closest(PIN_AREA)) return true;
             return top === document.body || top === document.documentElement || top.matches('.modal.snb-on') || !!top.closest('#diaryWrapper, #bgPatternLayer');   // 🖼 배경지 (다이어리 둘레 · 무늬 배경 · 📒 수첩 뒤 배경지 포함)
         }
+        const pinMenu = () => !!document.querySelector('.tap-menu');            // 📍 페이지를 눌러 뜬 메뉴(저장 · 순서 …)가 열려 있는 동안은 숨어요 (js/tapmenu.js)
         const pinDev = e => e.pointerType === 'mouse' ? 'pc' : Math.min(screen.width, screen.height) < 600 ? 'phone' : 'pad';
         function pinStart() {
             pinEl = document.createElement('div'); pinEl.className = 'twz pin-cur in'; pinEl.setAttribute('aria-hidden', 'true'); pinEl.innerHTML = pinSvg();
             document.body.appendChild(pinEl);
-            pinWatch = setInterval(() => { if (pinOff()) pinStop(); }, 250);
+            pinWatch = setInterval(() => { if (pinOff()) pinStop(); else if (pinMenu()) pinShow(false); }, 120);
         }
         function pinStop() {
             clearInterval(pinWatch); clearTimeout(pinTimer); if (pinEl) pinEl.remove(); pinEl = null; document.body.classList.remove('pin-on');
@@ -859,7 +860,7 @@
         function pinMove(e) {
             if (!pinEl) { if (pinOff()) return; pinStart(); }
             pinKind = pinDev(e); clearTimeout(pinTimer);
-            const on = (pinHold && (e.buttons & 1 || e.pointerType !== 'mouse')) || pinOver(e.clientX, e.clientY); pinShow(on); if (!on) return;
+            const on = !pinMenu() && ((pinHold && (e.buttons & 1 || e.pointerType !== 'mouse')) || pinOver(e.clientX, e.clientY)); pinShow(on); if (!on) return;
             pinEl.style.transform = `translate(${e.clientX - TWZ_TIP[0]}px, ${e.clientY - TWZ_TIP[1]}px)${handFlip()} rotate(${TWZ_ANG}deg)`;
             if (pinKind === 'pc' && !(e.buttons & 1)) pinLater();                 // 💻 마우스가 멈추면 (늘 보이기를 껐을 때만)
         }
