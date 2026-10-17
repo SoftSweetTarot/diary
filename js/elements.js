@@ -832,7 +832,7 @@
             if (r) r.value = c.sec; if (t) t.textContent = c.sec + '초';
             document.querySelectorAll('#pinStay [data-k]').forEach(btn => { const on = !!c[btn.dataset.k]; btn.classList.toggle('on', on); btn.querySelector('small').textContent = on ? '늘 보여요' : c.sec + '초 뒤 사라져요'; });
         }
-        let pinEl = null, pinWatch = 0, pinTimer = 0, pinKind = 'pc';
+        let pinEl = null, pinWatch = 0, pinTimer = 0, pinKind = 'pc', pinHold = false;   // pinHold : 보이는 곳에서 눌러 끄는 중 (스티커를 옮기는 동안은 어디서든 그대로 보여요)
         const pinOpen = () => { const p = document.getElementById('innerPage'); return !!p && p.offsetParent !== null; };
         const pinOff = () => !!twz || !pinOpen() || document.body.classList.contains('draw-on') || !!document.querySelector('.sk-room:not([hidden])');
         const PIN_AREA = '#innerPage, #pelRoom, #pcbRoom, #spkBoard, .modal.snb-on .snb-sheets';   // 🪡 핀셋이 보이는 곳
@@ -840,7 +840,7 @@
             const top = document.elementsFromPoint(x, y).find(n => !n.closest('.snb-ghost, .pin-cur, .spk-fly, .el-peel-back'));
             if (!top || top.closest('button, .pel-hint, .snb-cover, #pageHeader')) return false;   // 닫기 · 안내 버튼 · 수첩 표지 · 날짜 바
             if (top.closest(PIN_AREA)) return true;
-            return top === document.body || top === document.documentElement || top.matches('.modal.snb-on');   // 🖼 배경지 (📒 수첩 뒤 배경지 포함)
+            return top === document.body || top === document.documentElement || top.matches('.modal.snb-on') || !!top.closest('#diaryWrapper, #bgPatternLayer');   // 🖼 배경지 (다이어리 둘레 · 무늬 배경 · 📒 수첩 뒤 배경지 포함)
         }
         const pinDev = e => e.pointerType === 'mouse' ? 'pc' : Math.min(screen.width, screen.height) < 600 ? 'phone' : 'pad';
         function pinStart() {
@@ -859,13 +859,13 @@
         function pinMove(e) {
             if (!pinEl) { if (pinOff()) return; pinStart(); }
             pinKind = pinDev(e); clearTimeout(pinTimer);
-            const on = pinOver(e.clientX, e.clientY); pinShow(on); if (!on) return;
+            const on = (pinHold && (e.buttons & 1 || e.pointerType !== 'mouse')) || pinOver(e.clientX, e.clientY); pinShow(on); if (!on) return;
             pinEl.style.transform = `translate(${e.clientX - TWZ_TIP[0]}px, ${e.clientY - TWZ_TIP[1]}px)${handFlip()} rotate(${TWZ_ANG}deg)`;
             if (pinKind === 'pc' && !(e.buttons & 1)) pinLater();                 // 💻 마우스가 멈추면 (늘 보이기를 껐을 때만)
         }
         document.addEventListener('pointermove', pinMove, true);
-        document.addEventListener('pointerdown', e => { pinMove(e); if (pinEl) pinEl.classList.add('shut'); }, true);
-        ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => { if (pinEl) { pinEl.classList.remove('shut'); pinKind = pinDev(e); pinLater(); } }, true));
+        document.addEventListener('pointerdown', e => { pinHold = false; pinMove(e); if (pinEl) { pinEl.classList.add('shut'); pinHold = !pinEl.classList.contains('out'); } }, true);
+        ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => { pinHold = false; if (pinEl) { pinEl.classList.remove('shut'); pinKind = pinDev(e); pinLater(); } }, true));
         document.addEventListener('mouseout', e => { if (!e.relatedTarget && pinEl) pinShow(false); });   // 💻 마우스가 창 밖으로 나가면
         window.pinCfgSet = pinCfgSet; window.pinCfgRender = pinCfgRender;
         let twz = null;
