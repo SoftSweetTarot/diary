@@ -199,7 +199,7 @@
         .flap.dir-prev { border-radius: 0 15px 15px 0; filter: drop-shadow(6px 0 8px rgba(0,0,0,.28)); }
         .flap.dir-prev.page-back  { background: var(--curl-shade-prev), var(--page-bg); }
 
-        .under-shadow { position: absolute; top: 0; bottom: 0; display: none; pointer-events: none; z-index: 50; }
+        .under-shadow { position: absolute; top: 48px; bottom: 0; display: none; pointer-events: none; z-index: 50; }
         .under-shadow.dir-next { background: linear-gradient(to right, rgba(0,0,0,.38), rgba(0,0,0,0)); }
         .under-shadow.dir-prev { background: linear-gradient(to left,  rgba(0,0,0,.38), rgba(0,0,0,0)); }
 
@@ -3670,8 +3670,8 @@ body.rl-out .rl-top, body.rl-none .rl-top { display: none; }
 
 /* 📒 다이어리 고르기 (js/skins.js dyOpen · dyDeco) : 페이지 둘레 꾸밈 · 누르는 건 막지 않아요 */
 .dy-deco { position: absolute; pointer-events: none; }
-#dyBack { z-index: -1; }
-#dyFront { z-index: 3; }
+#dyBack, .dy-deco.dy-bk { z-index: -1; }
+#dyFront, .dy-deco.dy-fr { z-index: 3; }
 .inner-page.png-mode .dy-deco { display: none; }
 .inner-page.dy-noholes .canvas-area { --lf-holes: linear-gradient(transparent, transparent); }
 .inner-page.dy-noholes .canvas-area:not([class*="lf-"]) { background:

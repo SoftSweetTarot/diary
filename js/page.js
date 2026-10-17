@@ -311,6 +311,9 @@
 
             const under = buildStaticPage(targetDate);
             if (!isCover && dir === -1 && window.dySp && dySp()) under.classList.add('dy-at-r');   // 📱 전날은 오른쪽 쪽부터
+            const ip = document.getElementById('innerPage');                                  // 📒 아래 장도 같은 다이어리 모양 (링 · 밴드 · 구멍 없음)
+            if (ip.dataset.dy) { under.dataset.dy = ip.dataset.dy; under.style.setProperty('--dy-c', ip.style.getPropertyValue('--dy-c')); under.classList.toggle('dy-noholes', ip.classList.contains('dy-noholes'));
+                ip.querySelectorAll(':scope > .dy-deco').forEach(n => { const c = n.cloneNode(true); c.removeAttribute('id'); c.classList.add(n.id === 'dyBack' ? 'dy-bk' : 'dy-fr'); n.id === 'dyBack' ? under.prepend(c) : under.appendChild(c); }); }
             const shadow = document.createElement('div');
             shadow.className = 'under-shadow ' + (dir === 1 ? 'dir-next' : 'dir-prev');
             under.appendChild(shadow);
@@ -326,7 +329,13 @@
             if (selectedElement) { selectedElement.classList.remove('selected'); selectedElement = null; }
             updateTextPanel();
 
-            turn = { isCover, dir, W, pageEl, under, shadow, flapLayer, flap, d: 0 };
+            /* 💻 펼침면 : 넘기는 장(한 쪽)이 가운데 묶음을 축으로 반대쪽 쪽 위로 넘어가요 · 겉표지는 넘기는 만큼 다이어리가 가운데로 옮겨가요 */
+            const two = book.classList.contains('dy-sp') && !book.classList.contains('dy-one');
+            if (two) { flapLayer.style.left = -W + 'px'; flapLayer.style.width = 2 * W + 'px'; }
+            const bx = book.getBoundingClientRect().left;
+            const uOff = under.getBoundingClientRect().left - bx, fOff = two ? -W : 0;     // 아래 장 · 넘김 층이 책 왼쪽에서 얼마나 떨어져 있는지
+            const edgeL = !isCover && two ? -W : 0;                                          // 전날로 넘길 때 잡는 왼쪽 끝 (펼침면은 왼쪽 쪽 끝)
+            turn = { isCover, dir, W, pageEl, under, shadow, flapLayer, flap, d: 0, two, uOff, fOff, edgeL };
             updateCurl(0);
             return true;
         }
@@ -349,13 +358,17 @@
             if (t.dir === 1) {
                 const fold = W - d;
                 t.pageEl.style.clipPath = `inset(0 ${d}px 0 0)`;
-                t.flap.style.left = (fold - d) + 'px';
-                t.shadow.style.left = (fold - 4) + 'px';
+                t.flap.style.left = (fold - d - t.fOff) + 'px';
+                t.shadow.style.left = (fold - 4 - t.uOff) + 'px';
+                if (t.isCover && t.two) {                                     // 💻 표지 : 넘긴 만큼 왼쪽 쪽이 드러나고 다이어리가 가운데로
+                    t.under.style.clipPath = `inset(0 0 0 ${Math.max(0, fold - d - t.uOff)}px)`;
+                    document.getElementById('diaryWrapper').style.marginLeft = d + 'px';
+                }
             } else {
-                const fold = d;
+                const fold = t.edgeL + d;
                 t.pageEl.style.clipPath = `inset(0 0 0 ${d}px)`;
-                t.flap.style.left = fold + 'px';
-                t.shadow.style.left = (fold - sw - 4) + 'px';
+                t.flap.style.left = (fold - t.fOff) + 'px';
+                t.shadow.style.left = (fold - sw - 4 - t.uOff) + 'px';
             }
         }
 
@@ -400,6 +413,7 @@
                 else prefetchAfterTurn(t.dir);             // 한 장 넘기면: 넘긴 방향의 다음 하루치만
             }
 
+            if (t.isCover && t.two && !complete) document.getElementById('diaryWrapper').style.marginLeft = '';
             t.under.remove();
             t.flapLayer.remove();
             t.pageEl.style.clipPath = '';
@@ -487,7 +501,7 @@
                     try { wrapper.setPointerCapture(e.pointerId); } catch (err) {}
                 }
 
-                const moved = (drag.dir === 1 ? drag.x - e.clientX : e.clientX - drag.x) - 8;
+                const moved = ((drag.dir === 1 ? drag.x - e.clientX : e.clientX - drag.x) - 8) / (turn.isCover && turn.two ? 1.5 : 1);   // 💻 표지는 다이어리도 같이 옮겨가니 손가락 따라가게
                 updateCurl(moved);
 
                 const rect = book.getBoundingClientRect();
