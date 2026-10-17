@@ -1,8 +1,8 @@
 /* 말랑달콤 다이어리 - js/tapmenu.js
-   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 연필꽂이 · 👝 필통 · 💾 저장 · 📃 속지 다듬기 · 속지 빼기)가 나와요. (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
+   📍 빈 곳을 누르면 그 자리에 추가 메뉴(🖍️ 연필꽂이 · 👝 필통 · 💾 저장 · 📌 삭제핀 · 속지 빼기)가 나와요. (📃 속지 다듬기는 10-17 숨김) (속지 칸은 바꾼 속지가 있을 때만 · js/leafpad.js lfMenu) (스티커 · 이미지 · 조각스티커 · 메모지는 하단메뉴 ✨ 스티커 창으로 옮겼어요)
    - 고른 것이 있으면(빨간 점선) 첫 번째 터치는 '선택 해제'만 (elements.js 의 canvasArea click 에서 불러요)
    - 메뉴에서 고른 것은 눌렀던 자리 근처에 놓여요 (tmPlace)
-   📌 페이지에 놓은 그림은 짧게 톡 · 왼쪽 클릭하면 (도련 · 10-17 · 빈 곳 메뉴처럼 · 그림은 꾹 누르기 · 오른쪽 클릭으로는 안 나와요) / 글상자는 톡 = 글쓰기라 폰 · 아이패드에서 꾹 누르면(0.5초) · 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필꽂이의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 · 🗑️ 삭제 메뉴가 나와요 (tmOpenElem) */
+   📌 페이지에 놓은 그림은 짧게 톡 · 왼쪽 클릭하면 (도련 · 10-17 · 빈 곳 메뉴처럼 · 그림은 꾹 누르기 · 오른쪽 클릭으로는 안 나와요) / 글상자는 톡 = 글쓰기라 폰 · 아이패드에서 꾹 누르면(0.5초) · 마우스로 오른쪽 클릭하면 (🎨 다듬기는 10-17 숨김 · ✂️ 자르기는 연필꽂이의 스티커 칼로 · js/stkcut.js) · ✥ 글씨체(글) · 사진 꾸미기(사진) · ↕️ 순서 메뉴가 나와요 (tmOpenElem · 🗑️ 삭제는 10-17 숨김 → 빈 곳 메뉴의 📌 삭제핀) */
         /* 🎨 서브메뉴 아이콘 : 하단 메뉴(스티커 · 스킨 · 카페 · 설정)와 같은 말랑한 단색 면 스타일 */
         const TM_SVG = (b) => `<svg viewBox="0 0 24 24" aria-hidden="true">${b}</svg>`;
         const TM_ICONS = {
@@ -14,13 +14,16 @@
             font: TM_SVG('<rect x="3" y="3" width="18" height="18" rx="5" fill="#ffd9e6"/><path d="M8 17l4-10 4 10M9.6 13.4h4.8" fill="none" stroke="#d9577a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'),
             frame: TM_SVG('<rect x="3" y="4" width="18" height="16" rx="3" fill="#f6c445"/><rect x="5.5" y="6.5" width="13" height="11" rx="1.5" fill="#dbe8fc"/><path d="M6.5 16.5l4-4.5 3 3 2-2 2.5 3.5z" fill="#6fb0ff"/><circle cx="15.5" cy="9.5" r="1.4" fill="#fff"/>'),
             palette: TM_SVG('<path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.7 1.7-1.7H16a5 5 0 0 0 5-5C21 6.4 17 3 12 3z" fill="#f7a8c4"/><circle cx="7.5" cy="11" r="1.6" fill="#6c9be8"/><circle cx="10" cy="7" r="1.6" fill="#f6c445"/><circle cx="14.5" cy="7" r="1.6" fill="#5fd1b0"/><circle cx="17" cy="11" r="1.6" fill="#b48cf2"/>'),
+            pin: TM_SVG('<g transform="rotate(-25 12 12)"><path d="M11 2.5h2l2.6 12.2a1.4 1.4 0 0 1-1.4 1.7H9.8a1.4 1.4 0 0 1-1.4-1.7z" fill="#ff9dbb" stroke="#d95a84" stroke-width=".9"/><path d="M12 16.4v5.4" stroke="#d95a84" stroke-width="1.8" stroke-linecap="round"/><path d="M12 8.6c-.9-1.2-2.6-.5-2.2.7.3.9 2.2 2 2.2 2s1.9-1.1 2.2-2c.4-1.2-1.3-1.9-2.2-.7z" fill="#fff"/></g>'),
             trash: TM_SVG('<path d="M9.5 5.2V4a1.2 1.2 0 0 1 1.2-1.2h2.6A1.2 1.2 0 0 1 14.5 4v1.2" fill="none" stroke="#d9577a" stroke-width="1.8"/><path d="M6 9h12l-.9 10a2 2 0 0 1-2 1.8H8.9a2 2 0 0 1-2-1.8z" fill="#ee7f9f"/><rect x="4.5" y="5.2" width="15" height="2.8" rx="1.4" fill="#d9577a"/><path d="M10 11.5v6M14 11.5v6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>')
         };
         const TM_ITEMS = [
             { key: 'p_pen', icon: TM_ICONS.pen, label: '연필꽂이', run: () => { tmAnchor = null; window.openDraw ? openDraw() : comingSoon('🖍️ 연필꽂이'); } },
             { key: 'p_case', icon: TM_ICONS.case, label: '필통', run: () => { tmAnchor = null; window.openPencase ? openPencase() : comingSoon('👝 필통'); } },
-            { key: 'p_save', icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } }
+            { key: 'p_save', icon: TM_ICONS.save, label: '저장', run: () => { tmAnchor = null; openSaveChooser(); } },
+            { key: 'p_pin', icon: TM_ICONS.pin, label: '삭제핀', run: () => { const a = tmPinAt; tmAnchor = null; if (window.twzPin) twzPin(a && a.x, a && a.y); } }   // 📌 무엇이든 핀셋으로 뜯어 버려요 (도련 · 10-17 · js/elements.js twzPin)
         ];
+        let tmPinAt = null;                                                    // 빈 곳 메뉴를 연 화면 자리 (📌 삭제핀이 거기서 나와요)
         const TM_ANCHOR_MS = 120000;
         /* ⏲ 자동으로 사라지는 시간 (설정에서 정해요) : 팝업메뉴가 닫히는 시간 = 그림 선택이 풀리는 시간 (한 값으로 통일)
            저장: 'diary_clear_sec'(설정.json) · 게스트는 이 기기 'malang_clear_sec' */
@@ -94,7 +97,8 @@
             const k = r.width / (canvas.offsetWidth || r.width) || 1;
             tmAnchor = { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k, t: Date.now() };
             const lf = window.lfMenu ? lfMenu() : {};
-            tmShow(TM_ITEMS.concat(lf.edit ? [{ key: 'p_lfedit', icon: TM_ICONS.palette, label: '속지 다듬기', run: () => { tmAnchor = null; lfEdit(); } }] : [],
+            tmPinAt = { x: e.clientX, y: e.clientY };
+            tmShow(TM_ITEMS.concat(/* lf.edit ? [{ key: 'p_lfedit', icon: TM_ICONS.palette, label: '속지 다듬기', run: () => { tmAnchor = null; lfEdit(); } }] : [], */   // 📃 속지 다듬기 숨김 (도련 · 2026-10-17 · 코드는 그대로)
                 lf.off ? [{ key: 'p_lfoff', icon: TM_ICONS.trash, label: '속지 빼기', run: () => { tmAnchor = null; pickLeaf('line'); } }] : []), { x: e.clientX, y: e.clientY });
         }
 
@@ -109,8 +113,8 @@
                 ...(window.panelKindOf && panelKindOf(el) === 'text' ? [{ key: 'p_font', icon: TM_ICONS.font, label: '글씨체', run: () => openTextPanel(el) }] : []),
                 ...(window.panelKindOf && panelKindOf(el) === 'photo' ? [{ key: 'p_frame', icon: TM_ICONS.frame, label: '사진 꾸미기', run: () => openTextPanel(el) }] : []),
                 // ...(window.elEditable && elEditable(el) ? [{ key: 'p_edit', icon: TM_ICONS.palette, label: '다듬기', run: () => elEdit(el) }] : []),   // 🎨 다듬기 숨김 (도련 · 2026-10-17 · 코드는 그대로)
-                { key: 'p_order', icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } },
-                { key: 'p_trash', icon: TM_ICONS.trash, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }
+                { key: 'p_order', icon: TM_ICONS.order, label: '순서', run: (rect) => { selectElement(el); openLayerMenu(rect); } }
+                // { key: 'p_trash', icon: TM_ICONS.trash, label: '삭제', run: () => { selectElement(el); deleteSelected(); } }   // 🗑️ 삭제 숨김 (도련 · 2026-10-17 · 빈 곳 메뉴의 📌 삭제핀으로)
             ], { x, y, above: !!byTouch }, 0, 'elem');
         }
 

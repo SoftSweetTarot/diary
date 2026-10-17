@@ -845,7 +845,10 @@
            - 스티커를 집은(누른) 곳에서부터 뜯겨요 : 집은 곳(가장 가까운 가장자리)이 핀셋을 따라오고, 접히는 선(집은 곳과 핀셋의 가운데 선)에서 하얀 뒷면이 뒤집혀요
            - 뜯긴 부분이 절반을 넘는 순간 스티커가 사라지고, 조금 늦게 핀셋도 사라져요
            - 덜 뜯고 놓으면 다시 착 붙어요(핀셋은 그대로) · ✕ / Esc / 스티커에서 먼 곳을 톡 = 지우지 않고 그만두기
-           - 앞면 · 뒷면(복제본) 모두 clip-path 다각형 · 뒷면은 접는 선에 비친 모양(matrix) · 연출 중인 것은 저장에서 빼요 */
+           - 앞면 · 뒷면(복제본) 모두 clip-path 다각형 · 뒷면은 접는 선에 비친 모양(matrix) · 연출 중인 것은 저장에서 빼요
+           📌 삭제핀 (도련 · 10-17 · 페이지 빈 곳 메뉴 js/tapmenu.js) : 같은 핀셋인데 고른 것 하나가 아니라 페이지 위 무엇이든 집어서 뜯어요 (twzPin)
+           - 집은 곳 맨 위의 스티커 · 사진 · 글 · 메모가 뜯겨요 · 하나를 버려도 핀셋은 남아서 계속 뜯을 수 있어요
+           - 덜 뜯고 놓으면 다시 붙고 놓아줘요 · ✕ / Esc / 아무것도 없는 곳을 톡 = 그만두기 */
         const TWZ_SVG = '<svg viewBox="0 0 36 130" aria-hidden="true">'
             + '<defs><linearGradient id="twzA" x1="0" x2="1"><stop offset="0" stop-color="#ffd1df"/><stop offset=".5" stop-color="#ff9dbb"/><stop offset="1" stop-color="#f3779c"/></linearGradient>'
             + '<linearGradient id="twzT" x1="0" x2="1"><stop offset="0" stop-color="#fff6d8"/><stop offset="1" stop-color="#e9c46a"/></linearGradient></defs>'
@@ -854,16 +857,12 @@
             + '<path d="M18 104c-2.6-3.4-7-1.6-6 1.8.8 2.6 6 5.8 6 5.8s5.2-3.2 6-5.8c1-3.4-3.4-5.2-6-1.8z" fill="#fff"/><rect x="12" y="118" width="12" height="7" rx="3.5" fill="#ffe27a" stroke="#e7b93d" stroke-width=".8"/></svg>';
         const TWZ_Z = 1.55, TWZ_TIP = [18 * TWZ_Z, 3 * TWZ_Z], TWZ_ANG = 215;   // 크기 · 집게 끝(화면 px) · 기울기 = 필기구(draw.js PC_ANG)와 같아요
         let twz = null;
-        function elTweezers(el) {
-            if (!el || !el.isConnected || el.classList.contains('el-dying')) return;
-            if (twz) twzQuit();
-            el.classList.remove('selected');
-            const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reduce) { el.remove(); if (typeof saveData === 'function') saveData(false); return; }
+        const twzReduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function twzRoom(pin) {
             let room = document.getElementById('twzRoom');
             if (!room) {
                 room = document.createElement('div'); room.id = 'twzRoom'; room.className = 'twz-room';
-                room.innerHTML = '<div class="twz-tip"><b>🗑️ 스티커 버리기</b> 핀셋으로 스티커를 집어 쭉 뜯어요<button type="button" class="twz-x" aria-label="그만두기">✕</button></div><div class="twz" id="twzTool">' + TWZ_SVG + '</div>';
+                room.innerHTML = '<div class="twz-tip"><b id="twzTitle"></b><span id="twzSay"></span><button type="button" class="twz-x" aria-label="그만두기">✕</button></div><div class="twz" id="twzTool">' + TWZ_SVG + '</div>';
                 document.body.appendChild(room);
                 const x = room.querySelector('.twz-x');
                 x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('click', e => { e.stopPropagation(); twzQuit(); });
@@ -871,16 +870,50 @@
                 room.addEventListener('pointerup', twzUp); room.addEventListener('pointercancel', twzUp);
                 addEventListener('keydown', e => { if (e.key === 'Escape' && twz) twzQuit(); });
             }
+            room.querySelector('#twzTitle').textContent = pin ? '📌 삭제핀' : '🗑️ 스티커 버리기';
+            room.querySelector('#twzSay').textContent = pin ? '무엇이든 핀셋으로 집어 쭉 뜯어요' : '핀셋으로 스티커를 집어 쭉 뜯어요';
             room.hidden = false; room.classList.remove('bye');
+            return room;
+        }
+        function elTweezers(el) {
+            if (!el || !el.isConnected || el.classList.contains('el-dying')) return;
+            if (twz) twzQuit();
+            el.classList.remove('selected');
+            if (twzReduce()) { el.remove(); if (typeof saveData === 'function') saveData(false); return; }
+            const room = twzRoom(false);
+            twz = { room, tool: room.querySelector('#twzTool'), pin: false };
+            twzAttach(el);
+            twz.tool.classList.remove('shut', 'bye', 'in');
+            const b = el.getBoundingClientRect(); twzToolAt(b.left + b.width / 2, b.bottom - 6);   // 처음엔 스티커 아래쪽에서 · 이후 포인터를 따라와요
+            requestAnimationFrame(() => twz && twz.tool.classList.add('in'));
+        }
+        /* 📌 삭제핀 : 핀셋만 먼저 나와요 → 누른 곳의 것을 그때 집어요 */
+        function twzPin(x, y) {
+            if (twz) twzQuit();
+            if (typeof selectedElement !== 'undefined' && selectedElement) { selectedElement.classList.remove('selected'); selectedElement = null; }
+            const room = twzRoom(true);
+            twz = { room, tool: room.querySelector('#twzTool'), pin: true, el: null };
+            twz.tool.classList.remove('shut', 'bye', 'in');
+            const ca = document.getElementById('canvasArea').getBoundingClientRect();
+            twzToolAt(x != null ? x : ca.left + ca.width / 2, y != null ? y : ca.top + ca.height / 2);
+            requestAnimationFrame(() => twz && twz.tool.classList.add('in'));
+        }
+        function twzPick(x, y) {                                               // 누른 곳 맨 위의 것 (뜯기는 중인 것 · 뒷면 복제본은 빼요)
+            return document.elementsFromPoint(x, y).map(n => n.closest && n.closest('#canvasArea > .element-box')).find(b => b && !b.classList.contains('el-peel-back') && !b.classList.contains('el-dying')) || null;
+        }
+        function twzAttach(el) {                                               // 이 스티커를 뜯을 준비 (뒷면 복제본 · 손잡이 숨기기)
+            el.classList.remove('selected');
             el.classList.add('el-dying');
             el.querySelectorAll('.handle, .rot-zone, .stretch-handle').forEach(h => h.style.display = 'none');
             const back = el.cloneNode(true); back.classList.add('el-peel-back'); back.removeAttribute('id'); back.style.clipPath = 'polygon(0 0, 0 0, 0 0)'; back.style.zIndex = 99999;   // 뜯긴 부분은 다른 스티커보다 위로
             back.querySelectorAll('textarea').forEach(t => { t.readOnly = true; t.tabIndex = -1; });
             el.after(back);
-            twz = { el, back, room, tool: room.querySelector('#twzTool'), H: el.offsetHeight, W: el.offsetWidth, base: el.style.transform || '', G: null, P: null, drag: null, done: false };
-            twz.tool.classList.remove('shut', 'bye', 'in');
-            const b = el.getBoundingClientRect(); twzToolAt(b.left + b.width / 2, b.bottom - 6);   // 처음엔 스티커 아래쪽에서 · 이후 포인터를 따라와요
-            requestAnimationFrame(() => twz && twz.tool.classList.add('in'));
+            Object.assign(twz, { el, back, H: el.offsetHeight, W: el.offsetWidth, base: el.style.transform || '', G: null, P: null, drag: null, done: false, full: false });
+        }
+        function twzDetach() {                                                 // 뜯지 않고 원래대로 붙여 둬요
+            const t = twz; if (!t || !t.el) return;
+            t.el.style.clipPath = ''; t.el.classList.remove('el-dying'); t.el.querySelectorAll('.handle, .rot-zone, .stretch-handle').forEach(h => h.style.display = ''); t.back.remove();
+            t.el = null; t.back = null;
         }
         /* 스티커 안 좌표 ↔ 화면 좌표 (돌리기 · 크기 · 페이지 배율까지) */
         function twzGeo() {
@@ -919,6 +952,10 @@
             const t = twz; if (!t || t.done || e.button > 0) return;
             e.preventDefault();
             twzToolAt(e.clientX, e.clientY);                                    // 👆 터치는 닿은 곳으로 핀셋이 와요
+            if (t.pin) {                                                       // 📌 삭제핀 : 누른 곳의 것을 집어요 · 없으면 그만두기
+                const box = twzPick(e.clientX, e.clientY);
+                if (!box || box !== t.el) { twzDetach(); if (!box) { twzQuit(); return; } if (twzReduce()) { box.remove(); if (typeof saveData === 'function') saveData(false); return; } twzAttach(box); }
+            }
             const L = twzGeo().toLoc(e.clientX, e.clientY);
             if (L[0] < -30 || L[0] > t.W + 30 || L[1] < -30 || L[1] > t.H + 30) { twzQuit(); return; }   // 스티커에서 먼 곳을 톡 = 그만두기
             const P0 = 7, x = Math.max(P0, Math.min(t.W - P0, L[0])), y = Math.max(P0, Math.min(t.H - P0, L[1]));
@@ -945,25 +982,26 @@
             t.drag = null; t.tool.classList.remove('shut');
             if (t.full) { twzFinish(); return; }
             const P0 = t.P.slice(), t0 = performance.now();                    // 덜 뜯었으면 다시 착 붙어요
-            const back = now => { if (twz !== t || t.drag || t.done) return; const p = Math.min(1, (now - t0) / 260), v = (1 - p) * (1 - p); t.P = [t.G[0] + (P0[0] - t.G[0]) * v, t.G[1] + (P0[1] - t.G[1]) * v]; twzPaint(); if (p < 1) requestAnimationFrame(back); };
+            const el0 = t.el, back = now => { if (twz !== t || t.drag || t.done || t.el !== el0) return; const p = Math.min(1, (now - t0) / 260), v = (1 - p) * (1 - p); t.P = [t.G[0] + (P0[0] - t.G[0]) * v, t.G[1] + (P0[1] - t.G[1]) * v]; twzPaint(); if (p < 1) requestAnimationFrame(back); else if (t.pin) twzDetach(); };   // 📌 삭제핀은 다시 붙으면 놓아줘요
             requestAnimationFrame(back);
         }
         function twzFinish() {                                                 // 절반 넘게 뜯긴 순간 : 스티커 사라짐 → 조금 늦게 핀셋도
             const t = twz; if (!t || t.done) return;
             t.done = true; t.drag = null;
-            t.back.classList.add('twz-vanish'); t.el.remove();
-            setTimeout(() => t.back.remove(), 260);
-            setTimeout(() => { t.tool.classList.remove('shut'); t.tool.classList.add('bye'); t.room.classList.add('bye'); }, 380);
-            setTimeout(() => { if (twz === t) twz = null; t.room.hidden = true; }, 800);
+            const bk = t.back; bk.classList.add('twz-vanish'); t.el.remove();
+            setTimeout(() => bk.remove(), 260);
             if (navigator.vibrate) try { navigator.vibrate([6, 30, 10]); } catch (er) {}
             if (typeof saveData === 'function') saveData(false);
+            if (t.pin) { t.el = null; t.back = null; t.done = false; t.tool.classList.remove('shut'); return; }   // 📌 삭제핀은 남아서 또 뜯어요
+            setTimeout(() => { t.tool.classList.remove('shut'); t.tool.classList.add('bye'); t.room.classList.add('bye'); }, 380);
+            setTimeout(() => { if (twz === t) twz = null; t.room.hidden = true; }, 800);
         }
         function twzQuit() {                                                   // 지우지 않고 그만두기 : 원래대로
-            const t = twz; if (!t) return; twz = null;
-            if (!t.done) { t.el.style.clipPath = ''; t.el.classList.remove('el-dying'); t.el.querySelectorAll('.handle, .rot-zone, .stretch-handle').forEach(h => h.style.display = ''); t.back.remove(); }
-            t.room.hidden = true;
+            const t = twz; if (!t) return;
+            if (!t.done) twzDetach();
+            twz = null; t.room.hidden = true;
         }
-        window.elTweezers = elTweezers;
+        window.elTweezers = elTweezers; window.twzPin = twzPin;
 
         async function saveData(showAlert = false) {
             if (!isCoverOpen) return;
