@@ -310,6 +310,7 @@
             }
 
             const under = buildStaticPage(targetDate);
+            if (!isCover && dir === -1 && window.dySp && dySp()) under.classList.add('dy-at-r');   // 📱 전날은 오른쪽 쪽부터
             const shadow = document.createElement('div');
             shadow.className = 'under-shadow ' + (dir === 1 ? 'dir-next' : 'dir-prev');
             under.appendChild(shadow);
@@ -385,11 +386,14 @@
                 if (t.isCover) {
                     t.pageEl.style.display = 'none';
                     document.getElementById('innerPage').style.display = 'flex';
-                    isCoverOpen = true; pgmPos = { x: 0, y: 0 }; pgmApply();   // 다이어리를 열면 늘 가운데에서 시작
+                    isCoverOpen = true; pgmPos = { x: 0, y: 0 };
+                    turn = null; refreshLayout(); turn = t;                       // 📖 펼침면이면 두 쪽으로 펼쳐져요 (js/skins.js dyDeco)
+                    pgmApply();   // 다이어리를 열면 늘 가운데에서 시작
                 } else {
                     currentDate.setDate(currentDate.getDate() + t.dir);
                 }
                 selectedElement = null;
+                if (window.dyViewSet) dyViewSet(t.isCover || t.dir === 1 ? 'l' : 'r');   // 📱 다음 날은 왼쪽 · 전날은 오른쪽 쪽부터
                 document.getElementById('pageDateDisplay').innerText = formatDate(currentDate);
                 loadData();
                 if (t.isCover) prefetchInitial();          // 표지를 넘기면: 오늘 + 앞·뒤 3일치 (이미 읽었으면 바로 끝)
@@ -419,6 +423,7 @@
                     saveData(false);
                     currentDate.setTime(target.getTime());
                     selectedElement = null;
+                    if (window.dyViewSet) dyViewSet('l');
                     document.getElementById('pageDateDisplay').innerText = formatDate(currentDate);
                     loadData();
                     prefetchInitial();
@@ -449,7 +454,7 @@
            - 겉표지는 어디를 잡아도 열려요 */
         const CURL_EDGE = { ratio: 0.15, min: 36, max: 80 };      // 끝 영역 너비 : 페이지 너비의 15% (36~80px)
         function curlEdgeAt(x, book) {
-            const r = book.getBoundingClientRect(), z = clampNum(r.width * CURL_EDGE.ratio, CURL_EDGE.min, CURL_EDGE.max);
+            const r = (window.dyEdgeRect && dyEdgeRect()) || book.getBoundingClientRect(), z = clampNum(r.width * CURL_EDGE.ratio, CURL_EDGE.min, CURL_EDGE.max);   // 💻 펼침면은 두 쪽 전체의 양쪽 끝
             return x >= r.right - z ? 1 : x <= r.left + z ? -1 : 0;
         }
         function setupCurlDrag() {
@@ -475,6 +480,7 @@
                     const dir = dx < 0 ? 1 : -1;
                     if (!isCoverOpen && dir === -1) { drag = null; return; }
                     if (drag.edge && dir !== drag.edge) { drag = null; return; }     // 오른쪽 끝은 다음 날만 · 왼쪽 끝은 전날만
+                    if (isCoverOpen && window.dyHalf && dyHalf(dir)) { drag = null; return; }   // 📱 펼침면 : 같은 날 왼쪽 ↔ 오른쪽 쪽 (js/skins.js)
                     if (!beginCurl(!isCoverOpen, dir)) { drag = null; return; }
                     drag.started = true;
                     drag.dir = dir;
@@ -567,7 +573,7 @@
         }
         function getPageSize() {
             const b = document.getElementById('diaryBook');
-            return { w: b.clientWidth, h: b.clientHeight };
+            return { w: b.clientWidth * (window.dySp && dySp() ? 2 : 1), h: b.clientHeight };   // 📖 펼침면은 두 쪽이 한 장 (js/skins.js)
         }
         function fitFactor(c) {
             const ref = canvasOfPage(DEFAULT_PAGE_W, DEFAULT_PAGE_H);
@@ -606,7 +612,7 @@
             const maxW = Math.floor(window.innerWidth * 0.92);
             const maxH = Math.floor(window.innerHeight - toolbar.offsetHeight - 8 - 24);
             const dy = window.dySize && dySize();                               // 📒 고른 다이어리 크기 (비율 지키며 화면에 맞춰요 · js/skins.js)
-            if (dy) { const k = Math.min(1, maxW / dy.w, maxH / dy.h); wrapper.style.width = Math.round(dy.w * k) + 'px'; wrapper.style.height = Math.round(dy.h * k) + 'px'; }
+            if (dy) { const k = Math.min(1, maxW / (dy.w * (dy.two ? 2 : 1)), maxH / dy.h); wrapper.style.width = Math.round(dy.w * k) + 'px'; wrapper.style.height = Math.round(dy.h * k) + 'px'; }   // 💻 펼침면은 두 쪽이 화면에 들어가게
             else {
                 wrapper.style.width = Math.max(240, Math.min(pageSetting.w, maxW)) + 'px';
                 wrapper.style.height = Math.max(240, Math.min(pageSetting.h, maxH)) + 'px';
